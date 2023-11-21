@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+    get:
+      responses:
+        200:
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product_details'
+              examples:
+                GET_DETAILS:
+                  value:
+                    id: 10
+                    name: La Bouledogue
+                    date: 2023-10-12
+                    quantity: 5
+
+components:
+  schemas:
+    product_details:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer

@@ -1,0 +1,63 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product_details'
+            examples:
+              NEW_PRODUCT:
+                value:
+                  id: 10
+                  name: 'Duvel'
+                  quantity: 24
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/product_details'
+            examples:
+              NEW_PRODUCT:
+                value:
+                  id: 10
+                  name: 'Duvel'
+                  quantity: 24
+      responses:
+        201:
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product_details'
+              examples:
+                NEW_PRODUCT:
+                  value:
+                    id: 10
+                    name: 'Duvel'
+                    quantity: 24
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/product_details'
+              examples:
+                NEW_PRODUCT:
+                  value:
+                    id: 10
+                    name: 'Duvel'
+                    quantity: 24
+
+components:
+  schemas:
+    product_details:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer

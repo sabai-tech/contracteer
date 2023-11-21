@@ -1,0 +1,7 @@
+package dev.blitzcraft.contracts.core
+
+import dev.blitzcraft.contracts.core.datatype.DataType
+
+data class Property(val dataType: DataType<Any>, val example: Example? = null) {
+  fun value(): Any? = if (example != null) example.value else dataType.nextValue()
+}

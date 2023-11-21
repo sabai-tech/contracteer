@@ -1,0 +1,55 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        examples:
+          GET_DETAILS:
+            value: 10
+          GET_DETAILS2:
+            value: 10000000000000000000000000000000000000000
+          GET_DETAILS3:
+            value: toto
+          GET_DETAILS4:
+            value: [1,2,3]
+          GET_DETAILS5:
+            value:
+              id: 1
+              name: tutu
+          GET_DETAILS6:
+            value:
+              - 1
+              - 2
+              - 3
+          GET_DETAILS7:
+            value: true
+          GET_DETAILS9:
+            value: 2147483648
+    get:
+      responses:
+        200:
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product_details'
+components:
+  schemas:
+    product_details:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
