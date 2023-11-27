@@ -1,42 +1,87 @@
+import java.time.Duration
+
 plugins {
-  kotlin("jvm") version "1.9.0"
+  kotlin("jvm") version "1.9.21"
   id("java-library")
   id("com.adarshr.test-logger") version "3.2.0"
   id("com.bnorm.power.kotlin-power-assert") version "0.13.0"
+  id("maven-publish")
+  id("signing")
+  id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
 }
 
-group = "dev.blitzcraft"
-version = System.getenv("RELEASE_VERSION") ?: "LOCAL-SNAPSHOT"
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_17
-  withSourcesJar()
-  withJavadocJar()
+allprojects {
+  group = "dev.blitzcraft"
+  version = System.getenv("RELEASE_VERSION") ?: "LOCAL-SNAPSHOT"
+  repositories {
+    mavenCentral()
+  }
 }
 
-repositories {
-  mavenCentral()
+subprojects {
+  apply(plugin = "java-library")
+  apply(plugin = "org.jetbrains.kotlin.jvm")
+  apply(plugin = "maven-publish")
+  apply(plugin = "version-catalog")
+  apply(plugin = "signing")
+  apply(plugin = "com.adarshr.test-logger")
+  apply(plugin = "com.bnorm.power.kotlin-power-assert")
+  java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+    withJavadocJar()
+  }
+
+  publishing {
+    publications {
+      create<MavenPublication>("jars") {
+        from(components["java"])
+        pom {
+          name.set("Blitz-Contracts")
+          description.set("Transform your API Spec into Contract Testing")
+          url.set("https://blitzcraft.dev")
+          licenses {
+            license {
+              name.set("GNU GENERAL PUBLIC LICENSE, Version 3")
+              url.set("https://gnu.org/licenses/gpl-3.0.txt")
+            }
+          }
+          developers {
+            developer {
+              id.set("blitz-craft")
+              name.set("BlitzCraft")
+              email.set("contact@blitzcraft.dev")
+            }
+          }
+          scm {
+            connection.set("https://github.com/Blitz-Craft/blitz-contracts.git")
+            developerConnection.set("git@github.com:Blitz-Craft/blitz-contracts.git")
+            url.set("https://github.com/Blitz-Craft/blitz-contracts")
+          }
+        }
+      }
+    }
+  }
+  signing {
+    val signingKey: String? by project
+    val signingPassphrase: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassphrase)
+    sign(publishing.publications["jars"])
+  }
+
+}
+nexusPublishing {
+  this.repositories {
+    sonatype {
+      nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+    }
+  }
+  transitionCheckOptions {
+    maxRetries.set(100)
+    delayBetween.set(Duration.ofSeconds(5))
+  }
 }
 
-dependencies {
-  implementation("io.swagger.parser.v3:swagger-parser:2.1.18")
-  implementation("net.datafaker:datafaker:2.0.1")
-  implementation("com.jayway.jsonpath:json-path:2.8.0")
-  implementation("io.rest-assured:rest-assured:5.3.2")
-  implementation("org.wiremock:wiremock:3.2.0")
-  implementation("org.slf4j:slf4j-simple:2.0.9")
-
-
-  testImplementation(kotlin("test"))
-  testImplementation("io.mockk:mockk:1.13.8")
-  testImplementation("org.mock-server:mockserver-netty:5.15.0")
-  testImplementation(platform("org.http4k:http4k-bom:5.10.3.0"))
-  testImplementation("org.http4k:http4k-core")
-  testImplementation("org.http4k:http4k-server-jetty")
-}
-
-tasks.withType<Test> {
-  useJUnitPlatform()
-}
 
 
