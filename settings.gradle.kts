@@ -4,5 +4,6 @@ include(
   "blitz-contracts-core",
   "blitz-contracts-verifier",
   "blitz-contracts-mock-server",
+  "blitz-contracts-junit"
 )
 

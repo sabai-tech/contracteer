@@ -6,7 +6,7 @@ import io.swagger.v3.parser.core.models.ParseOptions
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
-object OpenApiLoader {
+internal object OpenApiLoader {
   fun from(path: Path): OpenApiLoadingResult {
     val parseResult = OpenAPIV3Parser().readLocation(path.absolutePathString(),
                                                      emptyList(),
@@ -30,4 +30,4 @@ object OpenApiLoader {
     }
 }
 
-data class OpenApiLoadingResult(val openAPI: OpenAPI? = null, val errors: List<String> = emptyList())
+internal data class OpenApiLoadingResult(val openAPI: OpenAPI? = null, val errors: List<String> = emptyList())

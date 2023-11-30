@@ -12,11 +12,20 @@ import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
+import java.nio.file.Path
 
 
 fun OpenAPI.contracts() = extractFrom(this)
 
 object ContractExtractor {
+  fun extractFrom(path: Path): Set<Contract> {
+    val loadingResult = OpenApiLoader.from(path)
+    if (loadingResult.errors.isEmpty().not()) {
+      throw IllegalArgumentException("Invalid file:${System.lineSeparator()}" + loadingResult.errors.joinToString(prefix = "   -", separator = System.lineSeparator()))
+    }
+    return loadingResult.openAPI!!.contracts()
+  }
+
   fun extractFrom(openAPI: OpenAPI): Set<Contract> {
     return openAPI.paths.flatMap { pathAndItem ->
       pathAndItem.item().readOperationsMap().flatMap { methodAndOperation ->

@@ -1,8 +1,6 @@
 package dev.blitzcraft.contracts.core
 
-import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.parser.OpenAPIV3Parser
-import io.swagger.v3.parser.core.models.ParseOptions
+import kotlin.io.path.Path
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 
@@ -11,10 +9,10 @@ class ContractExtractorTest {
 
   @Test
   fun `generate contracts for api mixing random values and example`() {
-    // given
-    val api = loadApiFrom("api_mixing_random_values_and_example_for_4xx_status.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml"))
+
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 404)))
@@ -26,10 +24,9 @@ class ContractExtractorTest {
 
   @Test
   fun `generate contracts for 2xx with random values`() {
-    // given
-    val api = loadApiFrom("no_example/api_2xx_responses.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/no_example/api_2xx_responses.yaml"))
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -37,10 +34,9 @@ class ContractExtractorTest {
 
   @Test
   fun `generate contracts for 2xx with array as body content `() {
-    // given
-    val api = loadApiFrom("no_example/api_array_random_values.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/no_example/api_array_random_values.yaml"))
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -48,10 +44,9 @@ class ContractExtractorTest {
 
   @Test
   fun `generate contract for each combination of request-response content-type`() {
-    // given
-    val api = loadApiFrom("no_example/api_multiple_content_type.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/no_example/api_multiple_content_type.yaml"))
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -65,40 +60,36 @@ class ContractExtractorTest {
 
   @Test
   fun `do not generate contract with only response example`() {
-    // given
-    val api = loadApiFrom("examples/api_with_response_body_example_only.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_response_body_example_only.yaml"))
     // then
     assert(contracts.none { it.exampleKey != null })
   }
 
   @Test
   fun `do not generate contract with only parameter example`() {
-    // given
-    val api = loadApiFrom("examples/api_with_parameter_example_only.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_parameter_example_only.yaml"))
     // then
     assert(contracts.none { it.exampleKey != null })
   }
 
   @Test
   fun `do not generate contract with only request body example`() {
-    // given
-    val api = loadApiFrom("examples/api_with_request_body_example_only.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_request_body_example_only.yaml"))
     // then
     assert(contracts.none { it.exampleKey != null })
   }
 
   @Test
   fun `generate a contract with a single example`() {
-    // given
-    val api = loadApiFrom("examples/api_with_example_for_4xx_status.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml"))
     // then
     assert(contracts.filter { it.exampleKey != null }.size == 1)
     assert(contracts.first { it.exampleKey != null }.request.pathParameters["id"]!!.value() == 999)
@@ -110,9 +101,9 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with array example as body content`() {
     // given
-    val api = loadApiFrom("examples/api_array_examples.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_array_examples.yaml"))
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -122,10 +113,9 @@ class ContractExtractorTest {
 
   @Test
   fun `generate contracts with multiple examples`() {
-    // given
-    val api = loadApiFrom("examples/api_with_multiple_examples.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_multiple_examples.yaml"))
     // then
     assert(contracts.size == 4)
     assertNotNull(contracts.find { it.request.method == "GET" && it.response.statusCode == 200 })
@@ -136,10 +126,9 @@ class ContractExtractorTest {
 
   @Test
   fun `generate contracts with multiple content-type and same example key for all`() {
-    // given
-    val api = loadApiFrom("examples/api_multiple_content_type_and_same_example_for_all.yaml")
     // when
-    val contracts = api.contracts()
+    val contracts =
+      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_multiple_content_type_and_same_example_for_all.yaml"))
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -151,11 +140,4 @@ class ContractExtractorTest {
              )))
   }
 }
-
-private fun loadApiFrom(fileName: String): OpenAPI {
-  val parseOptions = ParseOptions()
-  parseOptions.isResolveFully = true
-  return OpenAPIV3Parser().read("src/test/resources/$fileName", null, parseOptions)
-}
-
 private fun Any?.asMap(): Map<*, *> = this as Map<*, *>

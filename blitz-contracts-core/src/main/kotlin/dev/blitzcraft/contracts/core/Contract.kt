@@ -6,7 +6,11 @@ data class Contract(
   val exampleKey: String? = null
 ) {
 
-  fun description() =
-    if (exampleKey != null) "${request.method.uppercase()}: ${request.path}  with example $exampleKey"
-    else "${request.method.uppercase()}: ${request.path}"
+  fun description(): String {
+    val requestContentType = request.body?.contentType?.let { "($it)" } ?: ""
+    val responseContentType = response.body?.contentType?.let { "($it)" } ?: ""
+    val description =
+      "${request.method.uppercase()} ${request.path} $requestContentType-> ${response.statusCode} $responseContentType"
+    return exampleKey?.let { "$description with example $it" } ?: description
+  }
 }
