@@ -11,17 +11,22 @@ import dev.blitzcraft.contracts.core.JsonPathMatcher
 import dev.blitzcraft.contracts.core.ResponseContract
 
 
-class MockServer(private val contracts: List<Contract>) {
-  private val wireMockServer = WireMockServer(options().notifier(ConsoleNotifier(true)))
+class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
+
+  private var wireMockServer: WireMockServer
+  init {
+    wireMockServer = WireMockServer(options().port(port).notifier(ConsoleNotifier(true)))
+  }
 
   fun start() {
     wireMockServer.start()
+    println("Mock Server started at port: ${wireMockServer.port()}")
     addStubs(contracts)
   }
 
-  private fun addStubs(contracts: List<Contract>) {
+  private fun addStubs(contracts: Set<Contract>) {
     contracts.forEach {
-      stubFor(it.asMappingBuilder().willReturn(it.response.asResponseDefinitionBuilder()))
+      wireMockServer.stubFor(it.asMappingBuilder().willReturn(it.response.asResponseDefinitionBuilder()))
     }
   }
 

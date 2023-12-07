@@ -29,7 +29,7 @@ class MockServerTest {
       ResponseContract(statusCode = 200,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -53,7 +53,7 @@ class MockServerTest {
       ResponseContract(statusCode = 200,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -78,7 +78,7 @@ class MockServerTest {
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
       "simple example"
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -101,7 +101,7 @@ class MockServerTest {
       ResponseContract(statusCode = 201,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -127,7 +127,7 @@ class MockServerTest {
       ResponseContract(statusCode = 201,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -155,7 +155,7 @@ class MockServerTest {
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
       "simple example"
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -184,7 +184,7 @@ class MockServerTest {
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
       "simple example"
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()
@@ -208,7 +208,7 @@ class MockServerTest {
                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
       ResponseContract(statusCode = 201)
     )
-    mockServer = MockServer(listOf(contract))
+    mockServer = MockServer(contracts = setOf(contract))
 
     // when
     mockServer.start()

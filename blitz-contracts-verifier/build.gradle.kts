@@ -1,7 +1,12 @@
+plugins {
+  id ("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
 dependencies {
   implementation(project(":blitz-contracts-core"))
   implementation("io.rest-assured:rest-assured:5.3.2")
   implementation("com.jayway.jsonpath:json-path:2.8.0")
+  implementation("com.github.ajalt.clikt:clikt:4.2.1")
 
   testImplementation(kotlin("test"))
   testImplementation("org.mock-server:mockserver-netty:5.15.0")
@@ -15,3 +20,7 @@ tasks.withType<Test> {
   useJUnitPlatform()
 }
 
+tasks.shadowJar {
+  archiveClassifier.set("cli")
+  manifest.attributes["Main-Class"] = "dev.blitzcraft.contracts.verifier.VerifierCliKt"
+}
