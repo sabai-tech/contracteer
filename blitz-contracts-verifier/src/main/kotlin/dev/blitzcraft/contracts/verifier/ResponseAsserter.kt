@@ -17,8 +17,13 @@ internal class ResponseAsserter(private val responseContract: ResponseContract) 
   }
 
   private fun validateHeaders(headers: Headers) {
-    responseContract.headers.forEach { name, property ->
-      require(property.dataType.regexPattern().toPattern().asMatchPredicate().test(headers[name]!!.value)) {"Assertion Failed on Header '$name'. It does not match ${property.dataType.regexPattern()}"}
+    responseContract.headers.forEach { (name, property) ->
+      if (headers.hasHeaderWithName(name)) {
+        require(property.dataType.regexPattern().toPattern().asMatchPredicate().test(headers[name]!!.value))
+        { "Assertion failed on Header '$name'. It does not match ${property.dataType.regexPattern()}" }
+      } else {
+        require(property.required.not()) { "Assertion failed. Header '$name' is missing" }
+      }
     }
   }
 

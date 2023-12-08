@@ -87,7 +87,11 @@ private fun convert(value: Any?) = when (value) {
 }
 
 private fun Header.toProperty(exampleKey: String? = null) =
-  Property(DataType.from(schema), exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } })
+  Property(
+    dataType = DataType.from(schema),
+    example = exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } },
+    required = required ?: false
+  )
 
 private fun Map<String, Header>.exampleKeys() = flatMap { it.value.safeExamples().keys }.toSet()
 
@@ -140,6 +144,7 @@ private fun Content.exampleKeys() = flatMap { it.value.safeExamples().keys }.toS
 private fun ApiResponse.generateResponses(responseContract: ResponseContract) =
   content?.map { responseContract.copy(body = Body(it.key, DataType.from(it.value.schema))) }
   ?: listOf(responseContract)
+
 private fun ApiResponse.exampleKeys() = safeHeaders().exampleKeys() + bodyExampleKeys()
 private fun ApiResponse.bodyExampleKeys() = content?.exampleKeys() ?: emptySet()
 private fun Map.Entry<String, ApiResponse>.generateResponseExamples(exampleKey: String): List<ResponseContract> {

@@ -62,7 +62,7 @@ class ResponseAsserterTest {
   }
 
   @Test
-  fun `Fails Response headers`() {
+  fun `Fails for invalid Response header`() {
     // given
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
     val response = mockk<Response>()
@@ -73,6 +73,34 @@ class ResponseAsserterTest {
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
     assert(exception.message!!.contains("x-test"))
+  }
+
+  @Test
+  fun `Does not fails for missing optional Response header`() {
+    // given
+    val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
+    val response = mockk<Response>()
+    every { response.statusCode } returns 202
+    every { response.headers } returns Headers()
+    every { response.contentType } returns null
+
+    // when
+    ResponseAsserter(responseContract).assert(response)
+
+    // then no exception
+  }
+  @Test
+  fun `Fails for missing required Response header`() {
+    // given
+    val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType(), required = true)))
+    val response = mockk<Response>()
+    every { response.statusCode } returns 202
+    every { response.headers } returns Headers()
+    every { response.contentType } returns null
+
+    // expect
+    val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
+    assert(exception.message!!.contains(Regex("(?=.*missing)(?=.*x-test)")))
   }
 
   @Test

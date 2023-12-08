@@ -16,6 +16,15 @@ paths:
       responses:
         200:
           description: Product details
+          headers:
+            x-optional:
+              schema:
+                type: integer
+            x-required:
+              schema:
+                type: integer
+              required: true
+
           content:
             application/json:
               schema:
