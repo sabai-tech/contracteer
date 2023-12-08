@@ -124,9 +124,9 @@ private fun Operation.generateRequestExamples(path: String,
   )
   return requestBody?.content?.map { contentAndMediaType ->
     emptyBodyRequest.copy(
-      body = Body(contentType = contentAndMediaType.key,
-                  dataType = DataType.from(contentAndMediaType.value.schema),
-                  example = contentAndMediaType.value.safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
+      body = Body(contentType = contentAndMediaType.content(),
+                  dataType = DataType.from(contentAndMediaType.mediaType().schema),
+                  example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
   } ?: listOf(emptyBodyRequest)
 }
 
@@ -150,9 +150,9 @@ private fun Map.Entry<String, ApiResponse>.generateResponseExamples(exampleKey: 
   return response().content?.map { contentAndMediaType ->
     emptyBodyResponse.copy(
       body = Body(
-        contentType = contentAndMediaType.key,
-        dataType = DataType.from(contentAndMediaType.value.schema),
-        example = contentAndMediaType.value.safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
+        contentType = contentAndMediaType.content(),
+        dataType = DataType.from(contentAndMediaType.mediaType().schema),
+        example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
   } ?: listOf(emptyBodyResponse)
 }
 

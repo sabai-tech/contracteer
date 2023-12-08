@@ -23,6 +23,7 @@ class ResponseAsserterTest {
     val responseContract = ResponseContract(202)
     val response = mockk<Response>()
     every { response.statusCode } returns 202
+    every { response.headers } returns Headers()
     every { response.contentType } returns null
 
     // when
@@ -37,6 +38,7 @@ class ResponseAsserterTest {
     val responseContract = ResponseContract(202)
     val response = mockk<Response>()
     every { response.statusCode } returns 201
+    every { response.headers } returns Headers()
     every { response.contentType } returns null
 
     // expect
@@ -50,8 +52,8 @@ class ResponseAsserterTest {
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
     val response = mockk<Response>()
     every { response.statusCode } returns 202
-    every { response.contentType } returns null
     every { response.headers } returns Headers(Header("x-test", "42"))
+    every { response.contentType } returns null
 
     // when
     ResponseAsserter(responseContract).assert(response)
@@ -65,13 +67,12 @@ class ResponseAsserterTest {
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
     val response = mockk<Response>()
     every { response.statusCode } returns 202
+    every { response.headers } returns Headers(Header("x-test", "John"))
     every { response.contentType } returns null
-    every { response.headers } returns Headers(Header("x-test", "42"))
 
-    // when
-    ResponseAsserter(responseContract).assert(response)
-
-    // then no exception
+    // expect
+    val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
+    assert(exception.message!!.contains("x-test"))
   }
 
   @Test
@@ -82,6 +83,7 @@ class ResponseAsserterTest {
                                                         ObjectDataType(mapOf("name" to Property(StringDataType())))))
     val response = mockk<Response>()
     every { response.statusCode } returns 200
+    every { response.headers } returns Headers()
     every { response.contentType } returns "application/json; charset=utf-8"
     every { response.body.asString() } returns """{ "name2":"John", "age": 25}"""
 
@@ -98,6 +100,7 @@ class ResponseAsserterTest {
                                             body = Body("application/json", ArrayDataType(IntegerDataType())))
     val response = mockk<Response>()
     every { response.statusCode } returns 200
+    every { response.headers } returns Headers()
     every { response.contentType } returns "application/json; charset=utf-8"
     every { response.body.asString() } returns """[1,2,3]"""
 
@@ -115,6 +118,7 @@ class ResponseAsserterTest {
                                                         ObjectDataType(mapOf("name" to Property(StringDataType())))))
     val response = mockk<Response>()
     every { response.statusCode } returns 200
+    every { response.headers } returns Headers()
     every { response.contentType } returns "application/json; charset=utf-8"
     every { response.body.asString() } returns """{ "name":"John", "age": 42}"""
 
@@ -130,6 +134,7 @@ class ResponseAsserterTest {
     val response = mockk<Response>()
     every { response.statusCode } returns 200
     every { response.contentType } returns "application/json; charset=utf-8"
+    every { response.headers } returns Headers()
     every { response.body.asString() } returns """{ "name":"John", "age": 42}"""
 
     // expect
@@ -145,6 +150,7 @@ class ResponseAsserterTest {
                                                         ObjectDataType(mapOf("name" to Property(StringDataType())))))
     val response = mockk<Response>()
     every { response.statusCode } returns 200
+    every { response.headers } returns Headers()
     every { response.contentType } returns null
 
     // expect

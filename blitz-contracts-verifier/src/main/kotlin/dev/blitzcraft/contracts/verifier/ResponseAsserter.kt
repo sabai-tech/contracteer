@@ -3,14 +3,22 @@ package dev.blitzcraft.contracts.verifier
 import com.jayway.jsonpath.JsonPath
 import dev.blitzcraft.contracts.core.JsonPathMatcher
 import dev.blitzcraft.contracts.core.ResponseContract
+import io.restassured.http.Headers
 import io.restassured.response.Response
 
 internal class ResponseAsserter(private val responseContract: ResponseContract) {
   fun assert(response: Response) {
     validateStatusCode(response.statusCode)
+    validateHeaders(response.headers)
     validateContentType(response.contentType)
     if (responseContract.body != null) {
       validateBody(response)
+    }
+  }
+
+  private fun validateHeaders(headers: Headers) {
+    responseContract.headers.forEach { name, property ->
+      require(property.dataType.regexPattern().toPattern().asMatchPredicate().test(headers[name]!!.value)) {"Assertion Failed on Header '$name'. It does not match ${property.dataType.regexPattern()}"}
     }
   }
 
