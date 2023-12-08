@@ -15,13 +15,13 @@ class JsonPathMatcherTest {
   }
 
   @Test
-  fun `generate Json Path Regex Matchers for Object with simple property and nested object`() {
+  fun `generate Json Path Regex Matchers for Object with required properties and nested object`() {
     // given
     val objectDataType = ObjectDataType(mapOf(
-      "productId" to Property(IntegerDataType()),
+      "productId" to Property(IntegerDataType(), required = true),
       "user" to Property(ObjectDataType(mapOf(
-        "id" to Property(IntegerDataType()),
-        "enabled" to Property(BooleanDataType())))))
+        "id" to Property(IntegerDataType(), required = true),
+        "enabled" to Property(BooleanDataType(), required = true)))))
     )
 
     // when
@@ -37,11 +37,33 @@ class JsonPathMatcherTest {
   }
 
   @Test
+  fun `generate Json Path Regex Matchers for Object with optional properties`() {
+    // given
+    val objectDataType = ObjectDataType(mapOf(
+      "productId" to Property(IntegerDataType(), required = false),
+      "user" to Property(ObjectDataType(mapOf(
+        "id" to Property(IntegerDataType(), required = false),
+        "enabled" to Property(BooleanDataType(), required = false)))))
+    )
+
+    // when
+    val jsonPaths = JsonPathMatcher.regexMatchers(objectDataType)
+
+    // then
+    assert(jsonPaths.size == 3)
+    assert(jsonPaths.containsAll(listOf(
+      "$[?(@['productId'] =~ /(-?(\\d+))?/)]",
+      "$['user'][?(@['id'] =~ /(-?(\\d+))?/)]",
+      "$['user'][?(@['enabled'] =~ /((true|false))?/)]"
+    )))
+  }
+
+  @Test
   fun `generate Json Path Regex Matchers for Object with property of type Array of Object`() {
     // given
     val objectDataType = ObjectDataType(mapOf(
       "users" to Property(ArrayDataType(ObjectDataType(mapOf(
-        "id" to Property(IntegerDataType())
+        "id" to Property(IntegerDataType(), required = true)
       ))))))
 
     // when
@@ -73,7 +95,7 @@ class JsonPathMatcherTest {
     // given
     val objectDataType = ObjectDataType(mapOf(
       "users" to Property(ArrayDataType(ObjectDataType(mapOf(
-        "productIds" to Property(ArrayDataType(ArrayDataType( IntegerDataType())))))))))
+        "productIds" to Property(ArrayDataType(ArrayDataType(IntegerDataType())))))))))
 
     // when
     val jsonPaths = JsonPathMatcher.regexMatchers(objectDataType)
@@ -99,7 +121,7 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Array of Object`() {
     // given
-    val arrayDataType = ArrayDataType(ObjectDataType(mapOf("id" to Property(IntegerDataType()))))
+    val arrayDataType = ArrayDataType(ObjectDataType(mapOf("id" to Property(IntegerDataType(), required = true))))
 
     // when
     val jsonPaths = JsonPathMatcher.regexMatchers(arrayDataType)
@@ -237,10 +259,11 @@ class JsonPathMatcherTest {
       "$[?(@ == 3)]"
     )))
   }
+
   @Test
   fun `generate Json Path Value Matcher for Array of Array`() {
     // given
-    val anObject = arrayOf(arrayOf(1,2), arrayOf(3, 4))
+    val anObject = arrayOf(arrayOf(1, 2), arrayOf(3, 4))
 
     // when
     val jsonPaths = JsonPathMatcher.exampleMatchers(anObject)
@@ -254,6 +277,7 @@ class JsonPathMatcherTest {
       "$[*][?(@ == 4)]"
     )))
   }
+
   @Test
   fun `generate Json Path Value Matcher for Array of Object`() {
     // given

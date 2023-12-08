@@ -108,17 +108,58 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(statusCode = 200,
                                             body = Body("application/json",
-                                                        ObjectDataType(mapOf("name" to Property(StringDataType())))))
+                                                        ObjectDataType(mapOf(
+                                                          "name" to Property(StringDataType()),
+                                                          "age" to Property(IntegerDataType())))))
     val response = mockk<Response>()
     every { response.statusCode } returns 200
     every { response.headers } returns Headers()
     every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.body.asString() } returns """{ "name2":"John", "age": 25}"""
+    every { response.body.asString() } returns """{ "name":"John", "age": 25}"""
 
     // when
     ResponseAsserter(responseContract).assert(response)
 
     // then no exception
+  }
+
+  @Test
+  fun `Validates body with JSON Content-Type and missing optional properties`() {
+    // given
+    val responseContract = ResponseContract(statusCode = 200,
+                                            body = Body("application/json",
+                                                        ObjectDataType(mapOf(
+                                                          "name" to Property(StringDataType(), required = true),
+                                                          "age" to Property(IntegerDataType(), required = false)))))
+    val response = mockk<Response>()
+    every { response.statusCode } returns 200
+    every { response.headers } returns Headers()
+    every { response.contentType } returns "application/json; charset=utf-8"
+    every { response.body.asString() } returns """{ "name":"John"}"""
+
+    // when
+    ResponseAsserter(responseContract).assert(response)
+
+    // then no exception
+  }
+
+  @Test
+  fun `Fails to validate body with JSON Content-Type and missing required properties`() {
+    // given
+    val responseContract = ResponseContract(statusCode = 200,
+                                            body = Body("application/json",
+                                                        ObjectDataType(mapOf(
+                                                          "name" to Property(StringDataType(), required = true),
+                                                          "age" to Property(IntegerDataType(), required = false)))))
+    val response = mockk<Response>()
+    every { response.statusCode } returns 200
+    every { response.headers } returns Headers()
+    every { response.contentType } returns "application/json; charset=utf-8"
+    every { response.body.asString() } returns """{ "age":42}"""
+
+    // expect
+    val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
+    assert(exception.message!!.contains("name"))
   }
 
   @Test
@@ -139,7 +180,7 @@ class ResponseAsserterTest {
   }
 
   @Test
-  fun `Fails body with wrong Content-Type`() {
+  fun `Fails when Body has wrong Content-Type`() {
     // given
     val responseContract = ResponseContract(statusCode = 200,
                                             body = Body("text/plain",

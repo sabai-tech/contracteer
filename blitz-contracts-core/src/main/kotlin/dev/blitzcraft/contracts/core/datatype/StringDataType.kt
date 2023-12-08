@@ -7,5 +7,5 @@ class StringDataType: DataType<String> {
     return Faker().lorem().maxLengthSentence(20)
   }
 
-  override fun regexPattern() = ".*"
+  override fun regexPattern() = "[\\S\\s]+" // ".*" does not work with JsonPath as it always matches
 }

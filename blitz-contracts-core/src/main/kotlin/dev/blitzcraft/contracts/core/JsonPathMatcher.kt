@@ -15,9 +15,9 @@ object JsonPathMatcher {
 
   fun exampleMatchers(anObject: Any?) =
     when (anObject) {
-      is Map<*,*> -> anObject.flatMap { valueMatcher("$", it.toPair()) }
-      is Array<*> -> anObject.flatMap { arrayValueMatcher("$", it) }
-      else              -> throw IllegalArgumentException("Invalid Json. The root must be an Object or an Array")
+      is Map<*, *> -> anObject.flatMap { valueMatcher("$", it.toPair()) }
+      is Array<*>  -> anObject.flatMap { arrayValueMatcher("$", it) }
+      else         -> throw IllegalArgumentException("Invalid Json. The root must be an Object or an Array")
     }
 
 
@@ -25,7 +25,10 @@ object JsonPathMatcher {
     when (val dataType = namedProperty.second.dataType) {
       is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$path['${namedProperty.first}']", it.toPair()) }
       is ArrayDataType  -> arrayRegexMatcher("$path['${namedProperty.first}']", dataType.itemDataType)
-      else              -> listOf("$path[?(@['${namedProperty.first}'] =~ /${namedProperty.second.dataType.regexPattern()}/)]")
+      else              -> {
+        val pattern = if (namedProperty.second.required) dataType.regexPattern() else "(${dataType.regexPattern()})?"
+        listOf("$path[?(@['${namedProperty.first}'] =~ /$pattern/)]")
+      }
     }
 
   private fun arrayRegexMatcher(path: String, dataType: DataType<*>): List<String> =
