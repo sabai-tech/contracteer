@@ -20,12 +20,12 @@ class MockServerTest {
   }
 
   @Test
-  fun `responds for a contract with a path parameter and no request body`() {
+  fun `responds for a contract with a path parameter`() {
     // given
     val contract = Contract(
       RequestContract(method = "GET",
                       path = "/v1/users/{id}",
-                      pathParameters = mapOf("id" to Property(IntegerDataType()))),
+                      pathParameters = mapOf("id" to Property(IntegerDataType(), required = true))),
       ResponseContract(statusCode = 200,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
     )
@@ -44,12 +44,12 @@ class MockServerTest {
   }
 
   @Test
-  fun `responds for a contract with a path parameter example and no request body`() {
+  fun `responds for a contract with a path parameter example`() {
     // given
     val contract = Contract(
       RequestContract(method = "GET",
                       path = "/v1/users/{id}",
-                      pathParameters = mapOf("id" to Property(IntegerDataType(), Example(42)))),
+                      pathParameters = mapOf("id" to Property(IntegerDataType(), Example(42), required = true))),
       ResponseContract(statusCode = 200,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
     )
@@ -73,7 +73,7 @@ class MockServerTest {
     val contract = Contract(
       RequestContract(method = "GET",
                       path = "/v1/users/{id}",
-                      pathParameters = mapOf("id" to Property(IntegerDataType(), Example(42)))),
+                      pathParameters = mapOf("id" to Property(IntegerDataType(), Example(42), required = true))),
       ResponseContract(statusCode = 200,
                        body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
       "simple example"
@@ -87,6 +87,199 @@ class MockServerTest {
     given()
       .accept("application/json")
       .get("/v1/users/123").then()
+      .assertThat()
+      .statusCode(404)
+  }
+
+  @Test
+  fun `responds for a contract with a required query parameter`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      queryParameters = mapOf("id" to Property(IntegerDataType(), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .get("/v1/users?id=123").then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue(Int::class.java))
+  }
+
+  @Test
+  fun `does not respond when required query parameter is missing`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      queryParameters = mapOf("id" to Property(IntegerDataType(), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .get("/v1/users").then()
+      .assertThat()
+      .statusCode(404)
+  }
+
+  @Test
+  fun `responds for a contract with a query parameter example`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      queryParameters = mapOf("id" to Property(IntegerDataType(), Example(42), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .get("/v1/users?id=42").then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue(Int::class.java))
+  }
+
+  @Test
+  fun `does not respond when query parameter is not equal to example value`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      queryParameters = mapOf("id" to Property(IntegerDataType(), Example(42), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
+      "simple example"
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .get("/v1/users?id=123").then()
+      .assertThat()
+      .statusCode(404)
+  }
+
+  @Test
+  fun `responds for a contract with a required cookie`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      cookies = mapOf("id" to Property(IntegerDataType(), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .cookies(mapOf("id" to "123"))
+      .get("/v1/users").then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue(Int::class.java))
+  }
+
+  @Test
+  fun `does not respond when required cookie is missing`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      cookies = mapOf("id" to Property(IntegerDataType(), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .get("/v1/users").then()
+      .assertThat()
+      .statusCode(404)
+  }
+
+  @Test
+  fun `responds for a contract with a cookie example`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      cookies = mapOf("id" to Property(IntegerDataType(), Example(42), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType())))))
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .cookies(mapOf("id" to "42"))
+      .get("/v1/users").then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue(Int::class.java))
+  }
+
+  @Test
+  fun `does not respond when cookie is not equal to example value`() {
+    // given
+    val contract = Contract(
+      RequestContract(method = "GET",
+                      path = "/v1/users",
+                      cookies = mapOf("id" to Property(IntegerDataType(), Example(42), required = true))),
+      ResponseContract(statusCode = 200,
+                       body = Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))))),
+      "simple example"
+    )
+    mockServer = MockServer(contracts = setOf(contract))
+
+    // when
+    mockServer.start()
+
+    // then
+    given()
+      .accept("application/json")
+      .cookies(mapOf("id" to "123"))
+      .get("/v1/users").then()
       .assertThat()
       .statusCode(404)
   }
@@ -172,7 +365,7 @@ class MockServerTest {
   }
 
   @Test
-  fun `do no responds for contract with a request body example when body does not match example value`() {
+  fun `does not for contract with a request body example when request body does not match example value`() {
     // given
     val contract = Contract(
       RequestContract(method = "POST",

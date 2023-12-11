@@ -8,12 +8,14 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import dev.blitzcraft.contracts.core.Contract
 import dev.blitzcraft.contracts.core.JsonPathMatcher
+import dev.blitzcraft.contracts.core.Property
 import dev.blitzcraft.contracts.core.ResponseContract
 
 
 class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
 
   private var wireMockServer: WireMockServer
+
   init {
     wireMockServer = WireMockServer(options().port(port).notifier(ConsoleNotifier(true)))
   }
@@ -63,11 +65,17 @@ class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
                          ?: JsonPathMatcher.regexMatchers(body.dataType)
       bodyMatchers.forEach { mappingBuilder.withRequestBody(matchingJsonPath(it)) }
     }
-    request.pathParameters.forEach { param ->
-      mappingBuilder.withPathParam(param.key,
-                                   param.value.example?.let { equalTo(it.value.toString()) }
-                                   ?: matching(param.value.dataType.regexPattern()))
-    }
+    request.pathParameters.forEach { mappingBuilder.withPathParam(it.key, it.value.asStringValuePattern()) }
+    request.queryParameters.forEach { mappingBuilder.withQueryParam(it.key, it.value.asStringValuePattern()) }
+    request.cookies.forEach { mappingBuilder.withCookie(it.key, it.value.asStringValuePattern()) }
     return mappingBuilder
   }
+
+  private fun Property.asStringValuePattern() =
+    if (example != null) {
+      equalTo(example!!.value.toString())
+    } else {
+      if (required) matching(dataType.regexPattern())
+      else matching("(${dataType.regexPattern()})?")
+    }
 }

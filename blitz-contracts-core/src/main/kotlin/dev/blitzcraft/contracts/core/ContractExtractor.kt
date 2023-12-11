@@ -135,7 +135,11 @@ private fun Operation.generateRequestExamples(path: String,
 }
 
 private fun Parameter.toProperty(exampleKey: String?) =
-  Property(DataType.from(schema), exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } })
+  Property(
+    dataType = DataType.from(schema),
+    example = exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } },
+    required = required ?: false
+  )
 
 private fun List<Parameter>.exampleKeys() = flatMap { it.safeExamples().keys }.toSet()
 
