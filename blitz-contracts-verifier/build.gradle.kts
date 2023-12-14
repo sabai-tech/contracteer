@@ -4,7 +4,8 @@ plugins {
 
 dependencies {
   implementation(project(":blitz-contracts-core"))
-  implementation("io.rest-assured:rest-assured:5.3.2")
+  implementation(platform("org.http4k:http4k-bom:5.10.3.0"))
+  implementation("org.http4k:http4k-core")
   implementation("com.jayway.jsonpath:json-path:2.8.0")
   implementation("com.github.ajalt.clikt:clikt:4.2.1")
 

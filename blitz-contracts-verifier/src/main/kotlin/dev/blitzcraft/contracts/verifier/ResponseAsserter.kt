@@ -3,14 +3,14 @@ package dev.blitzcraft.contracts.verifier
 import com.jayway.jsonpath.JsonPath
 import dev.blitzcraft.contracts.core.JsonPathMatcher
 import dev.blitzcraft.contracts.core.ResponseContract
-import io.restassured.http.Headers
-import io.restassured.response.Response
+import org.http4k.core.Headers
+import org.http4k.core.Response
 
 internal class ResponseAsserter(private val responseContract: ResponseContract) {
   fun assert(response: Response) {
-    validateStatusCode(response.statusCode)
+    validateStatusCode(response.status.code)
     validateHeaders(response.headers)
-    validateContentType(response.contentType)
+    validateContentType(response.header("Content-Type"))
     if (responseContract.body != null) {
       validateBody(response)
     }
@@ -19,7 +19,7 @@ internal class ResponseAsserter(private val responseContract: ResponseContract) 
   private fun validateHeaders(headers: Headers) {
     responseContract.headers.forEach { (name, property) ->
       if (headers.hasHeaderWithName(name)) {
-        require(property.dataType.regexPattern().toPattern().asMatchPredicate().test(headers[name]!!.value))
+        require(property.dataType.regexPattern().toPattern().asMatchPredicate().test(headers.toMap()[name]!!))
         { "Assertion failed on Header '$name'. It does not match ${property.dataType.regexPattern()}" }
       } else {
         require(property.required.not()) { "Assertion failed. Header '$name' is missing" }
@@ -38,12 +38,16 @@ internal class ResponseAsserter(private val responseContract: ResponseContract) 
   }
 
   private fun validateBody(response: Response) {
-    response.contentType?.let { contentType ->
-      if ("json" !in contentType) throw IllegalArgumentException("Content '${response.contentType}' is not managed")
+    response.header("Content-Type")?.let { contentType ->
+      if ("json" !in contentType) throw IllegalArgumentException("Content '${response.header("Content-Type")}' is not managed")
 
       JsonPathMatcher.regexMatchers(responseContract.body!!.dataType).forEach {
-        require((JsonPath.read(response.body.asString(), it) as Collection<*>).isNotEmpty()) { "$it does not match" }
+        require((JsonPath.read(response.bodyString(), it) as Collection<*>).isNotEmpty()) { "$it does not match" }
       }
     }
   }
+}
+
+private fun Headers.hasHeaderWithName(name: String): Boolean {
+  return any { it.first == name }
 }

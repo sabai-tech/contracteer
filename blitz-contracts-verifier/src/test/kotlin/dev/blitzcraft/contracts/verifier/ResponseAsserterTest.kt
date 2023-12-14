@@ -9,9 +9,8 @@ import dev.blitzcraft.contracts.core.datatype.ObjectDataType
 import dev.blitzcraft.contracts.core.datatype.StringDataType
 import io.mockk.every
 import io.mockk.mockk
-import io.restassured.http.Header
-import io.restassured.http.Headers
-import io.restassured.response.Response
+import org.http4k.core.Response
+import org.http4k.core.Status
 import kotlin.test.Test
 import kotlin.test.assertFails
 
@@ -22,9 +21,9 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(202)
     val response = mockk<Response>()
-    every { response.statusCode } returns 202
-    every { response.headers } returns Headers()
-    every { response.contentType } returns null
+    every { response.status } returns Status.ACCEPTED
+    every { response.headers } returns  emptyList()
+    every { response.header("Content-Type") } returns null
 
     // when
     ResponseAsserter(responseContract).assert(response)
@@ -37,9 +36,9 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(202)
     val response = mockk<Response>()
-    every { response.statusCode } returns 201
-    every { response.headers } returns Headers()
-    every { response.contentType } returns null
+    every { response.status } returns Status.CREATED
+    every { response.headers } returns emptyList()
+    every { response.header("Content-Type") } returns null
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
@@ -51,9 +50,9 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
     val response = mockk<Response>()
-    every { response.statusCode } returns 202
-    every { response.headers } returns Headers(Header("x-test", "42"))
-    every { response.contentType } returns null
+    every { response.status } returns Status.ACCEPTED
+    every { response.headers } returns listOf("x-test" to "42")
+    every { response.header("Content-Type") } returns null
 
     // when
     ResponseAsserter(responseContract).assert(response)
@@ -66,9 +65,9 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
     val response = mockk<Response>()
-    every { response.statusCode } returns 202
-    every { response.headers } returns Headers(Header("x-test", "John"))
-    every { response.contentType } returns null
+    every { response.status } returns Status.ACCEPTED
+    every { response.headers } returns listOf("x-test" to "John")    
+    every { response.header("Content-Type") } returns null
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
@@ -80,10 +79,9 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType())))
     val response = mockk<Response>()
-    every { response.statusCode } returns 202
-    every { response.headers } returns Headers()
-    every { response.contentType } returns null
-
+    every { response.status } returns Status.ACCEPTED
+    every { response.header("Content-Type") } returns null
+    every { response.headers } returns  emptyList()
     // when
     ResponseAsserter(responseContract).assert(response)
 
@@ -94,9 +92,9 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(202, headers = mapOf("x-test" to Property(IntegerDataType(), required = true)))
     val response = mockk<Response>()
-    every { response.statusCode } returns 202
-    every { response.headers } returns Headers()
-    every { response.contentType } returns null
+    every { response.status } returns Status.ACCEPTED
+    every { response.header("Content-Type") } returns null
+    every { response.headers } returns  emptyList()
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
@@ -112,10 +110,10 @@ class ResponseAsserterTest {
                                                           "name" to Property(StringDataType()),
                                                           "age" to Property(IntegerDataType())))))
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.headers } returns Headers()
-    every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.body.asString() } returns """{ "name":"John", "age": 25}"""
+    every { response.status } returns Status.OK
+    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
+    every { response.headers } returns listOf( "Content-Type" to "application/json; charset=utf-8")
+    every { response.bodyString() } returns """{ "name":"John", "age": 25}"""
 
     // when
     ResponseAsserter(responseContract).assert(response)
@@ -132,10 +130,10 @@ class ResponseAsserterTest {
                                                           "name" to Property(StringDataType(), required = true),
                                                           "age" to Property(IntegerDataType(), required = false)))))
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.headers } returns Headers()
-    every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.body.asString() } returns """{ "name":"John"}"""
+    every { response.status } returns Status.OK
+    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
+    every { response.headers } returns listOf( "Content-Type" to "application/json; charset=utf-8")
+    every { response.bodyString() } returns """{ "name":"John"}"""
 
     // when
     ResponseAsserter(responseContract).assert(response)
@@ -152,10 +150,10 @@ class ResponseAsserterTest {
                                                           "name" to Property(StringDataType(), required = true),
                                                           "age" to Property(IntegerDataType(), required = false)))))
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.headers } returns Headers()
-    every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.body.asString() } returns """{ "age":42}"""
+    every { response.status } returns Status.OK    
+    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
+    every { response.headers } returns listOf( "Content-Type" to "application/json; charset=utf-8")
+    every { response.bodyString() } returns """{ "age":42}"""
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
@@ -168,10 +166,10 @@ class ResponseAsserterTest {
     val responseContract = ResponseContract(statusCode = 200,
                                             body = Body("application/json", ArrayDataType(IntegerDataType())))
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.headers } returns Headers()
-    every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.body.asString() } returns """[1,2,3]"""
+    every { response.status } returns Status.OK
+    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
+    every { response.headers } returns listOf( "Content-Type" to "application/json; charset=utf-8")
+    every { response.bodyString() } returns """[1,2,3]"""
 
     // when
     ResponseAsserter(responseContract).assert(response)
@@ -186,10 +184,10 @@ class ResponseAsserterTest {
                                             body = Body("text/plain",
                                                         ObjectDataType(mapOf("name" to Property(StringDataType())))))
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.headers } returns Headers()
-    every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.body.asString() } returns """{ "name":"John", "age": 42}"""
+    every { response.status } returns Status.OK
+    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
+    every { response.headers } returns listOf( "Content-Type" to "application/json; charset=utf-8")
+    every { response.bodyString() } returns """{ "name":"John", "age": 42}"""
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
@@ -201,10 +199,10 @@ class ResponseAsserterTest {
     // given
     val responseContract = ResponseContract(statusCode = 200)
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.contentType } returns "application/json; charset=utf-8"
-    every { response.headers } returns Headers()
-    every { response.body.asString() } returns """{ "name":"John", "age": 42}"""
+    every { response.status } returns Status.OK
+    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
+    every { response.headers } returns listOf( "Content-Type" to "application/json; charset=utf-8")
+    every { response.bodyString() } returns """{ "name":"John", "age": 42}"""
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }
@@ -218,9 +216,9 @@ class ResponseAsserterTest {
                                             body = Body("application/json",
                                                         ObjectDataType(mapOf("name" to Property(StringDataType())))))
     val response = mockk<Response>()
-    every { response.statusCode } returns 200
-    every { response.headers } returns Headers()
-    every { response.contentType } returns null
+    every { response.status } returns Status.OK
+    every { response.header("Content-Type") } returns null
+    every { response.headers } returns  emptyList()
 
     // expect
     val exception = assertFails { ResponseAsserter(responseContract).assert(response) }

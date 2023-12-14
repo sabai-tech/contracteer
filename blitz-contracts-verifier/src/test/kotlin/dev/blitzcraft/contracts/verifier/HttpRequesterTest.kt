@@ -4,6 +4,7 @@ import dev.blitzcraft.contracts.core.*
 import dev.blitzcraft.contracts.core.datatype.IntegerDataType
 import dev.blitzcraft.contracts.core.datatype.ObjectDataType
 import dev.blitzcraft.contracts.core.datatype.StringDataType
+import org.http4k.core.Status
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
 import org.mockserver.model.Cookie.cookie
@@ -54,7 +55,7 @@ class HttpRequesterTest {
     val response = HttpRequester(contract, "http://localhost", mockServer.port).sendRequest()
 
     // then
-    assert(response.statusCode == 200)
+    assert(response.status == Status.OK)
     mockServer.verify(
       request()
         .withMethod("POST")

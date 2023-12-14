@@ -38,7 +38,7 @@ class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
 
   private fun ResponseContract.asResponseDefinitionBuilder(): ResponseDefinitionBuilder {
     val response = aResponse().withStatus(statusCode)
-    headers.forEach { response.withHeader(it.key, it.value.value().toString()) }
+    headers.forEach { response.withHeader(it.key, it.value.stringValue()) }
     body?.let {
       response.withHeader("Content-Type", it.contentType)
       response.withBody(it.asString())
@@ -73,7 +73,7 @@ class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
 
   private fun Property.asStringValuePattern() =
     if (example != null) {
-      equalTo(example!!.value.toString())
+      equalTo(stringValue())
     } else {
       if (required) matching(dataType.regexPattern())
       else matching("(${dataType.regexPattern()})?")
