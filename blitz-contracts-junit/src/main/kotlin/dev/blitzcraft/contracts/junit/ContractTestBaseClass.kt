@@ -2,8 +2,10 @@ package dev.blitzcraft.contracts.junit
 
 import dev.blitzcraft.contracts.core.ContractExtractor
 import dev.blitzcraft.contracts.verifier.ServerVerifier
+import org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import java.lang.System.lineSeparator
 import java.nio.file.Path
 
 abstract class ContractTestBaseClass {
@@ -16,7 +18,17 @@ abstract class ContractTestBaseClass {
   fun contractTestsFactory(): List<DynamicTest> {
     val serverVerifier = ServerVerifier(serverUrl, serverPort)
     return ContractExtractor.extractFrom(Path.of(openApiSpecPath)).map {
-      DynamicTest.dynamicTest("Validate ${it.description()}") { serverVerifier.verify(it) }
+      DynamicTest.dynamicTest("Validate ${it.description()}") {
+        val result = serverVerifier.verify(it)
+        if (result.isSuccess().not()) {
+          assertionFailure()
+            .reason(result.errors().joinToString(
+              prefix = lineSeparator(),
+              separator = lineSeparator(),
+              postfix = lineSeparator()))
+            .buildAndThrow()
+        }
+      }
     }
   }
 }

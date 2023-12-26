@@ -3,10 +3,10 @@ package dev.blitzcraft.contracts.core
 data class RequestContract(
   val method: String,
   val path: String,
-  val pathParameters: Map<String, Property> = emptyMap(),
-  val queryParameters: Map<String, Property> = emptyMap(),
-  val headers: Map<String, Property> = emptyMap(),
-  val cookies: Map<String, Property> = emptyMap(),
+  val pathParameters: List<Property> = emptyList(),
+  val queryParameters: List<Property> = emptyList(),
+  val headers: List<Property> = emptyList(),
+  val cookies: List<Property> = emptyList(),
   val body: Body? = null
 )
 

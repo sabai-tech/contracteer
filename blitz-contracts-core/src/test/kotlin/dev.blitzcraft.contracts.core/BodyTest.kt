@@ -19,7 +19,7 @@ class BodyTest {
   fun `fails when Example value is not of type Map or Array for Json Content-Type`() {
     // expect
     assertFailsWith(IllegalArgumentException::class) {
-      Body("application/json", ObjectDataType(mapOf("id" to Property(IntegerDataType()))), Example(42))
+      Body("application/json", ObjectDataType(listOf(Property("id", IntegerDataType()))), Example(42))
     }
   }
 
@@ -28,7 +28,7 @@ class BodyTest {
     // expect
     assertDoesNotThrow {
       Body("application/json",
-           ObjectDataType(properties = mapOf("id" to Property(IntegerDataType()))))
+           ObjectDataType(properties = listOf(Property("id", IntegerDataType()))))
     }
   }
 
@@ -43,7 +43,7 @@ class BodyTest {
     // expect
     assertDoesNotThrow {
       Body("application/json",
-           ObjectDataType(properties = mapOf("id" to Property(IntegerDataType()))),
+           ObjectDataType(properties = listOf(Property("id", IntegerDataType()))),
            Example(mapOf("id" to 42)))
     }
   }
@@ -53,7 +53,7 @@ class BodyTest {
     // expect
     assertDoesNotThrow {
       Body("application/json",
-           ObjectDataType(properties = mapOf("id" to Property(IntegerDataType()))),
+           ObjectDataType(properties = listOf(Property("id", IntegerDataType()))),
            Example(arrayOf(1, 2, 3)))
     }
   }

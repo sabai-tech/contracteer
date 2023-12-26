@@ -21,6 +21,6 @@ data class Body(val contentType: String, val dataType: DataType<Any>, val exampl
   fun asString(): String =
     when {
       "json" in contentType.lowercase() -> ObjectMapper().writeValueAsString(content())
-      else                  -> throw IllegalStateException("Only JSON content type is managed")
+      else                              -> throw IllegalStateException("Only JSON content type is managed")
     }
 }

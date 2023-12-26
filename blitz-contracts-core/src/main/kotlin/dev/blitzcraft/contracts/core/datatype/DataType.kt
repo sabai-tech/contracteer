@@ -1,11 +1,14 @@
 package dev.blitzcraft.contracts.core.datatype
 
+import dev.blitzcraft.contracts.core.ValidationResult
 import io.swagger.v3.oas.models.media.*
 
 interface DataType<out T> {
 
   fun regexPattern(): String
   fun nextValue(): T
+  fun validateValue(value: Any): ValidationResult
+  fun parseAndValidate(stringValue: String):ValidationResult
 
   companion object {
     fun from(schema: Schema<*>) = when (schema) {

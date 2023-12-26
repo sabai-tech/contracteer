@@ -69,7 +69,7 @@ object ContractExtractor {
                                            headers = methodAndOperation.operation().headersParameters(),
                                            cookies = methodAndOperation.operation().cookiesParameter())
     val emptyBodyResponse = ResponseContract(
-      headers = codeAndResponse.response().safeHeaders().mapValues { it.value.toProperty() },
+      headers = codeAndResponse.response().safeHeaders().map { it.toProperty() },
       statusCode = codeAndResponse.code().toInt()
     )
     val requests = methodAndOperation.operation().generateRequests(emptyBodyRequest)
@@ -86,11 +86,12 @@ private fun convert(value: Any?) = when (value) {
   else          -> value
 }
 
-private fun Header.toProperty(exampleKey: String? = null) =
+private fun Map.Entry<String, Header>.toProperty(exampleKey: String? = null) =
   Property(
-    dataType = DataType.from(schema),
-    example = exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } },
-    required = required ?: false
+    name = key,
+    dataType = DataType.from(value.schema),
+    example = exampleKey?.let { value.safeExamples()[exampleKey]?.let { Example(it.value) } },
+    required = value.required ?: false
   )
 
 private fun Map<String, Header>.exampleKeys() = flatMap { it.value.safeExamples().keys }.toSet()
@@ -104,16 +105,16 @@ private fun Operation.generateRequests(defaultRequestContract: RequestContract) 
   } ?: listOf(defaultRequestContract)
 
 private fun Operation.pathParameters(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "path" }.associate { it.name to it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "path" }.map { it.toProperty(exampleKey) }
 
 private fun Operation.queryParameters(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "query" }.associate { it.name to it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "query" }.map { it.toProperty(exampleKey) }
 
 private fun Operation.headersParameters(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "header" }.associate { it.name to it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "header" }.map { it.toProperty(exampleKey) }
 
 private fun Operation.cookiesParameter(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "cookie" }.associate { it.name to it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "cookie" }.map { it.toProperty(exampleKey) }
 
 private fun Operation.generateRequestExamples(path: String,
                                               method: PathItem.HttpMethod,
@@ -128,14 +129,16 @@ private fun Operation.generateRequestExamples(path: String,
   )
   return requestBody?.content?.map { contentAndMediaType ->
     emptyBodyRequest.copy(
-      body = Body(contentType = contentAndMediaType.content(),
-                  dataType = DataType.from(contentAndMediaType.mediaType().schema),
-                  example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
+      body = Body(
+        contentType = contentAndMediaType.content(),
+        dataType = DataType.from(contentAndMediaType.mediaType().schema),
+        example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
   } ?: listOf(emptyBodyRequest)
 }
 
 private fun Parameter.toProperty(exampleKey: String?) =
   Property(
+    name = name,
     dataType = DataType.from(schema),
     example = exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } },
     required = required ?: false
@@ -154,7 +157,7 @@ private fun ApiResponse.bodyExampleKeys() = content?.exampleKeys() ?: emptySet()
 private fun Map.Entry<String, ApiResponse>.generateResponseExamples(exampleKey: String): List<ResponseContract> {
   val emptyBodyResponse = ResponseContract(
     statusCode = key.toInt(),
-    headers = response().safeHeaders().mapValues { it.value.toProperty(exampleKey) }
+    headers = response().safeHeaders().map { it.toProperty(exampleKey) }
   )
   return response().content?.map { contentAndMediaType ->
     emptyBodyResponse.copy(

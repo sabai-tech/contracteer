@@ -1,5 +1,6 @@
-package dev.blitzcraft.contracts.core
+package dev.blitzcraft.contracts.mockserver
 
+import dev.blitzcraft.contracts.core.Property
 import dev.blitzcraft.contracts.core.datatype.ArrayDataType
 import dev.blitzcraft.contracts.core.datatype.BooleanDataType
 import dev.blitzcraft.contracts.core.datatype.IntegerDataType
@@ -17,11 +18,11 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Object with required properties and nested object`() {
     // given
-    val objectDataType = ObjectDataType(mapOf(
-      "productId" to Property(IntegerDataType(), required = true),
-      "user" to Property(ObjectDataType(mapOf(
-        "id" to Property(IntegerDataType(), required = true),
-        "enabled" to Property(BooleanDataType(), required = true)))))
+    val objectDataType = ObjectDataType(listOf(
+      Property("productId", IntegerDataType(), required = true),
+      Property("user", ObjectDataType(listOf(
+        Property("id", IntegerDataType(), required = true),
+        Property("enabled", BooleanDataType(), required = true)))))
     )
 
     // when
@@ -39,11 +40,11 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Object with optional properties`() {
     // given
-    val objectDataType = ObjectDataType(mapOf(
-      "productId" to Property(IntegerDataType(), required = false),
-      "user" to Property(ObjectDataType(mapOf(
-        "id" to Property(IntegerDataType(), required = false),
-        "enabled" to Property(BooleanDataType(), required = false)))))
+    val objectDataType = ObjectDataType(listOf(
+      Property("productId", IntegerDataType(), required = false),
+      Property("user", ObjectDataType(listOf(
+        Property("id", IntegerDataType(), required = false),
+        Property("enabled", BooleanDataType(), required = false)))))
     )
 
     // when
@@ -61,9 +62,9 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Object with property of type Array of Object`() {
     // given
-    val objectDataType = ObjectDataType(mapOf(
-      "users" to Property(ArrayDataType(ObjectDataType(mapOf(
-        "id" to Property(IntegerDataType(), required = true)
+    val objectDataType = ObjectDataType(listOf(
+      Property("users", ArrayDataType(ObjectDataType(listOf(
+        Property("id", IntegerDataType(), required = true)
       ))))))
 
     // when
@@ -77,9 +78,9 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Object with property of type Array of Object with a property of type Array`() {
     // given
-    val objectDataType = ObjectDataType(mapOf(
-      "users" to Property(ArrayDataType(ObjectDataType(mapOf(
-        "productIds" to Property(ArrayDataType(IntegerDataType())))))))
+    val objectDataType = ObjectDataType(listOf(
+      Property("users", ArrayDataType(ObjectDataType(listOf(
+        Property("productIds", ArrayDataType(IntegerDataType())))))))
     )
 
     // when
@@ -93,9 +94,9 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Object with a property of type Array of Object with property of type Array of Array`() {
     // given
-    val objectDataType = ObjectDataType(mapOf(
-      "users" to Property(ArrayDataType(ObjectDataType(mapOf(
-        "productIds" to Property(ArrayDataType(ArrayDataType(IntegerDataType())))))))))
+    val objectDataType = ObjectDataType(listOf(
+      Property("users", ArrayDataType(ObjectDataType(listOf(
+        Property("productIds", ArrayDataType(ArrayDataType(IntegerDataType())))))))))
 
     // when
     val jsonPaths = JsonPathMatcher.regexMatchers(objectDataType)
@@ -121,7 +122,7 @@ class JsonPathMatcherTest {
   @Test
   fun `generate Json Path Regex Matchers for Array of Object`() {
     // given
-    val arrayDataType = ArrayDataType(ObjectDataType(mapOf("id" to Property(IntegerDataType(), required = true))))
+    val arrayDataType = ArrayDataType(ObjectDataType(listOf(Property("id", IntegerDataType(), required = true))))
 
     // when
     val jsonPaths = JsonPathMatcher.regexMatchers(arrayDataType)

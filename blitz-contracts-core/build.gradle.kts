@@ -1,10 +1,10 @@
 dependencies {
-    implementation("io.swagger.parser.v3:swagger-parser:2.1.18")
+  implementation("io.swagger.parser.v3:swagger-parser-v3:2.1.19")
 
-    testImplementation(kotlin("test"))
+  testImplementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }
 

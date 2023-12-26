@@ -16,8 +16,8 @@ class ContractExtractorTest {
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 404)))
-    assert(contracts.first { it.response.statusCode == 200 }.request.pathParameters["id"]!!.example == null)
-    assert(contracts.first { it.response.statusCode == 404 }.request.pathParameters["id"]!!.example!!.value == 999)
+    assert(contracts.first { it.response.statusCode == 200 }.request.pathParameters.first { it.name == "id" }.example == null)
+    assert(contracts.first { it.response.statusCode == 404 }.request.pathParameters.first { it.name == "id" }.example!!.value == 999)
     assert(contracts.first { it.response.statusCode == 404 }.response.body!!.content().asMap()["error"] == "NOT FOUND")
 
   }
@@ -29,8 +29,8 @@ class ContractExtractorTest {
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
-    assert(contracts.first {it.response.statusCode == 200}.response.headers["x-optional"]!!.required.not())
-    assert(contracts.first {it.response.statusCode == 200}.response.headers["x-required"]!!.required)
+    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-optional" }.required.not())
+    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-required" }.required)
   }
 
   @Test
@@ -91,7 +91,7 @@ class ContractExtractorTest {
       ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml"))
     // then
     assert(contracts.filter { it.exampleKey != null }.size == 1)
-    assert(contracts.first { it.exampleKey != null }.request.pathParameters["id"]!!.value() == 999)
+    assert(contracts.first { it.exampleKey != null }.request.pathParameters.first { it.name == "id" }.value() == 999)
     assert(contracts.first { it.exampleKey != null }.response.statusCode == 404)
     assert(contracts.first { it.exampleKey != null }.exampleKey == "NOT_FOUND")
     assert(contracts.first { it.exampleKey != null }.response.body!!.content() == mapOf("error" to "NOT FOUND"))

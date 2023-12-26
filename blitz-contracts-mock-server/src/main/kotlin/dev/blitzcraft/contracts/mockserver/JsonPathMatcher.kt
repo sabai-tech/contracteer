@@ -1,5 +1,6 @@
-package dev.blitzcraft.contracts.core
+package dev.blitzcraft.contracts.mockserver
 
+import dev.blitzcraft.contracts.core.Property
 import dev.blitzcraft.contracts.core.datatype.ArrayDataType
 import dev.blitzcraft.contracts.core.datatype.DataType
 import dev.blitzcraft.contracts.core.datatype.ObjectDataType
@@ -8,7 +9,7 @@ object JsonPathMatcher {
 
   fun regexMatchers(dataType: DataType<*>) =
     when (dataType) {
-      is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$", it.toPair()) }
+      is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$", it.name to it) }
       is ArrayDataType  -> arrayRegexMatcher("$", dataType.itemDataType)
       else              -> throw IllegalArgumentException("Invalid Json. The root must be an Object or an Array")
     }
@@ -23,7 +24,7 @@ object JsonPathMatcher {
 
   private fun regexMatcher(path: String, namedProperty: Pair<String, Property>): List<String> =
     when (val dataType = namedProperty.second.dataType) {
-      is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$path['${namedProperty.first}']", it.toPair()) }
+      is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$path['${namedProperty.first}']", it.name to it) }
       is ArrayDataType  -> arrayRegexMatcher("$path['${namedProperty.first}']", dataType.itemDataType)
       else              -> {
         val pattern = if (namedProperty.second.required) dataType.regexPattern() else "(${dataType.regexPattern()})?"
@@ -33,7 +34,7 @@ object JsonPathMatcher {
 
   private fun arrayRegexMatcher(path: String, dataType: DataType<*>): List<String> =
     when (dataType) {
-      is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$path[*]", it.toPair()) }
+      is ObjectDataType -> dataType.properties.flatMap { regexMatcher("$path[*]", it.name to it) }
       is ArrayDataType  -> arrayRegexMatcher("$path[*]", dataType.itemDataType)
       else              -> listOf("$path[?(@ =~ /${dataType.regexPattern()}/)]")
     }

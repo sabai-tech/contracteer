@@ -12,7 +12,6 @@ import org.http4k.routing.routes
 import org.http4k.server.Jetty
 import org.http4k.server.asServer
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
 
 class ServerVerifierTest {
 
@@ -20,13 +19,13 @@ class ServerVerifierTest {
     request = RequestContract(
       method = "GET",
       path = "/product/{id}",
-      pathParameters = mapOf("id" to Property(IntegerDataType()))),
+      pathParameters = listOf(Property("id", IntegerDataType()))),
     response = ResponseContract(
       statusCode = 200,
       body = Body(contentType = "application/json",
-                  dataType = ObjectDataType(mapOf(
-                    "id" to Property(IntegerDataType()),
-                    "name" to Property(StringDataType())))))
+                  dataType = ObjectDataType(listOf(
+                    Property("id", IntegerDataType()),
+                    Property("name", StringDataType())))))
   )
 
   @Test
@@ -39,8 +38,11 @@ class ServerVerifierTest {
     )
     val server = app.asServer(Jetty(0)).start()
 
-    // expect no error
-    ServerVerifier(serverPort = server.port()).verify(contract)
+    // when
+    val validationResult = ServerVerifier(serverPort = server.port()).verify(contract)
+
+    // then
+    assert(validationResult.isSuccess())
   }
 
   @Test
@@ -53,7 +55,12 @@ class ServerVerifierTest {
     )
     val server = app.asServer(Jetty(0)).start()
 
+    // when
+    val validationResult = ServerVerifier(serverPort = server.port()).verify(contract)
+
     // expect fails
-    assertFailsWith(IllegalArgumentException::class) { ServerVerifier(serverPort = server.port()).verify(contract) }
+    assert(validationResult.isSuccess().not())
+    assert(validationResult.errors().size == 1)
+    assert(validationResult.errors().first().startsWith("id"))
   }
 }

@@ -7,7 +7,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.common.ConsoleNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import dev.blitzcraft.contracts.core.Contract
-import dev.blitzcraft.contracts.core.JsonPathMatcher
 import dev.blitzcraft.contracts.core.Property
 import dev.blitzcraft.contracts.core.ResponseContract
 
@@ -38,7 +37,7 @@ class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
 
   private fun ResponseContract.asResponseDefinitionBuilder(): ResponseDefinitionBuilder {
     val response = aResponse().withStatus(statusCode)
-    headers.forEach { response.withHeader(it.key, it.value.stringValue()) }
+    headers.forEach { response.withHeader(it.name, it.stringValue()) }
     body?.let {
       response.withHeader("Content-Type", it.contentType)
       response.withBody(it.asString())
@@ -65,9 +64,9 @@ class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
                          ?: JsonPathMatcher.regexMatchers(body.dataType)
       bodyMatchers.forEach { mappingBuilder.withRequestBody(matchingJsonPath(it)) }
     }
-    request.pathParameters.forEach { mappingBuilder.withPathParam(it.key, it.value.asStringValuePattern()) }
-    request.queryParameters.forEach { mappingBuilder.withQueryParam(it.key, it.value.asStringValuePattern()) }
-    request.cookies.forEach { mappingBuilder.withCookie(it.key, it.value.asStringValuePattern()) }
+    request.pathParameters.forEach { mappingBuilder.withPathParam(it.name, it.asStringValuePattern()) }
+    request.queryParameters.forEach { mappingBuilder.withQueryParam(it.name, it.asStringValuePattern()) }
+    request.cookies.forEach { mappingBuilder.withCookie(it.name, it.asStringValuePattern()) }
     return mappingBuilder
   }
 

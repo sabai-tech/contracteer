@@ -38,16 +38,17 @@ class HttpRequesterTest {
     // given
     val contract = Contract(RequestContract(method = "POST",
                                             path = "/test/{id}",
-                                            pathParameters = mapOf("id" to Property(IntegerDataType())),
-                                            queryParameters = mapOf("q" to Property(IntegerDataType())),
-                                            cookies = mapOf("val" to Property(IntegerDataType())),
-                                            headers = mapOf("x-my-header" to Property(StringDataType())),
+                                            pathParameters = listOf(Property("id", IntegerDataType())),
+                                            queryParameters = listOf(Property("q", IntegerDataType())),
+                                            cookies = listOf(Property("val", IntegerDataType())),
+                                            headers = listOf(Property("x-my-header", StringDataType())),
                                             body = Body("application/json",
-                                                        ObjectDataType(mapOf("prop" to Property(IntegerDataType()))))
-                            ),
+                                                        ObjectDataType(listOf(Property("prop", IntegerDataType()))))
+    ),
                             ResponseContract(statusCode = 200,
                                              body = Body("application/json",
-                                                         ObjectDataType(mapOf("property" to Property(IntegerDataType()))))
+                                                         ObjectDataType(listOf(Property("property",
+                                                                                        IntegerDataType()))))
                             )
     )
 
