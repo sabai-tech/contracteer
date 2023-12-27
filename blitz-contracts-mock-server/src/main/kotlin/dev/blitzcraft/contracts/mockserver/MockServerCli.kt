@@ -10,7 +10,7 @@ import com.github.ajalt.clikt.parameters.types.int
 import dev.blitzcraft.contracts.core.ContractExtractor
 
 class MockServerCli: CliktCommand() {
-  private val port by option().int().default(8080).help("Port. Default is 8080")
+  private val port by option().int().default(8080).help("Server Port. Default is 8080")
   private val specFile by option()
     .file(mustExist = true, canBeDir = false)
     .required()

@@ -11,13 +11,9 @@ import dev.blitzcraft.contracts.core.Property
 import dev.blitzcraft.contracts.core.ResponseContract
 
 
-class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
+class MockServer(port: Int = 0, private val contracts: Set<Contract>) {
 
-  private var wireMockServer: WireMockServer
-
-  init {
-    wireMockServer = WireMockServer(options().port(port).notifier(ConsoleNotifier(true)))
-  }
+  private var wireMockServer: WireMockServer = WireMockServer(options().port(port).notifier(ConsoleNotifier(true)))
 
   fun start() {
     wireMockServer.start()
@@ -25,14 +21,18 @@ class MockServer(port: Int = 8080, private val contracts: Set<Contract>) {
     addStubs(contracts)
   }
 
+  fun stop() {
+    wireMockServer.stop()
+  }
+
+  fun port(): Int {
+    return wireMockServer.port()
+  }
+
   private fun addStubs(contracts: Set<Contract>) {
     contracts.forEach {
       wireMockServer.stubFor(it.asMappingBuilder().willReturn(it.response.asResponseDefinitionBuilder()))
     }
-  }
-
-  fun stop() {
-    wireMockServer.stop()
   }
 
   private fun ResponseContract.asResponseDefinitionBuilder(): ResponseDefinitionBuilder {

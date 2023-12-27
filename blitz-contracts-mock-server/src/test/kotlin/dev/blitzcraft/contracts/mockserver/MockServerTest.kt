@@ -3,6 +3,7 @@ package dev.blitzcraft.contracts.mockserver
 import dev.blitzcraft.contracts.core.*
 import dev.blitzcraft.contracts.core.datatype.IntegerDataType
 import dev.blitzcraft.contracts.core.datatype.ObjectDataType
+import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.notNullValue
@@ -33,6 +34,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -57,6 +59,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -82,6 +85,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -105,6 +109,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -129,6 +134,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -152,6 +158,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -177,6 +184,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -200,6 +208,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -225,6 +234,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -248,6 +258,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -274,6 +285,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -298,6 +310,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -324,6 +337,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -352,6 +366,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -381,6 +396,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
@@ -405,6 +421,7 @@ class MockServerTest {
 
     // when
     mockServer.start()
+    RestAssured.port = mockServer.port()
 
     // then
     given()
