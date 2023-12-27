@@ -14,8 +14,7 @@ paths:
           type: integer
         examples:
           GET_DETAILS:
-            value:
-              id: 100
+            value: 100
     get:
       responses:
         200:

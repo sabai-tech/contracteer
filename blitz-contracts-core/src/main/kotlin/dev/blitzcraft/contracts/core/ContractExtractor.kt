@@ -21,7 +21,7 @@ object ContractExtractor {
   fun extractFrom(path: Path): Set<Contract> {
     val loadingResult = OpenApiLoader.from(path)
     if (loadingResult.errors.isEmpty().not()) {
-      throw IllegalArgumentException("Invalid file:${System.lineSeparator()}" + loadingResult.errors.joinToString(prefix = "   -", separator = System.lineSeparator()))
+      throw IllegalArgumentException("Invalid file:${System.lineSeparator()}" + loadingResult.errors.joinToString(separator = System.lineSeparator()))
     }
     return loadingResult.openAPI!!.contracts()
   }

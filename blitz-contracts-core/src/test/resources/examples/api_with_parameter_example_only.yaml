@@ -15,25 +15,6 @@ paths:
         examples:
           GET_DETAILS:
             value: 10
-          GET_DETAILS2:
-            value: 10000000000000000000000000000000000000000
-          GET_DETAILS3:
-            value: toto
-          GET_DETAILS4:
-            value: [1,2,3]
-          GET_DETAILS5:
-            value:
-              id: 1
-              name: tutu
-          GET_DETAILS6:
-            value:
-              - 1
-              - 2
-              - 3
-          GET_DETAILS7:
-            value: true
-          GET_DETAILS9:
-            value: 2147483648
     get:
       responses:
         200:

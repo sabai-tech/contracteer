@@ -1,0 +1,88 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/product_details'
+            examples:
+              CREATE_PRODUCT:
+                value:
+                  id: 'Yo'
+                  name: 'Duvel'
+                  quantity: 24
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product_details'
+
+  /products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        examples:
+          GET_DETAILS:
+            value: 10
+          GET_DETAILS_2:
+            value: 10.1
+          NOT_FOUND:
+            value: john
+    get:
+      responses:
+        200:
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product_details'
+              examples:
+                GET_DETAILS:
+                  value:
+                    id: 10
+                    name: La Bouledogue
+                    quantity: true
+        404:
+          description: Not found
+          headers:
+            location:
+              schema:
+                type: string
+              examples:
+                ASYNC:
+                  value: 123
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+              examples:
+                NOT_FOUND:
+                  value:
+                    error: 123
+
+components:
+  schemas:
+    product_details:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
