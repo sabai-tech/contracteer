@@ -1,125 +1,94 @@
 package dev.blitzcraft.contracts.core
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import dev.blitzcraft.contracts.core.ContractExtractor.extractFrom
-import dev.blitzcraft.contracts.core.datatype.DataType
+import dev.blitzcraft.contracts.core.contract.*
+import dev.blitzcraft.contracts.core.datatype.toDataType
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
 import io.swagger.v3.oas.models.headers.Header
-import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
-import java.nio.file.Path
 
-
-fun OpenAPI.contracts() = extractFrom(this)
-
-object ContractExtractor {
-  fun extractFrom(path: Path): Set<Contract> {
-    val loadingResult = OpenApiLoader.from(path)
-    if (loadingResult.errors.isEmpty().not()) {
-      throw IllegalArgumentException("Invalid file:${System.lineSeparator()}" + loadingResult.errors.joinToString(separator = System.lineSeparator()))
-    }
-    return loadingResult.openAPI!!.contracts()
-  }
-
-  fun extractFrom(openAPI: OpenAPI): Set<Contract> {
-    return openAPI.paths.flatMap { pathAndItem ->
-      pathAndItem.item().readOperationsMap().flatMap { methodAndOperation ->
-        methodAndOperation.operation().responses.flatMap { codeAndResponse ->
-          val contractsWithExample = getContractBasedOnExamples(pathAndItem.path(), methodAndOperation, codeAndResponse)
-          if (codeAndResponse.code().startsWith("2") && contractsWithExample.isEmpty()) {
-            defaultSuccessContracts(pathAndItem.path(), methodAndOperation, codeAndResponse)
-          } else {
-            contractsWithExample
-          }
-        }
-      }
-    }.toSet()
-  }
-
-  private fun getContractBasedOnExamples(path: String,
-                                         methodAndOperation: Map.Entry<PathItem.HttpMethod, Operation>,
-                                         codeAndResponse: Map.Entry<String, ApiResponse>): List<Contract> {
-    val requestExampleKeys = methodAndOperation.operation().requestExampleKeys()
-    val requestsWithExample = requestExampleKeys.associateWith {
-      methodAndOperation.operation().generateRequestExamples(path, methodAndOperation.method(), it)
-    }
-    val contractExampleKeys = requestExampleKeys intersect codeAndResponse.response().exampleKeys()
-    val contractsWithExample = contractExampleKeys.flatMap { exampleKey ->
-      requestsWithExample[exampleKey]!!.flatMap { requestContract ->
-        codeAndResponse.generateResponseExamples(exampleKey).map { responseContract ->
-          Contract(requestContract, responseContract, exampleKey)
-        }
+fun OpenAPI.contracts() =
+  paths.flatMap { pathAndItem ->
+    pathAndItem.item().readOperationsMap().flatMap { methodAndOperation ->
+      methodAndOperation.operation().responses.flatMap { codeAndResponse ->
+        val contractsWithExample = getContractBasedOnExamples(pathAndItem.path(), methodAndOperation, codeAndResponse)
+        if (codeAndResponse.code().startsWith("2") && contractsWithExample.isEmpty())
+          defaultSuccessContracts(pathAndItem.path(), methodAndOperation, codeAndResponse)
+        else
+          contractsWithExample
       }
     }
-    return contractsWithExample
-  }
+  }.toSet()
 
-  private fun defaultSuccessContracts(path: String,
-                                      methodAndOperation: Map.Entry<PathItem.HttpMethod, Operation>,
-                                      codeAndResponse: Map.Entry<String, ApiResponse>): List<Contract> {
-    val emptyBodyRequest = RequestContract(method = methodAndOperation.method().name,
-                                           path = path,
-                                           pathParameters = methodAndOperation.operation().pathParameters(),
-                                           queryParameters = methodAndOperation.operation().queryParameters(),
-                                           headers = methodAndOperation.operation().headersParameters(),
-                                           cookies = methodAndOperation.operation().cookiesParameter())
-    val emptyBodyResponse = ResponseContract(
-      headers = codeAndResponse.response().safeHeaders().map { it.toProperty() },
-      statusCode = codeAndResponse.code().toInt()
-    )
-    val requests = methodAndOperation.operation().generateRequests(emptyBodyRequest)
-    val responses = codeAndResponse.response().generateResponses(emptyBodyResponse)
-    return requests.flatMap { request ->
-      responses.map { response -> Contract(request, response) }
+private fun getContractBasedOnExamples(path: String,
+                                       methodAndOperation: Map.Entry<PathItem.HttpMethod, Operation>,
+                                       codeAndResponse: Map.Entry<String, ApiResponse>): List<Contract> {
+  val requestExampleKeys = methodAndOperation.operation().requestExampleKeys()
+  val requestsWithExample = requestExampleKeys.associateWith {
+    methodAndOperation.operation().generateRequestExamples(path, methodAndOperation.method(), it)
+  }
+  val contractExampleKeys = requestExampleKeys intersect codeAndResponse.response().exampleKeys()
+  val contractsWithExample = contractExampleKeys.flatMap { exampleKey ->
+    requestsWithExample[exampleKey]!!.flatMap { requestContract ->
+      codeAndResponse.generateResponseExamples(exampleKey).map { responseContract ->
+        Contract(requestContract, responseContract, exampleKey)
+      }
     }
+  }
+  return contractsWithExample
+}
+
+private fun defaultSuccessContracts(path: String,
+                                    methodAndOperation: Map.Entry<PathItem.HttpMethod, Operation>,
+                                    codeAndResponse: Map.Entry<String, ApiResponse>): List<Contract> {
+  val emptyBodyRequest = ContractRequest(method = methodAndOperation.method().name,
+                                         path = path,
+                                         pathParameters = methodAndOperation.operation().pathParameters(),
+                                         queryParameters = methodAndOperation.operation().queryParameters(),
+                                         headers = methodAndOperation.operation().headersParameters(),
+                                         cookies = methodAndOperation.operation().cookiesParameter())
+  val emptyBodyResponse = ContractResponse(
+    headers = codeAndResponse.response().safeHeaders().map { it.toContractParameter() },
+    statusCode = codeAndResponse.code().toInt()
+  )
+  val requests = methodAndOperation.operation().generateRequests(emptyBodyRequest)
+  val responses = codeAndResponse.response().generateResponses(emptyBodyResponse)
+  return requests.flatMap { request ->
+    responses.map { response -> Contract(request, response) }
   }
 }
 
-private fun convert(value: Any?) = when (value) {
-  is ObjectNode -> ObjectMapper().convertValue(value, Map::class.java)
-  is ArrayNode  -> ObjectMapper().convertValue(value, Array::class.java)
-  else          -> value
-}
-
-private fun Map.Entry<String, Header>.toProperty(exampleKey: String? = null) =
-  Property(
+private fun Map.Entry<String, Header>.toContractParameter(exampleKey: String? = null) =
+  ContractParameter(
     name = key,
-    dataType = DataType.from(value.schema),
+    dataType = value.schema.toDataType(),
     example = exampleKey?.let { value.safeExamples()[exampleKey]?.let { Example(it.value) } },
-    required = value.required ?: false
+    isRequired = value.required ?: false
   )
 
-private fun Map<String, Header>.exampleKeys() = flatMap { it.value.safeExamples().keys }.toSet()
-
-private fun Operation.requestExampleKeys() =
-  safeParameters().exampleKeys() + (requestBody?.content?.exampleKeys() ?: emptySet())
-
-private fun Operation.generateRequests(defaultRequestContract: RequestContract) =
-  requestBody?.content?.map {
-    defaultRequestContract.copy(body = Body(it.key, DataType.from(it.value.schema)))
-  } ?: listOf(defaultRequestContract)
+private fun Operation.generateRequests(defaultRequestContract: ContractRequest) =
+  requestBody?.content
+    ?.map { defaultRequestContract.copy(body = Body(it.key, it.value.schema.toDataType())) }
+  ?: listOf(defaultRequestContract)
 
 private fun Operation.pathParameters(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "path" }.map { it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "path" }.map { it.toPathParameter(exampleKey) }
 
 private fun Operation.queryParameters(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "query" }.map { it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "query" }.map { it.toContractParameter(exampleKey) }
 
 private fun Operation.headersParameters(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "header" }.map { it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "header" }.map { it.toContractParameter(exampleKey) }
 
 private fun Operation.cookiesParameter(exampleKey: String? = null) =
-  safeParameters().filter { it.`in` == "cookie" }.map { it.toProperty(exampleKey) }
+  safeParameters().filter { it.`in` == "cookie" }.map { it.toContractParameter(exampleKey) }
 
 private fun Operation.generateRequestExamples(path: String,
                                               method: PathItem.HttpMethod,
-                                              exampleKey: String): List<RequestContract> {
-  val emptyBodyRequest = RequestContract(
+                                              exampleKey: String): List<ContractRequest> {
+  val emptyBodyRequest = ContractRequest(
     method = method.name,
     path = path,
     pathParameters = pathParameters(exampleKey),
@@ -131,42 +100,46 @@ private fun Operation.generateRequestExamples(path: String,
     emptyBodyRequest.copy(
       body = Body(
         contentType = contentAndMediaType.content(),
-        dataType = DataType.from(contentAndMediaType.mediaType().schema),
-        example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
+        dataType = contentAndMediaType.mediaType().schema.toDataType(),
+        example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(it.value) }))
   } ?: listOf(emptyBodyRequest)
 }
 
-private fun Parameter.toProperty(exampleKey: String?) =
-  Property(
+private fun Parameter.toPathParameter(exampleKey: String?) =
+  PathParameter(
     name = name,
-    dataType = DataType.from(schema),
+    dataType = schema.toDataType(),
     example = exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } },
-    required = required ?: false
   )
 
-private fun List<Parameter>.exampleKeys() = flatMap { it.safeExamples().keys }.toSet()
+private fun Parameter.toContractParameter(exampleKey: String?) =
+  ContractParameter(
+    name = name,
+    dataType = schema.toDataType(),
+    example = exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } },
+    isRequired = required ?: false
+  )
 
-private fun Content.exampleKeys() = flatMap { it.value.safeExamples().keys }.toSet()
-
-private fun ApiResponse.generateResponses(responseContract: ResponseContract) =
-  content?.map { responseContract.copy(body = Body(it.key, DataType.from(it.value.schema))) }
+private fun ApiResponse.generateResponses(responseContract: ContractResponse) =
+  content?.map { responseContract.copy(body = Body(it.key, it.value.schema.toDataType())) }
   ?: listOf(responseContract)
 
-private fun ApiResponse.exampleKeys() = safeHeaders().exampleKeys() + bodyExampleKeys()
-private fun ApiResponse.bodyExampleKeys() = content?.exampleKeys() ?: emptySet()
-private fun Map.Entry<String, ApiResponse>.generateResponseExamples(exampleKey: String): List<ResponseContract> {
-  val emptyBodyResponse = ResponseContract(
+private fun Map.Entry<String, ApiResponse>.generateResponseExamples(exampleKey: String): List<ContractResponse> {
+  val emptyBodyResponse = ContractResponse(
     statusCode = key.toInt(),
-    headers = response().safeHeaders().map { it.toProperty(exampleKey) }
+    headers = response().safeHeaders().map { it.toContractParameter(exampleKey) }
   )
   return response().content?.map { contentAndMediaType ->
     emptyBodyResponse.copy(
       body = Body(
         contentType = contentAndMediaType.content(),
-        dataType = DataType.from(contentAndMediaType.mediaType().schema),
-        example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(convert(it.value)) }))
+        dataType = contentAndMediaType.mediaType().schema.toDataType(),
+        example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(it.value) }))
   } ?: listOf(emptyBodyResponse)
 }
+
+private fun Operation.requestExampleKeys() =
+  safeParameters().exampleKeys() + (requestBody?.content?.exampleKeys() ?: emptySet())
 
 
 

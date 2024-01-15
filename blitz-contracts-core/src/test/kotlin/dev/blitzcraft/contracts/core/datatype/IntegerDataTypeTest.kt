@@ -1,6 +1,7 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import kotlin.test.Test
+import dev.blitzcraft.contracts.core.convert
+import org.junit.jupiter.api.Test
 
 class IntegerDataTypeTest {
 
@@ -10,7 +11,7 @@ class IntegerDataTypeTest {
     val integerDataType = IntegerDataType()
 
     // when
-    val result = integerDataType.validateValue(123)
+    val result = integerDataType.validate(123.convert())
 
     // then
     assert(result.isSuccess())
@@ -22,31 +23,30 @@ class IntegerDataTypeTest {
     val integerDataType = IntegerDataType()
 
     // when
-    val result = integerDataType.validateValue(true)
+    val result = integerDataType.validate(true)
 
     // then
     assert(result.isSuccess().not())
   }
-
   @Test
-  fun `parses and validates a string representation of an Integer`() {
+  fun `validates null value if it is nullable`() {
     // given
-    val integerDataType = IntegerDataType()
+    val integerDataType = IntegerDataType(isNullable = true)
 
     // when
-    val result = integerDataType.parseAndValidate("123456")
+    val result = integerDataType.validate(null)
 
     // then
     assert(result.isSuccess())
   }
 
   @Test
-  fun `does not parse a string representing something else than an Integer`() {
+  fun `does not validate null value if it is not nullable`() {
     // given
-    val integerDataType = IntegerDataType()
+    val integerDataType = IntegerDataType(isNullable = false)
 
     // when
-    val result = integerDataType.validateValue("Hello")
+    val result = integerDataType.validate(null)
 
     // then
     assert(result.isSuccess().not())

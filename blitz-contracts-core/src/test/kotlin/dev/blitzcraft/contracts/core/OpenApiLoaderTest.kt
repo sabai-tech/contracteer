@@ -8,7 +8,7 @@ class OpenApiLoaderTest {
   @Test
   fun `does not load Open API when 2xx response is missing`() {
     // when
-    val result = OpenApiLoader.from(Path.of("src/test/resources/api_missing_2xx_response.yaml"))
+    val result = loadOpenApiSpec(Path.of("src/test/resources/api_missing_2xx_response.yaml"))
 
     // then
     assert(result.openAPI == null)
@@ -18,7 +18,7 @@ class OpenApiLoaderTest {
   @Test
   fun `does not load Open API when examples are invalid`() {
     // when
-    val result = OpenApiLoader.from(Path.of("src/test/resources/examples/validate_multiple_examples.yaml"))
+    val result = loadOpenApiSpec(Path.of("src/test/resources/examples/validate_multiple_examples.yaml"))
 
     // then
     assert(result.openAPI == null)

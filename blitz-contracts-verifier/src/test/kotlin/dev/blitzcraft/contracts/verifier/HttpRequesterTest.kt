@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.verifier
 
-import dev.blitzcraft.contracts.core.*
+import dev.blitzcraft.contracts.core.contract.*
 import dev.blitzcraft.contracts.core.datatype.IntegerDataType
 import dev.blitzcraft.contracts.core.datatype.ObjectDataType
 import dev.blitzcraft.contracts.core.datatype.StringDataType
@@ -36,20 +36,20 @@ class HttpRequesterTest {
   @Test
   fun `send a request`() {
     // given
-    val contract = Contract(RequestContract(method = "POST",
-                                            path = "/test/{id}",
-                                            pathParameters = listOf(Property("id", IntegerDataType())),
-                                            queryParameters = listOf(Property("q", IntegerDataType())),
-                                            cookies = listOf(Property("val", IntegerDataType())),
-                                            headers = listOf(Property("x-my-header", StringDataType())),
-                                            body = Body("application/json",
-                                                        ObjectDataType(listOf(Property("prop", IntegerDataType()))))
-    ),
-                            ResponseContract(statusCode = 200,
-                                             body = Body("application/json",
-                                                         ObjectDataType(listOf(Property("property",
-                                                                                        IntegerDataType()))))
-                            )
+    val contract = Contract(
+      ContractRequest(
+        method = "POST",
+        path = "/test/{id}",
+        pathParameters = listOf(PathParameter("id", IntegerDataType())),
+        queryParameters = listOf(ContractParameter("q", IntegerDataType())),
+        cookies = listOf(ContractParameter("val", IntegerDataType())),
+        headers = listOf(ContractParameter("x-my-header", StringDataType())),
+        body = Body("application/json", ObjectDataType(mapOf("prop" to IntegerDataType())))
+      ),
+      ContractResponse(
+        statusCode = 200,
+        body = Body("application/json", ObjectDataType(mapOf("property" to IntegerDataType())))
+      )
     )
 
     // when

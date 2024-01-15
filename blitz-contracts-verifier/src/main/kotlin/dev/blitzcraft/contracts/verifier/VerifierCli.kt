@@ -7,7 +7,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.int
-import dev.blitzcraft.contracts.core.ContractExtractor
+import dev.blitzcraft.contracts.core.readContracts
 import kotlin.system.exitProcess
 
 class VerifierCli: CliktCommand() {
@@ -22,10 +22,10 @@ class VerifierCli: CliktCommand() {
     val serverVerifier = ServerVerifier(serverUrl, serverPort)
     var exitCode = 0
     echo()
-    ContractExtractor.extractFrom(specFile.toPath()).forEach { contract ->
+    specFile.readContracts().forEach { contract ->
       echo("* Validating ${contract.description()}: ", trailingNewline = false)
       val validationResult = serverVerifier.verify(contract)
-      if (validationResult.isSuccess()) echo("SUCCESS".inGreen())
+      if (validationResult.isSuccess()) echo("success()".inGreen())
       else {
         echo("ERROR".inRed())
         validationResult.errors().forEach { echo("   - $it".inYellow()) }

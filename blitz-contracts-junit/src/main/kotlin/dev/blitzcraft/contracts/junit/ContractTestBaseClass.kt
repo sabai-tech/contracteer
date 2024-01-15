@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.junit
 
-import dev.blitzcraft.contracts.core.ContractExtractor
+import dev.blitzcraft.contracts.core.readContracts
 import dev.blitzcraft.contracts.verifier.ServerVerifier
 import org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure
 import org.junit.jupiter.api.DynamicTest
@@ -17,7 +17,7 @@ abstract class ContractTestBaseClass {
   @TestFactory
   fun contractTestsFactory(): List<DynamicTest> {
     val serverVerifier = ServerVerifier(serverUrl, serverPort)
-    return ContractExtractor.extractFrom(Path.of(openApiSpecPath)).map {
+    return Path.of(openApiSpecPath).readContracts().map {
       DynamicTest.dynamicTest("Validate ${it.description()}") {
         val result = serverVerifier.verify(it)
         if (result.isSuccess().not()) {

@@ -1,43 +1,47 @@
 package dev.blitzcraft.contracts.verifier
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import dev.blitzcraft.contracts.core.*
+import dev.blitzcraft.contracts.core.contract.ContractResponse
+import dev.blitzcraft.contracts.core.contract.matches
+import dev.blitzcraft.contracts.core.validation.ValidationResult
+import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
+import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
+import dev.blitzcraft.contracts.core.validation.validate
 import org.http4k.core.Headers
 import org.http4k.core.Response
 import org.http4k.core.findSingle
 
-internal class ResponseValidator(private val responseContract: ResponseContract) {
-  private val objectMapper = ObjectMapper()
+internal class ResponseValidator(private val responseContract: ContractResponse) {
 
   fun validate(response: Response) =
-    CompositeValidationResult(listOf(validateStatusCode(response.status.code),
-                                     validateHeaders(response.headers),
-                                     validateBody(response)))
+    response.status.code.validate() and
+        response.headers.validate() and
+        response.validateBody()
 
-  private fun validateHeaders(headers: Headers) =
-    CompositeValidationResult(responseContract.headers.map {
-      if (it.required && headers.hasHeader(it.name).not()) SimpleValidationResult(it.name, "Missing property")
-      else it.parseAndValidate(headers.findSingle(it.name))
-    })
+  private fun Int.validate() =
+    if (this == responseContract.statusCode) success()
+    else error("Status code does not match. Expected: ${responseContract.statusCode}, Actual: $this")
 
-  private fun validateStatusCode(statusCode: Int) =
-    if (statusCode == responseContract.statusCode) SimpleValidationResult()
-    else SimpleValidationResult("Status code does not match. Expected: ${responseContract.statusCode}, Actual: $statusCode")
+  private fun Headers.validate() =
+    responseContract.headers.validate {
+      when {
+        it.isRequired.not() && hasHeader(it.name).not() -> success()
+        it.isRequired && hasHeader(it.name).not()       -> error(it.name, "Is Missing")
+        else                                            -> findSingle(it.name).matches(it)
+      }
+    }
 
-  private fun validateBody(response: Response): ValidationResult {
-    val contentType = response.header("Content-Type")
-
+  private fun Response.validateBody(): ValidationResult {
     return when {
-      responseContract.body == null && contentType.isNullOrEmpty()              -> SimpleValidationResult()
-      responseContract.body == null && !contentType.isNullOrEmpty()             -> SimpleValidationResult("Expected no Content-Type but found: '$contentType'")
-      responseContract.body != null && contentType.isNullOrEmpty()              -> SimpleValidationResult("Content-Type is missing, expected '${responseContract.body!!.contentType}'")
-      !contentType!!.matches(Regex("${responseContract.body!!.contentType}.*")) -> SimpleValidationResult("Wrong Content-Type. Expected: ${responseContract.body!!.contentType}, Actual: '$contentType")
-      "json" !in contentType.lowercase()                                        -> SimpleValidationResult("Content-Type'$contentType' is not managed")
-      else                                                                      ->
-        responseContract.body!!.dataType.validateValue(objectMapper.readTree(response.bodyString()))
+      responseContract.body == null && contentType().isNullOrEmpty()   -> success()
+      responseContract.body == null && !contentType().isNullOrEmpty()  -> error("Expected no Content-Type but found: '${contentType()}'")
+      responseContract.body != null && contentType().isNullOrEmpty()   -> error("Content-Type is missing, expected '${responseContract.body!!.contentType}'")
+      !contentType()!!.startsWith(responseContract.body!!.contentType) -> error("Wrong Content-Type. Expected: ${responseContract.body!!.contentType}, Actual: '${contentType()}")
+      "json" !in contentType()!!.lowercase()                           -> error("Content-Type'${contentType()}' is not managed")
+      else                                                             -> bodyString().matches(responseContract.body!!)
     }
   }
-}
 
-private fun Headers.hasHeader(name: String) = any { it.first == name }
+  private fun Headers.hasHeader(name: String) = any { it.first == name }
+  private fun Response.contentType(): String? = header("Content-Type")
+}
 

@@ -10,14 +10,13 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts for api mixing random values and example`() {
     // when
-    val contracts =
-      ContractExtractor.extractFrom(Path("src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml"))
+    val contracts = Path("src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml").readContracts()
 
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 404)))
     assert(contracts.first { it.response.statusCode == 200 }.request.pathParameters.first { it.name == "id" }.example == null)
-    assert(contracts.first { it.response.statusCode == 404 }.request.pathParameters.first { it.name == "id" }.example!!.value == 999)
+    assert(contracts.first { it.response.statusCode == 404 }.request.pathParameters.first { it.name == "id" }.example!!.value == 999.convert())
     assert(contracts.first { it.response.statusCode == 404 }.response.body!!.content().asMap()["error"] == "NOT FOUND")
 
   }
@@ -25,18 +24,18 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts for 2xx with random values`() {
     // when
-    val contracts = ContractExtractor.extractFrom(Path("src/test/resources/no_example/api_2xx_responses.yaml"))
+    val contracts = Path("src/test/resources/no_example/api_2xx_responses.yaml").readContracts()
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
-    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-optional" }.required.not())
-    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-required" }.required)
+    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-optional" }.isRequired.not())
+    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-required" }.isRequired)
   }
 
   @Test
   fun `generate contracts for 2xx with array as body content `() {
     // when
-    val contracts = ContractExtractor.extractFrom(Path("src/test/resources/no_example/api_array_random_values.yaml"))
+    val contracts = Path("src/test/resources/no_example/api_array_random_values.yaml").readContracts()
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -45,7 +44,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contract for each combination of request-response content-type`() {
     // when
-    val contracts = ContractExtractor.extractFrom(Path("src/test/resources/no_example/api_multiple_content_type.yaml"))
+    val contracts = Path("src/test/resources/no_example/api_multiple_content_type.yaml").readContracts()
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -60,8 +59,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only response example`() {
     // when
-    val contracts =
-      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_response_body_example_only.yaml"))
+    val contracts = Path("src/test/resources/examples/api_with_response_body_example_only.yaml").readContracts()
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -69,8 +67,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only parameter example`() {
     // when
-    val contracts =
-      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_parameter_example_only.yaml"))
+    val contracts = Path("src/test/resources/examples/api_with_parameter_example_only.yaml").readContracts()
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -78,8 +75,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only request body example`() {
     // when
-    val contracts =
-      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_request_body_example_only.yaml"))
+    val contracts = Path("src/test/resources/examples/api_with_request_body_example_only.yaml").readContracts()
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -87,11 +83,12 @@ class ContractExtractorTest {
   @Test
   fun `generate a contract with a single example`() {
     // when
-    val contracts =
-      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml"))
+    val contracts = Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml").readContracts()
     // then
     assert(contracts.filter { it.exampleKey != null }.size == 1)
-    assert(contracts.first { it.exampleKey != null }.request.pathParameters.first { it.name == "id" }.value() == 999)
+    assert(contracts.first { it.exampleKey != null }.request.pathParameters
+             .first { it.name == "id" }
+             .value() == 999.convert())
     assert(contracts.first { it.exampleKey != null }.response.statusCode == 404)
     assert(contracts.first { it.exampleKey != null }.exampleKey == "NOT_FOUND")
     assert(contracts.first { it.exampleKey != null }.response.body!!.content() == mapOf("error" to "NOT FOUND"))
@@ -101,7 +98,7 @@ class ContractExtractorTest {
   fun `generate contracts with array example as body content`() {
     // given
     // when
-    val contracts = ContractExtractor.extractFrom(Path("src/test/resources/examples/api_array_examples.yaml"))
+    val contracts = Path("src/test/resources/examples/api_array_examples.yaml").readContracts()
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -112,7 +109,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple examples`() {
     // when
-    val contracts = ContractExtractor.extractFrom(Path("src/test/resources/examples/api_with_multiple_examples.yaml"))
+    val contracts = Path("src/test/resources/examples/api_with_multiple_examples.yaml").readContracts()
     // then
     assert(contracts.size == 4)
     assertNotNull(contracts.find { it.request.method == "GET" && it.response.statusCode == 200 })
@@ -124,8 +121,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
-    val contracts =
-      ContractExtractor.extractFrom(Path("src/test/resources/examples/api_multiple_content_type_and_same_example_for_all.yaml"))
+    val contracts = Path("src/test/resources/examples/api_multiple_content_type_and_same_example_for_all.yaml").readContracts()
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
