@@ -16,7 +16,7 @@ class ValidationResultTest {
 
     // then
     assert(errors.size == 1)
-    assert(errors.first() == "prop: Wrong Type")
+    assert(errors.first() == "'prop': Wrong Type")
   }
 
   @Test
@@ -69,7 +69,7 @@ class ValidationResultTest {
     val result = error("prop1", "Wrong Type1") and error("prop2", "Wrong Type2") and error("prop3", "Wrong Type3")
 
     // then
-    assert(result.errors().containsAll(listOf("prop1: Wrong Type1", "prop2: Wrong Type2", "prop3: Wrong Type3")))
+    assert(result.errors().containsAll(listOf("'prop1': Wrong Type1", "'prop2': Wrong Type2", "'prop3': Wrong Type3")))
   }
 
   @Test
@@ -78,7 +78,7 @@ class ValidationResultTest {
     val result = (error("prop1", "Wrong Type") and error("prop2", "Wrong Type")).forProperty("parent")
 
     // then
-    assert(result.errors().containsAll(listOf("parent.prop1: Wrong Type", "parent.prop2: Wrong Type")))
+    assert(result.errors().containsAll(listOf("'parent.prop1': Wrong Type", "'parent.prop2': Wrong Type")))
   }
 
   @Test
@@ -87,6 +87,6 @@ class ValidationResultTest {
     val result = error("prop1", "Wrong Type").forIndex(1)
 
     // then
-    assert(result.errors().first() == "[1].prop1: Wrong Type")
+    assert(result.errors().first() == "'[1].prop1': Wrong Type")
   }
 }

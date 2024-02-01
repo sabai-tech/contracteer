@@ -50,7 +50,7 @@ private data class SimpleValidationResult(
     when {
       error == null          -> listOf()
       propertyPath.isEmpty() -> listOf(error)
-      else                   -> listOf("${propertyPathAsString()}: $error")
+      else                   -> listOf("'${propertyPathAsString()}': $error")
     }
 
   private fun propertyPathAsString() =

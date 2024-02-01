@@ -8,7 +8,7 @@ import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
-import org.http4k.server.Jetty
+import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +41,7 @@ class ContractTestBaseClassTest: ContractTestBaseClass() {
           }
         }
       )
-      server = app.asServer(Jetty(0)).start()
+      server = app.asServer(SunHttp(0)).start()
     }
   }
 }

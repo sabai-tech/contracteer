@@ -1,12 +1,15 @@
 plugins {
   id("com.github.johnrengelman.shadow") version "8.1.1"
+  kotlin("kapt")
 }
 
 dependencies {
   implementation(project(":blitz-contracts-core"))
-  implementation("com.github.ajalt.clikt:clikt:4.2.1") //TODO Migrate to picocli:4.7.5"
-  implementation(platform("org.http4k:http4k-bom:5.11.1.0"))
+  implementation(platform("org.http4k:http4k-bom:5.13.2.0"))
   implementation("org.http4k:http4k-core")
+  implementation("info.picocli:picocli:4.7.5")
+
+  kapt("info.picocli:picocli-codegen:4.7.5")
 
   testImplementation(kotlin("test"))
   testImplementation("io.rest-assured:rest-assured:5.3.2")
@@ -18,10 +21,11 @@ tasks.withType<Test> {
 
 tasks.shadowJar {
   archiveClassifier.set("cli")
-  manifest.attributes["Main-Class"] = "dev.blitzcraft.contracts.mockserver.MockServerCliKt"
+  manifest.attributes["Main-Class"] = "dev.blitzcraft.contracts.mockserver.MockServerCli"
 }
 
-tasks.register("copyToLib", Copy::class.java) {
-  into("$buildDir/libs/lib")
-  from(configurations.runtimeClasspath)
+kapt {
+  arguments {
+    arg("project", "${project.group}/${project.name}")
+  }
 }

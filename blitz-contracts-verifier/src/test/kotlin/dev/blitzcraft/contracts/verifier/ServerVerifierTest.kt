@@ -58,9 +58,9 @@ class ServerVerifierTest {
     // when
     val validationResult = ServerVerifier(serverPort = server.port()).verify(contract)
 
-    // expect fails
+    // then
     assert(validationResult.isSuccess().not())
     assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().startsWith("id"))
+    assert(validationResult.errors().first().startsWith("'id'"))
   }
 }

@@ -1,25 +1,42 @@
 package dev.blitzcraft.contracts.mockserver
 
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.help
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.required
-import com.github.ajalt.clikt.parameters.types.file
-import com.github.ajalt.clikt.parameters.types.int
-import dev.blitzcraft.contracts.core.readContracts
+import dev.blitzcraft.contracts.core.loadOpenApiSpec
+import picocli.CommandLine
+import picocli.CommandLine.Command
+import picocli.CommandLine.Parameters
+import java.io.File
+import java.util.concurrent.Callable
 
-class MockServerCli: CliktCommand() {
-  private val port by option().int().default(8080).help("Server Port. Default is 8080")
-  private val specFile by option()
-    .file(mustExist = true, canBeDir = false)
-    .required()
-    .help("Path of the Open Api Spec file ")
+@Command(name = "server-verifier",
+         mixinStandardHelpOptions = true,
+         version = ["0.0.1"],
+         description = ["Mock server emulating your API using the OpenAPI 3 specification"])
+class MockServerCli: Callable<Int> {
 
-  override fun run() {
-    val mockServer = MockServer(specFile.readContracts(), port)
-    mockServer.start()
+  @Parameters(index = "0", description = ["Path of the Open Api 3 file "])
+  lateinit var specFile: File
+
+  @CommandLine.Option(
+    names = ["-p", "--port"],
+    required = false,
+    description = ["Server port (default: \${DEFAULT-VALUE})"])
+  private var port = 8080
+  override fun call(): Int {
+    var exitCode = 0
+    val loadingResult = specFile.loadOpenApiSpec()
+    if (loadingResult.hasErrors()) {
+      println(CommandLine.Help.Ansi.AUTO.string("@|bold,red Invalid file:|@"))
+      loadingResult.errors.forEach { println(CommandLine.Help.Ansi.AUTO.string("     - @|yellow $it|@")) }
+      exitCode = 1
+    } else {
+      val mockServer = MockServer(loadingResult.contracts, port)
+      mockServer.start()
+    }
+    return exitCode
+  }
+
+  companion object {
+    @JvmStatic
+    fun main(args: Array<String>) { CommandLine(MockServerCli()).execute(*args) }
   }
 }
-
-fun main(args: Array<String>) = MockServerCli().main(args)

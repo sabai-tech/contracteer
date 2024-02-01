@@ -12,24 +12,23 @@ import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
 
-fun File.readContracts() = toPath().readContracts()
-fun Path.readContracts(): Set<Contract> {
-  val loadingResult = loadOpenApiSpec(this)
-  if (loadingResult.errors.isEmpty().not()) {
-    throw IllegalArgumentException("Invalid file:${System.lineSeparator()}" + loadingResult.errors.joinToString(System.lineSeparator()))
+data class OpenApiLoadingResult(
+  val contracts: Set<Contract> = emptySet(),
+  val errors: List<String> = emptyList()){
+    fun hasErrors() = errors.isNotEmpty()
   }
-  return loadingResult.openAPI!!.contracts()
-}
 
-internal fun loadOpenApiSpec(path: Path): OpenApiLoadingResult {
-  val parseResult = OpenAPIV3Parser().readLocation(path.absolutePathString(),
+fun File.loadOpenApiSpec() = toPath().loadOpenApiSpec()
+
+fun Path.loadOpenApiSpec(): OpenApiLoadingResult {
+  val parseResult = OpenAPIV3Parser().readLocation(absolutePathString(),
                                                    emptyList(),
-                                                   ParseOptions().also { it.isResolveFully = true })
+                                                   ParseOptions().apply { isResolveFully = true })
 
   if (parseResult.messages.isNotEmpty()) return OpenApiLoadingResult(errors = parseResult.messages)
 
   val errors = checkFor2xxResponses(parseResult.openAPI) + validateExamples(parseResult.openAPI)
-  return if (errors.isEmpty()) OpenApiLoadingResult(parseResult.openAPI)
+  return if (errors.isEmpty()) OpenApiLoadingResult(parseResult.openAPI.contracts())
   else OpenApiLoadingResult(errors = errors)
 }
 
@@ -99,8 +98,5 @@ private fun Map.Entry<String, ApiResponse>.validateHeaderExamples() =
     }
   }.map { "response status code: $key, $it" }
 
-
 private fun Map.Entry<String, io.swagger.v3.oas.models.examples.Example>.example() = value
 private fun Map.Entry<String, io.swagger.v3.oas.models.examples.Example>.name() = key
-
-internal data class OpenApiLoadingResult(val openAPI: OpenAPI? = null, val errors: List<String> = emptyList())

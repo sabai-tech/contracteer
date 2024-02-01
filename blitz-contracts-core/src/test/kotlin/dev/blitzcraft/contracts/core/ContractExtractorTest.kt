@@ -10,7 +10,8 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts for api mixing random values and example`() {
     // when
-    val contracts = Path("src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml").readContracts()
+    val contracts =
+      Path("src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml").loadOpenApiSpec().contracts
 
     // then
     assert(contracts.size == 2)
@@ -24,7 +25,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts for 2xx with random values`() {
     // when
-    val contracts = Path("src/test/resources/no_example/api_2xx_responses.yaml").readContracts()
+    val contracts = Path("src/test/resources/no_example/api_2xx_responses.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -35,7 +36,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts for 2xx with array as body content `() {
     // when
-    val contracts = Path("src/test/resources/no_example/api_array_random_values.yaml").readContracts()
+    val contracts = Path("src/test/resources/no_example/api_array_random_values.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -44,7 +45,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contract for each combination of request-response content-type`() {
     // when
-    val contracts = Path("src/test/resources/no_example/api_multiple_content_type.yaml").readContracts()
+    val contracts = Path("src/test/resources/no_example/api_multiple_content_type.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -59,7 +60,8 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only response example`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_response_body_example_only.yaml").readContracts()
+    val contracts =
+      Path("src/test/resources/examples/api_with_response_body_example_only.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -67,7 +69,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only parameter example`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_parameter_example_only.yaml").readContracts()
+    val contracts = Path("src/test/resources/examples/api_with_parameter_example_only.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -75,7 +77,8 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only request body example`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_request_body_example_only.yaml").readContracts()
+    val contracts =
+      Path("src/test/resources/examples/api_with_request_body_example_only.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -83,7 +86,7 @@ class ContractExtractorTest {
   @Test
   fun `generate a contract with a single example`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml").readContracts()
+    val contracts = Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.filter { it.exampleKey != null }.size == 1)
     assert(contracts.first { it.exampleKey != null }.request.pathParameters
@@ -98,7 +101,7 @@ class ContractExtractorTest {
   fun `generate contracts with array example as body content`() {
     // given
     // when
-    val contracts = Path("src/test/resources/examples/api_array_examples.yaml").readContracts()
+    val contracts = Path("src/test/resources/examples/api_array_examples.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 2)
     assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
@@ -109,7 +112,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple examples`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_multiple_examples.yaml").readContracts()
+    val contracts = Path("src/test/resources/examples/api_with_multiple_examples.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 4)
     assertNotNull(contracts.find { it.request.method == "GET" && it.response.statusCode == 200 })
@@ -121,7 +124,8 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_multiple_content_type_and_same_example_for_all.yaml").readContracts()
+    val contracts =
+      Path("src/test/resources/examples/api_multiple_content_type_and_same_example_for_all.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
