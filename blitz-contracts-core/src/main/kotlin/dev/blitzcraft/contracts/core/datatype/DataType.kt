@@ -42,7 +42,3 @@ fun Schema<*>.toDataType(): DataType<*> =
   }
 
 fun Schema<*>.safeNullable() = nullable ?: false
-
-
-
-

@@ -21,7 +21,7 @@ abstract class ContractTestBaseClass {
       throw IllegalArgumentException(
         "Failed to load OpenAPI spec file:${lineSeparator()}" + loadingResult.errors.joinToString(
           prefix = "- ",
-          separator = lineSeparator())
+          separator = lineSeparator()+"- ")
       )
     }
     val serverVerifier = ServerVerifier(serverUrl, serverPort)

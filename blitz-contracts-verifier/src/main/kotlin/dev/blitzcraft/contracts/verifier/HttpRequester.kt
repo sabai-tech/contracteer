@@ -21,9 +21,8 @@ internal class HttpRequester(private val contract: Contract,
       .withQueryParameters(contract.request.queryParameters)
       .withCookies(contract.request.cookies)
       .withBody(contract.request.body)
-      .header("Accept", contract.response.body?.contentType)
 
-    return client(request)
+    return client(contract.response.body?.let { request.header("Accept", it.contentType) }?: request)
   }
 
   private fun Request.withHeaders(contractHeaders: List<ContractParameter>) =

@@ -4,7 +4,7 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.validate
 
-class ObjectDataType(val properties: Map<String, DataType<*>>,
+class ObjectDataType(private val properties: Map<String, DataType<*>>,
                      private val requiredProperties: Set<String> = emptySet(),
                      isNullable: Boolean = false):
     DataType<Map<*, *>>("object", isNullable = isNullable, Map::class.java) {
