@@ -1,13 +1,13 @@
 import java.time.Duration
 
 plugins {
-  kotlin("jvm") version "1.9.21"
+  kotlin("jvm") version "2.1.0"
+  kotlin("plugin.power-assert") version "2.0.0"
   id("java-library")
-  id("com.adarshr.test-logger") version "3.2.0"
-  id("com.bnorm.power.kotlin-power-assert") version "0.13.0"
+  id("com.adarshr.test-logger") version "4.0.0"
   id("maven-publish")
   id("signing")
-  id("io.github.gradle-nexus.publish-plugin") version "1.3.0"
+  id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 }
 
 allprojects {
@@ -25,9 +25,11 @@ subprojects {
   apply(plugin = "version-catalog")
   apply(plugin = "signing")
   apply(plugin = "com.adarshr.test-logger")
-  apply(plugin = "com.bnorm.power.kotlin-power-assert")
+  apply(plugin = "org.jetbrains.kotlin.plugin.power-assert")
   java {
-    sourceCompatibility = JavaVersion.VERSION_17
+    toolchain {
+      languageVersion = JavaLanguageVersion.of(21)
+    }
     withSourcesJar()
     withJavadocJar()
   }

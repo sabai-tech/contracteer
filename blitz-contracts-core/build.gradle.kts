@@ -1,5 +1,5 @@
 dependencies {
-  implementation("io.swagger.parser.v3:swagger-parser-v3:2.1.19")
+  implementation("io.swagger.parser.v3:swagger-parser-v3:2.1.24")
 
   testImplementation(kotlin("test"))
 }
