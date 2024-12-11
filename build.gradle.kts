@@ -84,6 +84,3 @@ nexusPublishing {
     delayBetween.set(Duration.ofSeconds(5))
   }
 }
-
-
-

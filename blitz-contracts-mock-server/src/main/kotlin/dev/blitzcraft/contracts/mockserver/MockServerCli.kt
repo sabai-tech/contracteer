@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.mockserver
 
-import dev.blitzcraft.contracts.core.loadOpenApiSpec
+import dev.blitzcraft.contracts.core.loader.loadOpenApiSpec
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters

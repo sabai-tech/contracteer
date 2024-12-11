@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.junit
 
-import dev.blitzcraft.contracts.core.loadOpenApiSpec
+import dev.blitzcraft.contracts.core.loader.loadOpenApiSpec
 import dev.blitzcraft.contracts.verifier.ServerVerifier
 import org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure
 import org.junit.jupiter.api.DynamicTest

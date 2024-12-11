@@ -1,7 +1,7 @@
-package dev.blitzcraft.contracts.core
+package dev.blitzcraft.contracts.core.loader
 
 import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.datatype.toDataType
+import dev.blitzcraft.contracts.core.convert
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -11,12 +11,6 @@ import io.swagger.v3.parser.core.models.ParseOptions
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
-
-data class OpenApiLoadingResult(
-  val contracts: Set<Contract> = emptySet(),
-  val errors: List<String> = emptyList()){
-    fun hasErrors() = errors.isNotEmpty()
-  }
 
 fun File.loadOpenApiSpec() = toPath().loadOpenApiSpec()
 
@@ -28,8 +22,14 @@ fun Path.loadOpenApiSpec(): OpenApiLoadingResult {
   if (parseResult.messages.isNotEmpty()) return OpenApiLoadingResult(errors = parseResult.messages)
 
   val errors = checkFor2xxResponses(parseResult.openAPI) + validateExamples(parseResult.openAPI)
-  return if (errors.isEmpty()) OpenApiLoadingResult(parseResult.openAPI.contracts())
-  else OpenApiLoadingResult(errors = errors)
+
+  return if (errors.isEmpty()) OpenApiLoadingResult(parseResult.openAPI.contracts()) else OpenApiLoadingResult(errors = errors)
+}
+
+data class OpenApiLoadingResult(
+  val contracts: Set<Contract> = emptySet(),
+  val errors: List<String> = emptyList()) {
+  fun hasErrors() = errors.isNotEmpty()
 }
 
 private fun checkFor2xxResponses(openAPI: OpenAPI) =
@@ -97,6 +97,3 @@ private fun Map.Entry<String, ApiResponse>.validateHeaderExamples() =
       }
     }
   }.map { "response status code: $key, $it" }
-
-private fun Map.Entry<String, io.swagger.v3.oas.models.examples.Example>.example() = value
-private fun Map.Entry<String, io.swagger.v3.oas.models.examples.Example>.name() = key

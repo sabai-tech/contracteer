@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.verifier
 
 import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.loadOpenApiSpec
+import dev.blitzcraft.contracts.core.loader.loadOpenApiSpec
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi.AUTO

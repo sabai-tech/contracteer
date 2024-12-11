@@ -1,5 +1,6 @@
-package dev.blitzcraft.contracts.core
+package dev.blitzcraft.contracts.core.loader
 
+import dev.blitzcraft.contracts.core.convert
 import kotlin.io.path.Path
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -136,6 +137,6 @@ class ContractExtractorTest {
                "application/json" to "application/xml"
              )))
   }
-}
 
-private fun Any?.asMap(): Map<*, *> = this as Map<*, *>
+  private fun Any?.asMap(): Map<*, *> = this as Map<*, *>
+}

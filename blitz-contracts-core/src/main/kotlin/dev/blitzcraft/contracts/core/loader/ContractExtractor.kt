@@ -1,7 +1,6 @@
-package dev.blitzcraft.contracts.core
+package dev.blitzcraft.contracts.core.loader
 
 import dev.blitzcraft.contracts.core.contract.*
-import dev.blitzcraft.contracts.core.datatype.toDataType
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -9,7 +8,7 @@ import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
 
-fun OpenAPI.contracts() =
+internal fun OpenAPI.contracts() =
   paths.flatMap { pathAndItem ->
     pathAndItem.item().readOperationsMap().flatMap { methodAndOperation ->
       methodAndOperation.operation().responses.flatMap { codeAndResponse ->
@@ -137,9 +136,6 @@ private fun Map.Entry<String, ApiResponse>.generateResponseExamples(exampleKey: 
         example = contentAndMediaType.mediaType().safeExamples()[exampleKey]?.let { Example(it.value) }))
   } ?: listOf(emptyBodyResponse)
 }
-
-private fun Operation.requestExampleKeys() =
-  safeParameters().exampleKeys() + (requestBody?.content?.exampleKeys() ?: emptySet())
 
 
 
