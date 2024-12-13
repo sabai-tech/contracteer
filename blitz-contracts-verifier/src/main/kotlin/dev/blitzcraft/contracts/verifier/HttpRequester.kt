@@ -7,22 +7,22 @@ import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.core.cookie.cookie
 
-internal class HttpRequester(private val contract: Contract,
-                             private val serverBaseUri: String,
+internal class HttpRequester(private val serverBaseUri: String,
                              private val serverPort: Int) {
 
-  fun sendRequest(): Response {
+  fun sendRequestFor(contract: Contract): Response {
     val client: HttpHandler = JavaHttpClient()
-    val request = Request(method = Method.valueOf(contract.request.method),
-                          uri = UriTemplate
-                            .from("$serverBaseUri:$serverPort${contract.request.path}")
-                            .generate(contract.request.pathParameters.associate { it.name to it.stringValue() }))
-      .withHeaders(contract.request.headers)
-      .withQueryParameters(contract.request.queryParameters)
-      .withCookies(contract.request.cookies)
-      .withBody(contract.request.body)
+    val request =
+      Request(method = Method.valueOf(contract.request.method),
+              uri = UriTemplate
+                .from("$serverBaseUri:$serverPort${contract.request.path}")
+                .generate(contract.request.pathParameters.associate { it.name to it.stringValue() })
+      ).withHeaders(contract.request.headers)
+        .withQueryParameters(contract.request.queryParameters)
+        .withCookies(contract.request.cookies)
+        .withBody(contract.request.body)
 
-    return client(contract.response.body?.let { request.header("Accept", it.contentType) }?: request)
+    return client(contract.response.body?.let { request.header("Accept", it.contentType) } ?: request)
   }
 
   private fun Request.withHeaders(contractHeaders: List<ContractParameter>) =
