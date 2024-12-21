@@ -1,9 +1,9 @@
 package dev.blitzcraft.contracts.core.contract
 
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.datatype.*
 import dev.blitzcraft.contracts.core.validation.ValidationResult
+import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
+import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 
 open class ContractParameter(
   val name: String,
@@ -11,27 +11,31 @@ open class ContractParameter(
   val isRequired: Boolean = false,
   val example: Example? = null) {
 
-  fun hasExample() = example!= null
-  fun value(): Any? =
-    if (hasExample()) example!!.value else dataType.randomValue()
+  fun hasExample() = example != null
+
+  fun value(): Any? = if (hasExample()) example!!.value else dataType.randomValue()
 
   fun stringValue(): String {
-    val value = if (hasExample()) example!!.value else dataType.randomValue()
     return when (dataType) {
       is ObjectDataType -> TODO("Not yet implemented")
       is ArrayDataType  -> TODO("Not yet implemented")
-      else              -> value.toString()
+      else              -> value().toString()
     }
   }
 
   internal fun parseOrNull(value: String) =
     when (dataType) {
-      is BooleanDataType -> value.toBooleanStrictOrNull()
-      is IntegerDataType -> value.toBigIntegerOrNull()
-      is DecimalDataType -> value.toBigDecimalOrNull()
-      is StringDataType  -> value
-      is ObjectDataType  -> TODO("Not yet implemented")
-      is ArrayDataType   -> TODO("Not yet implemented")
+      is BooleanDataType  -> value.toBooleanStrictOrNull()
+      is IntegerDataType  -> value.toBigIntegerOrNull()
+      is DecimalDataType  -> value.toBigDecimalOrNull()
+      is StringDataType   -> value
+      is UuidDataType     -> value
+      is Base64DataType   -> value
+      is EmailDataType    -> value
+      is DateTimeDataType -> value
+      is DateDataType     -> value
+      is ObjectDataType   -> TODO("Not yet implemented")
+      is ArrayDataType    -> TODO("Not yet implemented")
     }
 }
 
@@ -46,7 +50,7 @@ fun String?.matches(parameter: ContractParameter) = when {
   else                                          -> {
     val value = parameter.parseOrNull(this)
     if (value != null) parameter.dataType.validate(value)
-    else error(parameter.name,"Wrong type. Expected type: ${parameter.dataType.openApiType}")
+    else error(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
   }
 }
 
@@ -60,7 +64,7 @@ fun String?.matchesExample(parameter: ContractParameter) = when {
 private fun validateEqualsExampleValue(parameter: ContractParameter, value: String): ValidationResult {
   val parsedValue = parameter.parseOrNull(value)
   return when {
-    parsedValue == null                     -> error(parameter.name,  "Wrong type. Expected type: ${parameter.dataType.openApiType}")
+    parsedValue == null                     -> error(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
     parameter.example?.value == parsedValue -> success()
     else                                    -> error(parameter.name, "Does not match example. Expected value: '${parameter.example?.value}'. Actual value: '$value'")
   }

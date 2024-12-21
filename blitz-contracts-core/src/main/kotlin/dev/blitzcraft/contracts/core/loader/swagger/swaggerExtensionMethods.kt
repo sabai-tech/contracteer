@@ -1,4 +1,4 @@
-package dev.blitzcraft.contracts.core.loader
+package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.datatype.*
 import io.swagger.v3.oas.models.Operation
@@ -35,16 +35,23 @@ internal fun Operation.requestExampleKeys() =
 
 internal fun Schema<*>.toDataType(): DataType<*> =
   when (this) {
-    is BooleanSchema -> BooleanDataType(isNullable = safeNullable())
-    is IntegerSchema -> IntegerDataType(isNullable = safeNullable())
-    is NumberSchema  -> DecimalDataType(isNullable = safeNullable())
-    is StringSchema  -> StringDataType(isNullable = safeNullable())
-    is ObjectSchema  -> ObjectDataType(properties = properties.mapValues { it.value.toDataType() },
-                                       requiredProperties = required?.toSet() ?: emptySet(),
-                                       isNullable = safeNullable())
-    is ArraySchema   -> ArrayDataType(itemDataType = items.toDataType(),
-                                      isNullable = safeNullable())
-    else             -> TODO("Schema ${this::class.java} is not yet supported")
+    is BooleanSchema   -> BooleanDataType(safeNullable())
+    is IntegerSchema   -> IntegerDataType(safeNullable())
+    is NumberSchema    -> DecimalDataType(safeNullable())
+    is StringSchema    -> StringDataType(isNullable =  safeNullable())
+    is PasswordSchema  -> StringDataType("string/password", safeNullable())
+    is BinarySchema    -> StringDataType("string/binary", safeNullable())
+    is UUIDSchema      -> UuidDataType(safeNullable())
+    is ByteArraySchema -> Base64DataType(safeNullable())
+    is EmailSchema     -> EmailDataType(safeNullable())
+    is DateTimeSchema  -> DateTimeDataType(safeNullable())
+    is DateSchema      -> DateDataType(safeNullable())
+    is ObjectSchema    -> ObjectDataType(properties = properties.mapValues { it.value.toDataType() },
+                                         requiredProperties = required?.toSet() ?: emptySet(),
+                                         isNullable = safeNullable())
+    is ArraySchema     -> ArrayDataType(itemDataType = items.toDataType(),
+                                        isNullable = safeNullable())
+    else               -> TODO("Schema ${this::class.java} is not yet supported")
   }
 
 internal fun Schema<*>.safeNullable() = nullable ?: false

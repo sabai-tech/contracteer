@@ -1,4 +1,4 @@
-package dev.blitzcraft.contracts.core.loader
+package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.contract.Contract
 import dev.blitzcraft.contracts.core.convert

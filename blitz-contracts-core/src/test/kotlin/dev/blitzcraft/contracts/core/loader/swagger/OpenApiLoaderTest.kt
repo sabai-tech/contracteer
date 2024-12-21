@@ -1,4 +1,4 @@
-package dev.blitzcraft.contracts.core.loader
+package dev.blitzcraft.contracts.core.loader.swagger
 
 import java.nio.file.Path
 import kotlin.test.Test

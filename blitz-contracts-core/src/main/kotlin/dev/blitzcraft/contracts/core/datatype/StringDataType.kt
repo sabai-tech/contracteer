@@ -3,8 +3,8 @@ package dev.blitzcraft.contracts.core.datatype
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 import kotlin.random.Random
 
-class StringDataType(isNullable: Boolean = false):
-    DataType<String>("string", isNullable, String::class.java) {
+class StringDataType(openApiType: String = "string", isNullable: Boolean = false):
+    DataType<String>(openApiType, isNullable, String::class.java) {
 
   private val loremIpsum =
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
