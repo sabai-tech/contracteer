@@ -59,15 +59,14 @@ internal fun Schema<*>.toDataType(): DataType<*> =
 
 fun createComposedObjectDataType(composedSchema: ComposedSchema) =
   when {
-    composedSchema.oneOf != null -> createOneOf(composedSchema)
+    composedSchema.oneOf != null -> OneOfDataType(composedSchema.name,
+                                                  composedSchema.oneOf.map { it.toDataType() as ObjectDataType },
+                                                  composedSchema.safeNullable())
+    composedSchema.anyOf != null -> AnyOfDataType(composedSchema.name,
+                                                  composedSchema.anyOf.map { it.toDataType() as ObjectDataType },
+                                                  composedSchema.safeNullable())
     else                         -> TODO("Not Yet Implemented")
   }
-
-fun createOneOf(composedSchema: ComposedSchema): OneOfDataType {
-  return OneOfDataType(composedSchema.name,
-                       composedSchema.oneOf.map { it.toDataType() as ObjectDataType },
-                       composedSchema.safeNullable())
-}
 
 internal fun Schema<*>.safeNullable() = nullable ?: false
 internal fun Schema<*>.fullyResolve() = SharedComponents.fullyResolve(this)
