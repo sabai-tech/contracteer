@@ -6,8 +6,8 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 import java.util.UUID.fromString
 import java.util.UUID.randomUUID
 
-class UuidDataType(isNullable: Boolean = false):
-    DataType<String>("string/uuid", isNullable, String::class.java) {
+class UuidDataType(name: String= "Inline Schema", isNullable: Boolean = false):
+    DataType<String>(name, "string/uuid", isNullable, String::class.java) {
 
   override fun doValidate(value: String): ValidationResult {
     return try {

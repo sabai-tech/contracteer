@@ -8,7 +8,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val objectDataType = ObjectDataType(mapOf("prop" to IntegerDataType()), isNullable = true)
+    val objectDataType = ObjectDataType(properties = mapOf("prop" to IntegerDataType()), isNullable = true)
 
     // when
     val result = objectDataType.validate(null)
@@ -20,7 +20,7 @@ class ObjectDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val objectDataType = ObjectDataType(mapOf("prop" to IntegerDataType()), isNullable = false)
+    val objectDataType = ObjectDataType(properties = mapOf("prop" to IntegerDataType()), isNullable = false)
 
     // when
     val result = objectDataType.validate(null)
@@ -32,7 +32,7 @@ class ObjectDataTypeTest {
   @Test
   fun `does not validate value whose type is not Map`() {
     // given
-    val objectDataType = ObjectDataType(mapOf("prop" to IntegerDataType()))
+    val objectDataType = ObjectDataType(properties = mapOf("prop" to IntegerDataType()))
 
     // when
     val result = objectDataType.validate(123)
@@ -44,7 +44,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validates a value of type Map`() {
     // given
-    val objectDataType = ObjectDataType(mapOf("prop" to IntegerDataType()))
+    val objectDataType = ObjectDataType(properties = mapOf("prop" to IntegerDataType()))
 
     // when
     val result = objectDataType.validate(mapOf("prop" to 1).convert())
@@ -88,7 +88,7 @@ class ObjectDataTypeTest {
   @Test
   fun `does not validate when a property is not of the right type`() {
     // given
-    val objectDataType = ObjectDataType(mapOf("prop" to IntegerDataType()))
+    val objectDataType = ObjectDataType(properties = mapOf("prop" to IntegerDataType()))
 
     // when
     val result = objectDataType.validate(mapOf("prop" to true))
@@ -100,7 +100,7 @@ class ObjectDataTypeTest {
   @Test
   fun `does not validate when a non nullable property is null`() {
     // given
-    val objectDataType = ObjectDataType(mapOf(
+    val objectDataType = ObjectDataType(properties = mapOf(
       "prop" to IntegerDataType(isNullable = false),
       "prop2" to BooleanDataType()
     ))

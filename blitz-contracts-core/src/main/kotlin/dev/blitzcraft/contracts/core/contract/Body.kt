@@ -1,11 +1,9 @@
 package dev.blitzcraft.contracts.core.contract
 
 import dev.blitzcraft.contracts.core.Mappers.jsonMapper
+import dev.blitzcraft.contracts.core.datatype.*
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.datatype.ArrayDataType
-import dev.blitzcraft.contracts.core.datatype.DataType
-import dev.blitzcraft.contracts.core.datatype.ObjectDataType
 
 data class Body(
   val contentType: String,
@@ -14,7 +12,7 @@ data class Body(
 
   init {
     if ("json" in contentType) {
-      require(dataType is ObjectDataType || dataType is ArrayDataType) { "Body with Content Type '$contentType' accepts only object type" }
+      require(dataType is StructuredObjectDataType || dataType is ArrayDataType ) { "Body with Content Type '$contentType' accepts only object type" }
       example?.value?.let { require(it is Map<*, *> || it is Array<*>) { "Example value is not an object or an array" } }
     }
   }

@@ -34,24 +34,40 @@ internal fun Operation.requestExampleKeys() =
 
 
 internal fun Schema<*>.toDataType(): DataType<*> =
-  when (this) {
-    is BooleanSchema   -> BooleanDataType(safeNullable())
-    is IntegerSchema   -> IntegerDataType(safeNullable())
-    is NumberSchema    -> DecimalDataType(safeNullable())
-    is StringSchema    -> StringDataType(isNullable =  safeNullable())
-    is PasswordSchema  -> StringDataType("string/password", safeNullable())
-    is BinarySchema    -> StringDataType("string/binary", safeNullable())
-    is UUIDSchema      -> UuidDataType(safeNullable())
-    is ByteArraySchema -> Base64DataType(safeNullable())
-    is EmailSchema     -> EmailDataType(safeNullable())
-    is DateTimeSchema  -> DateTimeDataType(safeNullable())
-    is DateSchema      -> DateDataType(safeNullable())
-    is ObjectSchema    -> ObjectDataType(properties = properties.mapValues { it.value.toDataType() },
-                                         requiredProperties = required?.toSet() ?: emptySet(),
-                                         isNullable = safeNullable())
-    is ArraySchema     -> ArrayDataType(itemDataType = items.toDataType(),
-                                        isNullable = safeNullable())
+  when (val fullyResolved = this.fullyResolve()) {
+    is ComposedSchema  -> createComposedObjectDataType(fullyResolved)
+    is BooleanSchema   -> BooleanDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is IntegerSchema   -> IntegerDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is NumberSchema    -> DecimalDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is StringSchema    -> StringDataType(fullyResolved.name, isNullable = fullyResolved.safeNullable())
+    is PasswordSchema  -> StringDataType(fullyResolved.name, "string/password", fullyResolved.safeNullable())
+    is BinarySchema    -> StringDataType(fullyResolved.name, "string/binary", fullyResolved.safeNullable())
+    is UUIDSchema      -> UuidDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is ByteArraySchema -> Base64DataType(fullyResolved.name, fullyResolved.safeNullable())
+    is EmailSchema     -> EmailDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is DateTimeSchema  -> DateTimeDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is DateSchema      -> DateDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is ObjectSchema    -> ObjectDataType(name = fullyResolved.name,
+                                         properties = fullyResolved.properties.mapValues { it.value.toDataType() },
+                                         requiredProperties = fullyResolved.required?.toSet() ?: emptySet(),
+                                         isNullable = fullyResolved.safeNullable())
+    is ArraySchema     -> ArrayDataType(name = fullyResolved.name,
+                                        itemDataType = fullyResolved.items.toDataType(),
+                                        isNullable = fullyResolved.safeNullable())
     else               -> TODO("Schema ${this::class.java} is not yet supported")
   }
 
+fun createComposedObjectDataType(composedSchema: ComposedSchema) =
+  when {
+    composedSchema.oneOf != null -> createOneOf(composedSchema)
+    else                         -> TODO("Not Yet Implemented")
+  }
+
+fun createOneOf(composedSchema: ComposedSchema): OneOfDataType {
+  return OneOfDataType(composedSchema.name,
+                       composedSchema.oneOf.map { it.toDataType() as ObjectDataType },
+                       composedSchema.safeNullable())
+}
+
 internal fun Schema<*>.safeNullable() = nullable ?: false
+internal fun Schema<*>.fullyResolve() = SharedComponents.fullyResolve(this)

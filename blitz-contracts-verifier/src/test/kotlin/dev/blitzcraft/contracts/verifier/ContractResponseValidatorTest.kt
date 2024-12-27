@@ -124,7 +124,7 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body(contentType = "application/json",
-                                                        dataType = ObjectDataType(mapOf(
+                                                        dataType = ObjectDataType(properties = mapOf(
                                                           "name" to StringDataType(),
                                                           "age" to IntegerDataType()))))
     val response = mockk<Response>()
@@ -192,7 +192,7 @@ class ContractResponseValidatorTest {
   fun `Validates body with JSON Content-Type and array as root element`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body("application/json", ArrayDataType(IntegerDataType())))
+                                            body = Body("application/json", ArrayDataType(itemDataType = IntegerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns "application/json; charset=utf-8"
@@ -211,7 +211,7 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body("text/plain",
-                                                        ObjectDataType(mapOf("name" to StringDataType()))))
+                                                        ObjectDataType(properties = mapOf("name" to StringDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns "application/json; charset=utf-8"
@@ -251,7 +251,7 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body("application/json",
-                                                        ObjectDataType(mapOf("name" to StringDataType()))))
+                                                        ObjectDataType(properties = mapOf("name" to StringDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns null

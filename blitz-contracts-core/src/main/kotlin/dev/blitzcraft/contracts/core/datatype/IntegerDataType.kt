@@ -4,8 +4,8 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 import java.math.BigInteger
 import kotlin.random.Random
 
-class IntegerDataType(isNullable: Boolean = false):
-    DataType<BigInteger>("integer", isNullable, BigInteger::class.java) {
+class IntegerDataType(name: String= "Inline Schema", isNullable: Boolean = false):
+    DataType<BigInteger>(name, "integer", isNullable, BigInteger::class.java) {
 
   override fun doValidate(value: BigInteger) = success()
 

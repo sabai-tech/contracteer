@@ -6,8 +6,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-class DateDataType(isNullable: Boolean = false):
-    DataType<String>("string/date", isNullable, String::class.java) {
+class DateDataType(name: String= "Inline Schema", isNullable: Boolean = false):
+    DataType<String>(name, "string/date", isNullable, String::class.java) {
 
   override fun doValidate(value: String) =
     try {

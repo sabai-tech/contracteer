@@ -8,8 +8,8 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-class DateTimeDataType(isNullable: Boolean = false):
-    DataType<String>("string/date-time", isNullable, String::class.java) {
+class DateTimeDataType(name: String= "Inline Schema", isNullable: Boolean = false):
+    DataType<String>(name, "string/date-time", isNullable, String::class.java) {
 
   override fun doValidate(value: String) =
     try {

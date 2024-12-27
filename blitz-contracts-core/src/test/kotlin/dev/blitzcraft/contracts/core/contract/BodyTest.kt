@@ -20,7 +20,7 @@ class BodyTest {
   fun `fails when Example value is not of type Map or Array for Json Content-Type`() {
     // expect
     assertFailsWith(IllegalArgumentException::class) {
-      Body("application/json", ObjectDataType(mapOf("id" to IntegerDataType())), Example(42))
+      Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())), Example(42))
     }
   }
 
@@ -28,21 +28,23 @@ class BodyTest {
   fun `accepts ObjectDataType as Body content`() {
     // expect
     assertDoesNotThrow {
-      Body("application/json", ObjectDataType(mapOf("id" to IntegerDataType())))
+      Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))
     }
   }
 
   @Test
   fun `accepts ArrayDataType as Body content`() {
     // expect
-    assertDoesNotThrow { Body("application/json", ArrayDataType(IntegerDataType())) }
+    assertDoesNotThrow { Body("application/json", ArrayDataType(itemDataType = IntegerDataType())) }
   }
 
   @Test
   fun `accepts Map as Body content Example`() {
     // expect
     assertDoesNotThrow {
-      Body("application/json", ObjectDataType(mapOf("id" to IntegerDataType())), Example(mapOf("id" to 42)))
+      Body("application/json",
+           ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+           Example(mapOf("id" to 42)))
     }
   }
 
@@ -50,7 +52,7 @@ class BodyTest {
   fun `accepts Array as Body content Example`() {
     // expect
     assertDoesNotThrow {
-      Body("application/json", ObjectDataType(mapOf("id" to IntegerDataType())), Example(arrayOf(1, 2, 3)))
+      Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())), Example(arrayOf(1, 2, 3)))
     }
   }
 
@@ -148,7 +150,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(IntegerDataType())
+      dataType = ArrayDataType(itemDataType = IntegerDataType())
     )
 
     // when
@@ -163,7 +165,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(IntegerDataType())
+      dataType = ArrayDataType(itemDataType = IntegerDataType())
     )
 
     // when
@@ -275,7 +277,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(IntegerDataType()),
+      dataType = ArrayDataType(itemDataType = IntegerDataType()),
       example = Example(arrayOf(20, 42))
     )
     // when
@@ -290,7 +292,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(IntegerDataType()),
+      dataType = ArrayDataType(itemDataType = IntegerDataType()),
       example = Example(arrayOf(20, 42))
     )
 

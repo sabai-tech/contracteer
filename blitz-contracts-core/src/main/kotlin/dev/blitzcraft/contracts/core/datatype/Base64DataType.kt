@@ -5,8 +5,8 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 import java.util.*
 
-class Base64DataType(isNullable: Boolean = false):
-    DataType<String>("string/byte", isNullable, String::class.java) {
+class Base64DataType(name: String = "Inline Schema", isNullable: Boolean = false):
+    DataType<String>(name, "string/byte", isNullable, String::class.java) {
 
   private val loremIpsum =
     "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"

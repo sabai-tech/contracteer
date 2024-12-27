@@ -4,17 +4,17 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.validate
 
-class ObjectDataType(private val properties: Map<String, DataType<*>>,
+class ObjectDataType(name: String= "Inline Schema", private val properties: Map<String, DataType<*>>,
                      private val requiredProperties: Set<String> = emptySet(),
                      isNullable: Boolean = false):
-    DataType<Map<*, *>>("object", isNullable = isNullable, Map::class.java) {
+    StructuredObjectDataType(name, "object", isNullable) {
 
-  override fun doValidate(value: Map<*, *>) =
+  override fun doValidate(value: Map<String, Any?>) =
     properties.validate {
       when {
         !value.containsKey(it.key) && !isRequired(it.key) -> success()
-        !value.containsKey(it.key)                         -> error(it.key, "is required")
-        else                                               -> it.value.validate(value[it.key]).forProperty(it.key)
+        !value.containsKey(it.key)                        -> error(it.key, "is required")
+        else                                              -> it.value.validate(value[it.key]).forProperty(it.key)
       }
     }
 

@@ -4,8 +4,8 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 
-class EmailDataType(isNullable: Boolean = false):
-    DataType<String>("string/email", isNullable, String::class.java) {
+class EmailDataType(name: String= "Inline Schema", isNullable: Boolean = false):
+    DataType<String>(name, "string/email", isNullable, String::class.java) {
 
   private val loremIpsum =
     "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"

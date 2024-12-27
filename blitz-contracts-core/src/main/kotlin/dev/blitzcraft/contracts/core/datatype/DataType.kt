@@ -5,6 +5,7 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 
 sealed class DataType<T>(
+  val name: String,
   val openApiType: String,
   val isNullable: Boolean = false,
   val dataTypeClass: Class<out T>) {

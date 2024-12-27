@@ -17,10 +17,10 @@ fun File.loadOpenApiSpec() = toPath().loadOpenApiSpec()
 fun Path.loadOpenApiSpec(): OpenApiLoadingResult {
   val parseResult = OpenAPIV3Parser().readLocation(absolutePathString(),
                                                    emptyList(),
-                                                   ParseOptions().apply { isResolveFully = true })
+                                                   ParseOptions().apply { isResolve = true })
 
   if (parseResult.messages.isNotEmpty()) return OpenApiLoadingResult(errors = parseResult.messages)
-
+  SharedComponents.components = parseResult.openAPI.components
   val errors = checkFor2xxResponses(parseResult.openAPI) + validateExamples(parseResult.openAPI)
 
   return if (errors.isEmpty()) OpenApiLoadingResult(parseResult.openAPI.contracts()) else OpenApiLoadingResult(errors = errors)

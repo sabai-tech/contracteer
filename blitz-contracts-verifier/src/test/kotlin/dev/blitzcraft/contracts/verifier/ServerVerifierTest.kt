@@ -23,7 +23,7 @@ class ServerVerifierTest {
     response = ContractResponse(
       statusCode = 200,
       body = Body(contentType = "application/json",
-                  dataType = ObjectDataType(mapOf(
+                  dataType = ObjectDataType(properties = mapOf(
                     "id" to IntegerDataType(),
                     "name" to StringDataType()))))
   )
