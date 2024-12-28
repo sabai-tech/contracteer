@@ -65,7 +65,10 @@ fun createComposedObjectDataType(composedSchema: ComposedSchema) =
     composedSchema.anyOf != null -> AnyOfDataType(composedSchema.name,
                                                   composedSchema.anyOf.map { it.toDataType() as ObjectDataType },
                                                   composedSchema.safeNullable())
-    else                         -> TODO("Not Yet Implemented")
+    composedSchema.allOf != null -> AllOfDataType(composedSchema.name,
+                                                  composedSchema.allOf.map { it.toDataType() as ObjectDataType },
+                                                  composedSchema.safeNullable())
+    else                         -> TODO("Schema ${composedSchema::class.java} is not yet supported")
   }
 
 internal fun Schema<*>.safeNullable() = nullable ?: false
