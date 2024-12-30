@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - in: header
+        name: header
+        required: true
+        schema:
+          type: string
+      - in: cookie
+        name: cookie
+        schema:
+          type: string
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: string
+
+      responses:
+        200:
+          description: Product details
+          headers:
+            x-optional:
+              schema:
+                type: integer
+            x-required:
+              schema:
+                type: integer
+              required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/product_details'
+components:
+  schemas:
+    object1:
+      type: object
+      properties:
+        prop1:
+          type: string
+    object2:
+      type: object
+      properties:
+        prop2:
+          type: string
+    product_details:
+      type: object
+      properties:
+        boolean:
+          type: boolean
+        integer:
+          type: integer
+        number:
+          type: number
+        array:
+          type: array
+          items:
+            type: integer
+        string:
+          type: string
+        email:
+          type: string
+          format: email
+        date:
+          type: string
+          format: date
+        dateTime:
+          type: string
+          format: date-time
+        byte:
+          type: string
+          format: byte
+        binary:
+          type: string
+          format: binary
+        password:
+          type: string
+          format: password
+        uuid:
+          type: string
+          format: uuid
+        oneOf:
+          oneOf:
+            - $ref: "#/components/schemas/object1"
+            - $ref: "#/components/schemas/object2"
+        anyOf:
+          oneOf:
+            - $ref: "#/components/schemas/object1"
+            - $ref: "#/components/schemas/object2"
+        allOf:
+          allOf:
+            - $ref: "#/components/schemas/object1"
+            - $ref: "#/components/schemas/object2"

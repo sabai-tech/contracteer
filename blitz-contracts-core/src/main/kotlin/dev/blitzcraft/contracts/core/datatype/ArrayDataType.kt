@@ -4,7 +4,7 @@ import dev.blitzcraft.contracts.core.validation.validate
 
 class ArrayDataType(
   name: String = "Inline Schema",
-  private val itemDataType: DataType<*>,
+  val itemDataType: DataType<*>,
   isNullable: Boolean = false): DataType<Array<*>>(name, "array", isNullable, Array::class.java) {
 
   override fun doValidate(value: Array<*>) =

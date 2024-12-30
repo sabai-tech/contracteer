@@ -6,7 +6,7 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 
 // TODO validate that sub schema does not have duplicated properties but with different type
 class AllOfDataType(name: String = "Inline Schema",
-                    private val objectDataTypes: List<ObjectDataType>,
+                    val objectDataTypes: List<ObjectDataType>,
                     isNullable: Boolean = false):
     StructuredObjectDataType(name, "anyOf", isNullable) {
 

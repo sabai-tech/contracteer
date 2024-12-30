@@ -4,8 +4,8 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.validate
 
-class ObjectDataType(name: String= "Inline Schema", private val properties: Map<String, DataType<*>>,
-                     private val requiredProperties: Set<String> = emptySet(),
+class ObjectDataType(name: String= "Inline Schema", val properties: Map<String, DataType<*>>,
+                     val requiredProperties: Set<String> = emptySet(),
                      isNullable: Boolean = false):
     StructuredObjectDataType(name, "object", isNullable) {
 

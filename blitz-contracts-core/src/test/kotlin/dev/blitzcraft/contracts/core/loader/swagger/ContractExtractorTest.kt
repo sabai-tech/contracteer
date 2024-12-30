@@ -1,52 +1,88 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
+import dev.blitzcraft.contracts.core.contract.ContractParameter
 import dev.blitzcraft.contracts.core.convert
+import dev.blitzcraft.contracts.core.datatype.*
 import kotlin.io.path.Path
 import kotlin.test.Test
-import kotlin.test.assertNotNull
+
 
 class ContractExtractorTest {
 
-
+  // TODO rename it
   @Test
-  fun `generate contracts for api mixing random values and example`() {
+  fun `auto generated contract with  all data types`() {
     // when
     val contracts =
-      Path("src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/2xx_auto_generated_contract_with_all_datatypes.yaml").loadOpenApiSpec().contracts
+    val contract = contracts.first()
 
     // then
-    assert(contracts.size == 2)
-    assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 404)))
-    assert(contracts.first { it.response.statusCode == 200 }.request.pathParameters.first { it.name == "id" }.example == null)
-    assert(contracts.first { it.response.statusCode == 404 }.request.pathParameters.first { it.name == "id" }.example!!.value == 999.convert())
-    assert(contracts.first { it.response.statusCode == 404 }.response.body!!.content().asMap()["error"] == "NOT FOUND")
+    assert(contracts.size == 1)
+    //   Request
+    assert(contract.request.method == "GET")
+    assert(contract.request.path == "/products/{id}")
+    //      Path Parameters
+    assert(contract.request.pathParameters.size == 1)
+    assert(contract.request.pathParameters.first().name == "id")
+    assert(contract.request.pathParameters.first().isRequired)
+    assert(contract.request.pathParameters.first().dataType is IntegerDataType)
+    //      Query Parameters
+    assert(contract.request.queryParameters.size == 1)
+    assert(contract.request.queryParameters.first().name == "query")
+    assert(contract.request.queryParameters.first().isRequired.not())
+    assert(contract.request.queryParameters.first().dataType is StringDataType)
+    //      Headers
+    assert(contract.request.headers.size == 1)
+    assert(contract.request.headers.first().name == "header")
+    assert(contract.request.headers.first().isRequired)
+    assert(contract.request.headers.first().dataType is StringDataType)
+    //      Cookies
+    assert(contract.request.cookies.size == 1)
+    assert(contract.request.cookies.first().name == "cookie")
+    assert(contract.request.cookies.first().isRequired.not())
+    assert(contract.request.cookies.first().dataType is StringDataType)
+    //      Body
+    assert(contract.request.body != null)
+    assert(contract.request.body!!.contentType == "application/json")
+    assert(contract.request.body!!.dataType is ObjectDataType)
+    assert((contract.request.body!!.dataType as ObjectDataType).name == "Inline Schema")
+    assert((contract.request.body!!.dataType as ObjectDataType).properties["prop1"] is StringDataType)
 
-  }
-
-  @Test
-  fun `generate contracts for 2xx with random values`() {
-    // when
-    val contracts = Path("src/test/resources/no_example/api_2xx_responses.yaml").loadOpenApiSpec().contracts
-    // then
-    assert(contracts.size == 2)
-    assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
-    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-optional" }.isRequired.not())
-    assert(contracts.first { it.response.statusCode == 200 }.response.headers.first { it.name == "x-required" }.isRequired)
-  }
-
-  @Test
-  fun `generate contracts for 2xx with array as body content `() {
-    // when
-    val contracts = Path("src/test/resources/no_example/api_array_random_values.yaml").loadOpenApiSpec().contracts
-    // then
-    assert(contracts.size == 2)
-    assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
+    //   Response
+    assert(contract.response.statusCode == 200)
+    //      Headers
+    assert(contract.response.headers.asMap()["x-optional"]!!.isRequired.not())
+    assert(contract.response.headers.asMap()["x-optional"]!!.dataType is IntegerDataType)
+    assert(contract.response.headers.asMap()["x-required"]!!.isRequired)
+    assert(contract.response.headers.asMap()["x-required"]!!.dataType is IntegerDataType)
+    //      Body
+    assert(contract.response.hasBody())
+    assert(contract.response.body!!.contentType == "application/json")
+    assert(contract.response.body!!.dataType.name == "product_details")
+    assert(contract.response.body!!.dataType is ObjectDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["boolean"] is BooleanDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["integer"] is IntegerDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["number"] is DecimalDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["array"] is ArrayDataType)
+    assert((contract.response.body!!.dataType.asObjectDataType().properties["array"] as ArrayDataType).itemDataType is IntegerDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["string"] is StringDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["email"] is EmailDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["date"] is DateDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["dateTime"] is DateTimeDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["byte"] is Base64DataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"] is StringDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"]!!.openApiType == "string/binary")
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["password"] is StringDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["password"]!!.openApiType == "string/password")
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["uuid"] is UuidDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["oneOf"] is OneOfDataType)
   }
 
   @Test
   fun `generate contract for each combination of request-response content-type`() {
     // when
-    val contracts = Path("src/test/resources/no_example/api_multiple_content_type.yaml").loadOpenApiSpec().contracts
+    val contracts = Path("src/test/resources/multiple_content_type.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -62,7 +98,7 @@ class ContractExtractorTest {
   fun `do not generate contract with only response example`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/api_with_response_body_example_only.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/response_body_example_only.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -70,7 +106,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only parameter example`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_parameter_example_only.yaml").loadOpenApiSpec().contracts
+    val contracts = Path("src/test/resources/examples/parameter_example_only.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -79,54 +115,43 @@ class ContractExtractorTest {
   fun `do not generate contract with only request body example`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/api_with_request_body_example_only.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/request_body_example_only.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.none { it.exampleKey != null })
   }
 
   @Test
-  fun `generate a contract with a single example`() {
+  fun `mix auto generated 2xx_contract with example based contract`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_example_for_4xx_status.yaml").loadOpenApiSpec().contracts
-    // then
-    assert(contracts.filter { it.exampleKey != null }.size == 1)
-    assert(contracts.first { it.exampleKey != null }.request.pathParameters
-             .first { it.name == "id" }
-             .value() == 999.convert())
-    assert(contracts.first { it.exampleKey != null }.response.statusCode == 404)
-    assert(contracts.first { it.exampleKey != null }.exampleKey == "NOT_FOUND")
-    assert(contracts.first { it.exampleKey != null }.response.body!!.content() == mapOf("error" to "NOT FOUND"))
-  }
-
-  @Test
-  fun `generate contracts with array example as body content`() {
-    // given
-    // when
-    val contracts = Path("src/test/resources/examples/api_array_examples.yaml").loadOpenApiSpec().contracts
+    val contracts =
+      Path("src/test/resources/examples/mix_2xx_auto_generated_contract_and_example_based_contract.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 2)
-    assert(contracts.map { it.response.statusCode }.containsAll(listOf(200, 201)))
-    assert(contracts.first { it.response.statusCode == 200 }.exampleKey == "GET_DETAILS")
-    assert(contracts.first { it.response.statusCode == 201 }.exampleKey == "CREATE_PRODUCTS")
+    assert(contracts.filter { it.exampleKey == null }.size == 1)
+    assert(contracts.filter { it.exampleKey == "NOT_FOUND" }.size == 1)
+    assert(contracts.first { it.exampleKey == "NOT_FOUND" }.request.pathParameters.first().value() == 999.convert())
+    assert(contracts.first { it.exampleKey == "NOT_FOUND" }.response.statusCode == 404)
+    assert(contracts.first { it.exampleKey == "NOT_FOUND" }.response.body!!.content() == mapOf("error" to "NOT FOUND"))
   }
 
   @Test
   fun `generate contracts with multiple examples`() {
     // when
-    val contracts = Path("src/test/resources/examples/api_with_multiple_examples.yaml").loadOpenApiSpec().contracts
+    val contracts = Path("src/test/resources/examples/multiple_examples.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 4)
-    assertNotNull(contracts.find { it.request.method == "GET" && it.response.statusCode == 200 })
-    assertNotNull(contracts.find { it.request.method == "GET" && it.response.statusCode == 404 })
-    assertNotNull(contracts.find { it.request.method == "POST" && it.response.statusCode == 201 })
-    assertNotNull(contracts.find { it.request.method == "POST" && it.response.statusCode == 202 })
+    assert(contracts.find { it.exampleKey == "GET_DETAILS" } != null)
+    assert(contracts.find { it.exampleKey == "NOT_FOUND" } != null)
+    assert(contracts.find { it.exampleKey == "CREATE_PRODUCT" } != null)
+    assert(contracts.find { it.exampleKey == "ASYNC" } != null)
+
   }
 
   @Test
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/api_multiple_content_type_and_same_example_for_all.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").loadOpenApiSpec().contracts
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -137,6 +162,7 @@ class ContractExtractorTest {
                "application/json" to "application/xml"
              )))
   }
-
-  private fun Any?.asMap(): Map<*, *> = this as Map<*, *>
 }
+
+private fun List<ContractParameter>.asMap() = associateBy { it.name }
+private fun DataType<*>.asObjectDataType() = this as ObjectDataType

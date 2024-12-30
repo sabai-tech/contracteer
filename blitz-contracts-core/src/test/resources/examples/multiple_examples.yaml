@@ -15,8 +15,6 @@ paths:
         examples:
           GET_DETAILS:
             value: 10
-          GET_DETAILS_2:
-            value: 10
           NOT_FOUND:
             value: 999
     get:

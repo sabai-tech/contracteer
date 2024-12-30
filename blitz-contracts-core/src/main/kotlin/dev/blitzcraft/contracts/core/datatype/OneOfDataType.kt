@@ -5,7 +5,7 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 
 class OneOfDataType(name: String = "Inline Schema",
-                    private val objectDataTypes: List<ObjectDataType>,
+                    val objectDataTypes: List<ObjectDataType>,
                     isNullable: Boolean = false):
     StructuredObjectDataType(name, "oneOf", isNullable) {
 
