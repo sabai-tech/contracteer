@@ -12,7 +12,7 @@ dependencies {
   kapt("info.picocli:picocli-codegen:4.7.6")
 
   testImplementation(kotlin("test"))
-  testImplementation("org.mock-server:mockserver-netty:5.15.0")
+  testImplementation("org.mock-server:mockserver-netty-no-dependencies:5.15.0")
   testImplementation("io.mockk:mockk:1.13.13")
 }
 
