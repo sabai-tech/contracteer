@@ -1,6 +1,5 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.convert
 import org.junit.jupiter.api.Test
 
 class ObjectDataTypeTest {
@@ -47,7 +46,7 @@ class ObjectDataTypeTest {
     val objectDataType = ObjectDataType(properties = mapOf("prop" to IntegerDataType()))
 
     // when
-    val result = objectDataType.validate(mapOf("prop" to 1).convert())
+    val result = objectDataType.validate(mapOf("prop" to 1))
 
     // then
     assert(result.isSuccess())
@@ -63,7 +62,7 @@ class ObjectDataTypeTest {
       requiredProperties = setOf("prop")
     )
     // when
-    val result = objectDataType.validate(mapOf("prop" to 1).convert())
+    val result = objectDataType.validate(mapOf("prop" to 1))
 
     // then
     assert(result.isSuccess())
@@ -79,7 +78,7 @@ class ObjectDataTypeTest {
       ),
       requiredProperties = setOf("prop"))
     // when
-    val result = objectDataType.validate(mapOf("prop" to 1).convert())
+    val result = objectDataType.validate(mapOf("prop" to 1))
 
     // then
     assert(result.isSuccess())

@@ -1,6 +1,5 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.convert
 import org.junit.jupiter.api.Test
 
 class OneOfDataTypeTest {
@@ -18,7 +17,7 @@ class OneOfDataTypeTest {
     val oneOfDataType = OneOfDataType(objectDataTypes = listOf(dog, cat))
 
     // when
-    val result = oneOfDataType.validate(mapOf("hunts" to true, "bark" to true).convert())
+    val result = oneOfDataType.validate(mapOf("hunts" to true, "bark" to true))
 
     // then
     assert(result.isSuccess().not())
@@ -36,7 +35,7 @@ class OneOfDataTypeTest {
       "bar" to true,
       "breed" to "breed",
       "hunts" to true,
-      "age" to 1.convert())
+      "age" to 1)
     )
 
     // then

@@ -38,7 +38,7 @@ internal fun Schema<*>.toDataType(): DataType<*> =
     is ComposedSchema  -> createComposedObjectDataType(fullyResolved)
     is BooleanSchema   -> BooleanDataType(fullyResolved.name, fullyResolved.safeNullable())
     is IntegerSchema   -> IntegerDataType(fullyResolved.name, fullyResolved.safeNullable())
-    is NumberSchema    -> DecimalDataType(fullyResolved.name, fullyResolved.safeNullable())
+    is NumberSchema    -> NumberDataType(fullyResolved.name, fullyResolved.safeNullable())
     is StringSchema    -> StringDataType(fullyResolved.name, isNullable = fullyResolved.safeNullable())
     is PasswordSchema  -> StringDataType(fullyResolved.name, "string/password", fullyResolved.safeNullable())
     is BinarySchema    -> StringDataType(fullyResolved.name, "string/binary", fullyResolved.safeNullable())

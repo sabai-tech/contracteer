@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.convert
+import dev.blitzcraft.contracts.core.normalize
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
@@ -58,7 +58,7 @@ private fun Operation.validateRequestBodyExamples() =
     contentAndMediaType.mediaType().safeExamples().flatMap { namedExample ->
       contentAndMediaType.mediaType().schema
         .toDataType()
-        .validate(namedExample.example().value.convert())
+        .validate(namedExample.example().value.normalize())
         .errors()
         .map {
           "request body: ${contentAndMediaType.content()}, example: ${namedExample.name()} -> $it"
@@ -69,7 +69,7 @@ private fun Operation.validateRequestBodyExamples() =
 private fun Operation.validateRequestParameterExamples() =
   safeParameters().flatMap { parameter ->
     parameter.safeExamples().flatMap { namedExample ->
-      parameter.schema.toDataType().validate(namedExample.example().value.convert()).errors().map {
+      parameter.schema.toDataType().validate(namedExample.example().value.normalize()).errors().map {
         "request parameter: ${parameter.name}, example: ${namedExample.name()} -> $it"
       }
     }
@@ -82,7 +82,7 @@ private fun Map.Entry<String, ApiResponse>.validateContentExamples() =
   response().content
     ?.flatMap { contentAndMediaType ->
       contentAndMediaType.mediaType().safeExamples().flatMap { namedExample ->
-        contentAndMediaType.mediaType().schema.toDataType().validate(namedExample.example().value.convert()).errors()
+        contentAndMediaType.mediaType().schema.toDataType().validate(namedExample.example().value.normalize()).errors()
           .map { "content: ${contentAndMediaType.content()}, example: ${namedExample.name()} -> $it" }
       }
     }
@@ -92,7 +92,7 @@ private fun Map.Entry<String, ApiResponse>.validateContentExamples() =
 private fun Map.Entry<String, ApiResponse>.validateHeaderExamples() =
   response().safeHeaders().flatMap { header ->
     header.value.safeExamples().flatMap { namedExample ->
-      header.value.schema.toDataType().validate(namedExample.example().value.convert()).errors().map {
+      header.value.schema.toDataType().validate(namedExample.example().value.normalize()).errors().map {
         "header: ${header.key}, example: ${namedExample.name()} -> $it"
       }
     }

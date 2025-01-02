@@ -24,13 +24,13 @@ sealed interface ValidationResult {
   }
 }
 
-fun <T> Collection<T>.validate(transform: (T) -> ValidationResult): ValidationResult =
+fun <T> Collection<T>.validateEach(transform: (T) -> ValidationResult): ValidationResult =
   map(transform).reduce()
 
-fun <K, V> Map<out K, V>.validate(transform: (Map.Entry<K, V>) -> ValidationResult): ValidationResult =
+fun <K, V> Map<out K, V>.validateEach(transform: (Map.Entry<K, V>) -> ValidationResult): ValidationResult =
   map(transform).reduce()
 
-fun <T> Array<T>.validate(transform: (index: Int, T) -> ValidationResult): ValidationResult =
+fun <T> Array<T>.validateEach(transform: (index: Int, T) -> ValidationResult): ValidationResult =
   mapIndexed(transform).reduce()
 
 fun Collection<ValidationResult>.reduce(): ValidationResult =

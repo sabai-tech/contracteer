@@ -2,7 +2,7 @@ package dev.blitzcraft.contracts.core.datatype
 
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.validate
+import dev.blitzcraft.contracts.core.validation.validateEach
 
 class ObjectDataType(name: String= "Inline Schema", val properties: Map<String, DataType<*>>,
                      val requiredProperties: Set<String> = emptySet(),
@@ -10,7 +10,7 @@ class ObjectDataType(name: String= "Inline Schema", val properties: Map<String, 
     StructuredObjectDataType(name, "object", isNullable) {
 
   override fun doValidate(value: Map<String, Any?>) =
-    properties.validate {
+    properties.validateEach {
       when {
         !value.containsKey(it.key) && !isRequired(it.key) -> success()
         !value.containsKey(it.key)                        -> error(it.key, "is required")

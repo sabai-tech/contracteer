@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.validation.validate
+import dev.blitzcraft.contracts.core.validation.validateEach
 
 class ArrayDataType(
   name: String = "Inline Schema",
@@ -8,7 +8,7 @@ class ArrayDataType(
   isNullable: Boolean = false): DataType<Array<*>>(name, "array", isNullable, Array::class.java) {
 
   override fun doValidate(value: Array<*>) =
-    value.validate { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
+    value.validateEach { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
 
 
   override fun randomValue(): Array<*> = Array((1..5).random()) { itemDataType.randomValue() }

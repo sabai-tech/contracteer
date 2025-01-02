@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.core.contract
 
 import dev.blitzcraft.contracts.core.datatype.BooleanDataType
-import dev.blitzcraft.contracts.core.datatype.DecimalDataType
+import dev.blitzcraft.contracts.core.datatype.NumberDataType
 import dev.blitzcraft.contracts.core.datatype.IntegerDataType
 import org.junit.jupiter.api.Test
 
@@ -33,7 +33,7 @@ class ContractParameterTest {
   @Test
   fun `string representing a decimal matches Parameter of type decimal`() {
     // given
-    val param = ContractParameter("param", DecimalDataType())
+    val param = ContractParameter("param", NumberDataType())
 
     // when
     val result = "1234.789".matches(param)
@@ -67,7 +67,7 @@ class ContractParameterTest {
   @Test
   fun `string with decimal value matches Example value`() {
     // given
-    val param = ContractParameter("param", DecimalDataType(), example = Example(1234.56))
+    val param = ContractParameter("param", NumberDataType(), example = Example(1234.56))
 
     // when
     val result = "1234.56".matchesExample(param)

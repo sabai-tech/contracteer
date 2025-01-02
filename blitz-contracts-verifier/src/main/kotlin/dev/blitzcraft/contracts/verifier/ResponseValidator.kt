@@ -5,7 +5,7 @@ import dev.blitzcraft.contracts.core.contract.matches
 import dev.blitzcraft.contracts.core.validation.ValidationResult
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.validate
+import dev.blitzcraft.contracts.core.validation.validateEach
 import org.http4k.core.Headers
 import org.http4k.core.Response
 import org.http4k.core.findSingle
@@ -22,7 +22,7 @@ internal class ResponseValidator(private val responseContract: ContractResponse)
     else error("Status code does not match. Expected: ${responseContract.statusCode}, Actual: $this")
 
   private fun Headers.validate() =
-    responseContract.headers.validate {
+    responseContract.headers.validateEach {
       when {
         it.isRequired.not() && hasHeader(it.name).not() -> success()
         it.isRequired && hasHeader(it.name).not()       -> error(it.name, "Is Missing")

@@ -1,26 +1,36 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.convert
 import org.junit.jupiter.api.Test
 
-class DecimalDataTypeTest {
+class NumberDataTypeTest {
 
   @Test
-  fun `validates a value of type Decimal`() {
+  fun `validates a decimal value`() {
     // given
-    val decimalDataType = DecimalDataType()
+    val decimalDataType = NumberDataType()
 
     // when
-    val result = decimalDataType.validate(123.45.convert())
+    val result = decimalDataType.validate(123.45)
+
+    // then
+    assert(result.isSuccess())
+  }
+  @Test
+  fun `validates an integer value`() {
+    // given
+    val decimalDataType = NumberDataType()
+
+    // when
+    val result = decimalDataType.validate(123)
 
     // then
     assert(result.isSuccess())
   }
 
   @Test
-  fun `does not validate value whose type is not Decimal`() {
+  fun `does not validate value which is not a number`() {
     // given
-    val decimalDataType = DecimalDataType()
+    val decimalDataType = NumberDataType()
 
     // when
     val result = decimalDataType.validate(true)
@@ -28,10 +38,11 @@ class DecimalDataTypeTest {
     // then
     assert(result.isSuccess().not())
   }
+
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val decimalDataType = DecimalDataType(isNullable = true)
+    val decimalDataType = NumberDataType(isNullable = true)
 
     // when
     val result = decimalDataType.validate(null)
@@ -43,7 +54,7 @@ class DecimalDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val decimalDataType = DecimalDataType(isNullable = false)
+    val decimalDataType = NumberDataType(isNullable = false)
 
     // when
     val result = decimalDataType.validate(null)

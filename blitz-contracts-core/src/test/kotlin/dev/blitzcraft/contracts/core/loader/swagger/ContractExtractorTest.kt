@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.contract.ContractParameter
-import dev.blitzcraft.contracts.core.convert
+import dev.blitzcraft.contracts.core.normalize
 import dev.blitzcraft.contracts.core.datatype.*
 import kotlin.io.path.Path
 import kotlin.test.Test
@@ -9,9 +9,8 @@ import kotlin.test.Test
 
 class ContractExtractorTest {
 
-  // TODO rename it
   @Test
-  fun `auto generated contract with  all data types`() {
+  fun `auto generated contract with all data types`() {
     // when
     val contracts =
       Path("src/test/resources/2xx_auto_generated_contract_with_all_datatypes.yaml").loadOpenApiSpec().contracts
@@ -63,7 +62,7 @@ class ContractExtractorTest {
     assert(contract.response.body!!.dataType is ObjectDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["boolean"] is BooleanDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["integer"] is IntegerDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["number"] is DecimalDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["number"] is NumberDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["array"] is ArrayDataType)
     assert((contract.response.body!!.dataType.asObjectDataType().properties["array"] as ArrayDataType).itemDataType is IntegerDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["string"] is StringDataType)
@@ -129,7 +128,7 @@ class ContractExtractorTest {
     assert(contracts.size == 2)
     assert(contracts.filter { it.exampleKey == null }.size == 1)
     assert(contracts.filter { it.exampleKey == "NOT_FOUND" }.size == 1)
-    assert(contracts.first { it.exampleKey == "NOT_FOUND" }.request.pathParameters.first().value() == 999.convert())
+    assert(contracts.first { it.exampleKey == "NOT_FOUND" }.request.pathParameters.first().value() == 999.normalize())
     assert(contracts.first { it.exampleKey == "NOT_FOUND" }.response.statusCode == 404)
     assert(contracts.first { it.exampleKey == "NOT_FOUND" }.response.body!!.content() == mapOf("error" to "NOT FOUND"))
   }

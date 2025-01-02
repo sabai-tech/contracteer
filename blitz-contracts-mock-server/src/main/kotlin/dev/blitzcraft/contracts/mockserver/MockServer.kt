@@ -8,7 +8,7 @@ import dev.blitzcraft.contracts.core.contract.matchesExample
 import dev.blitzcraft.contracts.core.validation.ValidationResult
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.validate
+import dev.blitzcraft.contracts.core.validation.validateEach
 import org.http4k.core.*
 import org.http4k.core.ContentType.Companion.TEXT_PLAIN
 import org.http4k.core.Status.Companion.CONFLICT
@@ -65,7 +65,7 @@ class MockServer(private val contracts: Set<Contract>,
         verifyAcceptRequestHeader(req.header("Accept"))
 
   private fun List<ContractParameter>.verify(parameterValueExtractor: (ContractParameter) -> String?): ValidationResult =
-    validate {
+    validateEach {
       val value = parameterValueExtractor.invoke(it)
       when {
         value == null && it.isRequired -> error(it.name, "is missing")

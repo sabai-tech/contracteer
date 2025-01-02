@@ -1,6 +1,5 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.convert
 import org.junit.jupiter.api.Test
 
 class ArrayDataTypeTest {
@@ -73,7 +72,7 @@ class ArrayDataTypeTest {
     val arrayDataType = ArrayDataType(itemDataType = IntegerDataType())
 
     // when
-    val result = arrayDataType.validate(arrayOf(1, 2, 3).convert())
+    val result = arrayDataType.validate(arrayOf(1, 2, 3))
 
     // then
     assert(result.isSuccess())

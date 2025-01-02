@@ -12,14 +12,14 @@ data class Body(
 
   init {
     if ("json" in contentType) {
-      require(dataType is StructuredObjectDataType || dataType is ArrayDataType ) { "Body with Content Type '$contentType' accepts only object type" }
-      example?.value?.let { require(it is Map<*, *> || it is Array<*>) { "Example value is not an object or an array" } }
+      require(dataType is StructuredObjectDataType || dataType is ArrayDataType) { "Body with Content Type '$contentType' accepts only object type" }
+      example?.normalizedValue?.let { require(it is Map<*, *> || it is Array<*>) { "Example value is not an object or an array" } }
     }
   }
 
   fun hasExample(): Boolean = example != null
 
-  fun content() = if (hasExample()) example!!.value else dataType.randomValue()
+  fun content() = if (hasExample()) example!!.normalizedValue else dataType.randomValue()
 
   fun asString(): String =
     when {
@@ -41,7 +41,7 @@ fun String?.matchesExample(body: Body) =
   when {
     body.example == null                                              -> error("Body Example is not defined")
     this == null && !body.dataType.isNullable                         -> error("Body cannot be null")
-    this == null && body.example.value == null                        -> success()
+    this == null && body.example.normalizedValue == null              -> success()
     "json" !in body.contentType.lowercase()                           -> error("Only JSON content type is managed")
     body.dataType is ObjectDataType || body.dataType is ArrayDataType -> parseAndValidateExample(this!!, body.example)
     else                                                              -> error("Body with Content Type '${body.contentType}' accepts only object or array type")
@@ -57,8 +57,8 @@ private fun parseAndValidate(stringValue: String, dataType: DataType<*>) =
 
 private fun parseAndValidateExample(stringValue: String, example: Example) =
   try {
-    val value = jsonMapper.readValue(stringValue, example.value!!::class.java)
-    example.validate(value)
+    val value = jsonMapper.readValue(stringValue, example.normalizedValue!!::class.java)
+    example.matches(value)
   } catch (e: Exception) {
     error("Body does not match the expected type")
   }

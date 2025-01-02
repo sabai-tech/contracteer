@@ -1,54 +1,53 @@
 package dev.blitzcraft.contracts.core.contract
 
-import dev.blitzcraft.contracts.core.convert
 import org.junit.jupiter.api.Test
 
 class ExampleTest {
 
 
   @Test
-  fun `validates Example for null`() {
+  fun `matches Example for null value`() {
     // given
     val example = Example(null)
 
     // when
-    val result = example.validate(null)
+    val result = example.matches(null)
 
     // then
     assert(result.isSuccess())
   }
 
   @Test
-  fun `validate Example for simple value`() {
+  fun `matches Example for simple value`() {
     // given
     val example = Example(1)
 
     // when
-    val result = example.validate(1.convert())
+    val result = example.matches(1)
 
     // then
     assert(result.isSuccess())
   }
 
   @Test
-  fun `does not validate Example when simple value are different`() {
+  fun `does not match Example when simple value are different`() {
     // given
     val example = Example(1)
 
     // when
-    val result = example.validate(2.convert())
+    val result = example.matches(2)
 
     // then
     assert(result.isSuccess().not())
   }
 
   @Test
-  fun `array does not validate Example if sizes are different`() {
+  fun `array does not match Example if sizes are different`() {
     // given
     val example = Example(arrayOf(1, 2))
 
     // when
-    val result = example.validate(arrayOf(1, 2, 42).convert())
+    val result = example.matches(arrayOf(1, 2, 42))
 
     // then
     assert(result.isSuccess().not())
@@ -57,12 +56,12 @@ class ExampleTest {
   }
 
   @Test
-  fun `array does not validate Example if items type are different`() {
+  fun `array does not matche Example if items type are different`() {
     // given
     val example = Example(arrayOf("John", "Doe"))
 
     // when
-    val result = example.validate(arrayOf(1, 2).convert())
+    val result = example.matches(arrayOf(1, 2))
 
     // then
     assert(result.isSuccess().not())
@@ -77,7 +76,7 @@ class ExampleTest {
     val example = Example(arrayOf("John", "Doe"))
 
     // when
-    val result = example.validate(arrayOf("John", "42").convert())
+    val result = example.matches(arrayOf("John", "42"))
 
     // then
     assert(result.isSuccess().not())
@@ -91,7 +90,7 @@ class ExampleTest {
     val example = Example(arrayOf("John", "Doe"))
 
     // when
-    val result = example.validate(arrayOf("John", "Doe").convert())
+    val result = example.matches(arrayOf("John", "Doe"))
 
     // then
     assert(result.isSuccess())
@@ -106,9 +105,9 @@ class ExampleTest {
       arrayOf(99, 101)))
 
     // when
-    val result = example.validate(arrayOf(
+    val result = example.matches(arrayOf(
       arrayOf(1, 2),
-      arrayOf(42, 101)).convert()
+      arrayOf(42, 101))
     )
 
     // then
@@ -127,11 +126,11 @@ class ExampleTest {
             "age" to 42)))
 
     // when
-    val result = example.validate(arrayOf(
+    val result = example.matches(arrayOf(
       mapOf("id" to 1,
             "age" to 20),
       mapOf("id" to 2,
-            "age" to 99)).convert()
+            "age" to 99))
     )
 
     // then
@@ -149,10 +148,10 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.validate(mapOf(
+    val result = example.matches(mapOf(
       "id" to "John",
       "address" to 20,
-    ).convert())
+    ))
 
     // then
     assert(result.isSuccess().not())
@@ -169,10 +168,10 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.validate(mapOf(
+    val result = example.matches(mapOf(
       "name" to "John",
       "age" to true,
-    ).convert())
+    ))
 
     // then
     assert(result.isSuccess().not())
@@ -189,10 +188,10 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.validate(mapOf(
+    val result = example.matches(mapOf(
       "name" to "John",
       "age" to 20
-    ).convert())
+    ))
 
     // then
     assert(result.isSuccess())
@@ -208,11 +207,11 @@ class ExampleTest {
       )))
 
     // when
-    val result = example.validate(mapOf(
+    val result = example.matches(mapOf(
       "user" to mapOf(
         "name" to "John",
         "age" to 21
-      )).convert())
+      )))
 
     // then
     assert(result.isSuccess().not())
@@ -221,7 +220,7 @@ class ExampleTest {
   }
 
   @Test
-  fun `map validates Example when an item value of a property of type array are not equals`() {
+  fun `map does not match Example when an item value of a property of type array are not equals`() {
     // given
     val example = Example(mapOf(
       "name" to "John",
@@ -230,11 +229,10 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.validate(mapOf(
+    val result = example.matches(mapOf(
       "name" to "John",
       "productIds" to arrayOf(1, 2, 42, 4, 5, 6)
-
-    ).convert())
+    ))
 
     // then
     assert(result.isSuccess().not())

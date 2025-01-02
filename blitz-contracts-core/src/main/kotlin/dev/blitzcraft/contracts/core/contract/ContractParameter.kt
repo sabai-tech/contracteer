@@ -1,7 +1,6 @@
 package dev.blitzcraft.contracts.core.contract
 
 import dev.blitzcraft.contracts.core.datatype.*
-import dev.blitzcraft.contracts.core.validation.ValidationResult
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
 import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
 
@@ -13,21 +12,21 @@ open class ContractParameter(
 
   fun hasExample() = example != null
 
-  fun value(): Any? = if (hasExample()) example!!.value else dataType.randomValue()
+  fun value(): Any? = if (hasExample()) example!!.normalizedValue else dataType.randomValue()
 
   fun stringValue(): String {
     return when (dataType) {
       is ObjectDataType -> TODO("Not yet implemented")
       is ArrayDataType  -> TODO("Not yet implemented")
-      else              -> value().toString()
+      else                                -> value().toString()
     }
   }
 
   internal fun parseOrNull(value: String) =
     when (dataType) {
       is BooleanDataType          -> value.toBooleanStrictOrNull()
-      is IntegerDataType          -> value.toBigIntegerOrNull()
-      is DecimalDataType          -> value.toBigDecimalOrNull()
+      is IntegerDataType          -> value.toBigDecimalOrNull()
+      is NumberDataType           -> value.toBigDecimalOrNull()
       is StringDataType           -> value
       is UuidDataType             -> value
       is Base64DataType           -> value
@@ -55,17 +54,14 @@ fun String?.matches(parameter: ContractParameter) = when {
 }
 
 fun String?.matchesExample(parameter: ContractParameter) = when {
-  parameter.example == null                       -> error(parameter.name, "Example is not defined")
-  this == null && !parameter.dataType.isNullable  -> error(parameter.name, "Cannot be null")
-  this == null && parameter.example.value == null -> success()
-  else                                            -> validateEqualsExampleValue(parameter, this!!)
+  parameter.example == null                                 -> error(parameter.name, "Example is not defined")
+  this == null && !parameter.dataType.isNullable            -> error(parameter.name, "Cannot be null")
+  this == null && parameter.example.normalizedValue == null -> success()
+  else                                                      -> validateEqualsExampleValue(parameter, this!!)
 }
 
-private fun validateEqualsExampleValue(parameter: ContractParameter, value: String): ValidationResult {
-  val parsedValue = parameter.parseOrNull(value)
-  return when {
-    parsedValue == null                     -> error(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
-    parameter.example?.value == parsedValue -> success()
-    else                                    -> error(parameter.name, "Does not match example. Expected value: '${parameter.example?.value}'. Actual value: '$value'")
+private fun validateEqualsExampleValue(parameter: ContractParameter, value: String) =
+  when (val parsedValue = parameter.parseOrNull(value)) {
+    null -> error(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
+    else -> parameter.example!!.matches(parsedValue).forProperty(parameter.name)
   }
-}
