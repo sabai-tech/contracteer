@@ -5,7 +5,8 @@ data class ContractResponse(
   val headers: List<ContractParameter> = emptyList(),
   val body: Body? = null
 ) {
-   fun hasBody(): Boolean = body!= null
+  fun hasBody(): Boolean = body != null
+  fun withBody(body: Body) = copy(body = body)
 }
 
 

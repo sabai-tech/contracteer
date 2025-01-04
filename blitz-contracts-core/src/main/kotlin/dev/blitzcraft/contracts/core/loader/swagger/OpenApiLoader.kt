@@ -1,11 +1,8 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
-import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.normalize
+import dev.blitzcraft.contracts.core.contract.*
+import dev.blitzcraft.contracts.core.validation.validateEach
 import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.Operation
-import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.responses.ApiResponse
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
 import java.io.File
@@ -21,79 +18,49 @@ fun Path.loadOpenApiSpec(): OpenApiLoadingResult {
 
   if (parseResult.messages.isNotEmpty()) return OpenApiLoadingResult(errors = parseResult.messages)
   SharedComponents.components = parseResult.openAPI.components
-  val errors = checkFor2xxResponses(parseResult.openAPI) + validateExamples(parseResult.openAPI)
 
-  return if (errors.isEmpty()) OpenApiLoadingResult(parseResult.openAPI.contracts()) else OpenApiLoadingResult(errors = errors)
-}
+  val missing2xxErrors = checkFor2xxResponses(parseResult.openAPI)
+  if (missing2xxErrors.isNotEmpty()) return OpenApiLoadingResult(errors = missing2xxErrors)
 
-data class OpenApiLoadingResult(
-  val contracts: Set<Contract> = emptySet(),
-  val errors: List<String> = emptyList()) {
-  fun hasErrors() = errors.isNotEmpty()
+  val examplesErrors = validateExamples(parseResult.openAPI.contracts())
+  if (examplesErrors.isNotEmpty()) return OpenApiLoadingResult(errors = examplesErrors)
+
+  return OpenApiLoadingResult(parseResult.openAPI.contracts())
 }
 
 private fun checkFor2xxResponses(openAPI: OpenAPI) =
-  openAPI.paths.flatMap { pathAndItem ->
-    pathAndItem.item()
-      .readOperationsMap()
-      .filter { methodAndOperation ->
-        methodAndOperation.operation().responses.filter { it.code().startsWith("2") }.isEmpty()
-      }.map { "'${it.method()}: ${pathAndItem.path()}' does not contain response for 2xx" }
+  openAPI.paths.flatMap { (path, item) ->
+    item.readOperationsMap()
+      .filter { (_, operation) -> operation.responses.none { it.key.startsWith("2") } }
+      .map { "'${path}: ${item.summary}' does not contain response for 2xx" }
   }
 
-private fun validateExamples(openAPI: OpenAPI) =
-  openAPI.paths.flatMap { pathItem ->
-    pathItem.item().readOperationsMap()
-      .flatMap {
-        (it.validateRequestExamples() + it.validateResponseExamples()).map { message -> "method: ${it.method()}, $message" }
-      }
-      .map { "path: ${pathItem.path()}, $it" }
-  }.sorted()
-
-private fun Map.Entry<PathItem.HttpMethod, Operation>.validateRequestExamples() =
-  operation().validateRequestParameterExamples() + operation().validateRequestBodyExamples()
-
-private fun Operation.validateRequestBodyExamples() =
-  requestBody?.content?.flatMap { contentAndMediaType ->
-    contentAndMediaType.mediaType().safeExamples().flatMap { namedExample ->
-      contentAndMediaType.mediaType().schema
-        .toDataType()
-        .validate(namedExample.example().value.normalize())
-        .errors()
-        .map {
-          "request body: ${contentAndMediaType.content()}, example: ${namedExample.name()} -> $it"
-        }
+private fun validateExamples(contracts: Set<Contract>) =
+  contracts
+    .filter { it.hasExample() }
+    .flatMap { contract ->
+      (validateRequestExample(contract.request) +
+       validateResponseExample(contract.response)
+      ).map { "${contract.description()}, $it" }
     }
-  } ?: emptyList()
 
-private fun Operation.validateRequestParameterExamples() =
-  safeParameters().flatMap { parameter ->
-    parameter.safeExamples().flatMap { namedExample ->
-      parameter.schema.toDataType().validate(namedExample.example().value.normalize()).errors().map {
-        "request parameter: ${parameter.name}, example: ${namedExample.name()} -> $it"
-      }
-    }
-  }
+private fun validateRequestExample(request: ContractRequest) =
+  request.headers.validateExamplesWithContext("request header") +
+  request.pathParameters.validateExamplesWithContext("request path parameter") +
+  request.cookies.validateExamplesWithContext("request cookie") +
+  request.queryParameters.validateExamplesWithContext("request query parameter") +
+  request.body.validateExampleWithContext("request body")
 
-private fun Map.Entry<PathItem.HttpMethod, Operation>.validateResponseExamples() =
-  operation().responses.flatMap { it.validateHeaderExamples() + it.validateContentExamples() }
+private fun validateResponseExample(response: ContractResponse) =
+  response.headers.validateExamplesWithContext("response header") +
+  response.body.validateExampleWithContext("response body")
 
-private fun Map.Entry<String, ApiResponse>.validateContentExamples() =
-  response().content
-    ?.flatMap { contentAndMediaType ->
-      contentAndMediaType.mediaType().safeExamples().flatMap { namedExample ->
-        contentAndMediaType.mediaType().schema.toDataType().validate(namedExample.example().value.normalize()).errors()
-          .map { "content: ${contentAndMediaType.content()}, example: ${namedExample.name()} -> $it" }
-      }
-    }
-    ?.map { "response status code: $key, $it" }
-  ?: emptyList()
+private fun Collection<ContractParameter>.validateExamplesWithContext(context: String) =
+  filter { it.hasExample() }
+    .validateEach { it.dataType.validate(it.example!!.normalizedValue).forProperty(it.name) }
+    .errors()
+    .map { "$context $it" }
 
-private fun Map.Entry<String, ApiResponse>.validateHeaderExamples() =
-  response().safeHeaders().flatMap { header ->
-    header.value.safeExamples().flatMap { namedExample ->
-      header.value.schema.toDataType().validate(namedExample.example().value.normalize()).errors().map {
-        "header: ${header.key}, example: ${namedExample.name()} -> $it"
-      }
-    }
-  }.map { "response status code: $key, $it" }
+private fun Body?.validateExampleWithContext(context: String) =
+  if (this != null && hasExample()) dataType.validate(example!!.normalizedValue).errors().map { "$context $it" }
+  else emptyList()

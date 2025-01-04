@@ -12,7 +12,7 @@ data class Contract(
     val requestContentType = request.body?.contentType?.let { "($it)" } ?: ""
     val responseContentType = response.body?.contentType?.let { "($it)" } ?: ""
     val description =
-      "${request.method.uppercase()} ${request.path} $requestContentType-> ${response.statusCode} $responseContentType"
+      "${request.method.uppercase()} ${request.path} $requestContentType -> ${response.statusCode} $responseContentType"
     return exampleKey?.let { "$description with example '$it'" } ?: description
   }
 }

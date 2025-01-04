@@ -8,6 +8,9 @@ data class ContractRequest(
   val headers: List<ContractParameter> = emptyList(),
   val cookies: List<ContractParameter> = emptyList(),
   val body: Body? = null
-)
+) {
+  fun withBody(body: Body) = copy(body = body)
+}
+
 
 

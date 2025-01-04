@@ -25,6 +25,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/product_details'
+              examples:
+                CREATE_PRODUCT:
+                  value:
+                    id: 10
+                    name: 'Duvel'
+                    quantity: 24
 
   /products/{id}:
     parameters:
@@ -35,6 +41,8 @@ paths:
           type: integer
         examples:
           GET_DETAILS:
+            value: 10
+          ASYNC:
             value: 10
           GET_DETAILS_2:
             value: 10.1

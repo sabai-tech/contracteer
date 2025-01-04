@@ -22,15 +22,15 @@ class OpenApiLoaderTest {
 
     // then
     assert(result.contracts.isEmpty())
-    assert(result.errors.size == 6)
-    assert(result.errors.all {
-      it.startsWith("path: /products, method: POST, request body: application/json, example: CREATE_PRODUCT -> ") ||
-      it.startsWith("path: /products/{id}, method: GET, request parameter: id, example: GET_DETAILS_2 -> ") ||
-      it.startsWith("path: /products/{id}, method: GET, request parameter: id, example: NOT_FOUND -> ") ||
-      it.startsWith("path: /products/{id}, method: GET, response status code: 200, content: application/json, example: GET_DETAILS -> ") ||
-      it.startsWith("path: /products/{id}, method: GET, response status code: 404, content: application/json, example: NOT_FOUND -> ") ||
-      it.startsWith("path: /products/{id}, method: GET, response status code: 404, header: location, example: ASYNC -> ")
-    })
+    assert(result.errors.size == 5)
+    assert(result.errors.containsAll(listOf(
+      "POST /products (application/json) -> 201 (application/json) with example 'CREATE_PRODUCT', request body 'id': Wrong type. Expected type: integer",
+      "GET /products/{id}  -> 200 (application/json) with example 'GET_DETAILS', response body 'quantity': Wrong type. Expected type: integer",
+      "GET /products/{id}  -> 404 (application/json) with example 'ASYNC', response header 'location': Wrong type. Expected type: string",
+      "GET /products/{id}  -> 404 (application/json) with example 'NOT_FOUND', request path parameter 'id': Wrong type. Expected type: integer",
+      "GET /products/{id}  -> 404 (application/json) with example 'NOT_FOUND', request path parameter 'id': Wrong type. Expected type: integer",
+      "GET /products/{id}  -> 404 (application/json) with example 'NOT_FOUND', response body 'error': Wrong type. Expected type: string"
+    )))
   }
 }
 

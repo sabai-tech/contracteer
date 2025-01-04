@@ -1,36 +1,80 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
+import dev.blitzcraft.contracts.core.contract.ContractParameter
+import dev.blitzcraft.contracts.core.contract.Example
+import dev.blitzcraft.contracts.core.contract.PathParameter
 import dev.blitzcraft.contracts.core.datatype.*
 import io.swagger.v3.oas.models.Operation
-import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.*
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
 
-internal fun Map.Entry<PathItem.HttpMethod, Operation>.method() = key
-internal fun Map.Entry<PathItem.HttpMethod, Operation>.operation() = value
-internal fun Map.Entry<String, PathItem>.path() = key
-internal fun Map.Entry<String, PathItem>.item() = value
-internal fun Map.Entry<String, ApiResponse>.code() = key
-internal fun Map.Entry<String, ApiResponse>.response() = value
-internal fun Map.Entry<String, MediaType>.mediaType() = value
-internal fun Map.Entry<String, MediaType>.content() = key
-internal fun Map.Entry<String, Example>.example() = value
-internal fun Map.Entry<String, Example>.name() = key
-internal fun Map<String, Header>.exampleKeys() = flatMap { it.value.safeExamples().keys }.toSet()
+
 internal fun MediaType.safeExamples() = examples ?: emptyMap()
-internal fun Parameter.safeExamples() = examples ?: emptyMap()
-internal fun Header.safeExamples() = examples ?: emptyMap()
-internal fun List<Parameter>.exampleKeys() = flatMap { it.safeExamples().keys }.toSet()
-internal fun Content.exampleKeys() = flatMap { it.value.safeExamples().keys }.toSet()
-internal fun ApiResponse.safeHeaders() = headers ?: emptyMap()
-internal fun ApiResponse.exampleKeys() = safeHeaders().exampleKeys() + bodyExampleKeys()
-internal fun ApiResponse.bodyExampleKeys() = content?.exampleKeys() ?: emptySet()
-internal fun Operation.safeParameters(): List<Parameter> = parameters ?: emptyList()
+
+internal fun MediaType.contractExample(exampleKey: String?): Example? =
+  exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
+
+internal fun Parameter.safeExamples() =
+  examples ?: emptyMap()
+
+internal fun Parameter.contractExample(exampleKey: String?): Example? =
+  exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
+
+internal fun Parameter.toContractParameter(exampleKey: String?) =
+  ContractParameter(name, schema.toDataType(), required ?: false, contractExample(exampleKey))
+
+internal fun Parameter.toPathParameter(exampleKey: String?) =
+  PathParameter(name, schema.toDataType(), contractExample(exampleKey))
+
+internal fun Header.safeExamples() =
+  examples ?: emptyMap()
+
+internal fun Header.contractExample(exampleKey: String?): Example? =
+  exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
+
+internal fun List<Parameter>.exampleKeys() =
+  flatMap { it.safeExamples().keys }.toSet()
+
+internal fun Content.exampleKeys() =
+  flatMap { it.value.safeExamples().keys }.toSet()
+
+internal fun ApiResponse.safeHeaders() =
+  headers ?: emptyMap()
+
+internal fun ApiResponse.exampleKeys() =
+  safeHeaders().exampleKeys() + bodyExampleKeys()
+
+internal fun ApiResponse.bodyExampleKeys() =
+  content?.exampleKeys() ?: emptySet()
+
+internal fun ApiResponse.headersParameters(exampleKey: String? = null) =
+  safeHeaders().map { it.toContractParameter(exampleKey) }
+
+internal fun Operation.safeParameters() =
+  parameters ?: emptyList()
+
 internal fun Operation.requestExampleKeys() =
   safeParameters().exampleKeys() + (requestBody?.content?.exampleKeys() ?: emptySet())
+
+internal fun Operation.pathParameters(exampleKey: String? = null) =
+  safeParameters().filter { it.`in` == "path" }.map { it.toPathParameter(exampleKey) }
+
+internal fun Operation.queryParameters(exampleKey: String? = null) =
+  safeParameters().filter { it.`in` == "query" }.map { it.toContractParameter(exampleKey) }
+
+internal fun Operation.headersParameters(exampleKey: String? = null) =
+  safeParameters().filter { it.`in` == "header" }.map { it.toContractParameter(exampleKey) }
+
+internal fun Operation.cookiesParameter(exampleKey: String? = null) =
+  safeParameters().filter { it.`in` == "cookie" }.map { it.toContractParameter(exampleKey) }
+
+internal fun Map.Entry<String, Header>.toContractParameter(exampleKey: String? = null) =
+  ContractParameter(key, value.schema.toDataType(), value.required ?: false, value.contractExample(exampleKey))
+
+internal fun Map<String, Header>.exampleKeys() =
+  flatMap { it.value.safeExamples().keys }.toSet()
 
 
 internal fun Schema<*>.toDataType(): DataType<*> =
@@ -57,7 +101,7 @@ internal fun Schema<*>.toDataType(): DataType<*> =
     else               -> TODO("Schema ${this::class.java} is not yet supported")
   }
 
-fun createComposedObjectDataType(composedSchema: ComposedSchema) =
+private fun createComposedObjectDataType(composedSchema: ComposedSchema) =
   when {
     composedSchema.oneOf != null -> OneOfDataType(composedSchema.name,
                                                   composedSchema.oneOf.map { it.toDataType() as ObjectDataType },
