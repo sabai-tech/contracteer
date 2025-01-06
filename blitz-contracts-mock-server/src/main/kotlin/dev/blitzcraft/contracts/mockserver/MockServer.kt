@@ -69,6 +69,7 @@ class MockServer(private val contracts: Set<Contract>,
       val value = parameterValueExtractor.invoke(it)
       when {
         value == null && it.isRequired -> error(it.name, "is missing")
+        value == null                  -> success()
         it.hasExample()                -> value.matchesExample(it)
         else                           -> value.matches(it)
       }
@@ -96,10 +97,12 @@ class MockServer(private val contracts: Set<Contract>,
 
   private fun Body.verify(req: Request) =
     when {
-      req.contentType() == null                    -> error("Request Header 'Content-type' is missing")
-      !req.contentType()!!.startsWith(contentType) -> error("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
-      hasExample()                                 -> req.bodyString().matchesExample(this)
-      else                                         -> req.bodyString().matches(this)
+      req.contentType() == null  -> error("Request Header 'Content-type' is missing")
+      !req
+        .contentType()!!
+        .startsWith(contentType) -> error("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
+      hasExample()               -> req.bodyString().matchesExample(this)
+      else                       -> req.bodyString().matches(this)
     }
 
 
@@ -107,7 +110,7 @@ class MockServer(private val contracts: Set<Contract>,
     val httpResponse = Response(Status.fromCode(response.statusCode)!!)
     return if (response.hasBody())
       httpResponse.header("Content-type", response.body!!.contentType).body(response.body!!.asString())
-     else httpResponse
+    else httpResponse
   }
 
   private fun List<Pair<Contract, ValidationResult>>.toNonMatchingErrorResponse() =

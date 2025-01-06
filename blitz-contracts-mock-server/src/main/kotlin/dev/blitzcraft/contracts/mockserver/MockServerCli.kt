@@ -21,6 +21,7 @@ class MockServerCli: Callable<Int> {
     required = false,
     description = ["Server port (default: \${DEFAULT-VALUE})"])
   private var port = 8080
+
   override fun call(): Int {
     var exitCode = 0
     val loadingResult = specFile.loadOpenApiSpec()
