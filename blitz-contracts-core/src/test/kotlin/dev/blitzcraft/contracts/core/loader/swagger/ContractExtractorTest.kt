@@ -75,7 +75,17 @@ class ContractExtractorTest {
     assert(contract.response.body!!.dataType.asObjectDataType().properties["password"] is StringDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["password"]!!.openApiType == "string/password")
     assert(contract.response.body!!.dataType.asObjectDataType().properties["uuid"] is UuidDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["oneOf"] is OneOfDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["allOf"] is AllOfDataType)
+
+    val oneOf = contract.response.body!!.dataType.asObjectDataType().properties["oneOf"]
+    assert(oneOf is OneOfDataType)
+    assert((oneOf as OneOfDataType).discriminator!!.propertyName == "discriminator")
+    assert(oneOf.discriminator!!.mapping["obj1"]!!.name == "object1")
+
+    val anyOf = contract.response.body!!.dataType.asObjectDataType().properties["anyOf"]
+    assert(anyOf is AnyOfDataType)
+    assert((anyOf as AnyOfDataType).discriminator!!.propertyName == "discriminator")
+    assert(anyOf.discriminator!!.mapping["obj1"]!!.name == "object1")
   }
 
   @Test

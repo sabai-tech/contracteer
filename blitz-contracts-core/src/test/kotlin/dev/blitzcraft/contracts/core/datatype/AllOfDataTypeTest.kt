@@ -14,7 +14,7 @@ class AllOfDataTypeTest {
   @Test
   fun `do not validate when some of the sub datatype does not validate the value`() {
     // given
-    val allOfDataType = AllOfDataType(objectDataTypes = listOf(dog, cat))
+    val allOfDataType = AllOfDataType(subTypes = listOf(dog, cat))
 
     // when
     val result = allOfDataType.validate(mapOf("hunts" to true, "bark" to true))
@@ -28,7 +28,7 @@ class AllOfDataTypeTest {
   @Test
   fun `validate when all sub datatype validates the value`() {
     // given
-    val allOfDataType = AllOfDataType(objectDataTypes = listOf(dog, cat))
+    val allOfDataType = AllOfDataType(subTypes = listOf(dog, cat))
 
     // when
     val result = allOfDataType.validate(mapOf(
@@ -44,7 +44,7 @@ class AllOfDataTypeTest {
   @Test
   fun `should generate a random value`() {
     // given
-    val allOfDataType = AllOfDataType(objectDataTypes = listOf(dog, cat))
+    val allOfDataType = AllOfDataType(subTypes = listOf(dog, cat))
 
     // when
     val randomValue = allOfDataType.randomValue()

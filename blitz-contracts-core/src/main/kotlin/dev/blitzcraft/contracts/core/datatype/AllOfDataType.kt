@@ -6,12 +6,12 @@ import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.succe
 
 // TODO validate that sub schema does not have duplicated properties but with different type
 class AllOfDataType(name: String = "Inline Schema",
-                    val objectDataTypes: List<ObjectDataType>,
+                    val subTypes: List<StructuredObjectDataType>,
                     isNullable: Boolean = false):
     StructuredObjectDataType(name, "anyOf", isNullable) {
 
   override fun doValidate(value: Map<String, Any?>): ValidationResult {
-    val validationResults = objectDataTypes.associateWith { it.validate(value) }
+    val validationResults = subTypes.associateWith { it.validate(value) }
     val dataTypeErrors = validationResults.filterValues { it.isSuccess().not() }
     return when {
       dataTypeErrors.isEmpty().not() -> buildNoMatchError(dataTypeErrors)
@@ -19,9 +19,9 @@ class AllOfDataType(name: String = "Inline Schema",
     }
   }
 
-  override fun randomValue() = objectDataTypes.map { it.randomValue() }.reduce { acc, properties -> acc + properties }
+  override fun randomValue() = subTypes.map { it.randomValue() }.reduce { acc, properties -> acc + properties }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<ObjectDataType, ValidationResult>) =
+  private fun buildNoMatchError(dataTypeErrors: Map<StructuredObjectDataType, ValidationResult>) =
     error(
       "No schema match: ${System.lineSeparator()}" +
       dataTypeErrors.map {

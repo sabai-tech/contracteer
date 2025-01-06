@@ -55,13 +55,21 @@ components:
   schemas:
     object1:
       type: object
+      required:
+        - discriminator
       properties:
         prop1:
           type: string
+        discriminator:
+          type: string
     object2:
       type: object
+      required:
+        - discriminator
       properties:
         prop2:
+          type: string
+        discriminator:
           type: string
     product_details:
       type: object
@@ -103,10 +111,18 @@ components:
           oneOf:
             - $ref: "#/components/schemas/object1"
             - $ref: "#/components/schemas/object2"
+          discriminator:
+            propertyName: discriminator
+            mapping:
+              obj1: "#/components/schemas/object1"
         anyOf:
-          oneOf:
+          anyOf:
             - $ref: "#/components/schemas/object1"
             - $ref: "#/components/schemas/object2"
+          discriminator:
+            propertyName: discriminator
+            mapping:
+              obj1: "#/components/schemas/object1"
         allOf:
           allOf:
             - $ref: "#/components/schemas/object1"

@@ -4,6 +4,7 @@ import dev.blitzcraft.contracts.core.contract.ContractParameter
 import dev.blitzcraft.contracts.core.contract.Example
 import dev.blitzcraft.contracts.core.contract.PathParameter
 import dev.blitzcraft.contracts.core.datatype.*
+import dev.blitzcraft.contracts.core.datatype.Discriminator
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.*
@@ -104,16 +105,28 @@ internal fun Schema<*>.toDataType(): DataType<*> =
 private fun createComposedObjectDataType(composedSchema: ComposedSchema) =
   when {
     composedSchema.oneOf != null -> OneOfDataType(composedSchema.name,
-                                                  composedSchema.oneOf.map { it.toDataType() as ObjectDataType },
+                                                  composedSchema.oneOf.map { it.toDataType() as StructuredObjectDataType },
+                                                  getDiscriminatorFrom(composedSchema),
                                                   composedSchema.safeNullable())
     composedSchema.anyOf != null -> AnyOfDataType(composedSchema.name,
-                                                  composedSchema.anyOf.map { it.toDataType() as ObjectDataType },
+                                                  composedSchema.anyOf.map { it.toDataType() as StructuredObjectDataType },
+                                                  getDiscriminatorFrom(composedSchema),
                                                   composedSchema.safeNullable())
     composedSchema.allOf != null -> AllOfDataType(composedSchema.name,
-                                                  composedSchema.allOf.map { it.toDataType() as ObjectDataType },
+                                                  composedSchema.allOf.map { it.toDataType() as StructuredObjectDataType },
                                                   composedSchema.safeNullable())
     else                         -> TODO("Schema ${composedSchema::class.java} is not yet supported")
   }
 
+private fun getDiscriminatorFrom(composedSchema: ComposedSchema) =
+  composedSchema.discriminator?.let {
+    Discriminator(
+      it.propertyName,
+      it.mapping.mapValues { schemaName ->
+        SharedComponents.findSchema(schemaName.value).toDataType() as ObjectDataType
+      })
+  }
+
 internal fun Schema<*>.safeNullable() = nullable ?: false
-internal fun Schema<*>.fullyResolve() = SharedComponents.fullyResolve(this)
+internal fun Schema<*>.fullyResolve() =
+  this.`$ref`?.let { SharedComponents.findSchema(it) } ?: this.apply { name = name ?: "Inline Schema" }

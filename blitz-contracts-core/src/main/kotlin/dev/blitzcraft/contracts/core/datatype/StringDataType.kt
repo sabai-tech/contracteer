@@ -9,7 +9,7 @@ class StringDataType(
   isNullable: Boolean = false): DataType<String>(name, openApiType, isNullable, String::class.java) {
 
   private val loremIpsum =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
 
   override fun doValidate(value: String) = success()
 
