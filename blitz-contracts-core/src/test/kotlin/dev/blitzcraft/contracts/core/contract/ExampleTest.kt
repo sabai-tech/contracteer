@@ -38,7 +38,7 @@ class ExampleTest {
     val result = example.matches(2)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -50,7 +50,7 @@ class ExampleTest {
     val result = example.matches(arrayOf(1, 2, 42))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(result.errors().first().contains("size"))
   }
@@ -64,7 +64,7 @@ class ExampleTest {
     val result = example.matches(arrayOf(1, 2))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 2)
     assert(listOf("0", "John", "1").all { it in result.errors()[0] })
     assert(listOf("1", "Doe", "2").all { it in result.errors()[1] })
@@ -79,7 +79,7 @@ class ExampleTest {
     val result = example.matches(arrayOf("John", "42"))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("1", "Doe", "42").all { it in result.errors().first() })
   }
@@ -111,7 +111,7 @@ class ExampleTest {
     )
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("0", "1", "42", "99").all { it in result.errors().first() })
   }
@@ -134,7 +134,7 @@ class ExampleTest {
     )
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("1", "age", "42", "99").all { it in result.errors().first() })
   }
@@ -154,7 +154,7 @@ class ExampleTest {
     ))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(result.errors().first().contains("Property names"))
   }
@@ -174,7 +174,7 @@ class ExampleTest {
     ))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("age", "20", "true").all { it in result.errors().first() })
   }
@@ -214,7 +214,7 @@ class ExampleTest {
       )))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("user", "age", "20", "21").all { it in result.errors().first() })
   }
@@ -235,7 +235,7 @@ class ExampleTest {
     ))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("productIds", "2", "3", "42").all { it in result.errors().first() })
   }

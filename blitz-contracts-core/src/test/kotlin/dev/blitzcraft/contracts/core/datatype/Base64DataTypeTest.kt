@@ -25,7 +25,7 @@ class Base64DataTypeTest {
     val result = base64DataType.validate("Hello1234")
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `validates null value if it is nullable`() {
@@ -48,7 +48,7 @@ class Base64DataTypeTest {
     val result = base64DataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test

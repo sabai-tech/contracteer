@@ -84,7 +84,7 @@ class ContractParameterTest {
     val result = "true".matchesExample(param)
 
      // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `null string value does not match example of non nullable Contract Parameter`() {
@@ -95,7 +95,7 @@ class ContractParameterTest {
     val result = null.matchesExample(param)
 
      // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `null string matches when example value is null `() {

@@ -21,7 +21,7 @@ class AllOfDataTypeTest {
 
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().first().contains(Regex("dog|Inline Schema|breed|age")))
   }
 

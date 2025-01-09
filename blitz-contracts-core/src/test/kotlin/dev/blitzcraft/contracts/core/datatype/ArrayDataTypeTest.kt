@@ -25,7 +25,7 @@ class ArrayDataTypeTest {
     val result = arrayDataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -37,7 +37,7 @@ class ArrayDataTypeTest {
     val result = arrayDataType.validate("value")
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -49,7 +49,7 @@ class ArrayDataTypeTest {
     val result = arrayDataType.validate(arrayOf(1, 2, 3))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -61,7 +61,7 @@ class ArrayDataTypeTest {
     val result = arrayDataType.validate(arrayOf("1", null, "3"))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("[1]", "Cannot be null").all { result.errors().first().contains(it) })
   }

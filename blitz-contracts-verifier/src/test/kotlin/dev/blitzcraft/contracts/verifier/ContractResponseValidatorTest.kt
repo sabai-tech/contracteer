@@ -44,7 +44,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains(Regex("(?=.*201)(?=.*202)")))
   }
@@ -80,7 +80,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains("x-test"))
   }
@@ -114,7 +114,7 @@ class ContractResponseValidatorTest {
 
     // expect
     val validationResult = ResponseValidator(responseContract).validate(response)
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains(Regex("(?=.*Missing)(?=.*x-test)")))
   }
@@ -183,7 +183,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains("name"))
   }
@@ -222,7 +222,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains(Regex("(?=.*text/plain)(?=.*application/json; charset=utf-8)")))
   }
@@ -241,7 +241,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains("application/json; charset=utf-8"))
   }
@@ -261,7 +261,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().contains("application/json"))
   }

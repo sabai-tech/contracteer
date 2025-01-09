@@ -59,7 +59,7 @@ class ServerVerifierTest {
     val validationResult = ServerVerifier(serverPort = server.port()).verify(contract)
 
     // then
-    assert(validationResult.isSuccess().not())
+    assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
     assert(validationResult.errors().first().startsWith("'id'"))
   }

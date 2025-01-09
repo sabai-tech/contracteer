@@ -78,7 +78,7 @@ internal fun Map<String, Header>.exampleKeys() =
   flatMap { it.value.safeExamples().keys }.toSet()
 
 
-internal fun Schema<*>.toDataType(): DataType<*> =
+internal fun Schema<*>.toDataType(): DataType<out Any> =
   when (val fullyResolved = this.fullyResolve()) {
     is ComposedSchema  -> createComposedObjectDataType(fullyResolved)
     is BooleanSchema   -> BooleanDataType(fullyResolved.name, fullyResolved.safeNullable())

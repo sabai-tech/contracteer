@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.contract.*
-import dev.blitzcraft.contracts.core.validation.validateEach
+import dev.blitzcraft.contracts.core.accumulate
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
@@ -57,7 +57,7 @@ private fun validateResponseExample(response: ContractResponse) =
 
 private fun Collection<ContractParameter>.validateExamplesWithContext(context: String) =
   filter { it.hasExample() }
-    .validateEach { it.dataType.validate(it.example!!.normalizedValue).forProperty(it.name) }
+    .accumulate { it.dataType.validate(it.example!!.normalizedValue).forProperty(it.name) }
     .errors()
     .map { "$context $it" }
 

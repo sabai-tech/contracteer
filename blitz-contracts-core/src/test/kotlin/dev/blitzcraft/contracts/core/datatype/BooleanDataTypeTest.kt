@@ -24,7 +24,7 @@ class BooleanDataTypeTest {
     val result = booleanDataType.validate(12)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -49,7 +49,7 @@ class BooleanDataTypeTest {
     val result = booleanDataType.validate(null)
 
      // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 }
 

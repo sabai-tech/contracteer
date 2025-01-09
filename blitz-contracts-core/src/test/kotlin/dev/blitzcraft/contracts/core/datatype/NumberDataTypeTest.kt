@@ -36,7 +36,7 @@ class NumberDataTypeTest {
     val result = decimalDataType.validate(true)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -60,6 +60,6 @@ class NumberDataTypeTest {
     val result = decimalDataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 }

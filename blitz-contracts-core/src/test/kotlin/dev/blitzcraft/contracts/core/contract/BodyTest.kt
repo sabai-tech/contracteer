@@ -87,7 +87,7 @@ class BodyTest {
     val result = null.matches(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -102,7 +102,7 @@ class BodyTest {
     val result = "42".matches(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -142,7 +142,7 @@ class BodyTest {
     val result = """{"foo": 'John', "bar": true}""".trimIndent().matches(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -172,7 +172,7 @@ class BodyTest {
     val result = """[42, "John", 100]""".trimIndent().matches(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -207,7 +207,7 @@ class BodyTest {
     val result = null.matchesExample(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -245,7 +245,7 @@ class BodyTest {
     val result = """{"name":"John","age":42}""".matchesExample(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     listOf("age", "20", "42").all { result.errors().first().contains(it) }
   }
@@ -267,7 +267,7 @@ class BodyTest {
     val result = """{"name":"John"}""".matchesExample(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     listOf("age", "is missing").all { result.errors().first().contains(it) }
   }
@@ -300,7 +300,7 @@ class BodyTest {
     val result = """[20,43]""".matchesExample(body)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("1", "42", "43").all { result.errors().first().contains(it) })
   }

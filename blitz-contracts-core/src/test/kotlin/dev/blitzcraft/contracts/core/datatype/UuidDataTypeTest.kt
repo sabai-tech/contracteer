@@ -26,7 +26,7 @@ class UuidDataTypeTest {
     val result = uuidDataType.validate("john doe")
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `validates null value if it is nullable`() {
@@ -49,7 +49,7 @@ class UuidDataTypeTest {
     val result = uuidDataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test

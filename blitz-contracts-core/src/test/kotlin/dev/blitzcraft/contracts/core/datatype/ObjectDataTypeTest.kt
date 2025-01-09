@@ -25,7 +25,7 @@ class ObjectDataTypeTest {
     val result = objectDataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -37,7 +37,7 @@ class ObjectDataTypeTest {
     val result = objectDataType.validate(123)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -93,7 +93,7 @@ class ObjectDataTypeTest {
     val result = objectDataType.validate(mapOf("prop" to true))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -110,7 +110,7 @@ class ObjectDataTypeTest {
       "prop2" to true))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -126,7 +126,7 @@ class ObjectDataTypeTest {
     val result = objectDataType.validate(mapOf("prop2" to true))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(listOf("is required", "prop").all { result.errors().first().contains(it) })
   }

@@ -1,8 +1,8 @@
 package dev.blitzcraft.contracts.core.contract
 
 import dev.blitzcraft.contracts.core.datatype.*
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
 
 open class ContractParameter(
   val name: String,
@@ -40,28 +40,28 @@ open class ContractParameter(
 
 class PathParameter(
   name: String,
-  dataType: DataType<*>,
+  dataType: DataType<out Any>,
   example: Example? = null): ContractParameter(name, dataType, true, example)
 
 fun String?.matches(parameter: ContractParameter) = when {
   this == null && parameter.dataType.isNullable -> success()
-  this == null                                  -> error(parameter.name, "Cannot be null")
+  this == null                                  -> failure(parameter.name, "Cannot be null")
   else                                          -> {
     val value = parameter.parseOrNull(this)
     if (value != null) parameter.dataType.validate(value)
-    else error(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
+    else failure(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
   }
 }
 
 fun String?.matchesExample(parameter: ContractParameter) = when {
-  parameter.example == null                                 -> error(parameter.name, "Example is not defined")
-  this == null && !parameter.dataType.isNullable            -> error(parameter.name, "Cannot be null")
+  parameter.example == null                                 -> failure(parameter.name, "Example is not defined")
+  this == null && !parameter.dataType.isNullable            -> failure(parameter.name, "Cannot be null")
   this == null && parameter.example.normalizedValue == null -> success()
   else                                                      -> validateEqualsExampleValue(parameter, this!!)
 }
 
 private fun validateEqualsExampleValue(parameter: ContractParameter, value: String) =
   when (val parsedValue = parameter.parseOrNull(value)) {
-    null -> error(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
+    null -> failure(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
     else -> parameter.example!!.matches(parsedValue).forProperty(parameter.name)
   }

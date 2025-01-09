@@ -21,14 +21,14 @@ abstract class ContractTestBaseClass {
       throw IllegalArgumentException(
         "Failed to load OpenAPI spec file:${lineSeparator()}" + loadingResult.errors.joinToString(
           prefix = "- ",
-          separator = lineSeparator()+"- ")
+          separator = lineSeparator() + "- ")
       )
     }
     val serverVerifier = ServerVerifier(serverUrl, serverPort)
     return loadingResult.contracts.map {
       DynamicTest.dynamicTest("Validate ${it.description()}") {
         val result = serverVerifier.verify(it)
-        if (result.isSuccess().not()) {
+        if (result.isFailure()) {
           assertionFailure()
             .reason(result.errors().joinToString(
               prefix = lineSeparator(),

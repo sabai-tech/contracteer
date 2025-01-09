@@ -1,8 +1,8 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.validation.ValidationResult
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
+import dev.blitzcraft.contracts.core.Result
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
 
 sealed class DataType<T>(
   val name: String,
@@ -12,15 +12,15 @@ sealed class DataType<T>(
 
 
   @Suppress("UNCHECKED_CAST")
-  internal fun validate(value: Any?) =
+  internal fun validate(value: Any?): Result<T> =
     when {
       value == null && isNullable           -> success()
-      value == null                         -> error("Cannot be null")
-      dataTypeClass.isInstance(value).not() -> error("Wrong type. Expected type: $openApiType")
+      value == null                         -> failure("Cannot be null")
+      dataTypeClass.isInstance(value).not() -> failure("Wrong type. Expected type: $openApiType")
       else                                  -> doValidate(value as T)
     }
 
-  protected abstract fun doValidate(value: T): ValidationResult
+  protected abstract fun doValidate(value: T): Result<T>
 
   internal abstract fun randomValue(): T
 }

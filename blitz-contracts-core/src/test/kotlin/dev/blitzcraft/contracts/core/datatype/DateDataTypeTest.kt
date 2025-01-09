@@ -25,7 +25,7 @@ class DateDataTypeTest {
     val result = dateDateType.validate("john doe")
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
@@ -49,7 +49,7 @@ class DateDataTypeTest {
     val result = dateDateType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test

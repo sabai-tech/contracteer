@@ -2,8 +2,8 @@ package dev.blitzcraft.contracts.core.contract
 
 import dev.blitzcraft.contracts.core.Mappers.jsonMapper
 import dev.blitzcraft.contracts.core.datatype.*
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
+import dev.blitzcraft.contracts.core.Result.Companion.success
+import dev.blitzcraft.contracts.core.Result.Companion.failure
 
 data class Body(
   val contentType: String,
@@ -31,20 +31,20 @@ data class Body(
 fun String?.matches(body: Body) =
   when {
     this == null && body.dataType.isNullable                          -> success()
-    this == null                                                      -> error("Body cannot be null")
-    "json" !in body.contentType.lowercase()                           -> error("Only JSON content type is managed")
+    this == null                                                      -> failure("Body cannot be null")
+    "json" !in body.contentType.lowercase()                           -> failure("Only JSON content type is managed")
     body.dataType is ObjectDataType || body.dataType is ArrayDataType -> parseAndValidate(this, body.dataType)
-    else                                                              -> error("Body with Content Type '${body.contentType}' accepts only object or array type")
+    else                                                              -> failure("Body with Content Type '${body.contentType}' accepts only object or array type")
   }
 
 fun String?.matchesExample(body: Body) =
   when {
-    body.example == null                                              -> error("Body Example is not defined")
-    this == null && !body.dataType.isNullable                         -> error("Body cannot be null")
+    body.example == null                                              -> failure("Body Example is not defined")
+    this == null && !body.dataType.isNullable                         -> failure("Body cannot be null")
     this == null && body.example.normalizedValue == null              -> success()
-    "json" !in body.contentType.lowercase()                           -> error("Only JSON content type is managed")
+    "json" !in body.contentType.lowercase()                           -> failure("Only JSON content type is managed")
     body.dataType is ObjectDataType || body.dataType is ArrayDataType -> parseAndValidateExample(this!!, body.example)
-    else                                                              -> error("Body with Content Type '${body.contentType}' accepts only object or array type")
+    else                                                              -> failure("Body with Content Type '${body.contentType}' accepts only object or array type")
   }
 
 private fun parseAndValidate(stringValue: String, dataType: DataType<*>) =
@@ -52,7 +52,7 @@ private fun parseAndValidate(stringValue: String, dataType: DataType<*>) =
     val value = jsonMapper.readValue(stringValue, dataType.dataTypeClass)
     dataType.validate(value)
   } catch (e: Exception) {
-    error("Body does not match the expected type. Expected type: ${dataType.openApiType}")
+    failure("Body does not match the expected type. Expected type: ${dataType.openApiType}")
   }
 
 private fun parseAndValidateExample(stringValue: String, example: Example) =
@@ -60,5 +60,5 @@ private fun parseAndValidateExample(stringValue: String, example: Example) =
     val value = jsonMapper.readValue(stringValue, example.normalizedValue!!::class.java)
     example.matches(value)
   } catch (e: Exception) {
-    error("Body does not match the expected type")
+    failure("Body does not match the expected type")
   }

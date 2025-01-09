@@ -1,8 +1,7 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.validation.ValidationResult
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
 
 class EmailDataType(name: String= "Inline Schema", isNullable: Boolean = false):
     DataType<String>(name, "string/email", isNullable, String::class.java) {
@@ -21,9 +20,8 @@ class EmailDataType(name: String= "Inline Schema", isNullable: Boolean = false):
       "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+))\$"
                            ).toRegex()
 
-  override fun doValidate(value: String): ValidationResult {
-    return if (emailRegex.matches(value)) success() else error("not a valid email")
-  }
+  override fun doValidate(value: String) =
+     if (emailRegex.matches(value)) success(value) else failure("not a valid email")
 
   override fun randomValue(): String {
     val words = loremIpsum.split(" ")

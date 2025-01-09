@@ -1,14 +1,11 @@
 package dev.blitzcraft.contracts.mockserver
 
+import dev.blitzcraft.contracts.core.contract.*
 import dev.blitzcraft.contracts.core.contract.Body
-import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.contract.ContractParameter
-import dev.blitzcraft.contracts.core.contract.matches
-import dev.blitzcraft.contracts.core.contract.matchesExample
-import dev.blitzcraft.contracts.core.validation.ValidationResult
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.validateEach
+import dev.blitzcraft.contracts.core.Result
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
+import dev.blitzcraft.contracts.core.accumulate
 import org.http4k.core.*
 import org.http4k.core.ContentType.Companion.TEXT_PLAIN
 import org.http4k.core.Status.Companion.CONFLICT
@@ -57,28 +54,28 @@ class MockServer(private val contracts: Set<Contract>,
     contracts.map { it to it.validate(this) }
 
   private fun Contract.validate(req: Request) =
-    request.pathParameters.verify { req.path(it.name) } and
-        request.queryParameters.verify { req.query(it.name) } and
-        request.headers.verify { req.header(it.name) } and
-        request.cookies.verify { req.cookie(it.name)?.value } and
-        (request.body?.verify(req) ?: success()) and
+    request.pathParameters.verify { req.path(it.name) } combineWith
+        request.queryParameters.verify { req.query(it.name) } combineWith
+        request.headers.verify { req.header(it.name) } combineWith
+        request.cookies.verify { req.cookie(it.name)?.value } combineWith
+        (request.body?.verify(req) ?: success()) combineWith
         verifyAcceptRequestHeader(req.header("Accept"))
 
-  private fun List<ContractParameter>.verify(parameterValueExtractor: (ContractParameter) -> String?): ValidationResult =
-    validateEach {
+  private fun List<ContractParameter>.verify(parameterValueExtractor: (ContractParameter) -> String?) =
+    accumulate {
       val value = parameterValueExtractor.invoke(it)
       when {
-        value == null && it.isRequired -> error(it.name, "is missing")
+        value == null && it.isRequired -> failure(it.name, "is missing")
         value == null                  -> success()
         it.hasExample()                -> value.matchesExample(it)
         else                           -> value.matches(it)
       }
     }
 
-  private fun manageMultipleSuccesses(matchingContracts: List<Pair<Contract, ValidationResult>>): Response {
+  private fun manageMultipleSuccesses(matchingContracts: List<Pair<Contract, Result<Any?>>>): Response {
     val successfullyMatchingContracts =
       matchingContracts
-        .filter { it.validationResult().isSuccess() }
+        .filter { it.result().isSuccess() }
         .map { it.contract() }
         .groupBy { it.priority() }
         .maxBy { it.priority() }
@@ -90,19 +87,17 @@ class MockServer(private val contracts: Set<Contract>,
   private fun Contract.verifyAcceptRequestHeader(acceptHeaderValue: String?) =
     when {
       response.body == null                                      -> success()
-      acceptHeaderValue == null                                  -> error("Request Header 'Accept' is missing")
-      !acceptHeaderValue.startsWith(response.body!!.contentType) -> error("Request Header 'Accept' does not match: Expected: ${response.body!!.contentType}, actual: $acceptHeaderValue")
-      else                                                       -> success()
+      acceptHeaderValue == null                                  -> failure("Request Header 'Accept' is missing")
+      !acceptHeaderValue.startsWith(response.body!!.contentType) -> failure("Request Header 'Accept' does not match: Expected: ${response.body!!.contentType}, actual: $acceptHeaderValue")
+      else                                                       -> success(acceptHeaderValue)
     }
 
   private fun Body.verify(req: Request) =
     when {
-      req.contentType() == null  -> error("Request Header 'Content-type' is missing")
-      !req
-        .contentType()!!
-        .startsWith(contentType) -> error("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
-      hasExample()               -> req.bodyString().matchesExample(this)
-      else                       -> req.bodyString().matches(this)
+      req.contentType() == null                    -> failure("Request Header 'Content-type' is missing")
+      !req.contentType()!!.startsWith(contentType) -> failure("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
+      hasExample()                                 -> req.bodyString().matchesExample(this)
+      else                                         -> req.bodyString().matches(this)
     }
 
 
@@ -113,7 +108,7 @@ class MockServer(private val contracts: Set<Contract>,
     else httpResponse
   }
 
-  private fun List<Pair<Contract, ValidationResult>>.toNonMatchingErrorResponse() =
+  private fun List<Pair<Contract, Result<Any?>>>.toNonMatchingErrorResponse() =
     Response(NOT_FOUND)
       .contentType(TEXT_PLAIN)
       .body(
@@ -144,8 +139,8 @@ class MockServer(private val contracts: Set<Contract>,
   private fun Map.Entry<Pair<String, Method>, List<Contract>>.method() = key.second
   private fun Map.Entry<Pair<String, Method>, List<Contract>>.contracts() = value
   private fun Map.Entry<Int, List<Contract>>.priority() = key
-  private fun List<Pair<Contract, ValidationResult>>.countSuccess() = filter { it.second.isSuccess() }.size
-  private fun List<Pair<Contract, ValidationResult>>.firstSuccess() = first { it.second.isSuccess() }.first
-  private fun Pair<Contract, ValidationResult>.contract() = first
-  private fun Pair<Contract, ValidationResult>.validationResult() = second
+  private fun List<Pair<Contract, Result<Any?>>>.countSuccess() = filter { it.second.isSuccess() }.size
+  private fun List<Pair<Contract, Result<Any?>>>.firstSuccess() = first { it.second.isSuccess() }.first
+  private fun Pair<Contract, Result<Any?>>.contract() = first
+  private fun Pair<Contract, Result<Any?>>.result() = second
 }

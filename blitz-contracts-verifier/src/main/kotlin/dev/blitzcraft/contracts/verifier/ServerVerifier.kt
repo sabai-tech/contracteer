@@ -1,11 +1,11 @@
 package dev.blitzcraft.contracts.verifier
 
 import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.validation.ValidationResult
+import dev.blitzcraft.contracts.core.Result
 
 class ServerVerifier(private val serverBaseUri: String = "http://localhost", val serverPort: Int = 8080) {
 
-  fun verify(contract: Contract): ValidationResult {
+  fun verify(contract: Contract): Result<Any?> {
     val httpRequester = HttpRequester(serverBaseUri, serverPort)
     val response = httpRequester.sendRequestFor(contract)
     return ResponseValidator(contract.response).validate(response)

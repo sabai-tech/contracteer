@@ -25,7 +25,7 @@ class DateTimeDataTypeTest {
     val result = dateTimeDateType.validate("john doe")
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `validates null value if it is nullable`() {
@@ -48,7 +48,7 @@ class DateTimeDataTypeTest {
     val result = dateTimeDateType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test

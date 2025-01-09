@@ -27,7 +27,7 @@ class AnyOfDataTypeTest {
 
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().first().contains("dog"))
     assert(result.errors().first().contains("cat"))
   }
@@ -77,7 +77,7 @@ class AnyOfDataTypeTest {
     )
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test

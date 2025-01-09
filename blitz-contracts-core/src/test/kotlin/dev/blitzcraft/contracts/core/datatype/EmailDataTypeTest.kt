@@ -25,7 +25,7 @@ class EmailDataTypeTest {
     val result = emailDataType.validate("john doe @example")
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `validates null value if it is nullable`() {
@@ -48,7 +48,7 @@ class EmailDataTypeTest {
     val result = emailDataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test

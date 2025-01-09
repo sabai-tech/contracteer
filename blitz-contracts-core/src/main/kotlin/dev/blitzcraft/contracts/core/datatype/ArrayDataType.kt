@@ -1,15 +1,19 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.validation.validateEach
+import dev.blitzcraft.contracts.core.Result
+import dev.blitzcraft.contracts.core.accumulate
 
+@Suppress("UNCHECKED_CAST")
 class ArrayDataType(
   name: String = "Inline Schema",
-  val itemDataType: DataType<*>,
-  isNullable: Boolean = false): DataType<Array<*>>(name, "array", isNullable, Array::class.java) {
+  val itemDataType: DataType<out Any>,
+  isNullable: Boolean = false):
+    DataType<Array<Any?>>(name, "array", isNullable, Array::class.java as Class<Array<Any?>>) {
 
-  override fun doValidate(value: Array<*>) =
-    value.validateEach { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
+  override fun doValidate(value: Array<Any?>): Result<Array<Any?>> =
+    value
+      .accumulate { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
+      .map { value }
 
-
-  override fun randomValue(): Array<*> = Array((1..5).random()) { itemDataType.randomValue() }
+  override fun randomValue(): Array<Any?> = Array((1..5).random()) { itemDataType.randomValue() }
 }

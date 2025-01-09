@@ -1,10 +1,10 @@
 package dev.blitzcraft.contracts.core.contract
 
 import dev.blitzcraft.contracts.core.normalize
-import dev.blitzcraft.contracts.core.validation.ValidationResult
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.validateEach
+import dev.blitzcraft.contracts.core.Result
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
+import dev.blitzcraft.contracts.core.accumulate
 
 private const val VALUE_DOES_NOT_MATCH = "value does not match. Expected: %s, Actual: %s"
 
@@ -13,21 +13,24 @@ class Example(value: Any?) {
 
   fun matches(other: Any?) = normalizedValue.matchesValue(other?.normalize())
 
-  private fun Any?.matchesValue(other: Any?) =
+  private fun Any?.matchesValue(other: Any?): Result<Any?> =
     when {
-      this == other                           -> success()
+      this == other                           -> success(this)
       this is Map<*, *> && other is Map<*, *> -> matches(other)
       this is Array<*> && other is Array<*>   -> matches(other)
-      else                                    -> error(VALUE_DOES_NOT_MATCH.format(this, other))
+      else                                    -> failure(VALUE_DOES_NOT_MATCH.format(this, other))
     }
 
-  private fun Map<*, *>.matches(other: Map<*, *>): ValidationResult =
-    if (keys != other.keys) error("Property names are not equal")
-    else validateEach { it.value.matchesValue(other[it.key]).forProperty(it.key.toString()) }
+  private fun Map<*, *>.matches(other: Map<*, *>): Result<Map<*, *>> =
+    when {
+      this.keys != other.keys -> failure("Property names are not equal")
+      else               -> accumulate { it.value.matchesValue(other[it.key]).forProperty(it.key.toString()) }.map { other }
+    }
 
-
-  private fun Array<*>.matches(other: Array<*>): ValidationResult =
-    if (size != other.size) error("Array size does not match")
-    else validateEach { index, item -> item.matchesValue(other[index]).forIndex(index) }
+  private fun Array<*>.matches(other: Array<*>): Result<Array<*>> =
+    when {
+      size != other.size -> failure("Array size does not match")
+      else               -> accumulate { index, item -> item.matchesValue(other[index]).forIndex(index) }.map { other }
+    }
 }
 

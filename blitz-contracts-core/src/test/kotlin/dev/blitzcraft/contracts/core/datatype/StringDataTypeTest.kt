@@ -25,7 +25,7 @@ class StringDataTypeTest {
     val result = stringDataType.validate(true)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
   @Test
   fun `validates null value if it is nullable`() {
@@ -48,6 +48,6 @@ class StringDataTypeTest {
     val result = stringDataType.validate(null)
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 }

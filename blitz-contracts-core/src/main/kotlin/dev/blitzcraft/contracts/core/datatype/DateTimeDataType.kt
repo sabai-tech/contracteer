@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -14,9 +14,9 @@ class DateTimeDataType(name: String= "Inline Schema", isNullable: Boolean = fals
   override fun doValidate(value: String) =
     try {
       OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-      success()
+      success(value)
     } catch (e: Exception) {
-      error("not a valid date-time")
+      failure("not a valid date-time")
     }
 
   override fun randomValue(): String {

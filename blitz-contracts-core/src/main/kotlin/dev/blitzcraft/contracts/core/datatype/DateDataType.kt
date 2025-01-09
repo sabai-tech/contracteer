@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.core.datatype
 
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.error
-import dev.blitzcraft.contracts.core.validation.ValidationResult.Companion.success
+import dev.blitzcraft.contracts.core.Result.Companion.failure
+import dev.blitzcraft.contracts.core.Result.Companion.success
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
@@ -12,9 +12,9 @@ class DateDataType(name: String= "Inline Schema", isNullable: Boolean = false):
   override fun doValidate(value: String) =
     try {
       LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
-      success()
+      success(value)
     } catch (e: Exception) {
-      error("not a valid date")
+      failure("not a valid date")
     }
 
   override fun randomValue(): String {

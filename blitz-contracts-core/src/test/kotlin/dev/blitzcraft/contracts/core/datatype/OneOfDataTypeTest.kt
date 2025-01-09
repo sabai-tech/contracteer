@@ -25,7 +25,7 @@ class OneOfDataTypeTest {
     val result = oneOfDataType.validate(mapOf("hunts" to true, "bark" to true))
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().first().contains("dog"))
     assert(result.errors().first().contains("cat"))
   }
@@ -45,7 +45,7 @@ class OneOfDataTypeTest {
     )
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
     assert(result.errors().first().contains(Regex("dog|cat|breed|age")))
   }
 
@@ -77,7 +77,7 @@ class OneOfDataTypeTest {
     )
 
     // then
-    assert(result.isSuccess().not())
+    assert(result.isFailure())
   }
 
   @Test
