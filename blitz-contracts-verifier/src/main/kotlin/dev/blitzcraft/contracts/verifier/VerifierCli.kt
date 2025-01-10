@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.verifier
 
 import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.loader.swagger.loadOpenApiSpec
+import dev.blitzcraft.contracts.core.loader.swagger.generateContracts
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi.AUTO
@@ -31,30 +31,31 @@ class VerifierCli: Callable<Int> {
   lateinit var specFile: File
 
   override fun call(): Int {
-    val exitCode: Int
-    val loadingResult = specFile.loadOpenApiSpec()
-    if (loadingResult.hasErrors()) {
-      println(AUTO.string("@|bold,red Invalid file:|@"))
-      loadingResult.errors.forEach { println(AUTO.string("     - @|yellow $it|@")) }
-      exitCode = 2
-    } else {
-      exitCode = runContractTests(loadingResult.contracts)
+    val result = specFile.generateContracts()
+    return when  {
+      result.isSuccess() -> runContractTests(result.value!!)
+      else               -> printErrors(result.errors())
     }
-    return exitCode
   }
 
-  private fun runContractTests(contracts: Set<Contract>): Int {
+  private fun printErrors(errors: List<String>): Int {
+    println(AUTO.string("@|bold,red Invalid file:|@"))
+    errors.forEach { println(AUTO.string("     - @|yellow $it|@")) }
+    return 2
+  }
+
+  private fun runContractTests(contracts: List<Contract>): Int {
     var exitCode = 0
     val serverVerifier = ServerVerifier(serverUrl, serverPort)
     println()
     println(AUTO.string("=== Verify @|bold,green $serverUrl:$serverPort|@ with @|bold '${specFile.name}'|@ ==="))
     contracts.forEach { contract ->
       print("* Validating ${contract.description()}: ")
-      val validationResult = serverVerifier.verify(contract)
-      if (validationResult.isSuccess()) println(AUTO.string("@|bold,green SUCCESS|@"))
+      val testResult = serverVerifier.verify(contract)
+      if (testResult.isSuccess()) println(AUTO.string("@|bold,green SUCCESS|@"))
       else {
         println(AUTO.string("@|bold,red ERROR|@"))
-        validationResult.errors().forEach { println(AUTO.string("    - @|yellow $it|@")) }
+        testResult.errors().forEach { println(AUTO.string("    - @|yellow $it|@")) }
         exitCode = 2
         println()
       }

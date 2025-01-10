@@ -13,7 +13,7 @@ class ContractExtractorTest {
   fun `auto generated contract with all data types`() {
     // when
     val contracts =
-      Path("src/test/resources/2xx_auto_generated_contract_with_all_datatypes.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/2xx_auto_generated_contract_with_all_datatypes.yaml").generateContracts().value!!
     val contract = contracts.first()
 
     // then
@@ -91,7 +91,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contract for each combination of request-response content-type`() {
     // when
-    val contracts = Path("src/test/resources/multiple_content_type.yaml").loadOpenApiSpec().contracts
+    val contracts = Path("src/test/resources/multiple_content_type.yaml").generateContracts().value!!
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
@@ -107,7 +107,7 @@ class ContractExtractorTest {
   fun `do not generate contract with only response example`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/response_body_example_only.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/response_body_example_only.yaml").generateContracts().value!!
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -115,7 +115,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only parameter example`() {
     // when
-    val contracts = Path("src/test/resources/examples/parameter_example_only.yaml").loadOpenApiSpec().contracts
+    val contracts = Path("src/test/resources/examples/parameter_example_only.yaml").generateContracts().value!!
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -124,7 +124,7 @@ class ContractExtractorTest {
   fun `do not generate contract with only request body example`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/request_body_example_only.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/request_body_example_only.yaml").generateContracts().value!!
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -133,7 +133,7 @@ class ContractExtractorTest {
   fun `mix auto generated 2xx_contract with example based contract`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/mix_2xx_auto_generated_contract_and_example_based_contract.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/mix_2xx_auto_generated_contract_and_example_based_contract.yaml").generateContracts().value!!
     // then
     assert(contracts.size == 2)
     assert(contracts.filter { it.exampleKey == null }.size == 1)
@@ -146,7 +146,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple examples`() {
     // when
-    val contracts = Path("src/test/resources/examples/multiple_examples.yaml").loadOpenApiSpec().contracts
+    val contracts = Path("src/test/resources/examples/multiple_examples.yaml").generateContracts().value!!
     // then
     assert(contracts.size == 4)
     assert(contracts.find { it.exampleKey == "GET_DETAILS" } != null)
@@ -160,7 +160,7 @@ class ContractExtractorTest {
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").loadOpenApiSpec().contracts
+      Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").generateContracts().value!!
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }

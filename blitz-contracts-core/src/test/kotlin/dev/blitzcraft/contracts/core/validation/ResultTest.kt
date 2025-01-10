@@ -57,7 +57,8 @@ class ResultTest {
   @Test
   fun `combining errors is an error`() {
     // when
-    val result = failure<Any>("Wrong Type1") combineWith failure<Any>("Wrong Type2") combineWith failure<Any>("Wrong Type3")
+    val result =
+      failure<Any>("Wrong Type1") combineWith failure<Any>("Wrong Type2") combineWith failure<Any>("Wrong Type3")
 
     // then
     assert(result.isFailure())
@@ -68,7 +69,9 @@ class ResultTest {
   @Test
   fun `combining errors do not modify property name`() {
     // when
-    val result = failure<Any>("prop1", "Wrong Type1") combineWith failure<Any>("prop2", "Wrong Type2") combineWith failure<Any>("prop3", "Wrong Type3")
+    val result = failure<Any>("prop1", "Wrong Type1") combineWith failure<Any>("prop2",
+                                                                               "Wrong Type2") combineWith failure<Any>("prop3",
+                                                                                                                       "Wrong Type3")
 
     // then
     assert(result.errors().containsAll(listOf("'prop1': Wrong Type1", "'prop2': Wrong Type2", "'prop3': Wrong Type3")))
@@ -77,7 +80,8 @@ class ResultTest {
   @Test
   fun `all error message are prepended with property name when adding it`() {
     // when
-    val result = (failure<Any>("prop1", "Wrong Type") combineWith failure<Any>("prop2", "Wrong Type")).forProperty("parent")
+    val result =
+      (failure<Any>("prop1", "Wrong Type") combineWith failure<Any>("prop2", "Wrong Type")).forProperty("parent")
 
     // then
     assert(result.errors().containsAll(listOf("'parent.prop1': Wrong Type", "'parent.prop2': Wrong Type")))
@@ -93,9 +97,9 @@ class ResultTest {
   }
 
   @Test
-  fun `map value when it is a success`() {
+  fun `map success when it is a success`() {
     // when
-    val result = success(1).map { it + 1 }
+    val result = success(1).mapSuccess { success(2) }
 
     // then
     assert(result.isSuccess())
@@ -103,13 +107,35 @@ class ResultTest {
   }
 
   @Test
-  fun `does not map when it is a failure`() {
+  fun `does not map success when it is a failure`() {
     // when
-    val result = failure<Int>("error").map { it + 1 }
+    val result = failure<Int>("error").mapSuccess { success(2) }
 
     // then
     assert(result.isFailure())
     assert(result.value == null)
     assert(result.errors().first() == "error")
+  }
+
+  @Test
+  fun `map a failure message`() {
+    // when
+    val result = failure<Int>("error").forProperty("toto").mapErrors { "$it !!!" }
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first() == "'toto': error !!!")
+  }
+
+  @Test
+  fun `map failure message has no effect for success`() {
+    // when
+    val result = success(1).mapErrors { "$it !!!" }
+
+    // then
+    assert(result.isSuccess())
+    assert(result.value == 1)
+    assert(result.errors().isEmpty())
   }
 }

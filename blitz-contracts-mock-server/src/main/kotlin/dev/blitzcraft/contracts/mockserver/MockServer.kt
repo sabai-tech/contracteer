@@ -19,7 +19,7 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 
-class MockServer(private val contracts: Set<Contract>,
+class MockServer(private val contracts: List<Contract>,
                  private val port: Int = 0) {
   private lateinit var http4kServer: Http4kServer
   fun start() {

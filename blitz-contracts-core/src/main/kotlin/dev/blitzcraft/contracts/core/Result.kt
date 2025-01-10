@@ -21,17 +21,20 @@ class Result<out T> private constructor(
   fun errors() =
     propertyErrors.map { it.errorMessage() }
 
-  fun <R> map(transform: (T) -> R): Result<R> =
-    when {
-      isSuccess() -> Result(value?.let { transform(it) })
-      else        -> Result(propertyErrors = propertyErrors)
-    }
+  fun <R> mapSuccess(transform: () -> Result<R>): Result<R> =
+    if (isSuccess()) transform() else retypeError()
+
+  fun mapErrors(transform: (String) -> String): Result<T> =
+    if (isSuccess()) this
+    else Result(propertyErrors = propertyErrors.map { PropertyError("", transform(it.errorMessage())) })
+
+  @Suppress("UNCHECKED_CAST")
+  fun <R> retypeError(): Result<R> =
+    if (isSuccess()) success() else this as Result<R>
 
   infix fun <R> combineWith(other: Result<R>): Result<Any?> =
-    when {
-      isSuccess() && other.isSuccess() -> success()
-      else                             -> Result(propertyErrors = propertyErrors + other.propertyErrors)
-    }
+    if (isSuccess() && other.isSuccess()) success()
+    else Result(propertyErrors = propertyErrors + other.propertyErrors)
 
   companion object {
     fun <T> success(value: T? = null): Result<T> =
@@ -46,6 +49,24 @@ class Result<out T> private constructor(
     fun <T> failure(propertyName: String, error: String): Result<T> =
       Result(propertyErrors = listOf(PropertyError(propertyName, error)))
   }
+
+
+  private class PropertyError(val path: String = "", val error: String) {
+    constructor(index: Int, error: String): this("[$index]", error)
+
+    fun prependProperty(propertyName: String) =
+      PropertyError(buildPath(propertyName), error)
+
+    fun prependIndex(index: Int) = prependProperty("[$index]")
+
+    fun errorMessage() = if (path.isEmpty()) error else "'$path': $error"
+
+    private fun buildPath(propertyName: String) = when {
+      path.isEmpty()       -> propertyName
+      path.startsWith("[") -> "$propertyName${path}"
+      else                 -> "$propertyName.${path}"
+    }
+  }
 }
 
 fun <E> Collection<E>.accumulate(transform: (E) -> Result<Any?>): Result<Any?> =
@@ -57,19 +78,10 @@ fun <K, V> Map<out K, V>.accumulate(transform: (Map.Entry<K, V>) -> Result<Any?>
 fun <E> Array<E>.accumulate(transform: (index: Int, E) -> Result<Any?>): Result<Any?> =
   indices.fold(success()) { acc, index -> acc.combineWith(transform(index, this[index])) }
 
-private class PropertyError(val path: String = "", val error: String) {
-  constructor(index: Int, error: String): this("[$index]", error)
-
-  fun prependProperty(propertyName: String) =
-    PropertyError(
-      when {
-        path.isEmpty()       -> propertyName
-        path.startsWith("[") -> "$propertyName${path}"
-        else                 -> "$propertyName.${path}"
-      },
-      error)
-
-  fun prependIndex(index: Int) = prependProperty("[$index]")
-
-  fun errorMessage() = if (path.isEmpty()) error else "'$path': $error"
-}
+fun <E> List<Result<E>>.sequence(): Result<List<E>> =
+  fold(success(emptyList())) { acc, current ->
+    when {
+      acc.isSuccess() and current.isSuccess() -> success((acc.value ?: emptyList()) + listOfNotNull(current.value))
+      else                                    -> (acc combineWith current).retypeError()
+    }
+  }

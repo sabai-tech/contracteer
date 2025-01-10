@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.junit
 
-import dev.blitzcraft.contracts.core.loader.swagger.loadOpenApiSpec
+import dev.blitzcraft.contracts.core.loader.swagger.generateContracts
 import dev.blitzcraft.contracts.verifier.ServerVerifier
 import org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure
 import org.junit.jupiter.api.DynamicTest
@@ -16,21 +16,21 @@ abstract class ContractTestBaseClass {
 
   @TestFactory
   fun contractTestsFactory(): List<DynamicTest> {
-    val loadingResult = Path.of(openApiSpecPath).loadOpenApiSpec()
-    if (loadingResult.hasErrors()) {
+    val result = Path.of(openApiSpecPath).generateContracts()
+    if (result.isFailure()) {
       throw IllegalArgumentException(
-        "Failed to load OpenAPI spec file:${lineSeparator()}" + loadingResult.errors.joinToString(
+        "Failed to load OpenAPI spec file:${lineSeparator()}" + result.errors().joinToString(
           prefix = "- ",
           separator = lineSeparator() + "- ")
       )
     }
     val serverVerifier = ServerVerifier(serverUrl, serverPort)
-    return loadingResult.contracts.map {
+    return result.value!!.map {
       DynamicTest.dynamicTest("Validate ${it.description()}") {
-        val result = serverVerifier.verify(it)
-        if (result.isFailure()) {
+        val testResult = serverVerifier.verify(it)
+        if (testResult.isFailure()) {
           assertionFailure()
-            .reason(result.errors().joinToString(
+            .reason(testResult.errors().joinToString(
               prefix = lineSeparator(),
               separator = lineSeparator(),
               postfix = lineSeparator()))

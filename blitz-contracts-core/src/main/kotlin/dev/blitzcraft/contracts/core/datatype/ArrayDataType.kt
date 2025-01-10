@@ -1,6 +1,7 @@
 package dev.blitzcraft.contracts.core.datatype
 
 import dev.blitzcraft.contracts.core.Result
+import dev.blitzcraft.contracts.core.Result.Companion.success
 import dev.blitzcraft.contracts.core.accumulate
 
 @Suppress("UNCHECKED_CAST")
@@ -13,7 +14,7 @@ class ArrayDataType(
   override fun doValidate(value: Array<Any?>): Result<Array<Any?>> =
     value
       .accumulate { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
-      .map { value }
+      .mapSuccess { success(value) }
 
   override fun randomValue(): Array<Any?> = Array((1..5).random()) { itemDataType.randomValue() }
 }
