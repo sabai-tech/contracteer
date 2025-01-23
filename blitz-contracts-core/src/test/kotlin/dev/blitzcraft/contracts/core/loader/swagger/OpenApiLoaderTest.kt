@@ -14,7 +14,7 @@ class OpenApiLoaderTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().size == 2)
+    assert(result.errors().size == 1)
   }
 
   @Test

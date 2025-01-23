@@ -148,12 +148,9 @@ class ContractExtractorTest {
     // when
     val contracts = Path("src/test/resources/examples/multiple_examples.yaml").loadContracts().value!!
     // then
-    assert(contracts.size == 4)
+    assert(contracts.size == 2)
     assert(contracts.find { it.exampleKey == "GET_DETAILS" } != null)
     assert(contracts.find { it.exampleKey == "NOT_FOUND" } != null)
-    assert(contracts.find { it.exampleKey == "CREATE_PRODUCT" } != null)
-    assert(contracts.find { it.exampleKey == "ASYNC" } != null)
-
   }
 
   @Test

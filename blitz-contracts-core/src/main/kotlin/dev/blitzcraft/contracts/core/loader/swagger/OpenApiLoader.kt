@@ -29,7 +29,7 @@ private fun checkFor2xxResponses(openAPI: OpenAPI): Result<OpenAPI> =
     .flatMap { (path, item) ->
       item.readOperationsMap()
         .filter { (_, operation) -> operation.responses.none { it.key.startsWith("2") } }
-        .map { "'${path}: ${item.summary}' does not contain response for 2xx" }
+        .map { "'${it.key} ${path}: ' does not contain response for 2xx" }
     }.let {
       if (it.isEmpty()) success(openAPI)
       else failure(*it.toTypedArray())

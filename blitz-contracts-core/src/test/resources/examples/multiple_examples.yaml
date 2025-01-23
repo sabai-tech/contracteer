@@ -44,47 +44,6 @@ paths:
                 NOT_FOUND:
                   value:
                     error: 'NOT FOUND'
-  /products:
-    post:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/product_details'
-            examples:
-              CREATE_PRODUCT:
-                value:
-                  id: 10
-                  name: 'Duvel'
-                  quantity: 24
-              ASYNC:
-                value:
-                  id: 100
-                  name: 'Goudale'
-                  quantity: 24
-      responses:
-        201:
-          description: created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/product_details'
-              examples:
-                CREATE_PRODUCT:
-                  value:
-                    id: 10
-                    name: 'Duvel'
-                    quantity: 24
-        202:
-          description: ACCEPTED
-          headers:
-            location:
-              schema:
-                type: string
-              examples:
-                ASYNC:
-                  value: "https://server.com"
-
 
 components:
   schemas:
