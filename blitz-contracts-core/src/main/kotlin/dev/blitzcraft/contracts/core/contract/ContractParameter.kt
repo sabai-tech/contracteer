@@ -40,7 +40,7 @@ open class ContractParameter(
 
 class PathParameter(
   name: String,
-  dataType: DataType<out Any>,
+  dataType: DataType<*>,
   example: Example? = null): ContractParameter(name, dataType, true, example)
 
 fun String?.matches(parameter: ContractParameter) = when {

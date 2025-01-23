@@ -1,18 +1,14 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
+import dev.blitzcraft.contracts.core.combineResults
 import io.swagger.v3.oas.models.OpenAPI
 
-internal fun OpenAPI.contracts() =
+internal fun OpenAPI.generateContracts() =
   paths.flatMap { (path, item) ->
     item.readOperationsMap().flatMap { (method, operation) ->
-      operation.responses.flatMap { (code, response) ->
-        val context = ContractContext(path, method, operation, code.toInt(), response)
-        val contractsWithExample = extractExampleBasedContracts(context)
-
-        if (code.startsWith("2") && contractsWithExample.isEmpty())
-          extractDefaultSuccessContracts(context)
-        else
-          contractsWithExample
+      operation.responses.map { (code, response) ->
+        SwaggerContext(path, method, operation, code, response).generateContracts()
       }
     }
-  }.toSet()
+  }.combineResults().map { (it ?: emptyList()).flatten() }
+

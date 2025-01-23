@@ -1,7 +1,7 @@
 package dev.blitzcraft.contracts.verifier
 
 import dev.blitzcraft.contracts.core.contract.Contract
-import dev.blitzcraft.contracts.core.loader.swagger.generateContracts
+import dev.blitzcraft.contracts.core.loader.swagger.loadContracts
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi.AUTO
@@ -31,7 +31,7 @@ class VerifierCli: Callable<Int> {
   lateinit var specFile: File
 
   override fun call(): Int {
-    val result = specFile.generateContracts()
+    val result = specFile.loadContracts()
     return when  {
       result.isSuccess() -> runContractTests(result.value!!)
       else               -> printErrors(result.errors())

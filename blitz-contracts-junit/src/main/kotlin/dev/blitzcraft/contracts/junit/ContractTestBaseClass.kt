@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.junit
 
-import dev.blitzcraft.contracts.core.loader.swagger.generateContracts
+import dev.blitzcraft.contracts.core.loader.swagger.loadContracts
 import dev.blitzcraft.contracts.verifier.ServerVerifier
 import org.junit.jupiter.api.AssertionFailureBuilder.assertionFailure
 import org.junit.jupiter.api.DynamicTest
@@ -16,7 +16,7 @@ abstract class ContractTestBaseClass {
 
   @TestFactory
   fun contractTestsFactory(): List<DynamicTest> {
-    val result = Path.of(openApiSpecPath).generateContracts()
+    val result = Path.of(openApiSpecPath).loadContracts()
     if (result.isFailure()) {
       throw IllegalArgumentException(
         "Failed to load OpenAPI spec file:${lineSeparator()}" + result.errors().joinToString(

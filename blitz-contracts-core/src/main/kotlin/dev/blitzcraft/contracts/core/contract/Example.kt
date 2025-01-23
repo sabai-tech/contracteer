@@ -22,15 +22,11 @@ class Example(value: Any?) {
     }
 
   private fun Map<*, *>.matches(other: Map<*, *>): Result<Map<*, *>> =
-    when {
-      this.keys != other.keys -> failure("Property names are not equal")
-      else                    -> accumulate { it.value.matchesValue(other[it.key]).forProperty(it.key.toString()) }.mapSuccess { success(other) }
-    }
+    if (this.keys != other.keys) failure("Property names are not equal")
+    else accumulate { it.value.matchesValue(other[it.key]).forProperty(it.key.toString()) }.map { other }
 
   private fun Array<*>.matches(other: Array<*>): Result<Array<*>> =
-    when {
-      size != other.size -> failure("Array size does not match")
-      else               -> accumulate { index, item -> item.matchesValue(other[index]).forIndex(index) }.mapSuccess { success(other) }
-    }
+    if (size != other.size) failure("Array size does not match")
+    else accumulate { index, item -> item.matchesValue(other[index]).forIndex(index) }.map { other }
 }
 

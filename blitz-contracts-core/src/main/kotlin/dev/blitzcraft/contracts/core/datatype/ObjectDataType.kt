@@ -17,7 +17,7 @@ class ObjectDataType(name: String = "Inline Schema",
         !value.containsKey(it.key)                        -> failure(it.key, "is required")
         else                                              -> it.value.validate(value[it.key]).forProperty(it.key)
       }
-    }.mapSuccess { success(value) }
+    }.map { value }
 
   private fun isRequired(key: String) =
     requiredProperties.contains(key)

@@ -13,9 +13,9 @@ import org.http4k.core.findSingle
 internal class ResponseValidator(private val responseContract: ContractResponse) {
 
   fun validate(response: Response) =
-    response.status.code.validate() combineWith
-        response.headers.validate() combineWith
-        response.validateBody()
+    response.status.code.validate() andThen
+        { response.headers.validate() } andThen
+        { response.validateBody() }
 
   private fun Int.validate(): Result<Any?> =
     if (this == responseContract.statusCode) success(this)

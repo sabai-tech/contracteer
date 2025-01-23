@@ -33,58 +33,25 @@ class ResultTest {
   }
 
   @Test
-  fun `combining 2 success of different type is a success with null value`() {
+  fun `combining 2 success of different type is a success with te value of the second one`() {
     // when
-    val result = success(1) combineWith success("John")
+    val result = success(1) andThen { success("John") }
 
     // expect
     assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.value == "John")
   }
 
   @Test
   fun `combining a success with an error is an error`() {
     // when
-    val result = success(1) combineWith failure<Any>("Wrong Type")
+    val result = success(1) andThen { failure<Any>("Wrong Type") }
 
     // then
     assert(result.isFailure())
     assert(result.errors().size == 1)
     assert(result.errors().first() == "Wrong Type")
     assert(result.value == null)
-  }
-
-  @Test
-  fun `combining errors is an error`() {
-    // when
-    val result =
-      failure<Any>("Wrong Type1") combineWith failure<Any>("Wrong Type2") combineWith failure<Any>("Wrong Type3")
-
-    // then
-    assert(result.isFailure())
-    assert(result.errors().size == 3)
-    assert(result.errors().containsAll(listOf("Wrong Type1", "Wrong Type2", "Wrong Type3")))
-  }
-
-  @Test
-  fun `combining errors do not modify property name`() {
-    // when
-    val result = failure<Any>("prop1", "Wrong Type1") combineWith failure<Any>("prop2",
-                                                                               "Wrong Type2") combineWith failure<Any>("prop3",
-                                                                                                                       "Wrong Type3")
-
-    // then
-    assert(result.errors().containsAll(listOf("'prop1': Wrong Type1", "'prop2': Wrong Type2", "'prop3': Wrong Type3")))
-  }
-
-  @Test
-  fun `all error message are prepended with property name when adding it`() {
-    // when
-    val result =
-      (failure<Any>("prop1", "Wrong Type") combineWith failure<Any>("prop2", "Wrong Type")).forProperty("parent")
-
-    // then
-    assert(result.errors().containsAll(listOf("'parent.prop1': Wrong Type", "'parent.prop2': Wrong Type")))
   }
 
   @Test
@@ -97,28 +64,7 @@ class ResultTest {
   }
 
   @Test
-  fun `map success when it is a success`() {
-    // when
-    val result = success(1).mapSuccess { success(2) }
-
-    // then
-    assert(result.isSuccess())
-    assert(result.value == 2)
-  }
-
-  @Test
-  fun `does not map success when it is a failure`() {
-    // when
-    val result = failure<Int>("error").mapSuccess { success(2) }
-
-    // then
-    assert(result.isFailure())
-    assert(result.value == null)
-    assert(result.errors().first() == "error")
-  }
-
-  @Test
-  fun `map a failure message`() {
+  fun `map error message`() {
     // when
     val result = failure<Int>("error").forProperty("toto").mapErrors { "$it !!!" }
 
@@ -129,13 +75,46 @@ class ResultTest {
   }
 
   @Test
-  fun `map failure message has no effect for success`() {
+  fun `map error message has no effect for success`() {
     // when
     val result = success(1).mapErrors { "$it !!!" }
 
     // then
     assert(result.isSuccess())
     assert(result.value == 1)
+    assert(result.errors().isEmpty())
+  }
+
+  @Test
+  fun `map a success`() {
+    // when
+    val result = success(1).map { it!! * 2 }
+
+    // then
+    assert(result.isSuccess())
+    assert(result.value == 2)
+    assert(result.errors().isEmpty())
+  }
+
+  @Test
+  fun `does not map a failure`() {
+    // when
+    val result = failure<Int>("Error").map { it!! * 2 }
+
+    // then
+    assert(result.isFailure())
+    assert(result.value == null)
+    assert(result.errors().size == 1)
+  }
+
+  @Test
+  fun `flatMap a success`() {
+    // when
+    val result = success(1).flatMap { success(it!! * 2) }
+
+    // then
+    assert(result.isSuccess())
+    assert(result.value == 2)
     assert(result.errors().isEmpty())
   }
 }

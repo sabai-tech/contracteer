@@ -1,6 +1,6 @@
 package dev.blitzcraft.contracts.mockserver
 
-import dev.blitzcraft.contracts.core.loader.swagger.generateContracts
+import dev.blitzcraft.contracts.core.loader.swagger.loadContracts
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Parameters
@@ -24,7 +24,7 @@ class MockServerCli: Callable<Int> {
 
   override fun call(): Int {
     var exitCode = 0
-    val result = specFile.generateContracts()
+    val result = specFile.loadContracts()
     if (result.isFailure()) {
       println(CommandLine.Help.Ansi.AUTO.string("@|bold,red Invalid file:|@"))
       result.errors().forEach { println(CommandLine.Help.Ansi.AUTO.string("     - @|yellow $it|@")) }

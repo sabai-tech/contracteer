@@ -54,12 +54,12 @@ class MockServer(private val contracts: List<Contract>,
     contracts.map { it to it.validate(this) }
 
   private fun Contract.validate(req: Request) =
-    request.pathParameters.verify { req.path(it.name) } combineWith
-        request.queryParameters.verify { req.query(it.name) } combineWith
-        request.headers.verify { req.header(it.name) } combineWith
-        request.cookies.verify { req.cookie(it.name)?.value } combineWith
-        (request.body?.verify(req) ?: success()) combineWith
-        verifyAcceptRequestHeader(req.header("Accept"))
+    request.pathParameters.verify { req.path(it.name) } andThen
+        { request.queryParameters.verify { req.query(it.name) } } andThen
+        { request.headers.verify { req.header(it.name) } } andThen
+        { request.cookies.verify { req.cookie(it.name)?.value } } andThen
+        { (request.body?.verify(req) ?: success()) } andThen
+        { verifyAcceptRequestHeader(req.header("Accept")) }
 
   private fun List<ContractParameter>.verify(parameterValueExtractor: (ContractParameter) -> String?) =
     accumulate {
