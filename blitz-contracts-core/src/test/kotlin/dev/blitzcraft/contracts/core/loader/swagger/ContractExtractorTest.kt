@@ -70,7 +70,7 @@ class ContractExtractorTest {
     assert(contract.response.body!!.dataType.asObjectDataType().properties["date"] is DateDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["dateTime"] is DateTimeDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["byte"] is Base64DataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"] is StringDataType)
+    assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"] is BinaryDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"]!!.openApiType == "string/binary")
     assert(contract.response.body!!.dataType.asObjectDataType().properties["password"] is StringDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["password"]!!.openApiType == "string/password")

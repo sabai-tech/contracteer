@@ -30,6 +30,7 @@ open class ContractParameter(
       is StringDataType           -> value
       is UuidDataType             -> value
       is Base64DataType           -> value
+      is BinaryDataType           -> value
       is EmailDataType            -> value
       is DateTimeDataType         -> value
       is DateDataType             -> value

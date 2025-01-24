@@ -3,7 +3,7 @@ package dev.blitzcraft.contracts.core.datatype
 import dev.blitzcraft.contracts.core.Result.Companion.failure
 import dev.blitzcraft.contracts.core.Result.Companion.success
 
-class EmailDataType(name: String= "Inline Schema", isNullable: Boolean = false):
+class EmailDataType(name: String= "Inline 'string/email' Schema", isNullable: Boolean = false):
     DataType<String>(name, "string/email", isNullable, String::class.java) {
 
   private val loremIpsum =

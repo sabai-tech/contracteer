@@ -4,7 +4,7 @@ import dev.blitzcraft.contracts.core.Result
 import dev.blitzcraft.contracts.core.Result.Companion.failure
 import dev.blitzcraft.contracts.core.Result.Companion.success
 
-class AnyOfDataType(name: String = "Inline Schema",
+class AnyOfDataType(name: String = "Inline 'anyOf' Schema",
                     val subTypes: List<StructuredObjectDataType>,
                     val discriminator: Discriminator? = null,
                     isNullable: Boolean = false): StructuredObjectDataType(name, "anyOf", isNullable) {

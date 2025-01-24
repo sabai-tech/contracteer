@@ -5,7 +5,7 @@ import dev.blitzcraft.contracts.core.Result.Companion.failure
 import dev.blitzcraft.contracts.core.Result.Companion.success
 import dev.blitzcraft.contracts.core.accumulate
 
-class ObjectDataType(name: String = "Inline Schema",
+class ObjectDataType(name: String = "Inline 'object' Schema",
                      val properties: Map<String, DataType<*>>,
                      val requiredProperties: Set<String> = emptySet(),
                      isNullable: Boolean = false): StructuredObjectDataType(name, "object", isNullable) {

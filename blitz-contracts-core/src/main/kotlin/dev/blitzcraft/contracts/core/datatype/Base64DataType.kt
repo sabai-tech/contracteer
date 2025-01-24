@@ -4,7 +4,7 @@ import dev.blitzcraft.contracts.core.Result.Companion.failure
 import dev.blitzcraft.contracts.core.Result.Companion.success
 import java.util.*
 
-class Base64DataType(name: String = "Inline Schema", isNullable: Boolean = false):
+class Base64DataType(name: String = "Inline 'string/byte' Schema", isNullable: Boolean = false):
     DataType<String>(name, "string/byte", isNullable, String::class.java) {
 
   private val loremIpsum =

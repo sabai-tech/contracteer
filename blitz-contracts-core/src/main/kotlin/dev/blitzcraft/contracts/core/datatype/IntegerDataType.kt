@@ -7,7 +7,7 @@ import java.math.BigInteger
 import kotlin.random.Random
 
 class IntegerDataType(
-  name: String = "Inline Schema",
+  name: String = "Inline 'integer' Schema",
   isNullable: Boolean = false): DataType<Number>(name, "integer", isNullable, Number::class.java) {
 
   override fun doValidate(value: Number) =

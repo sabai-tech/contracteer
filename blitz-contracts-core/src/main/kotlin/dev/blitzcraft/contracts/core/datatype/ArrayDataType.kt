@@ -5,7 +5,7 @@ import dev.blitzcraft.contracts.core.accumulate
 
 @Suppress("UNCHECKED_CAST")
 class ArrayDataType(
-  name: String = "Inline Schema",
+  name: String = "Inline 'array' Schema",
   val itemDataType: DataType<out Any>,
   isNullable: Boolean = false):
     DataType<Array<Any?>>(name, "array", isNullable, Array::class.java as Class<Array<Any?>>) {

@@ -4,7 +4,7 @@ import dev.blitzcraft.contracts.core.Result.Companion.success
 import kotlin.random.Random
 
 class StringDataType(
-  name: String= "Inline Schema",
+  name: String= "Inline 'string' Schema",
   openApiType: String = "string",
   isNullable: Boolean = false): DataType<String>(name, openApiType, isNullable, String::class.java) {
 
