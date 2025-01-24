@@ -1,13 +1,14 @@
 package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.Result
+import dev.blitzcraft.contracts.core.Result.Companion.failure
 import dev.blitzcraft.contracts.core.Result.Companion.success
 import dev.blitzcraft.contracts.core.combineResults
 import dev.blitzcraft.contracts.core.contract.Body
 import dev.blitzcraft.contracts.core.contract.ContractParameter
 import dev.blitzcraft.contracts.core.contract.Example
 import dev.blitzcraft.contracts.core.contract.PathParameter
-import dev.blitzcraft.contracts.core.datatype.DataType
+import dev.blitzcraft.contracts.core.datatype.*
 import dev.blitzcraft.contracts.core.loader.swagger.converter.SchemaConverter
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.headers.Header
@@ -96,6 +97,7 @@ internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result
   (requestBody?.content?.map { (contentType, mediaType) ->
     val example = mediaType.contractExample(exampleKey)
     mediaType.schema.convertToDataType()
+      .flatMap { it!!.validateContentType(contentType) }
       .flatMap { it!!.validateExample(example) }
       .map { Body(contentType, it!!, example) }
   } ?: emptyList()).combineResults()
@@ -104,6 +106,7 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
   return (content?.map { (contentType, mediaType) ->
     val example = mediaType.contractExample(exampleKey)
     mediaType.schema.convertToDataType()
+      .flatMap { it!!.validateContentType(contentType) }
       .flatMap { it!!.validateExample(example) }
       .map { Body(contentType, it!!, example) }
   } ?: emptyList()).combineResults()
@@ -133,4 +136,10 @@ private fun DataType<*>.validateExample(example: Example?, propertyName: String?
   else validate(example.normalizedValue)
     .let { if (propertyName != null) it.forProperty(propertyName) else it }
     .map { this }
+
+private fun <T> DataType<T>.validateContentType(contentType: String) =
+  if (contentType.lowercase().contains("json") && (this !is ArrayDataType && this !is StructuredObjectDataType))
+    failure("Content type $contentType supports only 'object' or 'array' schema")
+  else
+    success(this)
 

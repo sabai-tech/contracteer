@@ -12,7 +12,7 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/product_details'
-          application/xml:
+          "application/vnd.mycompany.myapp.v2+json":
             schema:
               $ref: '#/components/schemas/product_details'
       responses:
@@ -22,7 +22,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/product_details'
-            application/xml:
+            "application/vnd.mycompany.myapp.v2+json":
               schema:
                 $ref: '#/components/schemas/product_details'
 

@@ -4,57 +4,9 @@ import dev.blitzcraft.contracts.core.datatype.ArrayDataType
 import dev.blitzcraft.contracts.core.datatype.IntegerDataType
 import dev.blitzcraft.contracts.core.datatype.ObjectDataType
 import dev.blitzcraft.contracts.core.datatype.StringDataType
-import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
 
 class BodyTest {
-
-  @Test
-  fun `fails when DataType is not of type Object or Array for Json Content-Type`() {
-    // expect
-    assertFailsWith(IllegalArgumentException::class) { Body("application/json", IntegerDataType()) }
-  }
-
-  @Test
-  fun `fails when Example value is not of type Map or Array for Json Content-Type`() {
-    // expect
-    assertFailsWith(IllegalArgumentException::class) {
-      Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())), Example(42))
-    }
-  }
-
-  @Test
-  fun `accepts ObjectDataType as Body content`() {
-    // expect
-    assertDoesNotThrow {
-      Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))
-    }
-  }
-
-  @Test
-  fun `accepts ArrayDataType as Body content`() {
-    // expect
-    assertDoesNotThrow { Body("application/json", ArrayDataType(itemDataType = IntegerDataType())) }
-  }
-
-  @Test
-  fun `accepts Map as Body content Example`() {
-    // expect
-    assertDoesNotThrow {
-      Body("application/json",
-           ObjectDataType(properties = mapOf("id" to IntegerDataType())),
-           Example(mapOf("id" to 42)))
-    }
-  }
-
-  @Test
-  fun `accepts Array as Body content Example`() {
-    // expect
-    assertDoesNotThrow {
-      Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())), Example(arrayOf(1, 2, 3)))
-    }
-  }
 
   @Test
   fun `null string matches nullable Body`() {
@@ -63,8 +15,7 @@ class BodyTest {
       contentType = "application/json",
       dataType = ObjectDataType(
         properties = mapOf("id" to IntegerDataType()),
-        isNullable = true
-      ),
+        isNullable = true)
     )
 
     // when
@@ -81,7 +32,8 @@ class BodyTest {
       contentType = "application/json",
       dataType = ObjectDataType(
         isNullable = false,
-        properties = mapOf("id" to IntegerDataType())))
+        properties = mapOf("id" to IntegerDataType()))
+    )
 
     // when
     val result = null.matches(body)
@@ -95,14 +47,14 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "text/plain",
-      dataType = IntegerDataType()
+      dataType = StringDataType()
     )
 
     // when
     val result = "42".matches(body)
 
     // then
-    assert(result.isFailure())
+    assert(result.isSuccess())
   }
 
   @Test
@@ -113,9 +65,7 @@ class BodyTest {
       dataType = ObjectDataType(
         properties = mapOf(
           "foo" to IntegerDataType(),
-          "bar" to IntegerDataType()
-        )
-      )
+          "bar" to IntegerDataType()))
     )
 
     // when
@@ -133,9 +83,7 @@ class BodyTest {
       dataType = ObjectDataType(
         properties = mapOf(
           "foo" to IntegerDataType(),
-          "bar" to IntegerDataType()
-        )
-      )
+          "bar" to IntegerDataType()))
     )
 
     // when

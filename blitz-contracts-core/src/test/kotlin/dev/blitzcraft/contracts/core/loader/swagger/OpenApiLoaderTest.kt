@@ -2,6 +2,8 @@ package dev.blitzcraft.contracts.core.loader.swagger
 
 import dev.blitzcraft.contracts.core.Result
 import dev.blitzcraft.contracts.core.contract.Contract
+import dev.blitzcraft.contracts.core.datatype.ArrayDataType
+import dev.blitzcraft.contracts.core.datatype.StructuredObjectDataType
 import java.nio.file.Path
 import kotlin.test.Test
 

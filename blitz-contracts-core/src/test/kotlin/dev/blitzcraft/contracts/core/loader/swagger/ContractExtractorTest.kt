@@ -96,10 +96,10 @@ class ContractExtractorTest {
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
              .containsAll(listOf(
-               "application/xml" to "application/json",
-               "application/xml" to "application/xml",
+               "application/vnd.mycompany.myapp.v2+json" to "application/json",
+               "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json",
                "application/json" to "application/json",
-               "application/json" to "application/xml"
+               "application/json" to "application/vnd.mycompany.myapp.v2+json"
              )))
   }
 
@@ -146,7 +146,8 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple examples`() {
     // when
-    val contracts = Path("src/test/resources/examples/multiple_examples.yaml").loadContracts().value!!
+    val loadContracts = Path("src/test/resources/examples/multiple_examples.yaml").loadContracts()
+    val contracts = loadContracts.value!!
     // then
     assert(contracts.size == 2)
     assert(contracts.find { it.exampleKey == "GET_DETAILS" } != null)
@@ -156,17 +157,18 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
-    val contracts =
-      Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").loadContracts().value!!
-    // then
-    assert(contracts.size == 4)
-    assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
-             .containsAll(listOf(
-               "application/xml" to "application/json",
-               "application/xml" to "application/xml",
-               "application/json" to "application/json",
-               "application/json" to "application/xml"
-             )))
+    val loadContracts = Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").loadContracts()
+      val contracts =
+        loadContracts.value!!
+      // then
+      assert(contracts.size == 4)
+      assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
+               .containsAll(listOf(
+                 "application/vnd.mycompany.myapp.v2+json" to "application/json",
+                 "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json",
+                 "application/json" to "application/json",
+                 "application/json" to "application/vnd.mycompany.myapp.v2+json"
+               )))
   }
 }
 

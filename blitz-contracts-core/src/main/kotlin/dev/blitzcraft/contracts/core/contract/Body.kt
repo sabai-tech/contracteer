@@ -10,13 +10,6 @@ data class Body(
   val dataType: DataType<*>,
   val example: Example? = null) {
 
-  init {
-    if ("json" in contentType) {
-      require(dataType is StructuredObjectDataType || dataType is ArrayDataType) { "Body with Content Type '$contentType' accepts only object type" }
-      example?.normalizedValue?.let { require(it is Map<*, *> || it is Array<*>) { "Example value is not an object or an array" } }
-    }
-  }
-
   fun hasExample(): Boolean = example != null
 
   fun content() = if (hasExample()) example!!.normalizedValue else dataType.randomValue()
@@ -24,27 +17,27 @@ data class Body(
   fun asString(): String =
     when {
       "json" in contentType.lowercase() -> jsonMapper.writeValueAsString(content())
-      else                              -> throw IllegalStateException("Only JSON content type is managed for now")
+      else                              -> content().toString()
     }
 }
 
 fun String?.matches(body: Body) =
   when {
-    this == null && body.dataType.isNullable                          -> success()
-    this == null                                                      -> failure("Body cannot be null")
-    "json" !in body.contentType.lowercase()                           -> failure("Only JSON content type is managed")
-    body.dataType is ObjectDataType || body.dataType is ArrayDataType -> parseAndValidate(this, body.dataType)
-    else                                                              -> failure("Body with Content Type '${body.contentType}' accepts only object or array type")
+    this == null && body.dataType.isNullable                                            -> success()
+    this == null                                                                        -> failure("Body cannot be null")
+    body.dataType is StructuredObjectDataType && "json" in body.contentType.lowercase() -> parseAndValidate(this, body.dataType)
+    body.dataType is ArrayDataType && "json" in body.contentType.lowercase()            -> parseAndValidate(this, body.dataType)
+    else                                                                                -> body.dataType.validate(this)
   }
 
 fun String?.matchesExample(body: Body) =
   when {
-    body.example == null                                              -> failure("Body Example is not defined")
-    this == null && !body.dataType.isNullable                         -> failure("Body cannot be null")
-    this == null && body.example.normalizedValue == null              -> success()
-    "json" !in body.contentType.lowercase()                           -> failure("Only JSON content type is managed")
-    body.dataType is ObjectDataType || body.dataType is ArrayDataType -> parseAndValidateExample(this!!, body.example)
-    else                                                              -> failure("Body with Content Type '${body.contentType}' accepts only object or array type")
+    body.example == null                                                                -> failure("Body Example is not defined")
+    this == null && !body.dataType.isNullable                                           -> failure("Body cannot be null")
+    this == null && body.example.normalizedValue == null                                -> success()
+    body.dataType is StructuredObjectDataType && "json" in body.contentType.lowercase() -> parseAndValidateExample(this!!, body.example)
+    body.dataType is ArrayDataType && "json" in body.contentType.lowercase()            -> parseAndValidateExample(this!!, body.example)
+    else                                                                                -> body.example.matches(this)
   }
 
 private fun parseAndValidate(stringValue: String, dataType: DataType<*>) =

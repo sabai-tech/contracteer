@@ -18,7 +18,7 @@ paths:
                   id: 10
                   name: 'Duvel'
                   quantity: 24
-          application/xml:
+          application/vnd.mycompany.myapp.v2+json:
             schema:
               $ref: '#/components/schemas/product_details'
             examples:
@@ -40,7 +40,7 @@ paths:
                     id: 10
                     name: 'Duvel'
                     quantity: 24
-            application/xml:
+            application/vnd.mycompany.myapp.v2+json:
               schema:
                 $ref: '#/components/schemas/product_details'
               examples:
