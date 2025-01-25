@@ -22,6 +22,65 @@ class MockServerTest {
   }
 
   @Test
+  fun `responds correctly when Accept header is not required`() {
+    // given
+    val contracts = listOf(
+      Contract(
+        ContractRequest(method = "GET",
+                        path = "/v1/users/{id}",
+                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+        ContractResponse(statusCode = 200,
+                         body = Body(
+                           contentType = "application/json",
+                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+    )
+    mockServer = MockServer(contracts = contracts)
+
+    // when
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // then
+    given()
+      .get("/v1/users/42").then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue(Int::class.java))
+  }
+  @Test
+  fun `responds with 418 status code when Accept header is required but missing`() {
+    // given
+    val contracts = listOf(
+      Contract(
+        ContractRequest(method = "GET",
+                        path = "/v1/users/{id}",
+                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+        ContractResponse(statusCode = 200,
+                         body = Body(
+                           contentType = "application/json",
+                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+      Contract(
+        ContractRequest(method = "GET",
+                        path = "/v1/users/{id}",
+                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+        ContractResponse(statusCode = 200,
+                         body = Body(
+                           contentType = "application/vnd.mycompany.myapp.v2+json",
+                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+    )
+    mockServer = MockServer(contracts = contracts)
+
+    // when
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    given()
+      .get("/v1/users/42").then()
+      .assertThat()
+      .statusCode(418)
+  }
+
+  @Test
   fun `responds correctly when mixing contract with example and contracts with no example for the same path and method`() {
     // given
     val contracts = listOf(
@@ -67,7 +126,7 @@ class MockServerTest {
   }
 
   @Test
-  fun `responds with 409 status code when there is more than one matching contract with the same priority`() {
+  fun `responds with 418 status code when there is more than one matching contract with the same priority`() {
     // given
     val contracts = listOf(
       Contract(
@@ -102,7 +161,7 @@ class MockServerTest {
       .accept("application/json")
       .get("/v1/users/999").then()
       .assertThat()
-      .statusCode(409)
+      .statusCode(418)
       .body(allOf(
         containsString(contracts[0].description()),
         containsString(contracts[1].description()))
@@ -165,7 +224,7 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when path parameter is not equal to example value`() {
+    fun `responds with status code 418 when path parameter is not equal to example value`() {
       // given
       val contract = Contract(
         ContractRequest(method = "GET",
@@ -188,7 +247,7 @@ class MockServerTest {
         .accept("application/json")
         .get("/v1/users/123").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
         .contentType("text/plain")
         .body(allOf(
           containsString(contract.description()),
@@ -252,7 +311,7 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when required query parameter is missing`() {
+    fun `responds with status code 418 when required query parameter is missing`() {
       // given
       val contract = Contract(
         ContractRequest(method = "GET",
@@ -272,7 +331,7 @@ class MockServerTest {
         .accept("application/json")
         .get("/v1/users").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
 
     @Test
@@ -301,14 +360,15 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when query parameter is not equal to example value`() {
+    fun `responds with status code 418 when query parameter is not equal to example value`() {
       // given
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
                         queryParameters = listOf(ContractParameter("id", IntegerDataType(), true, Example(42)))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                         body = Body("application/json",
+                                     ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
         "simple example"
       )
       mockServer = MockServer(contracts = listOf(contract))
@@ -322,7 +382,7 @@ class MockServerTest {
         .accept("application/json")
         .get("/v1/users?id=123").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
   }
 
@@ -355,7 +415,7 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when required cookie is missing`() {
+    fun `responds with status code 418 when required cookie is missing`() {
       // given
       val contract = Contract(
         ContractRequest(method = "GET",
@@ -375,7 +435,7 @@ class MockServerTest {
         .accept("application/json")
         .get("/v1/users").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
 
     @Test
@@ -405,14 +465,15 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when cookie is not equal to example value`() {
+    fun `responds with status code 418 when cookie is not equal to example value`() {
       // given
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
                         cookies = listOf(ContractParameter("id", IntegerDataType(), true, Example(42)))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                         body = Body("application/json",
+                                     ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
         "simple example"
       )
       mockServer = MockServer(contracts = listOf(contract))
@@ -427,7 +488,7 @@ class MockServerTest {
         .cookies(mapOf("id" to "123"))
         .get("/v1/users").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
   }
 
@@ -461,7 +522,7 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when a request body does not match`() {
+    fun `responds with status code 418 when a request body does not match`() {
       // given
       val contract = Contract(
         ContractRequest(method = "POST",
@@ -483,7 +544,7 @@ class MockServerTest {
         .body("""{"id": "john"}""")
         .post("/v1/users").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
 
     @Test
@@ -519,7 +580,7 @@ class MockServerTest {
     }
 
     @Test
-    fun `responds with status code 404 when a request body does not match example value`() {
+    fun `responds with status code 418 when a request body does not match example value`() {
       // given
       val contract = Contract(
         ContractRequest(method = "POST",
@@ -546,7 +607,7 @@ class MockServerTest {
         .body("""{"id": 99}""")
         .post("/v1/users").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
   }
 
@@ -554,7 +615,7 @@ class MockServerTest {
   inner class ContentType {
 
     @Test
-    fun `respond with status code 404 when request content-type does not match contract`() {
+    fun `respond with status code 418 when request content-type does not match contract`() {
       // given
       val contract = Contract(
         ContractRequest(method = "POST",
@@ -576,11 +637,11 @@ class MockServerTest {
         .body("""{"id": 42}""")
         .post("/v1/users").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
 
     @Test
-    fun `respond with status code 404 when request header 'Accept' does not match contract response content type`() {
+    fun `respond with status code 418 when request header 'Accept' does not match contract response content type`() {
       // given
       val contract = Contract(
         ContractRequest(method = "GET",
@@ -600,7 +661,7 @@ class MockServerTest {
         .accept("text/plain")
         .get("/v1/users/123").then()
         .assertThat()
-        .statusCode(404)
+        .statusCode(418)
     }
 
     @Test
