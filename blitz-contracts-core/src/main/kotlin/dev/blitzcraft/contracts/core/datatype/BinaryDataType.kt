@@ -13,5 +13,5 @@ class BinaryDataType(
     success(value)
 
   override fun randomValue(): String =
-    ByteArray(16).also { Random.nextBytes(it) }.toString(Charsets.ISO_8859_1)
+    ByteArray(100).also { Random.nextBytes(it) }.toString(Charsets.ISO_8859_1)
 }
