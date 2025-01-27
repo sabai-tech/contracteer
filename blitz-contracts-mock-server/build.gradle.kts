@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":blitz-contracts-core"))
+  api(project(":blitz-contracts-core"))
   implementation(platform("org.http4k:http4k-bom:5.38.0.0"))
   implementation("org.http4k:http4k-core")
   implementation("info.picocli:picocli:4.7.6")
