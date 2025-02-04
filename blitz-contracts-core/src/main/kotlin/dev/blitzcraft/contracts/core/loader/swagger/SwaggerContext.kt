@@ -25,11 +25,11 @@ data class SwaggerContext(
       .combineResults()
       .map { (it ?: emptyList()).flatten() }
 
-    if (contractsFromExamples.isFailure()) return contractsFromExamples
-
-    if (contractsFromExamples.value.isNullOrEmpty() and statusCode.startsWith("2")) return createContracts()
-
-    return contractsFromExamples
+    return when {
+      contractsFromExamples.isFailure()                                          -> contractsFromExamples
+      contractsFromExamples.value.isNullOrEmpty() and statusCode.startsWith("2") -> createContracts()
+      else                                                                       -> contractsFromExamples
+    }
   }
 
   private fun createContracts(exampleKey: String? = null): Result<List<Contract>> {

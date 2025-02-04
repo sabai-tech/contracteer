@@ -35,6 +35,16 @@ class OpenApiLoaderTest {
       "path: /products/{id}, method: GET, response status code: 404, example: NOT_FOUND, body -> 'error': Wrong type. Expected type: string",
     )))
   }
+
+  @Test
+  fun `does not fail when loading unsupported OAS feature`() {
+    // when
+    val result = Path.of("src/test/resources/unsupported_oas_features.yaml").loadContracts()
+
+    // then
+    assert(result.isSuccess())
+    assert(result.value!!.isEmpty())
+  }
 }
 
 
