@@ -36,9 +36,7 @@ object ComposedSchemaConverter {
         schema,
         subSchemas = schema.allOf!!,
         typeName = "allOf",
-        buildDataType = { subTypes, _, isNullable ->
-          AllOfDataType(schema.name, subTypes, isNullable)
-        }
+        buildDataType = { subTypes, _, isNullable -> AllOfDataType(schema.name, subTypes, isNullable) }
       )
 
       else                               -> failure("Schema ${schema::class.java} is not yet supported")

@@ -5,12 +5,15 @@ plugins {
 
 dependencies {
   api(project(":blitz-contracts-core"))
+
   implementation(platform("org.http4k:http4k-bom:5.38.0.0"))
   implementation("org.http4k:http4k-core")
   implementation("info.picocli:picocli:4.7.6")
+  implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
 
   kapt("info.picocli:picocli-codegen:4.7.6")
 
+  testImplementation ("ch.qos.logback:logback-classic:1.5.16")
   testImplementation(kotlin("test"))
   testImplementation("io.rest-assured:rest-assured:5.5.0")
 }

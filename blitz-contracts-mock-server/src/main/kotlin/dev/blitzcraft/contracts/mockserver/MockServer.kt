@@ -17,30 +17,39 @@ import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class MockServer(private val contracts: List<Contract>,
                  private val port: Int = 0) {
+
   private lateinit var http4kServer: Http4kServer
+  private val logger = KotlinLogging.logger {}
 
   fun start() {
     val routeHandlers = contracts
       .groupBy { it.request.path to Method.valueOf(it.request.method) }
+      .onEach {  logger.info { "Registering route: [${it.key.second}] ${it.key.first} with ${it.value.size} contract(s)" } }
       .map { (pathAndMethod, contracts) -> createRouteHandler(pathAndMethod.first, pathAndMethod.second, contracts) }
+
+    logger.info { "Starting Blitz Contract mock server" }
 
     http4kServer = PrintRequestAndResponse()
       .then(routes(*routeHandlers.toTypedArray()))
       .asServer(SunHttp(port))
       .start()
+    logger.info { "Blitz Contract mock server started on port ${this.port()}" }
   }
 
   fun stop() {
     if (::http4kServer.isInitialized) {
+      logger.info { "Stopping Blitz Contracts mock server" }
       http4kServer.stop()
+      logger.info { "Stopped Blitz Contracts mock server" }
     }
   }
 
   fun port(): Int {
-    check(::http4kServer.isInitialized) { "Server is not started yet." }
+    check(::http4kServer.isInitialized) { "Blitz Contracts mock server is not started yet." }
     return http4kServer.port()
   }
 
@@ -102,7 +111,9 @@ class MockServer(private val contracts: List<Contract>,
   private fun Body.verify(req: Request) =
     when {
       req.contentType() == null                    -> failure("Request Header 'Content-type' is missing")
-      !req.contentType()!!.startsWith(contentType) -> failure("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
+      !req
+        .contentType()!!
+        .startsWith(contentType)                   -> failure("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
       hasExample()                                 -> req.bodyString().matchesExample(this)
       else                                         -> req.bodyString().matches(this)
     }
