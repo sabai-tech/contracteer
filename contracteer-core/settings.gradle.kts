@@ -1,0 +1,1 @@
+rootProjectname="contracteer-core"

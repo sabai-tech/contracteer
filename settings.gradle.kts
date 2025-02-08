@@ -1,9 +1,9 @@
-rootProject.name = "blitz-contracts"
+rootProject.name = "contracteer"
 
 include(
-  "blitz-contracts-core",
-  "blitz-contracts-verifier",
-  "blitz-contracts-mock-server",
-  "blitz-contracts-junit",
-  "blitz-contracts-mockserver-spring-boot"
+  "contracteer-core",
+  "contracteer-verifier",
+  "contracteer-verifier-junit",
+  "contracteer-mockserver",
+  "contracteer-mockserver-spring-boot-starter"
 )

@@ -1,0 +1,1 @@
+rootProject.name = "contracteer-mockserver-spring-boot-starter"

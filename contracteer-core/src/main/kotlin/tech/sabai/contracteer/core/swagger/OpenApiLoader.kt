@@ -1,0 +1,36 @@
+package tech.sabai.contracteer.core.swagger
+
+import io.swagger.v3.oas.models.OpenAPI
+import io.swagger.v3.parser.OpenAPIV3Parser
+import io.swagger.v3.parser.core.models.ParseOptions
+import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.contract.Contract
+import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.absolutePathString
+
+fun File.loadContracts() = toPath().loadContracts()
+
+fun Path.loadContracts(): Result<List<Contract>> {
+  val parseResult = OpenAPIV3Parser().readLocation(absolutePathString(),
+                                                   emptyList(),
+                                                   ParseOptions().apply { isResolve = true })
+
+  if (parseResult.messages.isNotEmpty()) return failure(*parseResult.messages.toTypedArray())
+
+  SharedComponents.components = parseResult.openAPI.components
+  return checkFor2xxResponses(parseResult.openAPI) andThen { parseResult.openAPI.generateContracts() }
+}
+
+private fun checkFor2xxResponses(openAPI: OpenAPI): Result<OpenAPI> =
+  openAPI.paths
+    .flatMap { (path, item) ->
+      item.readOperationsMap()
+        .filter { (_, operation) -> operation.responses.none { it.key.startsWith("2") } }
+        .map { "'${it.key} ${path}: ' does not contain response for 2xx" }
+    }.let {
+      if (it.isEmpty()) success(openAPI)
+      else failure(*it.toTypedArray())
+    }

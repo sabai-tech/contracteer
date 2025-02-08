@@ -11,7 +11,7 @@ plugins {
 }
 
 allprojects {
-  group = "dev.blitzcraft"
+  group = "tech.sabai.contracteer"
   version = System.getenv("RELEASE_VERSION") ?: "LOCAL-SNAPSHOT"
   repositories {
     mavenCentral()
@@ -39,9 +39,9 @@ subprojects {
       create<MavenPublication>("jars") {
         from(components["java"])
         pom {
-          name.set("Blitz-Contracts")
-          description.set("Transform your API Spec into Contract Testing")
-          url.set("https://blitzcraft.dev")
+          name.set("Contracteer")
+          description.set("Transform your Open API Spec into Contract Testing")
+          url.set("https://sabai.tech")
           licenses {
             license {
               name.set("GNU GENERAL PUBLIC LICENSE, Version 3")
@@ -50,15 +50,15 @@ subprojects {
           }
           developers {
             developer {
-              id.set("blitz-craft")
-              name.set("BlitzCraft")
-              email.set("contact@blitzcraft.dev")
+              id.set("sabai-tech")
+              name.set("Sabai Tech")
+              email.set("contact@bsabai.tech")
             }
           }
           scm {
-            connection.set("https://github.com/Blitz-Craft/blitz-contracts.git")
-            developerConnection.set("git@github.com:Blitz-Craft/blitz-contracts.git")
-            url.set("https://github.com/Blitz-Craft/blitz-contracts")
+            connection.set("https://github.com/Sabai-Technologies/contracteer.git")
+            developerConnection.set("git@github.com:Sabai-Technologies/contracteer.git")
+            url.set("https://github.com/Sabai-Technologies/contracteer")
           }
         }
       }
