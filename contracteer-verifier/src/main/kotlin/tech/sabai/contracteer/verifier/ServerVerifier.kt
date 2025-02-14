@@ -3,10 +3,11 @@ package tech.sabai.contracteer.verifier
 import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.Result
 
-class ServerVerifier(private val serverBaseUri: String = "http://localhost", val serverPort: Int = 8080) {
+class ServerVerifier(configuration: ServerConfiguration) {
+  private val serverUrl: String = "${configuration.baseUrl}:${configuration.port}"
 
   fun verify(contract: Contract): Result<Any?> {
-    val httpRequester = HttpRequester(serverBaseUri, serverPort)
+    val httpRequester = HttpRequester(serverUrl)
     val response = httpRequester.sendRequestFor(contract)
     return ResponseValidator(contract.response).validate(response)
   }

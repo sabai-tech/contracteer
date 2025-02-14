@@ -53,7 +53,7 @@ class HttpRequesterTest {
     )
 
     // when
-    val response = HttpRequester("http://localhost", mockServer.port).sendRequestFor(contract)
+    val response = HttpRequester("http://localhost:${mockServer.port}").sendRequestFor(contract)
 
     // then
     assert(response.status == Status.OK)

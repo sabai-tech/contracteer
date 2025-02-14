@@ -1,8 +1,5 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
 import org.http4k.core.Method.GET
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.OK
@@ -11,6 +8,9 @@ import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.contract.*
+import tech.sabai.contracteer.core.datatype.IntegerDataType
+import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.StringDataType
 import kotlin.test.Test
 
 class ServerVerifierTest {
@@ -39,7 +39,7 @@ class ServerVerifierTest {
     val server = app.asServer(SunHttp(0)).start()
 
     // when
-    val validationResult = ServerVerifier(serverPort = server.port()).verify(contract)
+    val validationResult = ServerVerifier(ServerConfiguration(port = server.port())).verify(contract)
 
     // then
     assert(validationResult.isSuccess())
@@ -56,7 +56,7 @@ class ServerVerifierTest {
     val server = app.asServer(SunHttp(0)).start()
 
     // when
-    val validationResult = ServerVerifier(serverPort = server.port()).verify(contract)
+    val validationResult = ServerVerifier(ServerConfiguration(port = server.port())).verify(contract)
 
     // then
     assert(validationResult.isFailure())

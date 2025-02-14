@@ -40,7 +40,7 @@ subprojects {
         from(components["java"])
         pom {
           name.set("Contracteer")
-          description.set("Transform your Open API Spec into Contract Testing")
+          description.set("Transform your API Spec into Contract Testing")
           url.set("https://sabai.tech")
           licenses {
             license {

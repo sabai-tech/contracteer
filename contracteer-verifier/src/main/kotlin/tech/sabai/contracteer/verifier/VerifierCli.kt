@@ -1,10 +1,10 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.contract.Contract
-import tech.sabai.contracteer.core.swagger.loadContracts
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi.AUTO
+import tech.sabai.contracteer.core.contract.Contract
+import tech.sabai.contracteer.core.swagger.loadContracts
 import java.io.File
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
@@ -32,7 +32,7 @@ class VerifierCli: Callable<Int> {
 
   override fun call(): Int {
     val result = specFile.loadContracts()
-    return when  {
+    return when {
       result.isSuccess() -> runContractTests(result.value!!)
       else               -> printErrors(result.errors())
     }
@@ -46,7 +46,7 @@ class VerifierCli: Callable<Int> {
 
   private fun runContractTests(contracts: List<Contract>): Int {
     var exitCode = 0
-    val serverVerifier = ServerVerifier(serverUrl, serverPort)
+    val serverVerifier = ServerVerifier(ServerConfiguration(serverUrl, serverPort))
     println()
     println(AUTO.string("=== Verify @|bold,green $serverUrl:$serverPort|@ with @|bold '${specFile.name}'|@ ==="))
     contracts.forEach { contract ->

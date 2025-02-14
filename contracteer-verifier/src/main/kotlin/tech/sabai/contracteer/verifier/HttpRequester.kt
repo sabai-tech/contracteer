@@ -6,16 +6,16 @@ import tech.sabai.contracteer.core.contract.ContractParameter
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.core.cookie.cookie
+import org.http4k.filter.DebuggingFilters
 
-internal class HttpRequester(private val serverBaseUri: String,
-                             private val serverPort: Int) {
+internal class HttpRequester(private val serverUrl: String) {
 
   fun sendRequestFor(contract: Contract): Response {
-    val client: HttpHandler = JavaHttpClient()
+    val client: HttpHandler = DebuggingFilters.PrintRequestAndResponse().then(JavaHttpClient())
     val request =
       Request(method = Method.valueOf(contract.request.method),
               uri = UriTemplate
-                .from("$serverBaseUri:$serverPort${contract.request.path}")
+                .from("$serverUrl${contract.request.path}")
                 .generate(contract.request.pathParameters.associate { it.name to it.stringValue() })
       ).withHeaders(contract.request.headers)
         .withQueryParameters(contract.request.queryParameters)
