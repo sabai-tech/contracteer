@@ -57,8 +57,8 @@ private fun Contract.hasUnsupportedContentType(): Boolean {
                                                                     "application/x-www-form-urlencoded",
                                                                     "application/xml")
 
-  if (isUnsupportedResponseContentType)
-    logger.warn { "Contract '${this.description()}' filtered out: request content-type '$requestContentType' is not yet supported:" }
+  if (isUnsupportedRequestContentType)
+    logger.warn { "Contract '${this.description()}' filtered out: request content-type '$requestContentType' is not yet supported." }
 
   return isUnsupportedResponseContentType || isUnsupportedRequestContentType
 }

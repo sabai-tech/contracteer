@@ -1,13 +1,12 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.contract.Body
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.ContractResponse
 import io.mockk.every
 import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
-import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.contract.Body
+import tech.sabai.contracteer.core.contract.ContractParameter
+import tech.sabai.contracteer.core.contract.ContractResponse
 import tech.sabai.contracteer.verifier.DataTypeFixture.arrayDataType
 import tech.sabai.contracteer.verifier.DataTypeFixture.integerDataType
 import tech.sabai.contracteer.verifier.DataTypeFixture.objectDataType
@@ -53,11 +52,15 @@ class ContractResponseValidatorTest {
   @Test
   fun `Validates successfully Response headers`() {
     // given
-    val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType())))
+    val responseContract = ContractResponse(
+      statusCode = 202,
+      headers = listOf(
+        ContractParameter("x-test", integerDataType()),
+        ContractParameter("Location", stringDataType()),)
+    )
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
-    every { response.headers } returns listOf("x-test" to "42")
+    every { response.headers } returns listOf("x-test" to "42", "location" to "here")
     every { response.header("Content-Type") } returns null
 
     // when
@@ -117,7 +120,7 @@ class ContractResponseValidatorTest {
     val validationResult = ResponseValidator(responseContract).validate(response)
     assert(validationResult.isFailure())
     assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains(Regex("(?=.*Missing)(?=.*x-test)")))
+    assert(validationResult.errors().first() == "Response header 'x-test' is missing")
   }
 
   @Test
