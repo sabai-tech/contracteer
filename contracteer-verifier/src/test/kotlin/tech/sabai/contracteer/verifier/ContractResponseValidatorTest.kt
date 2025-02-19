@@ -3,14 +3,15 @@ package tech.sabai.contracteer.verifier
 import tech.sabai.contracteer.core.contract.Body
 import tech.sabai.contracteer.core.contract.ContractParameter
 import tech.sabai.contracteer.core.contract.ContractResponse
-import tech.sabai.contracteer.core.datatype.ArrayDataType
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
 import io.mockk.every
 import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
+import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.verifier.DataTypeFixture.arrayDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.objectDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.stringDataType
 import kotlin.test.Test
 
 class ContractResponseValidatorTest {
@@ -53,7 +54,7 @@ class ContractResponseValidatorTest {
   fun `Validates successfully Response headers`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", IntegerDataType())))
+      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.headers } returns listOf("x-test" to "42")
@@ -70,7 +71,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate invalid Response header`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", IntegerDataType())))
+      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.headers } returns listOf("x-test" to "John")
@@ -89,7 +90,7 @@ class ContractResponseValidatorTest {
   fun `Validates successfully optional Response header is missing`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", IntegerDataType())))
+      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.header("Content-Type") } returns null
@@ -106,7 +107,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate successfully when required Response header is missing`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", IntegerDataType(), true)))
+      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType(), true)))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.header("Content-Type") } returns null
@@ -124,9 +125,9 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body(contentType = "application/json",
-                                                        dataType = ObjectDataType(properties = mapOf(
-                                                          "name" to StringDataType(),
-                                                          "age" to IntegerDataType()))))
+                                                        dataType = objectDataType(properties = mapOf(
+                                                          "name" to stringDataType(),
+                                                          "age" to integerDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns "application/json; charset=utf-8"
@@ -145,10 +146,10 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body(contentType = "application/json",
-                                                        dataType = ObjectDataType(
+                                                        dataType = objectDataType(
                                                           properties = mapOf(
-                                                            "name" to StringDataType(),
-                                                            "age" to IntegerDataType()),
+                                                            "name" to stringDataType(),
+                                                            "age" to integerDataType()),
                                                           requiredProperties = setOf("name"))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
@@ -168,10 +169,10 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body(contentType = "application/json",
-                                                        dataType = ObjectDataType(
+                                                        dataType = objectDataType(
                                                           properties = mapOf(
-                                                            "name" to StringDataType(),
-                                                            "age" to IntegerDataType()),
+                                                            "name" to stringDataType(),
+                                                            "age" to integerDataType()),
                                                           requiredProperties = setOf("name", "age"))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
@@ -192,7 +193,8 @@ class ContractResponseValidatorTest {
   fun `Validates body with JSON Content-Type and array as root element`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body("application/json", ArrayDataType(itemDataType = IntegerDataType())))
+                                            body = Body("application/json",
+                                                        arrayDataType(itemDataType = integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns "application/json; charset=utf-8"
@@ -211,7 +213,7 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body("text/plain",
-                                                        ObjectDataType(properties = mapOf("name" to StringDataType()))))
+                                                        objectDataType(properties = mapOf("name" to stringDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns "application/json; charset=utf-8"
@@ -251,7 +253,7 @@ class ContractResponseValidatorTest {
     // given
     val responseContract = ContractResponse(statusCode = 200,
                                             body = Body("application/json",
-                                                        ObjectDataType(properties = mapOf("name" to StringDataType()))))
+                                                        objectDataType(properties = mapOf("name" to stringDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
     every { response.header("Content-Type") } returns null

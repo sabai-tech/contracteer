@@ -2,7 +2,6 @@ package tech.sabai.contracteer.mockserver.spring
 
 import tech.sabai.contracteer.core.swagger.loadContracts
 import tech.sabai.contracteer.mockserver.MockServer
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextClosedEvent
@@ -12,7 +11,6 @@ import java.io.File
 
 internal class ContracteerContextCustomizer(
   private val contracteerContractsMockServerAnnotations: List<ContracteerMockServer>): ContextCustomizer {
-  private val logger = KotlinLogging.logger {}
 
   override fun customizeContext(context: ConfigurableApplicationContext, mergedConfig: MergedContextConfiguration) {
 

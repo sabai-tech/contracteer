@@ -1,9 +1,10 @@
 package tech.sabai.contracteer.core.contract
 
-import tech.sabai.contracteer.core.datatype.ArrayDataType
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
+import tech.sabai.contracteer.core.DataTypeFixture.arrayDataType
+import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.core.DataTypeFixture.objectDataType
+import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.core.datatype.*
 import kotlin.test.Test
 
 class BodyTest {
@@ -13,9 +14,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
-        properties = mapOf("id" to IntegerDataType()),
-        isNullable = true)
+      dataType = objectDataType(properties = mapOf("id" to integerDataType()), isNullable = true)
     )
 
     // when
@@ -30,9 +29,9 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
+      dataType = objectDataType(
         isNullable = false,
-        properties = mapOf("id" to IntegerDataType()))
+        properties = mapOf("id" to integerDataType()))
     )
 
     // when
@@ -47,7 +46,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "text/plain",
-      dataType = StringDataType()
+      dataType = stringDataType()
     )
 
     // when
@@ -62,10 +61,10 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
+      dataType = objectDataType(
         properties = mapOf(
-          "foo" to IntegerDataType(),
-          "bar" to IntegerDataType()))
+          "foo" to integerDataType(),
+          "bar" to integerDataType()))
     )
 
     // when
@@ -80,10 +79,10 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
+      dataType = objectDataType(
         properties = mapOf(
-          "foo" to IntegerDataType(),
-          "bar" to IntegerDataType()))
+          "foo" to integerDataType(),
+          "bar" to integerDataType()))
     )
 
     // when
@@ -98,7 +97,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(itemDataType = IntegerDataType())
+      dataType = arrayDataType(itemDataType = integerDataType())
     )
 
     // when
@@ -113,7 +112,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(itemDataType = IntegerDataType())
+      dataType = arrayDataType(itemDataType = integerDataType())
     )
 
     // when
@@ -128,8 +127,8 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
-        properties = mapOf("name" to StringDataType()),
+      dataType = objectDataType(
+        properties = mapOf("name" to stringDataType()),
         isNullable = true
       ),
       example = Example(null)
@@ -146,8 +145,8 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
-        properties = mapOf("name" to StringDataType())
+      dataType = objectDataType(
+        properties = mapOf("name" to stringDataType())
       ),
       example = Example(mapOf("name" to "John"))
     )
@@ -163,8 +162,8 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
-        properties = mapOf("name" to StringDataType())
+      dataType = objectDataType(
+        properties = mapOf("name" to stringDataType())
       ),
       example = Example(mapOf("name" to "John"))
     )
@@ -180,10 +179,10 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
+      dataType = objectDataType(
         properties = mapOf(
-          "name" to StringDataType(),
-          "age" to IntegerDataType()
+          "name" to stringDataType(),
+          "age" to integerDataType()
         )
       ),
       example = Example(mapOf("name" to "John", "age" to 20))
@@ -203,10 +202,10 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ObjectDataType(
+      dataType = objectDataType(
         properties = mapOf(
-          "name" to StringDataType(),
-          "age" to IntegerDataType()
+          "name" to stringDataType(),
+          "age" to integerDataType()
         )
       ),
       example = Example(mapOf("name" to "John", "age" to 42))
@@ -225,7 +224,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(itemDataType = IntegerDataType()),
+      dataType = arrayDataType(itemDataType = integerDataType()),
       example = Example(arrayOf(20, 42))
     )
     // when
@@ -240,7 +239,7 @@ class BodyTest {
     // given
     val body = Body(
       contentType = "application/json",
-      dataType = ArrayDataType(itemDataType = IntegerDataType()),
+      dataType = arrayDataType(itemDataType = integerDataType()),
       example = Example(arrayOf(20, 42))
     )
 

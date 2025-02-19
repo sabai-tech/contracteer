@@ -93,7 +93,7 @@ data class SwaggerContext(
 
   private fun responseErrorMessage(responsePart: String, exampleKey: String?) =
     if (exampleKey != null)
-      "path: ${path}, method: ${method}, response status code: ${statusCode}, example: $exampleKey, $responsePart"
+      "path: ${path}, method: ${method}, response status code: ${statusCode}, example: $exampleKey, response: $responsePart"
     else
       "path: ${path}, method: ${method}, response status code: ${statusCode}, response: $responsePart"
 

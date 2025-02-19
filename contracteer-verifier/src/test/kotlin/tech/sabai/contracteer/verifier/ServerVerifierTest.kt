@@ -9,8 +9,9 @@ import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.contract.*
 import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.objectDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.stringDataType
 import kotlin.test.Test
 
 class ServerVerifierTest {
@@ -19,13 +20,13 @@ class ServerVerifierTest {
     request = ContractRequest(
       method = "GET",
       path = "/product/{id}",
-      pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+      pathParameters = listOf(PathParameter("id", IntegerDataType.create().value!!))),
     response = ContractResponse(
       statusCode = 200,
       body = Body(contentType = "application/json",
-                  dataType = ObjectDataType(properties = mapOf(
-                    "id" to IntegerDataType(),
-                    "name" to StringDataType()))))
+                  dataType = objectDataType(properties = mapOf(
+                    "id" to integerDataType(),
+                    "name" to stringDataType()))))
   )
 
   @Test

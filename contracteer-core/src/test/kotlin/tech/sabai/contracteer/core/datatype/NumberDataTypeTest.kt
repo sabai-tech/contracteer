@@ -1,13 +1,14 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.DataTypeFixture.numberDataType
 
 class NumberDataTypeTest {
 
   @Test
   fun `validates a decimal value`() {
     // given
-    val decimalDataType = NumberDataType()
+    val decimalDataType = numberDataType()
 
     // when
     val result = decimalDataType.validate(123.45)
@@ -18,7 +19,7 @@ class NumberDataTypeTest {
   @Test
   fun `validates an integer value`() {
     // given
-    val decimalDataType = NumberDataType()
+    val decimalDataType = numberDataType()
 
     // when
     val result = decimalDataType.validate(123)
@@ -30,7 +31,7 @@ class NumberDataTypeTest {
   @Test
   fun `does not validate value which is not a number`() {
     // given
-    val decimalDataType = NumberDataType()
+    val decimalDataType = numberDataType()
 
     // when
     val result = decimalDataType.validate(true)
@@ -42,7 +43,7 @@ class NumberDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val decimalDataType = NumberDataType(isNullable = true)
+    val decimalDataType = numberDataType(isNullable = true)
 
     // when
     val result = decimalDataType.validate(null)
@@ -54,7 +55,7 @@ class NumberDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val decimalDataType = NumberDataType(isNullable = false)
+    val decimalDataType = numberDataType(isNullable = false)
 
     // when
     val result = decimalDataType.validate(null)

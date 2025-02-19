@@ -45,6 +45,9 @@ class Result<out T> private constructor(
     if (isFailure()) Result(propertyErrors = propertyErrors + next().propertyErrors)
     else next()
 
+  override fun toString() =
+    if (isSuccess()) "Result(success, value=${value})" else "Result(failure, errors=${errors()})"
+
   companion object {
     fun <T> success(value: T? = null): Result<T> =
       Result(value)

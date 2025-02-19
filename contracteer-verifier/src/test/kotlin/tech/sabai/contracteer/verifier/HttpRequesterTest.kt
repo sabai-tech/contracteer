@@ -1,8 +1,5 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
 import org.http4k.core.Status
 import org.mockserver.integration.ClientAndServer
 import org.mockserver.integration.ClientAndServer.startClientAndServer
@@ -13,6 +10,9 @@ import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.JsonPathBody.jsonPath
 import org.mockserver.model.Parameter.param
 import tech.sabai.contracteer.core.contract.*
+import tech.sabai.contracteer.verifier.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.objectDataType
+import tech.sabai.contracteer.verifier.DataTypeFixture.stringDataType
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -40,15 +40,15 @@ class HttpRequesterTest {
       ContractRequest(
         method = "POST",
         path = "/test/{id}",
-        pathParameters = listOf(PathParameter("id", IntegerDataType())),
-        queryParameters = listOf(ContractParameter("q", IntegerDataType())),
-        cookies = listOf(ContractParameter("val", IntegerDataType())),
-        headers = listOf(ContractParameter("x-my-header", StringDataType())),
-        body = Body("application/json", ObjectDataType(properties = mapOf("prop" to IntegerDataType())))
+        pathParameters = listOf(PathParameter("id", integerDataType())),
+        queryParameters = listOf(ContractParameter("q", integerDataType())),
+        cookies = listOf(ContractParameter("val", integerDataType())),
+        headers = listOf(ContractParameter("x-my-header", stringDataType())),
+        body = Body("application/json", objectDataType(properties = mapOf("prop" to integerDataType())))
       ),
       ContractResponse(
         statusCode = 200,
-        body = Body("application/json", ObjectDataType(properties = mapOf("property" to IntegerDataType())))
+        body = Body("application/json", objectDataType(properties = mapOf("property" to integerDataType())))
       )
     )
 

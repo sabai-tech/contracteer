@@ -4,15 +4,17 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
-class OneOfDataType(name: String = "Inline 'oneOf' Schema",
-                    val subTypes: List<StructuredObjectDataType>,
-                    val discriminator: Discriminator? = null,
-                    isNullable: Boolean = false): StructuredObjectDataType(name, "oneOf", isNullable) {
+class OneOfDataType private constructor(name: String,
+                                        val subTypes: List<StructuredObjectDataType>,
+                                        val discriminator: Discriminator?,
+                                        isNullable: Boolean,
+                                        allowedValues: AllowedValues? = null):
+    StructuredObjectDataType(name, "oneOf", isNullable, allowedValues) {
 
   override fun doValidate(value: Map<String, Any?>) =
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
 
-  override fun randomValue(): Map<String, Any?> {
+  override fun doRandomValue(): Map<String, Any?> {
     val chosenType = subTypes.random()
     if (discriminator != null) {
       val discriminatingValue = discriminator.mapping
@@ -72,4 +74,16 @@ class OneOfDataType(name: String = "Inline 'oneOf' Schema",
 
   private fun buildMultipleMatchError(dataTypeSuccess: Map<StructuredObjectDataType, Result<Map<String, Any?>>>): Result<Map<String, Any?>> =
     failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinToString())
+
+  companion object {
+    fun create(name: String = "Inline 'oneOf' Schema",
+               subTypes: List<StructuredObjectDataType>,
+               discriminator: Discriminator? = null,
+               isNullable: Boolean = false,
+               enum: List<Any?>) =
+      OneOfDataType(name, subTypes, discriminator, isNullable).let { dataType ->
+        if (enum.isEmpty()) success(dataType)
+        else AllowedValues.create(enum, dataType).map { OneOfDataType(name, subTypes, discriminator, isNullable, it) }
+      }
+  }
 }

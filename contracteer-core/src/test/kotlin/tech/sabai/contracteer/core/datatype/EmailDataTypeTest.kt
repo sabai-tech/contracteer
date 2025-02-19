@@ -1,13 +1,14 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.DataTypeFixture.emailDataType
 
 class EmailDataTypeTest {
 
   @Test
   fun `validates a value of type string representing an email address`() {
     // given
-    val emailDataType = EmailDataType()
+    val emailDataType = emailDataType()
 
     // when
     val result = emailDataType.validate("john@example.com")
@@ -19,7 +20,7 @@ class EmailDataTypeTest {
   @Test
   fun `does not validate string value which does not represent an email address`() {
     // given
-    val emailDataType = EmailDataType()
+    val emailDataType = emailDataType()
 
     // when
     val result = emailDataType.validate("john doe @example")
@@ -30,7 +31,7 @@ class EmailDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val emailDataType = EmailDataType(isNullable = true)
+    val emailDataType = emailDataType(isNullable = true)
 
     // when
     val result = emailDataType.validate(null)
@@ -42,7 +43,7 @@ class EmailDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val emailDataType = EmailDataType(isNullable = false)
+    val emailDataType = emailDataType(isNullable = false)
 
     // when
     val result = emailDataType.validate(null)
@@ -54,12 +55,49 @@ class EmailDataTypeTest {
   @Test
   fun `should generate a string representing an email address`() {
     // given
-    val emailDataType = EmailDataType()
+    val emailDataType = emailDataType()
 
     // when
     val randomEmail = emailDataType.randomValue()
 
     // then
     assert(emailDataType.validate(randomEmail).isSuccess())
+  }
+
+  @Test
+  fun `validates a string representing an email with enum values`() {
+    // given
+    val emailDataType = emailDataType(enum = listOf("john@example.com", "ane@example.com"))
+
+    // when
+    val result = emailDataType.validate("john@example.com")
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `does not validate a string representing an email with enum values`() {
+    // given
+    val emailDataType = emailDataType(enum = listOf("john@example.com", "ane@example.com"))
+
+    // when
+    val result = emailDataType.validate("john@jane.doe")
+
+    // then
+    assert(result.isFailure())
+  }
+
+  @Test
+  fun `generates random value with enum values`() {
+    // given
+    val enum = listOf("john@example.com", "ane@example.com")
+    val emailDataType = emailDataType(enum = enum)
+
+    // when
+    val result = emailDataType.randomValue()
+
+    // then
+    assert(enum.contains(result))
   }
 }

@@ -6,8 +6,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-class DateDataType(name: String= "Inline 'string/date' Schema", isNullable: Boolean = false):
-    DataType<String>(name, "string/date", isNullable, String::class.java) {
+class DateDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
+    DataType<String>(name, "string/date", isNullable, String::class.java, allowedValues) {
 
   override fun doValidate(value: String) =
     try {
@@ -17,11 +17,23 @@ class DateDataType(name: String= "Inline 'string/date' Schema", isNullable: Bool
       failure("not a valid date")
     }
 
-  override fun randomValue(): String {
+  override fun doRandomValue(): String {
     val year = Random.nextInt(2000, 2100)
     val month = Random.nextInt(1, 13)
     val day = Random.nextInt(1, LocalDate.of(year, month, 1).lengthOfMonth() + 1)
 
     return LocalDate.of(year, month, day).format(DateTimeFormatter.ISO_LOCAL_DATE)
+  }
+
+  companion object {
+    fun create(
+      name: String = "Inline 'string/date' Schema",
+      isNullable: Boolean = false,
+      enum: List<Any?> = emptyList()
+    ) =
+      DateDataType(name, isNullable).let { dataType ->
+        if (enum.isEmpty()) success(dataType)
+        else AllowedValues.create(enum, dataType).map { DateDataType(name, isNullable, it) }
+      }
   }
 }

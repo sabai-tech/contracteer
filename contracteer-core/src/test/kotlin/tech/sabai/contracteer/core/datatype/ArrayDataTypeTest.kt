@@ -1,13 +1,17 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.DataTypeFixture.arrayDataType
+import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.core.normalize
 
 class ArrayDataTypeTest {
 
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val arrayDataType = ArrayDataType(itemDataType = StringDataType(), isNullable = true)
+    val arrayDataType = arrayDataType(itemDataType = stringDataType(), isNullable = true)
 
     // when
     val result = arrayDataType.validate(null)
@@ -19,7 +23,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val arrayDataType = ArrayDataType(itemDataType = StringDataType(), isNullable = false)
+    val arrayDataType = arrayDataType(itemDataType = stringDataType(), isNullable = false)
 
     // when
     val result = arrayDataType.validate(null)
@@ -31,7 +35,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does validates value whose type is not array`() {
     // given
-    val arrayDataType = ArrayDataType(itemDataType = StringDataType())
+    val arrayDataType = arrayDataType(itemDataType = stringDataType())
 
     // when
     val result = arrayDataType.validate("value")
@@ -43,7 +47,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does validates array with wrong item type `() {
     // given
-    val arrayDataType = ArrayDataType(itemDataType = StringDataType())
+    val arrayDataType = arrayDataType(itemDataType = stringDataType())
 
     // when
     val result = arrayDataType.validate(arrayOf(1, 2, 3))
@@ -55,7 +59,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate array when item type is not nullable`() {
     // given
-    val arrayDataType = ArrayDataType(itemDataType = StringDataType(isNullable = false))
+    val arrayDataType = arrayDataType(itemDataType = stringDataType(isNullable = false))
 
     // when
     val result = arrayDataType.validate(arrayOf("1", null, "3"))
@@ -69,12 +73,49 @@ class ArrayDataTypeTest {
   @Test
   fun `validates an array with right item type`() {
     // given
-    val arrayDataType = ArrayDataType(itemDataType = IntegerDataType())
+    val arrayDataType = arrayDataType(itemDataType = integerDataType())
 
     // when
     val result = arrayDataType.validate(arrayOf(1, 2, 3))
 
     // then
     assert(result.isSuccess())
+  }
+
+  @Test
+  fun `validates an array with enum values`() {
+    // given
+    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(arrayOf(1, 3), arrayOf(2, 4)))
+
+    // when
+    val result = arrayDataType.validate(arrayOf(2, 4))
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `does not validate an array with enum values`() {
+    // given
+    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(arrayOf(1, 3), arrayOf(2, 4)))
+
+    // when
+    val result = arrayDataType.validate(arrayOf(1, 2))
+
+    // then
+    assert(result.isFailure())
+  }
+
+  @Test
+  fun `generates random value with enum values`() {
+    // given
+    val enum = listOf(arrayOf(1, 3), arrayOf(2, 4))
+    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = enum)
+
+    // when
+    val result = arrayDataType.randomValue()
+
+    // then
+    assert(enum.map { it.normalize() as Array<*> }.any { it.contentDeepEquals(result) })
   }
 }

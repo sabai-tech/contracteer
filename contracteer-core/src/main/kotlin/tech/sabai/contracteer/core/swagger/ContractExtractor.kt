@@ -48,7 +48,7 @@ private fun removeUnsupportedContracts(contracts: List<Contract>?): List<Contrac
 private fun Contract.hasUnsupportedContentType(): Boolean {
   val isUnsupportedResponseContentType = response.body?.contentType == "application/xml"
   if (isUnsupportedResponseContentType)
-    tech.sabai.contracteer.core.swagger.logger.warn {
+    logger.warn {
       "Contract '${this.description()}' filtered out: response content-type 'application/xml' is not yet supported."
     }
 
@@ -58,7 +58,7 @@ private fun Contract.hasUnsupportedContentType(): Boolean {
                                                                     "application/xml")
 
   if (isUnsupportedResponseContentType)
-    tech.sabai.contracteer.core.swagger.logger.warn { "Contract '${this.description()}' filtered out: request content-type '$requestContentType' is not yet supported:" }
+    logger.warn { "Contract '${this.description()}' filtered out: request content-type '$requestContentType' is not yet supported:" }
 
   return isUnsupportedResponseContentType || isUnsupportedRequestContentType
 }
@@ -70,7 +70,7 @@ private fun Contract.hasUnsupportedParameters() =
    request.headers +
    response.headers
   ).filter { it.dataType is ObjectDataType || it.dataType is ArrayDataType }
-    .onEach { tech.sabai.contracteer.core.swagger.logger.warn { "Contract '${this.description()}' filtered out: parameter '${it.name}': schema 'array' and 'object' are not yet supported." } }
+    .onEach { logger.warn { "Contract '${this.description()}' filtered out: parameter '${it.name}': schema 'array' and 'object' are not yet supported." } }
     .isNotEmpty()
 
 

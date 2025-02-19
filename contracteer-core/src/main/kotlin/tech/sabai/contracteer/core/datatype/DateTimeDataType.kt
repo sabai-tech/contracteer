@@ -8,8 +8,8 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-class DateTimeDataType(name: String= "Inline 'string/date-time' Schema", isNullable: Boolean = false):
-    DataType<String>(name, "string/date-time", isNullable, String::class.java) {
+class DateTimeDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
+    DataType<String>(name, "string/date-time", isNullable, String::class.java, allowedValues) {
 
   override fun doValidate(value: String) =
     try {
@@ -19,7 +19,7 @@ class DateTimeDataType(name: String= "Inline 'string/date-time' Schema", isNulla
       failure("not a valid date-time")
     }
 
-  override fun randomValue(): String {
+  override fun doRandomValue(): String {
     val year = Random.nextInt(2000, 2100)
     val month = Random.nextInt(1, 13)
     val day = Random.nextInt(1, LocalDate.of(year, month, 1).lengthOfMonth() + 1)
@@ -33,4 +33,15 @@ class DateTimeDataType(name: String= "Inline 'string/date-time' Schema", isNulla
     return dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
   }
 
+  companion object {
+    fun create(
+      name: String = "Inline 'string/date-time' Schema",
+      isNullable: Boolean = false,
+      enum: List<Any?> = emptyList()
+    ) =
+      DateTimeDataType(name, isNullable).let { dataType ->
+        if (enum.isEmpty()) success(dataType)
+        else AllowedValues.create(enum, dataType).map { DateTimeDataType(name, isNullable, it) }
+      }
+  }
 }

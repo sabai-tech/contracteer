@@ -4,15 +4,17 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
-class AnyOfDataType(name: String = "Inline 'anyOf' Schema",
-                    val subTypes: List<StructuredObjectDataType>,
-                    val discriminator: Discriminator? = null,
-                    isNullable: Boolean = false): StructuredObjectDataType(name, "anyOf", isNullable) {
+class AnyOfDataType private constructor(name: String,
+                                        private val subTypes: List<StructuredObjectDataType>,
+                                        val discriminator: Discriminator?,
+                                        isNullable: Boolean,
+                                        allowedValues: AllowedValues? = null):
+    StructuredObjectDataType(name, "anyOf", isNullable, allowedValues) {
 
   override fun doValidate(value: Map<String, Any?>): Result<Map<String, Any?>> =
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
 
-  override fun randomValue(): Map<String, Any?> {
+  override fun doRandomValue(): Map<String, Any?> {
     val chosenType = subTypes.random()
     if (discriminator != null) {
       val discriminatingValue = discriminator.mapping
@@ -59,4 +61,16 @@ class AnyOfDataType(name: String = "Inline 'anyOf' Schema",
           prefix = "${System.lineSeparator()}     - ",
           separator = "${System.lineSeparator()}     - ")
       }.joinToString(separator = System.lineSeparator()))
+
+  companion object {
+    fun create(name: String = "Inline 'allOf' Schema",
+               subTypes: List<StructuredObjectDataType>,
+               discriminator: Discriminator? = null,
+               isNullable: Boolean = false,
+               enum: List<Any?>) =
+      AnyOfDataType(name, subTypes, discriminator, isNullable).let { dataType ->
+        if (enum.isEmpty()) success(dataType)
+        else AllowedValues.create(enum, dataType).map { AnyOfDataType(name, subTypes, discriminator, isNullable, it) }
+      }
+  }
 }

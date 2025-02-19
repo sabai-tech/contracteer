@@ -1,8 +1,5 @@
 package tech.sabai.contracteer.mockserver
 
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
 import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.*
@@ -10,6 +7,9 @@ import org.hamcrest.Matchers.emptyOrNullString
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import tech.sabai.contracteer.core.contract.*
+import tech.sabai.contracteer.mockserver.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.mockserver.DataTypeFixture.objectDataType
+import tech.sabai.contracteer.mockserver.DataTypeFixture.stringDataType
 import kotlin.test.Test
 
 class MockServerTest {
@@ -28,11 +28,11 @@ class MockServerTest {
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+                        pathParameters = listOf(PathParameter("id", integerDataType()))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            contentType = "application/json",
-                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+                           dataType = objectDataType(properties = mapOf("id" to integerDataType()))))),
     )
     mockServer = MockServer(contracts = contracts)
 
@@ -47,6 +47,7 @@ class MockServerTest {
       .statusCode(200)
       .body("id", notNullValue(Int::class.java))
   }
+
   @Test
   fun `responds with 418 status code when Accept header is required but missing`() {
     // given
@@ -54,19 +55,19 @@ class MockServerTest {
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+                        pathParameters = listOf(PathParameter("id", integerDataType()))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            contentType = "application/json",
-                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+                           dataType = objectDataType(properties = mapOf("id" to integerDataType()))))),
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+                        pathParameters = listOf(PathParameter("id", integerDataType()))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            contentType = "application/vnd.mycompany.myapp.v2+json",
-                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+                           dataType = objectDataType(properties = mapOf("id" to integerDataType()))))),
     )
     mockServer = MockServer(contracts = contracts)
 
@@ -87,19 +88,19 @@ class MockServerTest {
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+                        pathParameters = listOf(PathParameter("id", integerDataType()))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            contentType = "application/json",
-                           dataType = ObjectDataType(properties = mapOf("id" to IntegerDataType()))))),
+                           dataType = objectDataType(properties = mapOf("id" to integerDataType()))))),
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType(), Example(999)))),
+                        pathParameters = listOf(PathParameter("id", integerDataType(), Example(999)))),
         ContractResponse(statusCode = 404,
                          body = Body(
                            contentType = "application/json",
-                           dataType = ObjectDataType(properties = mapOf("error" to StringDataType())),
+                           dataType = objectDataType(properties = mapOf("error" to stringDataType())),
                            example = Example(mapOf("error" to "Not Found")))),
         "Not Found Example")
     )
@@ -132,21 +133,21 @@ class MockServerTest {
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType(), Example(999)))),
+                        pathParameters = listOf(PathParameter("id", integerDataType(), Example(999)))),
         ContractResponse(statusCode = 404,
                          body = Body(
                            "application/json",
-                           ObjectDataType(properties = mapOf("error" to StringDataType())),
+                           objectDataType(properties = mapOf("error" to stringDataType())),
                            Example(mapOf("error" to "Not Found")))),
         "Not Found Example 1"),
       Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType(), Example(999)))),
+                        pathParameters = listOf(PathParameter("id", integerDataType(), Example(999)))),
         ContractResponse(statusCode = 404,
                          body = Body(
                            "application/json",
-                           ObjectDataType(properties = mapOf("error" to StringDataType())),
+                           objectDataType(properties = mapOf("error" to stringDataType())),
                            Example(mapOf("error" to "Not Found")))),
         "Not Found Example 2")
     )
@@ -176,9 +177,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+                        pathParameters = listOf(PathParameter("id", integerDataType()))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -201,11 +202,11 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType(), Example(42)))),
+                        pathParameters = listOf(PathParameter("id", integerDataType(), Example(42)))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            "application/json",
-                           ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+                           objectDataType(properties = mapOf("id" to integerDataType())),
                            Example(mapOf("id" to 42)))),
         "simple contract")
       mockServer = MockServer(contracts = listOf(contract))
@@ -229,11 +230,11 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType(), Example(42)))),
+                        pathParameters = listOf(PathParameter("id", integerDataType(), Example(42)))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            "application/json",
-                           ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+                           objectDataType(properties = mapOf("id" to integerDataType())),
                            Example(mapOf("id" to 42)))),
         "simple contract")
       mockServer = MockServer(contracts = listOf(contract))
@@ -261,11 +262,11 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType(), Example(42)))),
+                        pathParameters = listOf(PathParameter("id", integerDataType(), Example(42)))),
         ContractResponse(statusCode = 200,
                          body = Body(
                            "application/json",
-                           ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                           objectDataType(properties = mapOf("id" to integerDataType())))),
         "simple example"
       )
       mockServer = MockServer(contracts = listOf(contract))
@@ -291,9 +292,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        queryParameters = listOf(ContractParameter("id", IntegerDataType(), true))),
+                        queryParameters = listOf(ContractParameter("id", integerDataType(), true))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -316,9 +317,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        queryParameters = listOf(ContractParameter("id", IntegerDataType(), true))),
+                        queryParameters = listOf(ContractParameter("id", integerDataType(), true))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -340,9 +341,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        queryParameters = listOf(ContractParameter("id", IntegerDataType(), true, Example(42)))),
+                        queryParameters = listOf(ContractParameter("id", integerDataType(), true, Example(42)))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -365,10 +366,10 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        queryParameters = listOf(ContractParameter("id", IntegerDataType(), true, Example(42)))),
+                        queryParameters = listOf(ContractParameter("id", integerDataType(), true, Example(42)))),
         ContractResponse(statusCode = 200,
                          body = Body("application/json",
-                                     ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                                     objectDataType(properties = mapOf("id" to integerDataType())))),
         "simple example"
       )
       mockServer = MockServer(contracts = listOf(contract))
@@ -394,9 +395,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        cookies = listOf(ContractParameter("id", IntegerDataType(), true))),
+                        cookies = listOf(ContractParameter("id", integerDataType(), true))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -420,9 +421,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        cookies = listOf(ContractParameter("id", IntegerDataType(), true))),
+                        cookies = listOf(ContractParameter("id", integerDataType(), true))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -444,9 +445,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        cookies = listOf(ContractParameter("id", IntegerDataType(), true, Example(42)))),
+                        cookies = listOf(ContractParameter("id", integerDataType(), true, Example(42)))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -470,10 +471,10 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users",
-                        cookies = listOf(ContractParameter("id", IntegerDataType(), true, Example(42)))),
+                        cookies = listOf(ContractParameter("id", integerDataType(), true, Example(42)))),
         ContractResponse(statusCode = 200,
                          body = Body("application/json",
-                                     ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                                     objectDataType(properties = mapOf("id" to integerDataType())))),
         "simple example"
       )
       mockServer = MockServer(contracts = listOf(contract))
@@ -500,9 +501,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "POST",
                         path = "/v1/users",
-                        body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                        body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType())))),
         ContractResponse(statusCode = 201,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -527,9 +528,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "POST",
                         path = "/v1/users",
-                        body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                        body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType())))),
         ContractResponse(statusCode = 201,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -554,11 +555,11 @@ class MockServerTest {
         ContractRequest(method = "POST",
                         path = "/v1/users",
                         body = Body("application/json",
-                                    ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+                                    objectDataType(properties = mapOf("id" to integerDataType())),
                                     Example(mapOf("id" to 42)))),
         ContractResponse(statusCode = 201,
                          body = Body("application/json",
-                                     ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+                                     objectDataType(properties = mapOf("id" to integerDataType())),
                                      Example(mapOf("id" to 999)))),
         "simple example"
       )
@@ -586,11 +587,11 @@ class MockServerTest {
         ContractRequest(method = "POST",
                         path = "/v1/users",
                         body = Body("application/json",
-                                    ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+                                    objectDataType(properties = mapOf("id" to integerDataType())),
                                     Example(mapOf("id" to 42)))),
         ContractResponse(statusCode = 201,
                          body = Body("application/json",
-                                     ObjectDataType(properties = mapOf("id" to IntegerDataType())),
+                                     objectDataType(properties = mapOf("id" to integerDataType())),
                                      Example(mapOf("id" to 999)))),
         "simple example"
       )
@@ -620,9 +621,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "POST",
                         path = "/v1/users",
-                        body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                        body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType())))),
         ContractResponse(statusCode = 201,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -646,9 +647,9 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "GET",
                         path = "/v1/users/{id}",
-                        pathParameters = listOf(PathParameter("id", IntegerDataType()))),
+                        pathParameters = listOf(PathParameter("id", integerDataType()))),
         ContractResponse(statusCode = 200,
-                         body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType()))))
+                         body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType()))))
       )
       mockServer = MockServer(contracts = listOf(contract))
 
@@ -670,7 +671,7 @@ class MockServerTest {
       val contract = Contract(
         ContractRequest(method = "POST",
                         path = "/v1/users",
-                        body = Body("application/json", ObjectDataType(properties = mapOf("id" to IntegerDataType())))),
+                        body = Body("application/json", objectDataType(properties = mapOf("id" to integerDataType())))),
         ContractResponse(statusCode = 201)
       )
       mockServer = MockServer(contracts = listOf(contract))

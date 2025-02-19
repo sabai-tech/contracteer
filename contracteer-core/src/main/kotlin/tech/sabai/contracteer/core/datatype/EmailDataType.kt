@@ -3,8 +3,8 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
-class EmailDataType(name: String= "Inline 'string/email' Schema", isNullable: Boolean = false):
-    DataType<String>(name, "string/email", isNullable, String::class.java) {
+class EmailDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
+    DataType<String>(name, "string/email", isNullable, String::class.java, allowedValues) {
 
   private val loremIpsum =
     "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
@@ -21,12 +21,24 @@ class EmailDataType(name: String= "Inline 'string/email' Schema", isNullable: Bo
                            ).toRegex()
 
   override fun doValidate(value: String) =
-     if (emailRegex.matches(value)) success(value) else failure("not a valid email")
+    if (emailRegex.matches(value)) success(value) else failure("not a valid email")
 
-  override fun randomValue(): String {
+  override fun doRandomValue(): String {
     val words = loremIpsum.split(" ")
     val randomUser = List(2) { words.random() }.joinToString(".")
     val randomDomain = List(2) { words.random() }.joinToString(".")
     return "$randomUser@$randomDomain"
+  }
+
+  companion object {
+    fun create(
+      name: String = "Inline 'string/email' Schema",
+      isNullable: Boolean = false,
+      enum: List<Any?> = emptyList()
+    ) =
+      EmailDataType(name, isNullable).let { dataType ->
+        if (enum.isEmpty()) success(dataType)
+        else AllowedValues.create(enum, dataType).map { EmailDataType(name, isNullable, it) }
+      }
   }
 }
