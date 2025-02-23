@@ -50,7 +50,7 @@ class ArrayDataTypeTest {
     val arrayDataType = arrayDataType(itemDataType = stringDataType())
 
     // when
-    val result = arrayDataType.validate(arrayOf(1, 2, 3))
+    val result = arrayDataType.validate(listOf(1, 2, 3))
 
     // then
     assert(result.isFailure())
@@ -62,7 +62,7 @@ class ArrayDataTypeTest {
     val arrayDataType = arrayDataType(itemDataType = stringDataType(isNullable = false))
 
     // when
-    val result = arrayDataType.validate(arrayOf("1", null, "3"))
+    val result = arrayDataType.validate(listOf("1", null, "3"))
 
     // then
     assert(result.isFailure())
@@ -76,7 +76,7 @@ class ArrayDataTypeTest {
     val arrayDataType = arrayDataType(itemDataType = integerDataType())
 
     // when
-    val result = arrayDataType.validate(arrayOf(1, 2, 3))
+    val result = arrayDataType.validate(listOf(1, 2, 3))
 
     // then
     assert(result.isSuccess())
@@ -85,10 +85,10 @@ class ArrayDataTypeTest {
   @Test
   fun `validates an array with enum values`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(arrayOf(1, 3), arrayOf(2, 4)))
+    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(listOf(1, 3), listOf(2, 4)))
 
     // when
-    val result = arrayDataType.validate(arrayOf(2, 4))
+    val result = arrayDataType.validate(listOf(2, 4))
 
     // then
     assert(result.isSuccess())
@@ -97,10 +97,10 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate an array with enum values`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(arrayOf(1, 3), arrayOf(2, 4)))
+    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(listOf(1, 3), listOf(2, 4)))
 
     // when
-    val result = arrayDataType.validate(arrayOf(1, 2))
+    val result = arrayDataType.validate(listOf(1, 2))
 
     // then
     assert(result.isFailure())
@@ -109,13 +109,13 @@ class ArrayDataTypeTest {
   @Test
   fun `generates random value with enum values`() {
     // given
-    val enum = listOf(arrayOf(1, 3), arrayOf(2, 4))
+    val enum = listOf(listOf(1, 3), listOf(2, 4))
     val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = enum)
 
     // when
     val result = arrayDataType.randomValue()
 
     // then
-    assert(enum.map { it.normalize() as Array<*> }.any { it.contentDeepEquals(result) })
+    assert(enum.map { it.normalize() }.contains(result))
   }
 }

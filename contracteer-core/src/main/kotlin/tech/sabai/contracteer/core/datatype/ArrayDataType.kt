@@ -2,20 +2,19 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.accumulateWithIndex
 
-@Suppress("UNCHECKED_CAST")
 class ArrayDataType private constructor(name: String,
                                         val itemDataType: DataType<out Any>,
                                         isNullable: Boolean,
                                         allowedValues: AllowedValues? = null):
-    DataType<Array<Any?>>(name, "array", isNullable, Array::class.java as Class<Array<Any?>>, allowedValues) {
+    DataType<List<Any?>>(name, "array", isNullable, List::class.java as Class<List<Any?>>, allowedValues) {
 
-  override fun doValidate(value: Array<Any?>): Result<Array<Any?>> =
-    value.accumulate { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }.map { value }
+  override fun doValidate(value: List<Any?>): Result<List<Any?>> =
+    value.accumulateWithIndex { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }.map { value }
 
-  override fun doRandomValue(): Array<Any?> =
-    Array((1..5).random()) { itemDataType.randomValue() }
+  override fun doRandomValue(): List<Any?> =
+    List((1..5).random()) { itemDataType.randomValue() }
 
   companion object {
     fun create(name: String = "Inline 'array' Schema",

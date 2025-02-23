@@ -9,7 +9,7 @@ class AllowedValues private constructor(values: List<Any?>) {
   private val allowedValues = values.distinct().map { it.normalize() }
 
   fun contains(value: Any?) =
-    if (allowedValues.containsDeep(value.normalize())) success(value)
+    if (allowedValues.contains(value.normalize())) success(value)
     else failure("value '${value.formatValue()}' is not allowed. Possible values: ${allowedValues.formatValue()}")
 
   fun randomValue(): Any = allowedValues.filterNotNull().random()
@@ -26,18 +26,8 @@ class AllowedValues private constructor(values: List<Any?>) {
 
   private fun Any?.formatValue(): String =
     when (this) {
-      is Array<*>      -> this.joinToString(prefix = "[", postfix = "]") { it.formatValue() }
       is Collection<*> -> this.joinToString(prefix = "[", postfix = "]") { it.formatValue() }
       else             -> this.toString()
     }
-
-  private fun <T> List<T>.containsDeep(element: T): Boolean {
-    return this.any { item ->
-      when {
-        item is Array<*> && element is Array<*> -> item.contentDeepEquals(element)
-        else                                    -> item == element
-      }
-    }
-  }
 }
 

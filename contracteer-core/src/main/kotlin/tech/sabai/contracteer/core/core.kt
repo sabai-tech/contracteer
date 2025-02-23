@@ -14,8 +14,9 @@ fun Any?.normalize(): Any? = when (this) {
   is Float      -> BigDecimal.valueOf(toDouble())
   is Double     -> BigDecimal.valueOf(this)
   is Map<*, *>  -> mapValues { it.value.normalize() }
-  is Array<*>   -> map { it.normalize() }.toTypedArray<Any?>()
-  is ObjectNode -> Mappers.jsonMapper.convertValue(this, Map::class.java)
-  is ArrayNode  -> Mappers.jsonMapper.convertValue(this, Array::class.java)
+  is Collection<*>  -> map { it.normalize() }
+  is Array<*>   -> map { it.normalize() }.toList()
+  is ObjectNode -> Mappers.jsonMapper.convertValue(this, Map::class.java).mapValues { it.value.normalize() }
+  is ArrayNode  -> Mappers.jsonMapper.convertValue(this, List::class.java).map { it.normalize() }
   else          -> this
 }

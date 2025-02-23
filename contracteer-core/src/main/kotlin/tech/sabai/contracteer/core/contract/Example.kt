@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.accumulateWithIndex
 import tech.sabai.contracteer.core.normalize
 
 private const val VALUE_DOES_NOT_MATCH = "value does not match. Expected: %s, Actual: %s"
@@ -17,7 +18,7 @@ class Example(value: Any?) {
     when {
       this == other                           -> success(this)
       this is Map<*, *> && other is Map<*, *> -> matches(other)
-      this is Array<*> && other is Array<*>   -> matches(other)
+      this is List<*> && other is List<*>     -> matches(other)
       else                                    -> failure(VALUE_DOES_NOT_MATCH.format(this, other))
     }
 
@@ -25,8 +26,8 @@ class Example(value: Any?) {
     if (this.keys != other.keys) failure("Property names are not equal")
     else accumulate { it.value.matchesValue(other[it.key]).forProperty(it.key.toString()) }.map { other }
 
-  private fun Array<*>.matches(other: Array<*>): Result<Array<*>> =
+  private fun List<*>.matches(other: List<*>): Result<List<*>> =
     if (size != other.size) failure("Array size does not match")
-    else accumulate { index, item -> item.matchesValue(other[index]).forIndex(index) }.map { other }
+    else accumulateWithIndex { index, item -> item.matchesValue(other[index]).forIndex(index) }.map { other }
 }
 

@@ -80,7 +80,7 @@ class Result<out T> private constructor(
   }
 }
 
-fun <E, R> Collection<E>.accumulate(transform: (E) -> Result<R>): Result<R> =
+fun <E, R> List<E>.accumulate(transform: (E) -> Result<R>): Result<R> =
   fold(success()) { acc, element -> acc combineWith transform(element) }
 
 fun <K, V, R> Map<out K, V>.accumulate(transform: (Map.Entry<K, V>) -> Result<R>): Result<Map<K, R>> =
@@ -94,7 +94,7 @@ fun <K, V, R> Map<out K, V>.accumulate(transform: (Map.Entry<K, V>) -> Result<R>
     }
   }
 
-inline fun <E, reified R> Array<E>.accumulate(transform: (index: Int, E) -> Result<R>): Result<Array<R>> =
+inline fun <E, reified R> List<E>.accumulateWithIndex(transform: (index: Int, E) -> Result<R>): Result<List<R>> =
   indices.fold(success(emptyList<R>())) { acc, index ->
     val result = transform(index, this[index])
     when {
@@ -104,7 +104,7 @@ inline fun <E, reified R> Array<E>.accumulate(transform: (index: Int, E) -> Resu
       else                                  -> acc combineWith result.retypeError()
     }
   }.let {
-    if (it.isSuccess()) success(it.value!!.toTypedArray())
+    if (it.isSuccess()) success(it.value!!)
     else it.retypeError()
   }
 

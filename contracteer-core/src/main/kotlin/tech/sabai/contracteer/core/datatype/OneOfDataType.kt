@@ -63,9 +63,8 @@ class OneOfDataType private constructor(name: String,
 
   private fun buildNoMatchError(dataTypeErrors: Map<StructuredObjectDataType, Result<Map<String, Any?>>>): Result<Map<String, Any?>> =
     failure(
-      "No schema match: ${System.lineSeparator()}" +
       dataTypeErrors.map {
-        "   * ${it.key.name}" +
+        "Schema '${it.key.name}'" +
         it.value.errors().joinToString(
           prefix = "${System.lineSeparator()}     - ",
           separator = "${System.lineSeparator()}     - ")
