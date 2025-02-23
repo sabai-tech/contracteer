@@ -46,13 +46,13 @@ private fun removeUnsupportedContracts(contracts: List<Contract>?): List<Contrac
   contracts?.filter { !it.hasUnsupportedContentType() && !it.hasUnsupportedParameters() } ?: emptyList()
 
 private fun Contract.hasUnsupportedContentType(): Boolean {
-  val isUnsupportedResponseContentType = response.body?.contentType == "application/xml"
+  val isUnsupportedResponseContentType = response.body?.contentType?.value == "application/xml"
   if (isUnsupportedResponseContentType)
     logger.warn {
       "Contract '${this.description()}' filtered out: response content-type 'application/xml' is not yet supported."
     }
 
-  val requestContentType = request.body?.contentType
+  val requestContentType = request.body?.contentType?.value
   val isUnsupportedRequestContentType = requestContentType in setOf("multipart/form-data",
                                                                     "application/x-www-form-urlencoded",
                                                                     "application/xml")

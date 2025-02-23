@@ -43,7 +43,7 @@ class ContractExtractorTest {
     assert(contract.request.cookies.first().dataType is StringDataType)
     //      Body
     assert(contract.request.body != null)
-    assert(contract.request.body!!.contentType == "application/json")
+    assert(contract.request.body!!.contentType.value == "application/json")
     assert(contract.request.body!!.dataType is ObjectDataType)
     assert((contract.request.body!!.dataType as ObjectDataType).name == "Inline Schema")
     assert((contract.request.body!!.dataType as ObjectDataType).properties["prop1"] is StringDataType)
@@ -57,7 +57,7 @@ class ContractExtractorTest {
     assert(contract.response.headers.asMap()["x-required"]!!.dataType is IntegerDataType)
     //      Body
     assert(contract.response.hasBody())
-    assert(contract.response.body!!.contentType == "application/json")
+    assert(contract.response.body!!.contentType.value == "application/json")
     assert(contract.response.body!!.dataType.name == "product_details")
     assert(contract.response.body!!.dataType is ObjectDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["boolean"] is BooleanDataType)
@@ -94,7 +94,7 @@ class ContractExtractorTest {
     val contracts = Path("src/test/resources/multiple_content_type.yaml").loadContracts().value!!
     // then
     assert(contracts.size == 4)
-    assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
+    assert(contracts.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }
              .containsAll(listOf(
                "application/vnd.mycompany.myapp.v2+json" to "application/json",
                "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json",
@@ -162,7 +162,7 @@ class ContractExtractorTest {
         loadContracts.value!!
       // then
       assert(contracts.size == 4)
-      assert(contracts.map { it.request.body!!.contentType to it.response.body!!.contentType }
+      assert(contracts.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }
                .containsAll(listOf(
                  "application/vnd.mycompany.myapp.v2+json" to "application/json",
                  "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json",

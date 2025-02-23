@@ -11,10 +11,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
-import tech.sabai.contracteer.core.contract.Body
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.Example
-import tech.sabai.contracteer.core.contract.PathParameter
+import tech.sabai.contracteer.core.contract.*
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.StructuredObjectDataType
@@ -103,7 +100,7 @@ internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result
     mediaType.schema.convertToDataType()
       .flatMap { it!!.validateContentType(contentType) }
       .flatMap { it!!.validateExample(example) }
-      .map { Body(contentType, it!!, example) }
+      .map { Body(ContentType(contentType), it!!, example) }
   } ?: emptyList()).combineResults()
 
 internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Result<List<Body>> {
@@ -112,7 +109,7 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
     mediaType.schema.convertToDataType()
       .flatMap { it!!.validateContentType(contentType) }
       .flatMap { it!!.validateExample(example) }
-      .map { Body(contentType, it!!, example) }
+      .map { Body(ContentType(contentType), it!!, example) }
   } ?: emptyList()).combineResults()
 }
 

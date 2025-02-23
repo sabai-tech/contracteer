@@ -23,7 +23,7 @@ class ServerVerifierTest {
       pathParameters = listOf(PathParameter("id", IntegerDataType.create().value!!))),
     response = ContractResponse(
       statusCode = 200,
-      body = Body(contentType = "application/json",
+      body = Body(contentType = ContentType("application/json"),
                   dataType = objectDataType(properties = mapOf(
                     "id" to integerDataType(),
                     "name" to stringDataType()))))

@@ -9,7 +9,7 @@ import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.contract.ContractResponse
 import tech.sabai.contracteer.core.contract.matches
 
-internal class ResponseValidator(private val responseContract: ContractResponse) {
+internal class ResponseValidator(private val contractResponse: ContractResponse) {
 
   fun validate(response: Response) =
     response.status.code.validate() andThen
@@ -17,11 +17,11 @@ internal class ResponseValidator(private val responseContract: ContractResponse)
         { response.validateBody() }
 
   private fun Int.validate(): Result<Any?> =
-    if (this == responseContract.statusCode) success(this)
-    else failure("Status code does not match. Expected: ${responseContract.statusCode}, Actual: $this")
+    if (this == contractResponse.statusCode) success(this)
+    else failure("Status code does not match. Expected: ${contractResponse.statusCode}, Actual: $this")
 
   private fun Headers.validate() =
-    responseContract.headers.accumulate {
+    contractResponse.headers.accumulate {
       when {
         it.isRequired.not() && hasHeader(it.name).not() -> success()
         it.isRequired && hasHeader(it.name).not()       -> failure("Response header '${it.name}' is missing")
@@ -31,17 +31,17 @@ internal class ResponseValidator(private val responseContract: ContractResponse)
 
   private fun Response.validateBody() =
     when {
-      responseContract.body == null && contentType().isNullOrEmpty()   -> success()
-      responseContract.body == null && !contentType().isNullOrEmpty()  -> failure("Expected no Content-Type but found: '${contentType()}'")
-      responseContract.body != null && contentType().isNullOrEmpty()   -> failure("Content-Type is missing, expected '${responseContract.body!!.contentType}'")
-      !contentType()!!.startsWith(responseContract.body!!.contentType) -> failure("Wrong Content-Type. Expected: ${responseContract.body!!.contentType}, Actual: '${contentType()}'")
-      "json" !in contentType()!!.lowercase()                           -> failure("Content-Type'${contentType()}' is not managed")
-      else                                                             -> bodyString().matches(responseContract.body!!)
+      contractResponse.body == null && contentType().isNullOrEmpty()  -> success()
+      contractResponse.body == null && !contentType().isNullOrEmpty() -> failure("Expected no Content-Type but found: '${contentType()}'")
+      contractResponse.body != null && contentType().isNullOrEmpty()  -> failure("Content-Type is missing, expected '${contractResponse.body!!.contentType}'")
+      else                                                            ->
+        contractResponse.body!!.contentType
+          .validate(contentType()!!)
+          .flatMap { bodyString().matches(contractResponse.body!!) }
     }
 
   private fun Headers.hasHeader(name: String) = any { it.first.lowercase() == name.lowercase() }
   private fun Headers.headerValue(name: String) = find { it.first.lowercase() == name.lowercase() }?.second
-
   private fun Response.contentType(): String? = header("Content-Type")
 }
 

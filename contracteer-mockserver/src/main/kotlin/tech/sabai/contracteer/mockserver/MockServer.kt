@@ -1,11 +1,8 @@
 package tech.sabai.contracteer.mockserver
 
-import tech.sabai.contracteer.core.Result
-import tech.sabai.contracteer.core.Result.Companion.failure
-import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.accumulate
-import tech.sabai.contracteer.core.contract.Body
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.http4k.core.*
+import org.http4k.core.ContentType
 import org.http4k.core.ContentType.Companion.TEXT_PLAIN
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
 import org.http4k.core.cookie.cookie
@@ -16,11 +13,12 @@ import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
-import io.github.oshai.kotlinlogging.KotlinLogging
-import tech.sabai.contracteer.core.contract.Contract
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.matches
-import tech.sabai.contracteer.core.contract.matchesExample
+import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.contract.*
+import tech.sabai.contracteer.core.contract.Body
 
 class MockServer(private val contracts: List<Contract>,
                  private val port: Int = 0) {
@@ -31,7 +29,7 @@ class MockServer(private val contracts: List<Contract>,
   fun start() {
     val routeHandlers = contracts
       .groupBy { it.request.path to Method.valueOf(it.request.method) }
-      .onEach {  logger.info { "Registering route: [${it.key.second}] ${it.key.first} with ${it.value.size} contract(s)" } }
+      .onEach { logger.info { "Registering route: [${it.key.second}] ${it.key.first} with ${it.value.size} contract(s)" } }
       .map { (pathAndMethod, contracts) -> createRouteHandler(pathAndMethod.first, pathAndMethod.second, contracts) }
 
     logger.info { "Starting Contracteer mock server" }
@@ -111,34 +109,34 @@ class MockServer(private val contracts: List<Contract>,
       }
     }
 
-  private fun Body.verify(req: Request) =
-    when {
-      req.contentType() == null                    -> failure("Request Header 'Content-type' is missing")
-      !req
-        .contentType()!!
-        .startsWith(contentType)                   -> failure("Request Header 'Content-type' does not match: Expected: ${contentType}, actual: ${req.contentType()}")
-      hasExample()                                 -> req.bodyString().matchesExample(this)
-      else                                         -> req.bodyString().matches(this)
-    }
+  private fun Body.verify(req: Request): Result<Any?> {
+    val requestContentType = req.contentType() ?: return failure("Request Header 'Content-type' is missing")
+
+    return contentType.validate(requestContentType).flatMap {
+      if (hasExample()) req.bodyString().matchesExample(this)
+      else req.bodyString().matches(this)
+    }.mapErrors { "Request $it" }
+  }
+
 
   private fun Contract.verifyAcceptRequestHeader(acceptHeader: String?): Result<Contract> =
-    when {
-      response.body == null                                 -> success(this)
-      acceptHeader.isNullOrEmpty() || acceptHeader == "*/*" -> success(this)
-      !acceptHeader.startsWith(response.body!!.contentType) -> failure("Request Header 'Accept' does not match: Expected: ${response.body!!.contentType}, actual: $acceptHeader")
-      else                                                  -> success(this)
+    if (response.body == null || acceptHeader.isNullOrEmpty() || acceptHeader == "*/*") success()
+    else {
+      response.body!!.contentType.validate(acceptHeader)
+        .map { this }
+        .mapErrors { "Request Header 'Accept' does not match: Expected: ${response.body!!.contentType}, actual: $acceptHeader" }
     }
 
   private fun Contract.priority() =
     if (hasExample()) Int.MAX_VALUE else Int.MIN_VALUE // TODO: introduce open api extension to manage priority ?
 
-  private fun Contract.toResponse(): Response {
-    val httpResponse = Response(Status.fromCode(response.statusCode)!!)
-    return when (response.hasBody()) {
-      true  -> httpResponse.header("Content-type", response.body!!.contentType).body(response.body!!.asString())
-      false -> httpResponse
+  private fun Contract.toResponse() =
+    Response(Status.fromCode(response.statusCode)!!).let { baseResponse ->
+      if (response.hasBody())
+        baseResponse.header("Content-type", response.body!!.contentType.value).body(response.body!!.asString())
+      else
+        baseResponse
     }
-  }
 
   private fun Contract.notFoundWithErrors(errors: List<String>): Response =
     Response(I_M_A_TEAPOT)

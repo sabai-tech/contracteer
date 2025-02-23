@@ -4,7 +4,6 @@ import tech.sabai.contracteer.core.DataTypeFixture.arrayDataType
 import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
 import tech.sabai.contracteer.core.DataTypeFixture.objectDataType
 import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
-import tech.sabai.contracteer.core.datatype.*
 import kotlin.test.Test
 
 class BodyTest {
@@ -13,7 +12,7 @@ class BodyTest {
   fun `null string matches nullable Body`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(properties = mapOf("id" to integerDataType()), isNullable = true)
     )
 
@@ -28,7 +27,7 @@ class BodyTest {
   fun `null string does not match non nullable Body`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         isNullable = false,
         properties = mapOf("id" to integerDataType()))
@@ -45,7 +44,7 @@ class BodyTest {
   fun `string does not match when content-type is not json`() {
     // given
     val body = Body(
-      contentType = "text/plain",
+      contentType = ContentType("text/plain"),
       dataType = stringDataType()
     )
 
@@ -60,7 +59,7 @@ class BodyTest {
   fun `Json Object string matches body when all properties match`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf(
           "foo" to integerDataType(),
@@ -78,7 +77,7 @@ class BodyTest {
   fun `Json Object string does not match body when some properties do not match`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf(
           "foo" to integerDataType(),
@@ -96,7 +95,7 @@ class BodyTest {
   fun `Json Array matches when all items match`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = arrayDataType(itemDataType = integerDataType())
     )
 
@@ -111,7 +110,7 @@ class BodyTest {
   fun `Json Array does not match when some items do not match`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = arrayDataType(itemDataType = integerDataType())
     )
 
@@ -126,7 +125,7 @@ class BodyTest {
   fun `null string matches example body with null value`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf("name" to stringDataType()),
         isNullable = true
@@ -144,7 +143,7 @@ class BodyTest {
   fun `null string does match example body with non null value`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf("name" to stringDataType())
       ),
@@ -161,7 +160,7 @@ class BodyTest {
   fun `Json Object string matches Body example value`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf("name" to stringDataType())
       ),
@@ -178,7 +177,7 @@ class BodyTest {
   fun `Json Object string does not match when some property are equals to example value`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf(
           "name" to stringDataType(),
@@ -201,7 +200,7 @@ class BodyTest {
   fun `Json Object string does not match when some example properties are missing`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = objectDataType(
         properties = mapOf(
           "name" to stringDataType(),
@@ -223,7 +222,7 @@ class BodyTest {
   fun `Json Array string matches body example value`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = arrayDataType(itemDataType = integerDataType()),
       example = Example(arrayOf(20, 42))
     )
@@ -238,7 +237,7 @@ class BodyTest {
   fun `Json Array string does not match body example value`() {
     // given
     val body = Body(
-      contentType = "application/json",
+      contentType = ContentType("application/json"),
       dataType = arrayDataType(itemDataType = integerDataType()),
       example = Example(arrayOf(20, 42))
     )

@@ -44,11 +44,11 @@ class HttpRequesterTest {
         queryParameters = listOf(ContractParameter("q", integerDataType())),
         cookies = listOf(ContractParameter("val", integerDataType())),
         headers = listOf(ContractParameter("x-my-header", stringDataType())),
-        body = Body("application/json", objectDataType(properties = mapOf("prop" to integerDataType())))
+        body = Body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("prop" to integerDataType())))
       ),
       ContractResponse(
         statusCode = 200,
-        body = Body("application/json", objectDataType(properties = mapOf("property" to integerDataType())))
+        body = Body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("property" to integerDataType())))
       )
     )
 

@@ -22,7 +22,7 @@ internal class HttpRequester(private val serverUrl: String) {
         .withCookies(contract.request.cookies)
         .withBody(contract.request.body)
 
-    return client(contract.response.body?.let { request.header("Accept", it.contentType) } ?: request)
+    return client(contract.response.body?.let { request.header("Accept", it.contentType.value) } ?: request)
   }
 
   private fun Request.withHeaders(contractHeaders: List<ContractParameter>) =
@@ -35,6 +35,6 @@ internal class HttpRequester(private val serverUrl: String) {
     cookies.fold(this) { req, cookie -> req.cookie(cookie.name, cookie.stringValue()) }
 
   private fun Request.withBody(body: Body?): Request {
-    return body?.let { header("Content-Type", body.contentType).body(it.asString()) } ?: this
+    return body?.let { header("Content-Type", body.contentType.value).body(it.asString()) } ?: this
   }
 }
