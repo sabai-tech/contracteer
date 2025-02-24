@@ -3,23 +3,26 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.normalize
 
 sealed class DataType<T>(
   val name: String,
   val openApiType: String,
   val isNullable: Boolean = false,
   val dataTypeClass: Class<out T>,
-  private val allowedValues: AllowedValues? = null) {
+  val allowedValues: AllowedValues? = null) {
 
   @Suppress("UNCHECKED_CAST")
-  internal fun validate(value: Any?): Result<T> =
-    when {
-      value == null && isNullable           -> success()
-      value == null                         -> failure("Cannot be null")
-      dataTypeClass.isInstance(value).not() -> failure("Wrong type. Expected type: $openApiType")
-      allowedValues != null                 -> allowedValues.contains(value).map { value as T }
-      else                                  -> doValidate(value as T)
+  internal fun validate(value: Any?): Result<T> {
+    val normalizedValue = value.normalize()
+    return when {
+      normalizedValue == null && isNullable      -> success()
+      normalizedValue == null                    -> failure("Cannot be null")
+      !dataTypeClass.isInstance(normalizedValue) -> failure("Wrong type. Expected type: $openApiType")
+      allowedValues != null                      -> allowedValues.contains(normalizedValue).map { normalizedValue as T }
+      else                                       -> doValidate(normalizedValue as T)
     }
+  }
 
   @Suppress("UNCHECKED_CAST")
   internal fun randomValue(): T = allowedValues?.randomValue() as T ?: doRandomValue()

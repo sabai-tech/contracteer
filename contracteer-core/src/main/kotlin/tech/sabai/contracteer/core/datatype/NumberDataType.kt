@@ -5,9 +5,9 @@ import java.math.BigDecimal
 import kotlin.random.Random
 
 class NumberDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
-    DataType<Number>(name, "number", isNullable, Number::class.java, allowedValues) {
+    DataType<BigDecimal>(name, "number", isNullable, BigDecimal::class.java, allowedValues) {
 
-  override fun doValidate(value: Number) = success(value)
+  override fun doValidate(value: BigDecimal) = success(value)
 
   override fun doRandomValue(): BigDecimal = BigDecimal.valueOf(Random.nextDouble(-1_000.0, 1_000.0))
 

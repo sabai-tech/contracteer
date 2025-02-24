@@ -4,8 +4,10 @@ import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.swagger.*
 import tech.sabai.contracteer.core.swagger.fullyResolve
 import tech.sabai.contracteer.core.swagger.safeEnum
+import tech.sabai.contracteer.core.swagger.safeExclusiveMinimum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
 object SchemaConverter {
@@ -14,7 +16,7 @@ object SchemaConverter {
     return when (val fullyResolved = schema.fullyResolve()) {
       is ComposedSchema  -> ComposedSchemaConverter.convert(fullyResolved)
       is BooleanSchema   -> BooleanDataType.create(fullyResolved.name, fullyResolved.safeNullable(),fullyResolved.safeEnum())
-      is IntegerSchema   -> IntegerDataType.create(fullyResolved.name, isNullable = fullyResolved.safeNullable(), fullyResolved.safeEnum())
+      is IntegerSchema   -> createIntegerDataType(fullyResolved)
       is NumberSchema    -> NumberDataType.create(fullyResolved.name, isNullable = fullyResolved.safeNullable(), fullyResolved.safeEnum())
       is StringSchema    -> StringDataType.create(fullyResolved.name, "string", isNullable = fullyResolved.safeNullable(), fullyResolved.safeEnum())
       is PasswordSchema  -> StringDataType.create(fullyResolved.name, "string/password", fullyResolved.safeNullable(), fullyResolved.safeEnum())
@@ -29,4 +31,14 @@ object SchemaConverter {
       else               -> failure("Schema ${fullyResolved::class.java.simpleName} is not yet supported")
     }
   }
+
+  private fun createIntegerDataType(schema: Schema<out Any>) =
+    IntegerDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      minimum = schema.minimum,
+      maximum = schema.maximum,
+      exclusiveMinimum = schema.safeExclusiveMinimum(),
+      exclusiveMaximum = schema.safeExclusiveMaximum(),
+      enum = schema.safeEnum())
 }

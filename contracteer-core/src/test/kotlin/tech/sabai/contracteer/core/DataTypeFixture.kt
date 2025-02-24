@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core
 
 import tech.sabai.contracteer.core.datatype.*
+import java.math.BigDecimal
 
 object DataTypeFixture {
 
@@ -46,8 +47,12 @@ object DataTypeFixture {
     EmailDataType.create("email", isNullable, enum).value!!
 
   fun integerDataType(isNullable: Boolean = false,
-                      enum: List<Any?> = emptyList()) =
-    IntegerDataType.create("integer", isNullable, enum).value!!
+                      enum: List<Any?> = emptyList(),
+                      minimum: BigDecimal? = null,
+                      maximum: BigDecimal? = null,
+                      exclusiveMinimum: Boolean = false,
+                      exclusiveMaximum: Boolean = false) =
+    IntegerDataType.create("integer", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
 
   fun numberDataType(isNullable: Boolean = false,
                      enum: List<Any?> = emptyList()) =

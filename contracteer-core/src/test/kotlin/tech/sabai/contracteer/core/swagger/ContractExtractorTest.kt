@@ -10,6 +10,22 @@ import kotlin.test.Test
 class ContractExtractorTest {
 
   @Test
+  fun `extract IntegerDataType`() {
+    // when
+    val contractResults = Path("src/test/resources/datatype/integer_datatype.yaml").loadContracts()
+    val integerDataType = contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as IntegerDataType
+
+    // then
+    assert(integerDataType.allowedValues != null)
+    assert(integerDataType.allowedValues!!.contains(10).isSuccess())
+    assert(integerDataType.allowedValues!!.contains(20).isSuccess())
+    assert(integerDataType.range.minimum == 9.toBigDecimal())
+    assert(integerDataType.range.maximum == 20.toBigDecimal())
+    assert(integerDataType.range.exclusiveMinimum)
+    assert(integerDataType.range.exclusiveMaximum.not())
+  }
+
+  @Test
   fun `auto generated contract with all data types`() {
     // when
     val contractResults =
@@ -158,17 +174,16 @@ class ContractExtractorTest {
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
     val loadContracts = Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").loadContracts()
-      val contracts =
-        loadContracts.value!!
-      // then
-      assert(contracts.size == 4)
-      assert(contracts.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }
-               .containsAll(listOf(
-                 "application/vnd.mycompany.myapp.v2+json" to "application/json",
-                 "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json",
-                 "application/json" to "application/json",
-                 "application/json" to "application/vnd.mycompany.myapp.v2+json"
-               )))
+    val contracts = loadContracts.value!!
+    // then
+    assert(contracts.size == 4)
+    assert(contracts.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }
+             .containsAll(listOf(
+               "application/vnd.mycompany.myapp.v2+json" to "application/json",
+               "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json",
+               "application/json" to "application/json",
+               "application/json" to "application/vnd.mycompany.myapp.v2+json"
+             )))
   }
 }
 
