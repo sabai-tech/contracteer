@@ -26,6 +26,22 @@ class ContractExtractorTest {
   }
 
   @Test
+  fun `extract NumberDataType`() {
+    // when
+    val contractResults = Path("src/test/resources/datatype/number_datatype.yaml").loadContracts()
+    val numberDataType = contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as NumberDataType
+
+    // then
+    assert(numberDataType.allowedValues != null)
+    assert(numberDataType.allowedValues!!.contains(10.5).isSuccess())
+    assert(numberDataType.allowedValues!!.contains(20).isSuccess())
+    assert(numberDataType.range.minimum == 10.toBigDecimal())
+    assert(numberDataType.range.maximum == 20.3.toBigDecimal())
+    assert(numberDataType.range.exclusiveMinimum)
+    assert(numberDataType.range.exclusiveMaximum.not())
+  }
+
+  @Test
   fun `auto generated contract with all data types`() {
     // when
     val contractResults =
@@ -77,8 +93,6 @@ class ContractExtractorTest {
     assert(contract.response.body!!.dataType.name == "product_details")
     assert(contract.response.body!!.dataType is ObjectDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["boolean"] is BooleanDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["integer"] is IntegerDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["number"] is NumberDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["array"] is ArrayDataType)
     assert((contract.response.body!!.dataType.asObjectDataType().properties["array"] as ArrayDataType).itemDataType is IntegerDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["string"] is StringDataType)

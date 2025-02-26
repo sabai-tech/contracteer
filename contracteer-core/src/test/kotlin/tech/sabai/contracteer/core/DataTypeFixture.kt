@@ -55,8 +55,12 @@ object DataTypeFixture {
     IntegerDataType.create("integer", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
 
   fun numberDataType(isNullable: Boolean = false,
-                     enum: List<Any?> = emptyList()) =
-    NumberDataType.create("number", isNullable, enum).value!!
+                     enum: List<Any?> = emptyList(),
+                     minimum: BigDecimal? = null,
+                     maximum: BigDecimal? = null,
+                     exclusiveMinimum: Boolean = false,
+                     exclusiveMaximum: Boolean = false) =
+    NumberDataType.create("number", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
 
   fun objectDataType(name: String = "object",
                      properties: Map<String, DataType<*>>,

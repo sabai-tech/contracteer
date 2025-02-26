@@ -76,10 +76,6 @@ components:
       properties:
         boolean:
           type: boolean
-        integer:
-          type: integer
-        number:
-          type: number
         array:
           type: array
           items:

@@ -1,0 +1,26 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: number
+                  enum: [10.5, 20]
+                  minimum: 10
+                  exclusiveMinimum: true
+                  maximum: 20.3
+                  exclusiveMaximum: false
+
+      responses:
+        200:
+          description: OK
