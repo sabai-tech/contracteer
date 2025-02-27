@@ -29,7 +29,7 @@ class DateDataType private constructor(name: String, isNullable: Boolean, allowe
     fun create(
       name: String = "Inline 'string/date' Schema",
       isNullable: Boolean = false,
-      enum: List<Any?> = emptyList()
+      enum: List<String?> = emptyList()
     ) =
       DateDataType(name, isNullable).let { dataType ->
         if (enum.isEmpty()) success(dataType)

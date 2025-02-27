@@ -1,7 +1,9 @@
 package tech.sabai.contracteer.core.datatype
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.DataTypeFixture.emailDataType
+import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
 
 class EmailDataTypeTest {
 
@@ -28,6 +30,7 @@ class EmailDataTypeTest {
     // then
     assert(result.isFailure())
   }
+
   @Test
   fun `validates null value if it is nullable`() {
     // given
@@ -54,50 +57,122 @@ class EmailDataTypeTest {
 
   @Test
   fun `should generate a string representing an email address`() {
-    // given
-    val emailDataType = emailDataType()
+      // given
+      val emailDataType = emailDataType()
 
-    // when
-    val randomEmail = emailDataType.randomValue()
+      // when
+      val randomEmail = emailDataType.randomValue()
 
-    // then
-    assert(emailDataType.validate(randomEmail).isSuccess())
+      // then
+      assert(emailDataType.validate(randomEmail).isSuccess())
   }
 
-  @Test
-  fun `validates a string representing an email with enum values`() {
-    // given
-    val emailDataType = emailDataType(enum = listOf("john@example.com", "ane@example.com"))
+  @Nested
+  inner class WithEnum {
+    @Test
+    fun `validates a string representing an email with enum values`() {
+      // given
+      val emailDataType = emailDataType(enum = listOf("john@example.com", "jane@example.com"))
 
-    // when
-    val result = emailDataType.validate("john@example.com")
+      // when
+      val result = emailDataType.validate("john@example.com")
 
-    // then
-    assert(result.isSuccess())
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `does not validate a string representing an email with enum values`() {
+      // given
+      val emailDataType = emailDataType(enum = listOf("john@example.com", "ane@example.com"))
+
+      // when
+      val result = emailDataType.validate("john@jane.doe")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates random value with enum values`() {
+      // given
+      val enum = listOf("john@example.com", "ane@example.com")
+      val emailDataType = emailDataType(enum = enum)
+
+      // when
+      val result = emailDataType.randomValue()
+
+      // then
+      assert(enum.contains(result))
+    }
   }
 
-  @Test
-  fun `does not validate a string representing an email with enum values`() {
-    // given
-    val emailDataType = emailDataType(enum = listOf("john@example.com", "ane@example.com"))
+  @Nested
+  inner class WithLengthRange {
 
-    // when
-    val result = emailDataType.validate("john@jane.doe")
+    @Test
+    fun `does not create when maxLength is negative`() {
+      // when
+      val result = EmailDataType.create(maxLength = -1)
 
-    // then
-    assert(result.isFailure())
-  }
+      // then
+      assert(result.isFailure())
+    }
 
-  @Test
-  fun `generates random value with enum values`() {
-    // given
-    val enum = listOf("john@example.com", "ane@example.com")
-    val emailDataType = emailDataType(enum = enum)
+    @Test
+    fun `does not create when minLength is less than 6`() {
+      // when
+      val result = EmailDataType.create(minLength = 3)
 
-    // when
-    val result = emailDataType.randomValue()
+      // then
+      assert(result.isFailure())
+    }
+    @Test
+    fun `defaults to 6 when minLength is null`() {
+      // when
+      val result = EmailDataType.create(minLength = null)
 
-    // then
-    assert(enum.contains(result))
+      // then
+      assert(result.isSuccess())
+      assert(result.value!!.lengthRange.minimum == 6.toBigDecimal())
+    }
+
+    @Test
+    fun `does not validate when value length is not in the range`() {
+      // given
+      val emailDataType = emailDataType(minLength = 6, maxLength = 7)
+
+      // when
+      val result = emailDataType.validate("john@example.com")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validates when value length is in the range`() {
+      // given
+      val emailDataType = emailDataType(minLength = 6, maxLength = 150)
+
+      // when
+      val result = emailDataType.validate("john@example.com")
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates random value with length inside the range`() {
+      // given
+      val stringDataType = stringDataType(minLength = 6, maxLength = 10)
+
+      // when
+      val result = stringDataType.randomValue()
+
+      // then
+      assert(
+        Range.create(6.toBigDecimal(), 10.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+      )
+    }
   }
 }

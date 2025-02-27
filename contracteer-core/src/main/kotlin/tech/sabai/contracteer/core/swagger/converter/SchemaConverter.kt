@@ -4,35 +4,39 @@ import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.swagger.*
-import tech.sabai.contracteer.core.swagger.fullyResolve
-import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeExclusiveMinimum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import java.math.BigDecimal
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
+import java.util.*
 
 object SchemaConverter {
 
   fun convert(schema: Schema<*>): Result<DataType<out Any>> {
     return when (val fullyResolved = schema.fullyResolve()) {
-      is ComposedSchema  -> ComposedSchemaConverter.convert(fullyResolved)
-      is BooleanSchema   -> BooleanDataType.create(fullyResolved.name, fullyResolved.safeNullable(),fullyResolved.safeEnum())
-      is IntegerSchema   -> createIntegerDataType(fullyResolved)
-      is NumberSchema    -> createNumberDataType(fullyResolved)
-      is StringSchema    -> StringDataType.create(fullyResolved.name, "string", isNullable = fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is PasswordSchema  -> StringDataType.create(fullyResolved.name, "string/password", fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is BinarySchema    -> BinaryDataType.create(fullyResolved.name, fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is UUIDSchema      -> UuidDataType.create(fullyResolved.name, fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is ByteArraySchema -> Base64DataType.create(fullyResolved.name, fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is EmailSchema     -> EmailDataType.create(fullyResolved.name, fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is DateTimeSchema  -> DateTimeDataType.create(fullyResolved.name, fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is DateSchema      -> DateDataType.create(fullyResolved.name, fullyResolved.safeNullable(), fullyResolved.safeEnum())
-      is ObjectSchema    -> ObjectSchemaConverter.convert(fullyResolved)
-      is ArraySchema     -> ArraySchemaConverter.convert(fullyResolved)
-      else               -> failure("Schema ${fullyResolved::class.java.simpleName} is not yet supported")
+      is ComposedSchema -> ComposedSchemaConverter.convert(fullyResolved)
+      is BooleanSchema -> BooleanDataType.create(fullyResolved.name,
+                                                 fullyResolved.safeNullable(),
+                                                 fullyResolved.safeEnum())
+      is IntegerSchema -> createIntegerDataType(fullyResolved)
+      is NumberSchema -> createNumberDataType(fullyResolved)
+      is StringSchema -> createStringDataType(fullyResolved, "string")
+      is PasswordSchema -> createStringDataType(fullyResolved, "string/password")
+      is BinarySchema -> createBinaryDataType(fullyResolved)
+      is UUIDSchema -> createUuidDataType(fullyResolved)
+      is ByteArraySchema -> createBase64DataType(fullyResolved)
+      is EmailSchema -> createEmailDataType(fullyResolved)
+      is DateTimeSchema -> createDateTimeDataType(fullyResolved)
+      is DateSchema -> createDateDataType(fullyResolved)
+      is ObjectSchema -> ObjectSchemaConverter.convert(fullyResolved)
+      is ArraySchema -> ArraySchemaConverter.convert(fullyResolved)
+      else -> failure("Schema ${fullyResolved::class.java.simpleName} is not yet supported")
     }
   }
 
-  private fun createIntegerDataType(schema: Schema<out Any>) =
+  private fun createIntegerDataType(schema: IntegerSchema) =
     IntegerDataType.create(
       name = schema.name,
       isNullable = schema.safeNullable(),
@@ -40,9 +44,9 @@ object SchemaConverter {
       maximum = schema.maximum,
       exclusiveMinimum = schema.safeExclusiveMinimum(),
       exclusiveMaximum = schema.safeExclusiveMaximum(),
-      enum = schema.safeEnum())
+      enum = schema.safeEnum().map { it.normalize() as BigDecimal? })
 
-  private fun createNumberDataType(schema: Schema<out Any>) =
+  private fun createNumberDataType(schema: NumberSchema) =
     NumberDataType.create(
       name = schema.name,
       isNullable = schema.safeNullable(),
@@ -51,4 +55,70 @@ object SchemaConverter {
       exclusiveMinimum = schema.safeExclusiveMinimum(),
       exclusiveMaximum = schema.safeExclusiveMaximum(),
       enum = schema.safeEnum())
+
+  private fun createStringDataType(schema: Schema<String>, openApiType: String) =
+    StringDataType.create(
+      name = schema.name,
+      openApiType,
+      isNullable = schema.safeNullable(),
+      minLength = schema.minLength,
+      maxLength = schema.maxLength,
+      enum = schema.safeEnum())
+
+  private fun createBase64DataType(schema: ByteArraySchema) =
+    Base64DataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      minLength = schema.minLength,
+      maxLength = schema.maxLength,
+      enum = schema.safeEnum().map { Base64.getEncoder().encodeToString(it) }
+    )
+
+  private fun createBinaryDataType(schema: BinarySchema) =
+    BinaryDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      minLength = schema.minLength,
+      maxLength = schema.maxLength,
+      enum = schema.safeEnum().map { String(it) }
+    )
+
+  private fun createUuidDataType(schema: UUIDSchema) =
+    UuidDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      enum = schema.safeEnum().map { it.toString() }
+    )
+
+  private fun createEmailDataType(schema: EmailSchema) =
+    EmailDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      minLength = schema.minLength,
+      maxLength = schema.maxLength,
+      enum = schema.safeEnum(),
+    )
+
+  private fun createDateDataType(schema: DateSchema) =
+    DateDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      enum = schema
+        .safeEnum()
+        .map { date ->
+          date?.let {
+            ISO_LOCAL_DATE.format(it
+                                    .toInstant()
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate())
+          }
+        }
+    )
+
+  private fun createDateTimeDataType(schema: DateTimeSchema) =
+    DateTimeDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      enum = schema.safeEnum().map { it?.format(ISO_OFFSET_DATE_TIME) }
+    )
 }

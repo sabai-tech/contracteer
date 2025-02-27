@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
 
@@ -53,41 +54,103 @@ class StringDataTypeTest {
     assert(result.isFailure())
   }
 
-  @Test
-  fun `validates a string with enum values`() {
-    // given
-    val stringDataType = stringDataType(enum = listOf("Hello", "World"))
+  @Nested
+  inner class WithEnum {
+    @Test
+    fun `does not create when enum length is not in the length range`() {
+      // when
+      val result = StringDataType.create(openApiType = "string", minLength = 1, maxLength = 2, enum = listOf("ABC", "DEF"))
 
-    // when
-    val result = stringDataType.validate("World")
+      // then
+      assert(result.isFailure())
+    }
 
-    // then
-    assert(result.isSuccess())
+    @Test
+    fun `validates a string with enum values`() {
+      // given
+      val stringDataType = stringDataType(enum = listOf("Hello", "World"))
+
+      // when
+      val result = stringDataType.validate("World")
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `does not validate a string with enum values`() {
+      // given
+      val stringDataType = stringDataType(enum = listOf("Hello", "World"))
+
+      // when
+      val result = stringDataType.validate("John")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates random value with enum values`() {
+      // given
+      val enum = listOf("Hello", "World")
+      val stringDataType = stringDataType(enum = enum)
+
+      // when
+      val result = stringDataType.randomValue()
+
+      // then
+      assert(enum.contains(result))
+    }
   }
 
-  @Test
-  fun `does not validate a string with enum values`() {
-    // given
-    val stringDataType = stringDataType(enum = listOf("Hello", "World"))
+  @Nested
+  inner class WithLengthRange {
 
-    // when
-    val result = stringDataType.validate("John")
+    @Test
+    fun `does not create when maxLength is negative`() {
+      // when
+      val result = StringDataType.create(openApiType = "string", maxLength = -1)
 
-    // then
-    assert(result.isFailure())
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `does not validate when value length is not in the range`() {
+      // given
+      val stringDataType = stringDataType(minLength = 1, maxLength = 5)
+
+      // when
+      val result = stringDataType.validate("Hello World !")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validates when value length is in the range`() {
+      // given
+      val stringDataType = stringDataType(minLength = 1, maxLength = 15)
+
+      // when
+      val result = stringDataType.validate("Hello World !")
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates random value with length inside the range`() {
+      // given
+      val stringDataType = stringDataType(minLength = 1, maxLength = 5)
+
+      // when
+      val result = stringDataType.randomValue()
+
+      // then
+      assert(
+        Range.create(1.toBigDecimal(), 5.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+      )
+    }
   }
-
-  @Test
-  fun `generates random value with enum values`() {
-    // given
-    val enum = listOf("Hello", "World")
-    val stringDataType = stringDataType(enum = enum)
-
-    // when
-    val result = stringDataType.randomValue()
-
-    // then
-    assert(enum.contains(result))
-  }
-
 }

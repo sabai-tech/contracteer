@@ -80,29 +80,6 @@ components:
           type: array
           items:
             type: integer
-        string:
-          type: string
-        email:
-          type: string
-          format: email
-        date:
-          type: string
-          format: date
-        dateTime:
-          type: string
-          format: date-time
-        byte:
-          type: string
-          format: byte
-        binary:
-          type: string
-          format: binary
-        password:
-          type: string
-          format: password
-        uuid:
-          type: string
-          format: uuid
         oneOf:
           oneOf:
             - $ref: "#/components/schemas/object1"

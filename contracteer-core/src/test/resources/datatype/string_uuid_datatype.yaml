@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: string
+                  format: uuid
+                  enum: ["d972d2c3-9b84-4076-a836-aa2465acd9fb", "24b12872-6410-46c5-81d3-c589e849dfca"]
+      responses:
+        200:
+          description: OK

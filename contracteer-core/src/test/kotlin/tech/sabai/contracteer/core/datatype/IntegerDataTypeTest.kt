@@ -84,7 +84,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validates a integer value with enum values`() {
       // given
-      val integerDataType = integerDataType(enum = listOf(1, 2))
+      val integerDataType = integerDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
       // when
       val result = integerDataType.validate(1)
@@ -96,7 +96,7 @@ class IntegerDataTypeTest {
     @Test
     fun `does not validate an integer value  with enum values`() {
       // given
-      val integerDataType = integerDataType(enum = listOf(1, 2))
+      val integerDataType = integerDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
       // when
       val result = integerDataType.validate(3)
@@ -108,7 +108,7 @@ class IntegerDataTypeTest {
     @Test
     fun `generates random value with enum values`() {
       // given
-      val enum = listOf(1, 2)
+      val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
       val dateDataType = integerDataType(enum = enum)
 
       // when

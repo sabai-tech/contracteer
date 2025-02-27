@@ -21,7 +21,7 @@ class UuidDataType private constructor(name: String = "Inline 'string/uuid' Sche
   override fun doRandomValue() = randomUUID().toString()
 
   companion object {
-    fun create(name: String, isNullable: Boolean, enum: List<Any?>) =
+    fun create(name: String, isNullable: Boolean, enum: List<String?>) =
       UuidDataType(name, isNullable).let { dataType ->
         if (enum.isEmpty()) success(dataType)
         else AllowedValues.create(enum, dataType).map { UuidDataType(name, isNullable, it) }

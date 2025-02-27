@@ -10,38 +10,6 @@ import kotlin.test.Test
 class ContractExtractorTest {
 
   @Test
-  fun `extract IntegerDataType`() {
-    // when
-    val contractResults = Path("src/test/resources/datatype/integer_datatype.yaml").loadContracts()
-    val integerDataType = contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as IntegerDataType
-
-    // then
-    assert(integerDataType.allowedValues != null)
-    assert(integerDataType.allowedValues!!.contains(10).isSuccess())
-    assert(integerDataType.allowedValues!!.contains(20).isSuccess())
-    assert(integerDataType.range.minimum == 9.toBigDecimal())
-    assert(integerDataType.range.maximum == 20.toBigDecimal())
-    assert(integerDataType.range.exclusiveMinimum)
-    assert(integerDataType.range.exclusiveMaximum.not())
-  }
-
-  @Test
-  fun `extract NumberDataType`() {
-    // when
-    val contractResults = Path("src/test/resources/datatype/number_datatype.yaml").loadContracts()
-    val numberDataType = contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as NumberDataType
-
-    // then
-    assert(numberDataType.allowedValues != null)
-    assert(numberDataType.allowedValues!!.contains(10.5).isSuccess())
-    assert(numberDataType.allowedValues!!.contains(20).isSuccess())
-    assert(numberDataType.range.minimum == 10.toBigDecimal())
-    assert(numberDataType.range.maximum == 20.3.toBigDecimal())
-    assert(numberDataType.range.exclusiveMinimum)
-    assert(numberDataType.range.exclusiveMaximum.not())
-  }
-
-  @Test
   fun `auto generated contract with all data types`() {
     // when
     val contractResults =
@@ -95,16 +63,6 @@ class ContractExtractorTest {
     assert(contract.response.body!!.dataType.asObjectDataType().properties["boolean"] is BooleanDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["array"] is ArrayDataType)
     assert((contract.response.body!!.dataType.asObjectDataType().properties["array"] as ArrayDataType).itemDataType is IntegerDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["string"] is StringDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["email"] is EmailDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["date"] is DateDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["dateTime"] is DateTimeDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["byte"] is Base64DataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"] is BinaryDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["binary"]!!.openApiType == "string/binary")
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["password"] is StringDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["password"]!!.openApiType == "string/password")
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["uuid"] is UuidDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["allOf"] is AllOfDataType)
 
     val oneOf = contract.response.body!!.dataType.asObjectDataType().properties["oneOf"]

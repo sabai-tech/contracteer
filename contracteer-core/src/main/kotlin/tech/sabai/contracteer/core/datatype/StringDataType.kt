@@ -1,31 +1,42 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import kotlin.random.Random
 
 class StringDataType private constructor(name: String,
                                          openApiType: String,
                                          isNullable: Boolean,
+                                         val lengthRange: Range,
                                          allowedValues: AllowedValues? = null):
     DataType<String>(name, openApiType, isNullable, String::class.java, allowedValues) {
 
-  private val loremIpsum =
-    "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua"
+  private val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
 
-  override fun doValidate(value: String) = success(value)
+  override fun doValidate(value: String) =
+    lengthRange
+      .contains(value.length.toBigDecimal())
+      .map { value }
+      .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
 
   override fun doRandomValue(): String =
-    loremIpsum.split(" ").shuffled().take(Random.nextInt(2, 7)).joinToString(separator = " ")
+    (1..lengthRange.randomIntegerValue().toLong()).map { candidateChars.random() }.joinToString("")
 
   companion object {
     fun create(
       name: String = "Inline 'string' Schema",
       openApiType: String,
       isNullable: Boolean = false,
-      enum: List<Any?> = emptyList()) =
-      StringDataType(name, openApiType, isNullable).let { dataType ->
-        if (enum.isEmpty()) success(dataType)
-        else AllowedValues.create(enum, dataType).map { StringDataType(name, openApiType, isNullable, it) }
-      }
+      enum: List<String?> = emptyList(),
+      minLength: Int? = 0,
+      maxLength: Int? = null) =
+      if ((minLength != null && minLength < 0) || (maxLength != null && maxLength < 0))
+        failure("schema '$name': 'minLength' and 'maxlength' must be equal or greater than zero.")
+      else
+        Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
+          .flatMap { range ->
+            val dataType = StringDataType(name, openApiType, isNullable, range!!)
+            if (enum.isEmpty()) success(dataType)
+            else AllowedValues.create(enum, dataType).map { StringDataType(name, openApiType, isNullable, range, it) }
+          }.mapErrors { "schema '$name': $it" }
   }
 }

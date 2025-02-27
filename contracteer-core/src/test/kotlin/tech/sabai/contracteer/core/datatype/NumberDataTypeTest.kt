@@ -73,7 +73,7 @@ class NumberDataTypeTest {
     @Test
     fun `validates a number value with enum values`() {
       // given
-      val numberDataType = numberDataType(enum = listOf(1.1, 2.2))
+      val numberDataType = numberDataType(enum = listOf(1.1.toBigDecimal(), 2.2.toBigDecimal()))
 
       // when
       val result = numberDataType.validate(1.1)
@@ -85,7 +85,7 @@ class NumberDataTypeTest {
     @Test
     fun `does not validate a number with enum values`() {
       // given
-      val numberDataType = numberDataType(enum = listOf(1, 2))
+      val numberDataType = numberDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
       // when
       val result = numberDataType.validate(3)
@@ -97,7 +97,7 @@ class NumberDataTypeTest {
     @Test
     fun `generates random value with enum values`() {
       // given
-      val enum = listOf(1, 2)
+      val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
       val dateDataType = numberDataType(enum = enum)
 
       // when

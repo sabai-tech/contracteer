@@ -5,11 +5,10 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import java.math.BigDecimal
 
-class IntegerDataType private constructor(
-  name: String,
-  isNullable: Boolean,
-  val range: Range,
-  allowedValues: AllowedValues? = null):
+class IntegerDataType private constructor(name: String,
+                                          isNullable: Boolean,
+                                          val range: Range,
+                                          allowedValues: AllowedValues? = null):
     DataType<BigDecimal>(name, "integer", isNullable, BigDecimal::class.java, allowedValues) {
 
   override fun doValidate(value: BigDecimal) =
@@ -25,7 +24,7 @@ class IntegerDataType private constructor(
     fun create(
       name: String = "Inline 'integer' Schema",
       isNullable: Boolean = false,
-      enum: List<Any?> = emptyList(),
+      enum: List<BigDecimal?> = emptyList(),
       minimum: BigDecimal? = null,
       maximum: BigDecimal? = null,
       exclusiveMinimum: Boolean = false,

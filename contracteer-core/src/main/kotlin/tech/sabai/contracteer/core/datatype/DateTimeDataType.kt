@@ -37,7 +37,7 @@ class DateTimeDataType private constructor(name: String, isNullable: Boolean, al
     fun create(
       name: String = "Inline 'string/date-time' Schema",
       isNullable: Boolean = false,
-      enum: List<Any?> = emptyList()
+      enum: List<String?> = emptyList()
     ) =
       DateTimeDataType(name, isNullable).let { dataType ->
         if (enum.isEmpty()) success(dataType)

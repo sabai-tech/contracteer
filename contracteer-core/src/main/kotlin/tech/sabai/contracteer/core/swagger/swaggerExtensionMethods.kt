@@ -63,7 +63,7 @@ internal fun Map<String, Header>.exampleKeys() =
 internal fun Schema<*>.safeNullable() =
   nullable ?: false
 
-internal fun Schema<*>.safeEnum() =
+internal fun <T> Schema<T>.safeEnum() =
   enum ?: emptyList()
 
 internal fun Schema<*>.safeExclusiveMinimum() =

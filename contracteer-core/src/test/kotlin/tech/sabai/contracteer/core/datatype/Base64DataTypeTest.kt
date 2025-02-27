@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.datatype
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.DataTypeFixture.base64DataType
-import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
 
 class Base64DataTypeTest {
 
@@ -21,7 +21,7 @@ class Base64DataTypeTest {
   @Test
   fun `does not validate string value which is not base64 encoded`() {
     // given
-    val base64DataType = integerDataType()
+    val base64DataType = base64DataType()
 
     // when
     val result = base64DataType.validate("Hello1234")
@@ -29,6 +29,7 @@ class Base64DataTypeTest {
     // then
     assert(result.isFailure())
   }
+
   @Test
   fun `validates null value if it is nullable`() {
     // given
@@ -54,51 +55,143 @@ class Base64DataTypeTest {
   }
 
   @Test
-  fun `generates a string encoded in base64`() {
+  fun `generates a random string encoded in base64`() {
     // given
-    val base64DataType = integerDataType()
+    val base64DataType = base64DataType()
 
     // when
     val randomBase64 = base64DataType.randomValue()
+    println(randomBase64)
 
     // then
     assert(base64DataType.validate(randomBase64).isSuccess())
   }
 
-  @Test
-  fun `validates a base64 encoded string with enum values`() {
-    // given
-    val base64DataType = base64DataType(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+  @Nested
+  inner class WithEnum {
 
-    // when
-    val result = base64DataType.validate("Az9obiBEb4e=")
+    @Test
+    fun `does not create when enum length is not in the length range`() {
+      // when
+      val result = Base64DataType.create(minLength = 1, maxLength = 2, enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
 
-    // then
-    assert(result.isSuccess())
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validates a base64 encoded string with enum values`() {
+      // given
+      val base64DataType = base64DataType(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+
+      // when
+      val result = base64DataType.validate("Az9obiBEb4e=")
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `does not validate a base64 encoded string with enum values`() {
+      // given
+      val base64DataType = base64DataType(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+
+      // when
+      val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates random value with enum values`() {
+      // given
+      val enum = listOf("Sm9obiBEb2U=", "SGVsbG8gV29ybGQgIQ==")
+      val base64DataType = base64DataType(enum = enum)
+
+      // when
+      val result = base64DataType.randomValue()
+
+      // then
+      assert(enum.contains(result))
+    }
   }
 
-  @Test
-  fun `does not validate a base64 encoded string with enum values`() {
-    // given
-    val base64DataType = base64DataType(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+  @Nested
+  inner class WithLengthRange {
 
-    // when
-    val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
+    @Test
+    fun `does not create when maxLength is negative`() {
+      // when
+      val result = Base64DataType.create(maxLength = -1)
 
-    // then
-    assert(result.isFailure())
-  }
+      // then
+      assert(result.isFailure())
+    }
 
-  @Test
-  fun `generates random value with enum values`() {
-    // given
-    val enum = listOf("Sm9obiBEb2U=", "SGVsbG8gV29ybGQgIQ==")
-    val base64DataType = base64DataType(enum = enum)
+    @Test
+    fun `does not create when minLength is less than 4`() {
+      // when
+      val result = Base64DataType.create(minLength = 3)
 
-    // when
-    val result = base64DataType.randomValue()
+      // then
+      assert(result.isFailure())
+    }
 
-    // then
-    assert(enum.contains(result))
+    @Test
+    fun `does not create when minLength is not a multiple of 4`() {
+      // when
+      val result = Base64DataType.create(minLength = 13)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `does not create when maxLength is not a multiple of 4`() {
+      // when
+      val result = Base64DataType.create(maxLength = 11)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `does not validate when value length is not in the range`() {
+      // given
+      val base64DataType = base64DataType(minLength = 4, maxLength = 8)
+
+      // when
+      val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validates when value length is in the range`() {
+      // given
+      val base64DataType = base64DataType(maxLength = 32)
+
+      // when
+      val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates random value with length inside the range`() {
+      // given
+      val base64DataType = base64DataType(minLength = 12, maxLength = 16)
+
+      // when
+      val result = base64DataType.randomValue()
+
+      // then
+      assert(
+        Range.create(12.toBigDecimal(), 16.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+      )
+    }
   }
 }
