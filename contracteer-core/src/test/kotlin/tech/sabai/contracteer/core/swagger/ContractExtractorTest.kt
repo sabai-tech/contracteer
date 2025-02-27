@@ -60,9 +60,6 @@ class ContractExtractorTest {
     assert(contract.response.body!!.contentType.value == "application/json")
     assert(contract.response.body!!.dataType.name == "product_details")
     assert(contract.response.body!!.dataType is ObjectDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["boolean"] is BooleanDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["array"] is ArrayDataType)
-    assert((contract.response.body!!.dataType.asObjectDataType().properties["array"] as ArrayDataType).itemDataType is IntegerDataType)
     assert(contract.response.body!!.dataType.asObjectDataType().properties["allOf"] is AllOfDataType)
 
     val oneOf = contract.response.body!!.dataType.asObjectDataType().properties["oneOf"]

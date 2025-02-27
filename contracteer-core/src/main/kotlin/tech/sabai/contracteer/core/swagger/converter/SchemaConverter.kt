@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.swagger.converter
 import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.swagger.*
@@ -16,23 +17,21 @@ object SchemaConverter {
 
   fun convert(schema: Schema<*>): Result<DataType<out Any>> {
     return when (val fullyResolved = schema.fullyResolve()) {
-      is ComposedSchema -> ComposedSchemaConverter.convert(fullyResolved)
-      is BooleanSchema -> BooleanDataType.create(fullyResolved.name,
-                                                 fullyResolved.safeNullable(),
-                                                 fullyResolved.safeEnum())
-      is IntegerSchema -> createIntegerDataType(fullyResolved)
-      is NumberSchema -> createNumberDataType(fullyResolved)
-      is StringSchema -> createStringDataType(fullyResolved, "string")
-      is PasswordSchema -> createStringDataType(fullyResolved, "string/password")
-      is BinarySchema -> createBinaryDataType(fullyResolved)
-      is UUIDSchema -> createUuidDataType(fullyResolved)
+      is ComposedSchema  -> ComposedSchemaConverter.convert(fullyResolved)
+      is BooleanSchema   -> createBooleanDataType(fullyResolved)
+      is IntegerSchema   -> createIntegerDataType(fullyResolved)
+      is NumberSchema    -> createNumberDataType(fullyResolved)
+      is StringSchema    -> createStringDataType(fullyResolved, "string")
+      is PasswordSchema  -> createStringDataType(fullyResolved, "string/password")
+      is BinarySchema    -> createBinaryDataType(fullyResolved)
+      is UUIDSchema      -> createUuidDataType(fullyResolved)
       is ByteArraySchema -> createBase64DataType(fullyResolved)
-      is EmailSchema -> createEmailDataType(fullyResolved)
-      is DateTimeSchema -> createDateTimeDataType(fullyResolved)
-      is DateSchema -> createDateDataType(fullyResolved)
-      is ObjectSchema -> ObjectSchemaConverter.convert(fullyResolved)
-      is ArraySchema -> ArraySchemaConverter.convert(fullyResolved)
-      else -> failure("Schema ${fullyResolved::class.java.simpleName} is not yet supported")
+      is EmailSchema     -> createEmailDataType(fullyResolved)
+      is DateTimeSchema  -> createDateTimeDataType(fullyResolved)
+      is DateSchema      -> createDateDataType(fullyResolved)
+      is ObjectSchema    -> createObjectDataType(fullyResolved)
+      is ArraySchema     -> createArrayDataType(fullyResolved)
+      else               -> failure("Schema ${fullyResolved::class.java.simpleName} is not yet supported")
     }
   }
 
@@ -105,14 +104,7 @@ object SchemaConverter {
       isNullable = schema.safeNullable(),
       enum = schema
         .safeEnum()
-        .map { date ->
-          date?.let {
-            ISO_LOCAL_DATE.format(it
-                                    .toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate())
-          }
-        }
+        .map { it?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()?.format(ISO_LOCAL_DATE) }
     )
 
   private fun createDateTimeDataType(schema: DateTimeSchema) =
@@ -121,4 +113,36 @@ object SchemaConverter {
       isNullable = schema.safeNullable(),
       enum = schema.safeEnum().map { it?.format(ISO_OFFSET_DATE_TIME) }
     )
+
+  private fun createBooleanDataType(schema: BooleanSchema) =
+    BooleanDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      enum = schema.safeEnum()
+    )
+
+  private fun createArrayDataType(schema: ArraySchema) =
+    convert(schema.items).flatMap { itemDataType ->
+      ArrayDataType.create(
+        name = schema.name,
+        itemDataType = itemDataType!!,
+        isNullable = schema.safeNullable(),
+        enum = schema.safeEnum().map { it.normalize() }
+      )
+    }
+
+  private fun createObjectDataType(schema: ObjectSchema): Result<ObjectDataType> {
+    val propertyDataTypeResults = schema.properties.mapValues { convert(it.value) }
+    return propertyDataTypeResults.values
+      .combineResults()
+      .flatMap {
+        ObjectDataType.create(
+          name = schema.name,
+          properties = propertyDataTypeResults.mapValues { it.value.value!! },
+          requiredProperties = schema.required?.toSet() ?: emptySet(),
+          isNullable = schema.safeNullable(),
+          enum = schema.safeEnum().map { it.normalize() }
+        )
+      }
+  }
 }

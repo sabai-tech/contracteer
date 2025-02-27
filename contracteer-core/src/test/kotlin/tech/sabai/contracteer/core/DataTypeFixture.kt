@@ -35,7 +35,7 @@ object DataTypeFixture {
     BinaryDataType.create("binary", isNullable, enum, minLength, maxLength).value!!
 
   fun booleanDataType(isNullable: Boolean = false,
-                      enum: List<Any?> = emptyList()) =
+                      enum: List<Boolean?> = emptyList()) =
     BooleanDataType.create("boolean", isNullable, enum).value!!
 
   fun dateDataType(isNullable: Boolean = false,

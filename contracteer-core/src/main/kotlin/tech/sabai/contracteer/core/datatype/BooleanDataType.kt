@@ -14,7 +14,7 @@ class BooleanDataType private constructor(name: String, isNullable: Boolean, all
     fun create(
       name: String = "Inline 'boolean' Schema",
       isNullable: Boolean = false,
-      enum: List<Any?> = emptyList()
+      enum: List<Boolean?> = emptyList()
     ) =
       BooleanDataType(name, isNullable).let { dataType ->
         if (enum.isEmpty()) success(dataType)

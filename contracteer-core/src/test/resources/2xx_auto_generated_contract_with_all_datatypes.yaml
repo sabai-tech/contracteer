@@ -74,12 +74,6 @@ components:
     product_details:
       type: object
       properties:
-        boolean:
-          type: boolean
-        array:
-          type: array
-          items:
-            type: integer
         oneOf:
           oneOf:
             - $ref: "#/components/schemas/object1"

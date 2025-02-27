@@ -1,6 +1,8 @@
 package tech.sabai.contracteer.core.swagger.converter
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.swagger.loadContracts
 import kotlin.io.path.Path
@@ -11,8 +13,7 @@ class SchemaConverterTest {
   fun `extract IntegerDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/integer_datatype.yaml").loadContracts()
-    val integerDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as IntegerDataType
+    val integerDataType = getDataType(contractResults) as IntegerDataType
 
     // then
     assert(integerDataType.allowedValues != null)
@@ -28,8 +29,7 @@ class SchemaConverterTest {
   fun `extract NumberDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/number_datatype.yaml").loadContracts()
-    val numberDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as NumberDataType
+    val numberDataType = getDataType(contractResults) as NumberDataType
 
     // then
     assert(numberDataType.allowedValues != null)
@@ -45,8 +45,7 @@ class SchemaConverterTest {
   fun `extract StringDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string__datatype.yaml").loadContracts()
-    val stringDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as StringDataType
+    val stringDataType = getDataType(contractResults) as StringDataType
 
     // then
     assert(stringDataType.allowedValues != null)
@@ -62,8 +61,7 @@ class SchemaConverterTest {
   fun `extract Base64DataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string_base64_datatype.yaml").loadContracts()
-    val base64DataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as Base64DataType
+    val base64DataType = getDataType(contractResults) as Base64DataType
 
     // then
     assert(base64DataType.allowedValues != null)
@@ -79,8 +77,7 @@ class SchemaConverterTest {
   fun `extract BinaryDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string_binary_datatype.yaml").loadContracts()
-    val binaryDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as BinaryDataType
+    val binaryDataType = getDataType(contractResults) as BinaryDataType
 
     // then
     assert(binaryDataType.allowedValues != null)
@@ -96,8 +93,7 @@ class SchemaConverterTest {
   fun `extract UuidDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string_uuid_datatype.yaml").loadContracts()
-    val uuidDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as UuidDataType
+    val uuidDataType = getDataType(contractResults) as UuidDataType
 
     // then
     assert(uuidDataType.allowedValues != null)
@@ -109,8 +105,7 @@ class SchemaConverterTest {
   fun `extract EmailDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string_email_datatype.yaml").loadContracts()
-    val emailDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as EmailDataType
+    val emailDataType = getDataType(contractResults) as EmailDataType
 
     // then
     assert(emailDataType.allowedValues != null)
@@ -126,26 +121,68 @@ class SchemaConverterTest {
   fun `extract DateDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string_date_datatype.yaml").loadContracts()
-    val dateDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as DateDataType
+    val dateDataType = getDataType(contractResults) as DateDataType
 
     // then
     assert(dateDataType.allowedValues != null)
     assert(dateDataType.allowedValues!!.contains("2020-12-01").isSuccess())
     assert(dateDataType.allowedValues!!.contains("2024-01-01").isSuccess())
   }
+
   @Test
   fun `extract DateTimeDataType`() {
     // when
     val contractResults = Path("src/test/resources/datatype/string_datetime_datatype.yaml").loadContracts()
-    val dateTimeDataType =
-      contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"] as DateTimeDataType
+    val dateTimeDataType = getDataType(contractResults) as DateTimeDataType
 
     // then
     assert(dateTimeDataType.allowedValues != null)
     assert(dateTimeDataType.allowedValues!!.contains("2020-12-20T15:30:45+02:00").isSuccess())
     assert(dateTimeDataType.allowedValues!!.contains("2024-12-20T15:30:45+02:00").isSuccess())
   }
+
+  @Test
+  fun `extract BooleanDataType`() {
+    // when
+    val contractResults = Path("src/test/resources/datatype/boolean_datatype.yaml").loadContracts()
+    val booleanDataType = getDataType(contractResults) as BooleanDataType
+
+    // then
+    assert(booleanDataType.allowedValues != null)
+    assert(booleanDataType.allowedValues!!.contains(false).isSuccess())
+  }
+
+  @Test
+  fun `extract ArrayDataType`() {
+    // when
+    val contractResults = Path("src/test/resources/datatype/array_datatype.yaml").loadContracts()
+    val arrayDataType = getDataType(contractResults) as ArrayDataType
+
+    // then
+    assert(arrayDataType.itemDataType is StringDataType)
+    assert(arrayDataType.allowedValues != null)
+    assert(arrayDataType.allowedValues!!.contains(listOf("cat", "dog")).isSuccess())
+    assert(arrayDataType.allowedValues!!.contains(listOf("john", "jane")).isSuccess())
+  }
+
+  @Test
+  fun `extract ObjectDataType`() {
+    // when
+    val contractResults = Path("src/test/resources/datatype/object_datatype.yaml").loadContracts()
+    val objectDataType = getDataType(contractResults) as ObjectDataType
+
+    // then
+    assert(objectDataType.properties.keys == setOf("name", "age"))
+    assert(objectDataType.properties["name"]!! is StringDataType)
+    assert(objectDataType.properties["age"]!! is IntegerDataType)
+    assert(objectDataType.requiredProperties == setOf("name"))
+    assert(objectDataType.allowedValues != null)
+    assert(objectDataType.allowedValues!!.contains(mapOf("name" to "john", "age" to 30)).isSuccess())
+    assert(objectDataType.allowedValues!!.contains(mapOf("name" to "jane")).isSuccess())
+  }
+
+  private fun getDataType(contractResults: Result<List<Contract>>) =
+    contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"]
 
   private fun DataType<*>.asObjectDataType() = this as ObjectDataType
 }
