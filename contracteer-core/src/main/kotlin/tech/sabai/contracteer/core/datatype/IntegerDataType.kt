@@ -18,8 +18,6 @@ class IntegerDataType private constructor(name: String,
 
   override fun doRandomValue(): BigDecimal = range.randomIntegerValue()
 
-  private fun BigDecimal.isInteger() = stripTrailingZeros().scale() <= 0
-
   companion object {
     fun create(
       name: String = "Inline 'integer' Schema",
@@ -33,14 +31,18 @@ class IntegerDataType private constructor(name: String,
       Range.create(minimum, maximum, exclusiveMinimum, exclusiveMaximum)
         .flatMap { range ->
           when {
-            !range!!.containsIntegers() -> failure("minimum: '$minimum', maximum: '$maximum', exclusiveMinimum: '$exclusiveMinimum' and exclusiveMaximum: '$exclusiveMaximum' do not allow integer value.")
-            enum.isEmpty()              -> success(IntegerDataType(name, isNullable, range))
+            minimum != null && !minimum.isInteger() -> failure("minimum must be an integer.")
+            maximum != null && !maximum.isInteger() -> failure("maximum must be an integer.")
+            enum.isEmpty()              -> success(IntegerDataType(name, isNullable, range!!))
             else                        ->
               AllowedValues
-                .create(enum, IntegerDataType(name, isNullable, range))
+                .create(enum, IntegerDataType(name, isNullable, range!!))
                 .map { allowedValues -> IntegerDataType(name, isNullable, range, allowedValues) }
           }
         }.mapErrors { "schema '$name': $it" }
   }
+
 }
+
+private fun BigDecimal.isInteger() = stripTrailingZeros().scale() <= 0
 

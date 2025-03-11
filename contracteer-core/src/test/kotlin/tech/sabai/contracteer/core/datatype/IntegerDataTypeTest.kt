@@ -8,7 +8,7 @@ import tech.sabai.contracteer.core.normalize
 class IntegerDataTypeTest {
 
   @Test
-  fun `validates a value of type Integer`() {
+  fun `validation succeeds when a value is of type Integer`() {
     // given
     val integerDataType = integerDataType()
 
@@ -20,7 +20,7 @@ class IntegerDataTypeTest {
   }
 
   @Test
-  fun `validates a floating point value when decimal part equals to zero`() {
+  fun `validation succeeds when the value is a floating point with zero decimal part`() {
     // given
     val integerDataType = integerDataType()
 
@@ -32,7 +32,7 @@ class IntegerDataTypeTest {
   }
 
   @Test
-  fun `does not validate a floating point value when decimal is not equal to zero`() {
+  fun `validation fails when the value is a floating point with a non-zero decimal part`() {
     // given
     val integerDataType = integerDataType()
 
@@ -44,7 +44,7 @@ class IntegerDataTypeTest {
   }
 
   @Test
-  fun `does not validate value which is not a number`() {
+  fun `validation fails when the value is not a number`() {
     // given
     val integerDataType = integerDataType()
 
@@ -56,7 +56,7 @@ class IntegerDataTypeTest {
   }
 
   @Test
-  fun `validates null value if it is nullable`() {
+  fun `validation succeeds for a null value when nullable`() {
     // given
     val integerDataType = integerDataType(isNullable = true)
 
@@ -68,7 +68,7 @@ class IntegerDataTypeTest {
   }
 
   @Test
-  fun `does not validate null value if it is not nullable`() {
+  fun `validation fails for a null value when not nullable`() {
     // given
     val integerDataType = integerDataType(isNullable = false)
 
@@ -81,8 +81,9 @@ class IntegerDataTypeTest {
 
   @Nested
   inner class WithEnum {
+
     @Test
-    fun `validates a integer value with enum values`() {
+    fun `validation succeeds when the value is included in the enum`() {
       // given
       val integerDataType = integerDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
@@ -94,7 +95,7 @@ class IntegerDataTypeTest {
     }
 
     @Test
-    fun `does not validate an integer value  with enum values`() {
+    fun `validation fails when the value is not included in the enum`() {
       // given
       val integerDataType = integerDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
@@ -106,7 +107,7 @@ class IntegerDataTypeTest {
     }
 
     @Test
-    fun `generates random value with enum values`() {
+    fun `generates valid random value with enum`() {
       // given
       val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
       val dateDataType = integerDataType(enum = enum)
@@ -121,17 +122,18 @@ class IntegerDataTypeTest {
 
   @Nested
   inner class WithRange {
+
     @Test
-    fun `does not create when range does not contains integer`() {
+    fun `creation fails when range boundaries are non-integer`() {
       // when
-      val result = IntegerDataType.create(minimum = 10.1.toBigDecimal(), maximum = 10.2.toBigDecimal())
+      val result = IntegerDataType.create(minimum = 10.1.toBigDecimal(), maximum = 11.2.toBigDecimal())
 
       // then
       assert(result.isFailure())
     }
 
     @Test
-    fun `validates a value inside the range`() {
+    fun `validation succeeds when the value is within the range`() {
       // given
       val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
@@ -143,7 +145,7 @@ class IntegerDataTypeTest {
     }
 
     @Test
-    fun `does not validate a value outside the range`() {
+    fun `validation fails when the value is outside of the range`() {
       // given
       val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
@@ -155,7 +157,7 @@ class IntegerDataTypeTest {
     }
 
     @Test
-    fun `generates a random value inside the range`() {
+    fun `generates a valid random value within the range`() {
       // given
       val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 

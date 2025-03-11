@@ -22,7 +22,7 @@ class AllOfDataTypeTest {
                                    requiredProperties = setOf("hunts", "age"))
 
   @Test
-  fun `fails validation when any the sub datatypes validation fails`() {
+  fun `validation fails when any of the sub datatypes validation fails`() {
     // given
     val allOfDataType = allOfDataType(subTypes = listOf(pet, cat))
 
@@ -35,7 +35,7 @@ class AllOfDataTypeTest {
   }
 
   @Test
-  fun `succeeds validation when all sub datatypes validation succeed`() {
+  fun `validation succeeds when all sub datatypes validation succeed`() {
     // given
     val allOfDataType = allOfDataType(subTypes = listOf(pet, cat))
 
@@ -67,7 +67,7 @@ class AllOfDataTypeTest {
   inner class WithEnum {
 
     @Test
-    fun `fails creation when enum contains value not matching`() {
+    fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
       // when
       val result = AllOfDataType.create(
         subTypes = listOf(pet, cat),
@@ -82,7 +82,7 @@ class AllOfDataTypeTest {
 
 
     @Test
-    fun `succeeds validation when value matches one of the enumerated values`() {
+    fun `validation succeeds when the value is included in the enum`() {
       // given
       val allOfDataType = allOfDataType(
         subTypes = listOf(pet, cat),
@@ -99,7 +99,7 @@ class AllOfDataTypeTest {
     }
 
     @Test
-    fun `fails validation when the value is not one of the enumerated values `() {
+    fun `validation fails when the value is not included in the enum`() {
       // given
       val allOfDataType = allOfDataType(
         subTypes = listOf(pet, cat),
@@ -139,7 +139,7 @@ class AllOfDataTypeTest {
   inner class WithDiscriminator {
 
     @Test
-    fun `fails creation when discriminator property is missing`() {
+    fun `creation fails when discriminator property is missing`() {
       // when
       val result = AllOfDataType.create(
         subTypes = listOf(pet, cat),
@@ -150,7 +150,7 @@ class AllOfDataTypeTest {
     }
 
     @Test
-    fun `fails creation when discriminator property type is not a string`() {
+    fun `creation fails when discriminator property type is not a string`() {
       // when
       val result = AllOfDataType.create(
         "cat",
@@ -165,7 +165,7 @@ class AllOfDataTypeTest {
     }
 
     @Test
-    fun `fails creation when discriminator property is not a required property`() {
+    fun `creation fails when discriminator property is not a required property`() {
       // when
       val result = AllOfDataType.create(
         "cat",
@@ -181,7 +181,7 @@ class AllOfDataTypeTest {
     }
 
     @Test
-    fun `fails creation when discriminator property appears in multiple sub types`() {
+    fun `creation fails when discriminator property appears in multiple sub types`() {
       // when
       val result = AllOfDataType.create(
         "cat",
@@ -197,7 +197,7 @@ class AllOfDataTypeTest {
     }
 
     @Test
-    fun `succeeds validation using discriminator mapping`() {
+    fun `validation succeeds using discriminator mapping`() {
       // given
       val allOfDataType = allOfDataType("cat",
                                         subTypes = listOf(pet,
@@ -215,7 +215,7 @@ class AllOfDataTypeTest {
     }
 
     @Test
-    fun `fails validation when discriminator property is not defined in the sub data types`() {
+    fun `validation fails when discriminator property is not defined in the sub data types`() {
       // given
       val allOfDataType = allOfDataType("cat",
                                         subTypes = listOf(pet,

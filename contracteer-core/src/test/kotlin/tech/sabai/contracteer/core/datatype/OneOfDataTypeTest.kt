@@ -27,7 +27,7 @@ class OneOfDataTypeTest {
   private val name = stringDataType(name = "name")
 
   @Test
-  fun `fails validation when none of sub datatype validates the value`() {
+  fun `validation fails when none of sub datatype validates the value`() {
     // given
     val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat, quantity, name))
 
@@ -43,7 +43,7 @@ class OneOfDataTypeTest {
   }
 
   @Test
-  fun `fails validation when multiple sub datatypes validate the value`() {
+  fun `validation fails when multiple sub datatypes validate the value`() {
     // given
     val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
 
@@ -62,7 +62,7 @@ class OneOfDataTypeTest {
   }
 
   @Test
-  fun `succeeds validation when a single sub datatype validates the value`() {
+  fun `validation succeeds when a single sub datatype validates the value`() {
     // given
     val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
 
@@ -93,7 +93,7 @@ class OneOfDataTypeTest {
   inner class WithEnum {
 
     @Test
-    fun `fails creation when enum contains value not matching any sub datatypes`() {
+    fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
       // when
       val result = OneOfDataType.create(
         subTypes = listOf(dog, cat, quantity, name),
@@ -105,7 +105,7 @@ class OneOfDataTypeTest {
     }
 
     @Test
-    fun `succeeds validation with enum values`() {
+    fun `validation succeeds when the value is included in the enum`() {
       // given
       val oneOfDataType = oneOfDataType(
         subTypes = listOf(dog, cat),
@@ -128,7 +128,7 @@ class OneOfDataTypeTest {
     }
 
     @Test
-    fun `fails validation when value is not included in the enum`() {
+    fun `validation fails when the value is not included in the enum`() {
       // given
       val oneOfDataType = oneOfDataType(
         subTypes = listOf(dog, cat, quantity, name),
@@ -144,7 +144,7 @@ class OneOfDataTypeTest {
     }
 
     @Test
-    fun `generates valid random value from enum values`() {
+    fun `generates valid random value that matches one of the enumerated values`() {
       // given
       val enum = listOf(mapOf("barks" to true, "age" to 3, "type" to "dog"),
                         mapOf("hunts" to true, "age" to 2, "type" to "cat"),
@@ -164,31 +164,18 @@ class OneOfDataTypeTest {
   inner class WithDiscriminator {
 
     @Test
-    fun `fails creation when discriminator mapping references unknown sub datatype`() {
+    fun `creation fails when discriminator property is missing`() {
       // when
       val result = OneOfDataType.create(
         subTypes = listOf(dog, cat),
-        discriminator = Discriminator("type",
-                                      mapOf("DOG" to "lizard")
-        ))
-      // then
-      assert(result.isFailure())
-    }
-
-    @Test
-    fun `fails creation when discriminator is provided and not all sub datatypes are composite structured`() {
-      // when
-      val result = OneOfDataType.create(
-        subTypes = listOf(dog, cat, quantity, name),
-        discriminator = Discriminator("type")
+        discriminator = Discriminator("unknown")
       )
-
       // then
       assert(result.isFailure())
     }
 
     @Test
-    fun `fails creation when discriminator property is not a string`() {
+    fun `creation fails when discriminator property is not a string`() {
       // when
       val result = OneOfDataType.create(
         subTypes = listOf(dog,
@@ -203,16 +190,37 @@ class OneOfDataTypeTest {
     }
 
     @Test
-    fun `fails creation when discriminator property is missing in some sub datatypes`() {
+    fun `creation fails when discriminator property is not a required property`() {
       // when
       val result = OneOfDataType.create(
-        subTypes = listOf(dog,
-                          cat,
-                          objectDataType(
-                            name = "lizard",
-                            properties = mapOf("age" to integerDataType()),
-                            requiredProperties = setOf("age")
-                          )),
+        subTypes = listOf(cat,
+                          objectDataType(properties = mapOf("type" to stringDataType(),
+                                                            "hunts" to booleanDataType(),
+                                                            "age" to integerDataType()),
+                                         requiredProperties = setOf("hunts",
+                                                                    "age"))),
+        discriminator = Discriminator("type"))
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when discriminator mapping references unknown sub datatype`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog, cat),
+        discriminator = Discriminator("type",
+                                      mapOf("DOG" to "lizard")
+        ))
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when discriminator is provided and not all sub datatypes are composite structured`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog, cat, quantity, name),
         discriminator = Discriminator("type")
       )
 
@@ -221,7 +229,7 @@ class OneOfDataTypeTest {
     }
 
     @Test
-    fun `succeeds creation when sub datatype are a composite structured datatype`() {
+    fun `creation succeeds when sub datatypes are a composite structured datatype`() {
       // when
       val result = OneOfDataType.create(
         subTypes = listOf(
@@ -243,7 +251,7 @@ class OneOfDataTypeTest {
     }
 
     @Test
-    fun `succeeds validation using discriminator mapping`() {
+    fun `validation succeeds with discriminator mapping`() {
       // given
       val oneOfDataType = oneOfDataType(
         subTypes = listOf(dog, cat),
@@ -251,20 +259,6 @@ class OneOfDataTypeTest {
 
       // when
       val result = oneOfDataType.validate(mapOf("type" to "DOG", "barks" to true))
-
-      // then
-      assert(result.isSuccess())
-    }
-
-    @Test
-    fun `succeeds validation using discriminator`() {
-      // given
-      val oneOfDataType = oneOfDataType(
-        subTypes = listOf(dog, cat),
-        discriminator = Discriminator("type"))
-
-      // when
-      val result = oneOfDataType.validate(mapOf("type" to "cat", "hunts" to true))
 
       // then
       assert(result.isSuccess())
