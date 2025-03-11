@@ -1,0 +1,52 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  anyOf:
+                    - $ref: "#/components/schemas/cat"
+                    - $ref: "#/components/schemas/dog"
+                  discriminator:
+                    propertyName: type
+                    mapping:
+                      DOG: "#/components/schemas/dog"
+
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    cat:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        age:
+          type: integer
+        hunts:
+          type: boolean
+    dog:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        age:
+          type: integer
+        barks:
+          type: boolean

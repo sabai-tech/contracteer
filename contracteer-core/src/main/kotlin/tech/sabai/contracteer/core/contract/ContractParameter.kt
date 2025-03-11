@@ -24,18 +24,11 @@ open class ContractParameter(
 
   internal fun parseOrNull(value: String) =
     when (dataType) {
-      is BooleanDataType          -> value.toBooleanStrictOrNull()
-      is IntegerDataType          -> value.toBigDecimalOrNull()
-      is NumberDataType           -> value.toBigDecimalOrNull()
-      is StringDataType           -> value
-      is UuidDataType             -> value
-      is Base64DataType           -> value
-      is BinaryDataType           -> value
-      is EmailDataType            -> value
-      is DateTimeDataType         -> value
-      is DateDataType             -> value
-      is StructuredObjectDataType -> TODO("Not yet implemented")
-      is ArrayDataType            -> TODO("Not yet implemented")
+      is BooleanDataType                                                                        -> value.toBooleanStrictOrNull()
+      is NumberDataType, is IntegerDataType                                                     -> value.toBigDecimalOrNull()
+      is StringDataType, is UuidDataType, is Base64DataType,
+      is BinaryDataType, is EmailDataType, is DateTimeDataType, is DateDataType                 -> value
+      is CompositeDataType, is ArrayDataType -> TODO("Not yet implemented")
     }
 }
 

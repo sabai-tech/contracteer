@@ -1,0 +1,49 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+      - in: query
+        name: query
+        required: false
+        schema:
+          type: string
+      - in: header
+        name: header
+        required: true
+        schema:
+          type: string
+      - in: cookie
+        name: cookie
+        schema:
+          type: string
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: string
+
+      responses:
+        200:
+          description: Product details
+          headers:
+            x-optional:
+              schema:
+                type: integer
+            x-required:
+              schema:
+                type: integer
+              required: true

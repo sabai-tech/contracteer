@@ -1,10 +1,25 @@
 package tech.sabai.contracteer.core.swagger
 
+import io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.headers.Header
+import io.swagger.v3.oas.models.media.ArraySchema
+import io.swagger.v3.oas.models.media.BinarySchema
+import io.swagger.v3.oas.models.media.BooleanSchema
+import io.swagger.v3.oas.models.media.ByteArraySchema
+import io.swagger.v3.oas.models.media.ComposedSchema
 import io.swagger.v3.oas.models.media.Content
+import io.swagger.v3.oas.models.media.DateSchema
+import io.swagger.v3.oas.models.media.DateTimeSchema
+import io.swagger.v3.oas.models.media.EmailSchema
+import io.swagger.v3.oas.models.media.IntegerSchema
 import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.oas.models.media.NumberSchema
+import io.swagger.v3.oas.models.media.ObjectSchema
+import io.swagger.v3.oas.models.media.PasswordSchema
 import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
+import io.swagger.v3.oas.models.media.UUIDSchema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
@@ -12,10 +27,24 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.contract.*
-import tech.sabai.contracteer.core.datatype.ArrayDataType
+import tech.sabai.contracteer.core.datatype.CompositeDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.StructuredObjectDataType
-import tech.sabai.contracteer.core.swagger.converter.SchemaConverter
+import tech.sabai.contracteer.core.datatype.Discriminator
+import tech.sabai.contracteer.core.swagger.converter.AllOfSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.AnyOfSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.ArraySchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.Base64SchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.BinarySchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.BooleanSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.DateSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.DateTimeSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.EmailSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.IntegerSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.NumberSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.ObjectSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.OneOfSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.StringSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.UuidSchemaConverter
 
 
 internal fun MediaType.safeExamples() =
@@ -73,7 +102,39 @@ internal fun Schema<*>.safeExclusiveMaximum() =
   exclusiveMaximum ?: false
 
 internal fun Schema<*>.fullyResolve() =
-  this.`$ref`?.let { SharedComponents.findSchema(it) } ?: this.apply { name = name ?: "Inline Schema" }
+  this.`$ref`?.let { SharedComponents.findSchema(it) } ?: success(this.apply { name = name ?: "Inline Schema" })
+
+internal fun Schema<*>.toContracteerDiscriminator() =
+  discriminator?.let {
+    Discriminator(it.propertyName,
+                  it.safeMapping().mapValues { mapping -> mapping.value.replace(COMPONENTS_SCHEMAS_REF, "") })
+  }
+
+internal fun Schema<*>.convertToDataType(): Result<DataType<out Any>> =
+  fullyResolve().flatMap { fullyResolved ->
+    when (fullyResolved) {
+      is ArraySchema                                    -> ArraySchemaConverter.convert(fullyResolved)
+      is BinarySchema                                   -> BinarySchemaConverter.convert(fullyResolved)
+      is ByteArraySchema                                -> Base64SchemaConverter.convert(fullyResolved)
+      is BooleanSchema                                  -> BooleanSchemaConverter.convert(fullyResolved)
+      is ComposedSchema if(fullyResolved.allOf != null) -> AllOfSchemaConverter.convert(fullyResolved)
+      is ComposedSchema if(fullyResolved.anyOf != null) -> AnyOfSchemaConverter.convert(fullyResolved)
+      is ComposedSchema if(fullyResolved.oneOf != null) -> OneOfSchemaConverter.convert(fullyResolved)
+      is DateSchema                                     -> DateSchemaConverter.convert(fullyResolved)
+      is DateTimeSchema                                 -> DateTimeSchemaConverter.convert(fullyResolved)
+      is EmailSchema                                    -> EmailSchemaConverter.convert(fullyResolved)
+      is IntegerSchema                                  -> IntegerSchemaConverter.convert(fullyResolved)
+      is NumberSchema                                   -> NumberSchemaConverter.convert(fullyResolved)
+      is StringSchema                                   -> StringSchemaConverter.convert(fullyResolved, "string")
+      is ObjectSchema                                   -> ObjectSchemaConverter.convert(fullyResolved)
+      is PasswordSchema                                 -> StringSchemaConverter.convert(fullyResolved, "string/password")
+      is UUIDSchema                                     -> UuidSchemaConverter.convert(fullyResolved)
+      else               -> failure("Schema ${fullyResolved!!::class.java.simpleName} is not yet supported")
+    }
+  }
+
+internal fun io.swagger.v3.oas.models.media.Discriminator.safeMapping() =
+  mapping ?: emptyMap()
 
 internal fun Operation.generatePathParameters(exampleKey: String? = null) =
   safeParameters()
@@ -136,9 +197,6 @@ internal fun List<Parameter>.toContractParameters(exampleKey: String?): Result<L
       .map { ContractParameter(param.name, it!!, param.required ?: false, example) }
   }.combineResults()
 
-private fun Schema<*>.convertToDataType(): Result<DataType<*>> =
-  SchemaConverter.convert(this)
-
 private fun DataType<*>.validateExample(example: Example?, propertyName: String? = null): Result<DataType<*>> =
   if (example == null) success(this)
   else validate(example.normalizedValue)
@@ -146,8 +204,7 @@ private fun DataType<*>.validateExample(example: Example?, propertyName: String?
     .map { this }
 
 private fun <T> DataType<T>.validateContentType(contentType: String) =
-  if (contentType.lowercase().contains("json") && (this !is ArrayDataType && this !is StructuredObjectDataType))
+  if (contentType.lowercase().contains("json") && (this !is CompositeDataType || !this.isStructured()))
     failure("Content type $contentType supports only 'object' or 'array' schema")
   else
     success(this)
-

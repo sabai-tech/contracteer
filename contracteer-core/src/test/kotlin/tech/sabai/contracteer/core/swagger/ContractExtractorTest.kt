@@ -13,11 +13,11 @@ class ContractExtractorTest {
   fun `auto generated contract with all data types`() {
     // when
     val contractResults =
-      Path("src/test/resources/2xx_auto_generated_contract_with_all_datatypes.yaml").loadContracts()
+      Path("src/test/resources/2xx_auto_generated_contract.yaml").loadContracts()
     val contract = contractResults.value!!.first()
 
     // then
-    assert(contractResults.value!!.size == 1)
+    assert(contractResults.value.size == 1)
     //   Request
     assert(contract.request.method == "GET")
     assert(contract.request.path == "/products/{id}")
@@ -44,9 +44,9 @@ class ContractExtractorTest {
     //      Body
     assert(contract.request.body != null)
     assert(contract.request.body!!.contentType.value == "application/json")
-    assert(contract.request.body!!.dataType is ObjectDataType)
-    assert((contract.request.body!!.dataType as ObjectDataType).name == "Inline Schema")
-    assert((contract.request.body!!.dataType as ObjectDataType).properties["prop1"] is StringDataType)
+    assert(contract.request.body.dataType is ObjectDataType)
+    assert((contract.request.body.dataType as ObjectDataType).name == "Inline Schema")
+    assert((contract.request.body.dataType).properties["prop1"] is StringDataType)
 
     //   Response
     assert(contract.response.statusCode == 200)
@@ -55,22 +55,6 @@ class ContractExtractorTest {
     assert(contract.response.headers.asMap()["x-optional"]!!.dataType is IntegerDataType)
     assert(contract.response.headers.asMap()["x-required"]!!.isRequired)
     assert(contract.response.headers.asMap()["x-required"]!!.dataType is IntegerDataType)
-    //      Body
-    assert(contract.response.hasBody())
-    assert(contract.response.body!!.contentType.value == "application/json")
-    assert(contract.response.body!!.dataType.name == "product_details")
-    assert(contract.response.body!!.dataType is ObjectDataType)
-    assert(contract.response.body!!.dataType.asObjectDataType().properties["allOf"] is AllOfDataType)
-
-    val oneOf = contract.response.body!!.dataType.asObjectDataType().properties["oneOf"]
-    assert(oneOf is OneOfDataType)
-    assert((oneOf as OneOfDataType).discriminator!!.propertyName == "discriminator")
-    assert(oneOf.discriminator!!.mapping["obj1"]!!.name == "object1")
-
-    val anyOf = contract.response.body!!.dataType.asObjectDataType().properties["anyOf"]
-    assert(anyOf is AnyOfDataType)
-    assert((anyOf as AnyOfDataType).discriminator!!.propertyName == "discriminator")
-    assert(anyOf.discriminator!!.mapping["obj1"]!!.name == "object1")
   }
 
   @Test
@@ -157,4 +141,3 @@ class ContractExtractorTest {
 }
 
 private fun List<ContractParameter>.asMap() = associateBy { it.name }
-private fun DataType<*>.asObjectDataType() = this as ObjectDataType

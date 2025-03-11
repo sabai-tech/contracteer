@@ -18,7 +18,7 @@ sealed class DataType<T>(
     return when {
       normalizedValue == null && isNullable      -> success()
       normalizedValue == null                    -> failure("Cannot be null")
-      !dataTypeClass.isInstance(normalizedValue) -> failure("Wrong type. Expected type: $openApiType")
+      !dataTypeClass.isInstance(normalizedValue) -> failure("Wrong type. Expected type: '$openApiType'")
       allowedValues != null                      -> allowedValues.contains(normalizedValue).map { normalizedValue as T }
       else                                       -> doValidate(normalizedValue as T)
     }

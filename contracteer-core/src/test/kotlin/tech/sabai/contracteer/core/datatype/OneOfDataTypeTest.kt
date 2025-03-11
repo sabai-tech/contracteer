@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.DataTypeFixture.booleanDataType
 import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
@@ -9,41 +10,46 @@ import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
 import tech.sabai.contracteer.core.normalize
 
 class OneOfDataTypeTest {
+
   private val dog = objectDataType(name = "dog",
-                                   properties = mapOf("bark" to booleanDataType(),
-                                                      "breed" to stringDataType(),
+                                   properties = mapOf("barks" to booleanDataType(),
+                                                      "age" to integerDataType(),
                                                       "type" to stringDataType()),
-                                   requiredProperties = setOf("breed", "type")
-  )
+                                   requiredProperties = setOf("type", "barks"))
   private val cat = objectDataType(name = "cat",
                                    properties = mapOf("hunts" to booleanDataType(),
                                                       "age" to integerDataType(),
                                                       "type" to stringDataType()),
-                                   requiredProperties = setOf("hunts", "age", "type")
-  )
+                                   requiredProperties = setOf("type", "hunts"))
+
+  private val quantity = integerDataType(name = "quantity")
+
+  private val name = stringDataType(name = "name")
 
   @Test
-  fun `do not validate when none of the sub datatype validates the value`() {
+  fun `fails validation when none of sub datatype validates the value`() {
     // given
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
+    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat, quantity, name))
 
     // when
-    val result = oneOfDataType.validate(mapOf("hunts" to true, "bark" to true))
+    val result = oneOfDataType.validate(true)
 
     // then
     assert(result.isFailure())
     assert(result.errors().first().contains("dog"))
     assert(result.errors().first().contains("cat"))
+    assert(result.errors().first().contains("quantity"))
+    assert(result.errors().first().contains("name"))
   }
 
   @Test
-  fun `do not validate when more than one sub datatype validates the value`() {
+  fun `fails validation when multiple sub datatypes validate the value`() {
     // given
     val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
 
     // when
     val result = oneOfDataType.validate(mapOf(
-      "bar" to true,
+      "barks" to true,
       "breed" to "breed",
       "hunts" to true,
       "type" to "dog",
@@ -56,13 +62,13 @@ class OneOfDataTypeTest {
   }
 
   @Test
-  fun `validate when a sub type validates the value`() {
+  fun `succeeds validation when a single sub datatype validates the value`() {
     // given
     val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
 
     // when
     val result = oneOfDataType.validate(mapOf(
-      "bark" to true,
+      "barks" to true,
       "breed" to "breed",
       "type" to "dog")
     )
@@ -72,40 +78,7 @@ class OneOfDataTypeTest {
   }
 
   @Test
-  fun `do not validate when discriminator property has a wrong value`() {
-    // given
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat), discriminator = Discriminator("type"))
-
-    // when
-    val result = oneOfDataType.validate(mapOf("bark" to true,
-                                              "breed" to "breed",
-                                              "type" to "pet")
-    )
-
-    // then
-    assert(result.isFailure())
-  }
-
-  @Test
-  fun `validate when discriminator property is equal to a mapping value `() {
-    // given
-    val oneOfDataType = oneOfDataType(
-      subTypes = listOf(dog, cat),
-      discriminator = Discriminator("type", mapOf("BigDog" to dog))
-    )
-
-    // when
-    val result = oneOfDataType.validate(mapOf("bark" to true,
-                                              "breed" to "breed",
-                                              "type" to "BigDog")
-    )
-
-    // then
-    assert(result.isSuccess())
-  }
-
-  @Test
-  fun `generate a random value`() {
+  fun `generates a valid random value`() {
     // given
     val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
 
@@ -116,94 +89,227 @@ class OneOfDataTypeTest {
     assert(oneOfDataType.validate(randomValue).isSuccess())
   }
 
-  @Test
-  fun `generate a random value with the right discriminating value`() {
-    // given
-    val oneOfDataType = oneOfDataType(
-      subTypes = listOf(dog, cat),
-      discriminator = Discriminator("type", mapOf("BigDog" to dog))
-    )
+  @Nested
+  inner class WithEnum {
 
-    // when
-    val randomValue = oneOfDataType.randomValue()
+    @Test
+    fun `fails creation when enum contains value not matching any sub datatypes`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog, cat, quantity, name),
+        enum = listOf("John", 42, true)
+      )
 
-    // then
-    assert(
-      (randomValue["type"] == "BigDog" && randomValue["bark"] is Boolean && randomValue["breed"] is String)
-      ||
-      (randomValue["type"] == "cat" && randomValue["hunts"] is Boolean && randomValue["age"] is Number)
-    )
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `succeeds validation with enum values`() {
+      // given
+      val oneOfDataType = oneOfDataType(
+        subTypes = listOf(dog, cat),
+        enum = listOf(
+          mapOf("barks" to true,
+                "breed" to "breed",
+                "type" to "dog"),
+          mapOf("hunts" to true,
+                "age" to 2,
+                "type" to "cat"))
+      )
+
+      // when
+      val result = oneOfDataType.validate(mapOf("barks" to true,
+                                                "breed" to "breed",
+                                                "type" to "dog"))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `fails validation when value is not included in the enum`() {
+      // given
+      val oneOfDataType = oneOfDataType(
+        subTypes = listOf(dog, cat, quantity, name),
+        enum = listOf(mapOf("barks" to true, "age" to 3, "type" to "dog"),
+                      mapOf("hunts" to true, "age" to 2, "type" to "cat"),
+                      42))
+
+      // when
+      val result = oneOfDataType.validate(mapOf("barks" to false, "age" to 2))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates valid random value from enum values`() {
+      // given
+      val enum = listOf(mapOf("barks" to true, "age" to 3, "type" to "dog"),
+                        mapOf("hunts" to true, "age" to 2, "type" to "cat"),
+                        42,
+                        "John")
+      val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat, quantity, name), enum = enum)
+
+      // when
+      val result = oneOfDataType.randomValue()
+
+      // then
+      assert(enum.map { obj -> obj.normalize() }.contains(result))
+    }
   }
 
+  @Nested
+  inner class WithDiscriminator {
 
-  @Test
-  fun `validates with enum values`() {
-    // given
-    val oneOfDataType = oneOfDataType(
-      subTypes = listOf(dog, cat),
-      enum = listOf(
-        mapOf("bark" to true,
-              "breed" to "breed",
-              "type" to "dog"),
-        mapOf("hunts" to true,
-              "age" to 2,
-              "type" to "cat"
-        )
+    @Test
+    fun `fails creation when discriminator mapping references unknown sub datatype`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog, cat),
+        discriminator = Discriminator("type",
+                                      mapOf("DOG" to "lizard")
+        ))
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `fails creation when discriminator is provided and not all sub datatypes are composite structured`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog, cat, quantity, name),
+        discriminator = Discriminator("type")
       )
-    )
 
-    // when
-    val result = oneOfDataType.validate(mapOf("bark" to true,
-                                              "breed" to "breed",
-                                              "type" to "dog"))
+      // then
+      assert(result.isFailure())
+    }
 
-    // then
-    assert(result.isSuccess())
-  }
-
-  @Test
-  fun `does not validate a string representing a date with enum values`() {
-    // given
-    val oneOfDataType = oneOfDataType(
-      subTypes = listOf(dog, cat),
-      enum = listOf(
-        mapOf("bark" to true,
-              "breed" to "breed",
-              "type" to "dog"),
-        mapOf("hunts" to true,
-              "age" to 2,
-              "type" to "cat"
-        )
+    @Test
+    fun `fails creation when discriminator property is not a string`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog,
+                          cat,
+                          objectDataType(properties = mapOf("type" to integerDataType()),
+                                         requiredProperties = setOf("type"))),
+        discriminator = Discriminator("type")
       )
-    )
 
-    // when
-    val result = oneOfDataType.validate(mapOf("hunts" to false,
-                                              "age" to 2,
-                                              "type" to "cat"))
+      // then
+      assert(result.isFailure())
+    }
 
-    // then
-    assert(result.isFailure())
-  }
-
-  @Test
-  fun `generates random value with enum values`() {
-    // given
-    val enum = listOf(
-      mapOf("bark" to true,
-            "breed" to "breed",
-            "type" to "dog"),
-      mapOf("hunts" to true,
-            "age" to 2,
-            "type" to "cat"
+    @Test
+    fun `fails creation when discriminator property is missing in some sub datatypes`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(dog,
+                          cat,
+                          objectDataType(
+                            name = "lizard",
+                            properties = mapOf("age" to integerDataType()),
+                            requiredProperties = setOf("age")
+                          )),
+        discriminator = Discriminator("type")
       )
-    )
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat), enum = enum)
 
-    // when
-    val result = oneOfDataType.randomValue()
+      // then
+      assert(result.isFailure())
+    }
 
-    // then
-    assert(enum.map { obj -> obj.map { it.key to it.value.normalize() }.toMap() }.contains(result))
+    @Test
+    fun `succeeds creation when sub datatype are a composite structured datatype`() {
+      // when
+      val result = OneOfDataType.create(
+        subTypes = listOf(
+          dog,
+          oneOfDataType(
+            name = "other",
+            subTypes = listOf(
+              cat,
+              objectDataType(
+                name = "lizard",
+                properties = mapOf("age" to integerDataType(), "type" to stringDataType()),
+                requiredProperties = setOf("age", "type")
+              )))),
+        discriminator = Discriminator("type")
+      )
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `succeeds validation using discriminator mapping`() {
+      // given
+      val oneOfDataType = oneOfDataType(
+        subTypes = listOf(dog, cat),
+        discriminator = Discriminator("type", mapOf("DOG" to "dog")))
+
+      // when
+      val result = oneOfDataType.validate(mapOf("type" to "DOG", "barks" to true))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `succeeds validation using discriminator`() {
+      // given
+      val oneOfDataType = oneOfDataType(
+        subTypes = listOf(dog, cat),
+        discriminator = Discriminator("type"))
+
+      // when
+      val result = oneOfDataType.validate(mapOf("type" to "cat", "hunts" to true))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates random valid value with discriminator`() {
+      // given
+      val oneOfDataType = oneOfDataType(
+        subTypes = listOf(dog, cat),
+        discriminator = Discriminator("type"))
+
+      // when
+      val randomValue = oneOfDataType.randomValue() as Map<*, *>
+
+      assert(
+        (dog.validate(randomValue).isSuccess() && randomValue["type"] == "dog") ||
+        (cat.validate(randomValue).isSuccess() && randomValue["type"] == "cat")
+      )
+    }
+
+    @Test
+    fun `generates random valid value for composite structured sub datatypes`() {
+      // given
+      val oneOfDataType = oneOfDataType(
+        subTypes = listOf(
+          dog,
+          oneOfDataType(
+            name = "other",
+            subTypes = listOf(
+              cat,
+              objectDataType(
+                name = "lizard",
+                properties = mapOf("lovesRocks" to booleanDataType(), "type" to stringDataType()),
+                requiredProperties = setOf("type", "lovesRocks")
+              )))),
+        discriminator = Discriminator("type")
+      )
+
+      // when
+      val randomValue = oneOfDataType.randomValue()
+
+      // then
+      assert(oneOfDataType.validate(randomValue).isSuccess())
+      assert((randomValue as Map<*, *>)["type"] == "dog" || (randomValue["type"] == "other"))
+    }
   }
 }

@@ -3,45 +3,55 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.combineResults
 
 class OneOfDataType private constructor(name: String,
-                                        val subTypes: List<StructuredObjectDataType>,
+                                        val subTypes: List<DataType<out Any>>,
                                         val discriminator: Discriminator?,
                                         isNullable: Boolean,
                                         allowedValues: AllowedValues? = null):
-    StructuredObjectDataType(name, "oneOf", isNullable, allowedValues) {
+    CompositeDataType<Any>(name, "oneOf", isNullable, Object::class.java, allowedValues) {
 
-  override fun doValidate(value: Map<String, Any?>) =
+  override fun doValidate(value: Any): Result<Any> =
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
 
-  override fun doRandomValue(): Map<String, Any?> {
+  @Suppress("UNCHECKED_CAST")
+  override fun doRandomValue(): Any {
     val chosenType = subTypes.random()
-    if (discriminator != null) {
-      val discriminatingValue = discriminator.mapping
-                                  .filterValues { it == chosenType }
-                                  .keys
-                                  .firstOrNull()
-                                ?: chosenType.name
-      return chosenType.randomValue() + (discriminator.propertyName to discriminatingValue)
+    return if (discriminator == null) {
+      chosenType.randomValue()
+    } else {
+      (chosenType as CompositeDataType<Map<String, Any?>>).randomValue() +
+      (discriminator.propertyName to (discriminator.getMappingName(chosenType.name)))
     }
-    return chosenType.randomValue()
   }
 
-  private fun validateWithDiscriminator(value: Map<String, Any?>): Result<Map<String, Any?>> {
-    val discriminatorValue = value[discriminator!!.propertyName]
-                             ?: return failure("discriminator property '${discriminator.propertyName}' is required")
-    val dataType = getDataTypeFrom(discriminatorValue)
-                   ?: return failure("No schema found for discriminator '${discriminator.propertyName}' with value: $discriminatorValue")
+  override fun isStructured() =
+    subTypes.all { it is CompositeDataType && it.isStructured() }
 
-    return dataType.validate(value)
-  }
+  override fun hasDiscriminatorProperty(name: String) =
+    if (!isStructured()) failure("Discriminator property '$name' is missing")
+    else subTypes
+      .filterIsInstance<CompositeDataType<*>>()
+      .map { it.hasDiscriminatorProperty(name) }
+      .combineResults()
+      .map { name }
 
-  private fun getDataTypeFrom(discriminatorValue: Any?) =
-    discriminator?.let { discriminator ->
-      subTypes.firstOrNull { it.name == discriminator.propertyName } ?: discriminator.mapping[discriminatorValue]
+  private fun validateWithDiscriminator(value: Any) =
+    when {
+      value !is Map<*, *>                          -> failure("Wrong type, expected 'object' type")
+      value[discriminator!!.propertyName] == null  -> failure("discriminator property '${discriminator.propertyName}' is required")
+      value[discriminator.propertyName] !is String -> failure("discriminator property '${discriminator.propertyName}' must be of type 'string'")
+      else                                         ->
+        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it!!.validate(value) }
     }
 
-  private fun validateWithoutDiscriminator(value: Map<String, Any?>): Result<Map<String, Any?>> {
+  private fun dataTypeFrom(discriminatorValue: String): Result<DataType<out Any>> =
+    subTypes.firstOrNull { it.name == discriminator!!.getDataTypeNameFor(discriminatorValue) }
+      ?.let { success(it) }
+    ?: failure("No schema found for discriminator property '${discriminator!!.propertyName}' with value: $discriminatorValue")
+
+  private fun validateWithoutDiscriminator(value: Any): Result<Any> {
     val validationResults = subTypes.associateWith { it.validate(value) }
     val dataTypeErrors = validationResults.filterValues { it.isFailure() }
     val dataTypeSuccess = validationResults.filterValues { it.isSuccess() }
@@ -49,19 +59,11 @@ class OneOfDataType private constructor(name: String,
     return when {
       dataTypeSuccess.isEmpty() -> buildNoMatchError(dataTypeErrors)
       dataTypeSuccess.size > 1  -> buildMultipleMatchError(dataTypeSuccess)
-      else                      -> validateDiscriminatorProperty(value, dataTypeSuccess.entries.first().key)
+      else                      -> success(value)
     }
   }
 
-  private fun validateDiscriminatorProperty(value: Map<String, Any?>, dataType: StructuredObjectDataType) =
-    when {
-      discriminator == null                              -> success(value)
-      value[discriminator.propertyName] == dataType.name -> success(value)
-
-      else                                               -> failure("the discriminator property $discriminator is wrong. Expected: ${dataType.name}, actual: ${value[discriminator.propertyName]}")
-    }
-
-  private fun buildNoMatchError(dataTypeErrors: Map<StructuredObjectDataType, Result<Map<String, Any?>>>): Result<Map<String, Any?>> =
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
     failure(
       dataTypeErrors.map {
         "Schema '${it.key.name}'" +
@@ -71,18 +73,38 @@ class OneOfDataType private constructor(name: String,
       }.joinToString(separator = System.lineSeparator()))
 
 
-  private fun buildMultipleMatchError(dataTypeSuccess: Map<StructuredObjectDataType, Result<Map<String, Any?>>>): Result<Map<String, Any?>> =
-    failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinToString())
+  private fun buildMultipleMatchError(dataTypeSuccess: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
+    failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinToString { "'$it'" })
 
   companion object {
     fun create(name: String = "Inline 'oneOf' Schema",
-               subTypes: List<StructuredObjectDataType>,
+               subTypes: List<DataType<out Any>>,
                discriminator: Discriminator? = null,
                isNullable: Boolean = false,
-               enum: List<Any?>) =
-      OneOfDataType(name, subTypes, discriminator, isNullable).let { dataType ->
-        if (enum.isEmpty()) success(dataType)
-        else AllowedValues.create(enum, dataType).map { OneOfDataType(name, subTypes, discriminator, isNullable, it) }
+               enum: List<Any?> = emptyList()) =
+      subTypes.validate(discriminator)
+        .flatMap {
+          OneOfDataType(name, subTypes, discriminator, isNullable).let { dataType ->
+            if (enum.isEmpty()) success(dataType)
+            else AllowedValues
+              .create(enum, dataType)
+              .map { OneOfDataType(name, subTypes, discriminator, isNullable, it) }
+          }
+        }
+
+    private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
+      when {
+        discriminator == null                                  -> success()
+        any { it !is CompositeDataType || !it.isStructured() } -> failure("Discriminator can only be used with 'object', 'anyOf', 'oneOf' or 'allOf' schema")
+        namesNotContains(discriminator.dataTypeNames())        -> failure("Discriminator mapping references schemas not defined in 'anyOf'")
+        else                                                   ->
+          map { it as CompositeDataType }
+            .map { it.hasDiscriminatorProperty(discriminator.propertyName) }
+            .combineResults()
+            .map { discriminator }
       }
+
+    private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =
+      !map { it.name }.containsAll(names)
   }
 }

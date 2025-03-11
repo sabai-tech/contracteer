@@ -6,16 +6,19 @@ import java.math.BigDecimal
 object DataTypeFixture {
 
   fun allOfDataType(
-    subTypes: List<StructuredObjectDataType>,
+    name: String = "allOf",
+    subTypes: List<ObjectDataType>,
     isNullable: Boolean = false,
+    discriminator: Discriminator? = null,
     enum: List<Any?> = emptyList()) =
-    AllOfDataType.create("allOf", subTypes, isNullable, enum).value!!
+    AllOfDataType.create(name, subTypes, isNullable, discriminator, enum).value!!
 
-  fun anyOfDataType(subTypes: List<StructuredObjectDataType>,
+  fun anyOfDataType(name: String = "anyOf",
+                    subTypes: List<DataType<out Any>>,
                     discriminator: Discriminator? = null,
                     isNullable: Boolean = false,
                     enum: List<Any?> = emptyList()) =
-    AnyOfDataType.create("anyOf", subTypes, discriminator, isNullable, enum).value!!
+    AnyOfDataType.create(name, subTypes, discriminator, isNullable, enum).value!!
 
   fun arrayDataType(itemDataType: DataType<out Any>,
                     isNullable: Boolean = false,
@@ -26,7 +29,7 @@ object DataTypeFixture {
                      enum: List<String?> = emptyList(),
                      minLength: Int? = null,
                      maxLength: Int? = null) =
-    Base64DataType.create("base64", isNullable, enum, minLength,maxLength).value!!
+    Base64DataType.create("base64", isNullable, enum, minLength, maxLength).value!!
 
   fun binaryDataType(isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),
@@ -52,13 +55,14 @@ object DataTypeFixture {
                     maxLength: Int? = null) =
     EmailDataType.create("email", isNullable, minLength, maxLength, enum).value!!
 
-  fun integerDataType(isNullable: Boolean = false,
+  fun integerDataType(name: String= "integer",
+                      isNullable: Boolean = false,
                       enum: List<BigDecimal?> = emptyList(),
                       minimum: BigDecimal? = null,
                       maximum: BigDecimal? = null,
                       exclusiveMinimum: Boolean = false,
                       exclusiveMaximum: Boolean = false) =
-    IntegerDataType.create("integer", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
+    IntegerDataType.create(name, isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
 
   fun numberDataType(isNullable: Boolean = false,
                      enum: List<BigDecimal?> = emptyList(),
@@ -69,23 +73,25 @@ object DataTypeFixture {
     NumberDataType.create("number", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
 
   fun objectDataType(name: String = "object",
-                     properties: Map<String, DataType<*>>,
+                     properties: Map<String, DataType<out Any>>,
                      requiredProperties: Set<String> = emptySet(),
                      isNullable: Boolean = false,
                      enum: List<Any?> = emptyList()) =
     ObjectDataType.create(name, properties, requiredProperties, isNullable, enum).value!!
 
-  fun oneOfDataType(subTypes: List<StructuredObjectDataType>,
+  fun oneOfDataType(name: String ="oneOf",
+                    subTypes: List<DataType<out Any>>,
                     discriminator: Discriminator? = null,
                     isNullable: Boolean = false,
                     enum: List<Any?> = emptyList()) =
-    OneOfDataType.create("oneOf", subTypes, discriminator, isNullable, enum).value!!
+    OneOfDataType.create(name, subTypes, discriminator, isNullable, enum).value!!
 
-  fun stringDataType(isNullable: Boolean = false,
+  fun stringDataType(name: String = "string",
+                     isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),
                      minLength: Int? = null,
                      maxLength: Int? = null) =
-    StringDataType.create("string", "string", isNullable, enum, minLength, maxLength).value!!
+    StringDataType.create(name, "string", isNullable, enum, minLength, maxLength).value!!
 
   fun uuidDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =

@@ -7,6 +7,12 @@ dependencies {
   testImplementation(kotlin("test"))
 }
 
+kotlin {
+  compilerOptions {
+    freeCompilerArgs.add("-Xwhen-guards")
+  }
+}
+
 tasks.withType<Test> {
   useJUnitPlatform()
 }

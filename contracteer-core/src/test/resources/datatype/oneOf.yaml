@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  oneOf:
+                    - type: string
+                    - type: integer
+                    - type: object
+                      properties:
+                        name:
+                          type: string
+                        age:
+                          type: integer
+                      required: ["name"]
+                    - $ref: "#/components/schemas/pet"
+                  enum:
+                    - "Hello"
+                    - 42
+                    - "name": "john"
+                      "age": 42
+                    - "prop1": "Yo"
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    pet:
+      type: object
+      properties:
+        prop1:
+          type: string
+      required:
+        - prop1

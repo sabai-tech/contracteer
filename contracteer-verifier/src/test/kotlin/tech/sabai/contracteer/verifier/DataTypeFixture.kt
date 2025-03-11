@@ -13,7 +13,7 @@ object DataTypeFixture {
                       enum: List<BigDecimal?> = emptyList()) =
     IntegerDataType.create("integer", isNullable, enum).value!!
 
-  fun objectDataType(properties: Map<String, DataType<*>>,
+  fun objectDataType(properties: Map<String, DataType<out Any>>,
                      requiredProperties: Set<String> = emptySet(),
                      isNullable: Boolean = false,
                      enum: List<Any?> = emptyList()) =

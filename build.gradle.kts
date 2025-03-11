@@ -1,7 +1,7 @@
 import java.time.Duration
 
 plugins {
-  kotlin("jvm") version "2.1.0"
+  kotlin("jvm") version "2.1.10"
   kotlin("plugin.power-assert") version "2.0.0"
   id("java-library")
   id("com.adarshr.test-logger") version "4.0.0"

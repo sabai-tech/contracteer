@@ -1,0 +1,15 @@
+package tech.sabai.contracteer.core.swagger.converter
+
+import io.swagger.v3.oas.models.media.BooleanSchema
+import tech.sabai.contracteer.core.datatype.BooleanDataType
+import tech.sabai.contracteer.core.swagger.safeEnum
+import tech.sabai.contracteer.core.swagger.safeNullable
+
+object BooleanSchemaConverter {
+  fun convert(schema: BooleanSchema) =
+    BooleanDataType.create(
+      name = schema.name,
+      isNullable = schema.safeNullable(),
+      enum = schema.safeEnum()
+    )
+}
