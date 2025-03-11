@@ -1,9 +1,12 @@
 package tech.sabai.contracteer.core.datatype
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import java.util.*
 import kotlin.random.Random
+
+private val logger = KotlinLogging.logger {}
 
 class Base64DataType private constructor(name: String,
                                          isNullable: Boolean,
@@ -22,6 +25,7 @@ class Base64DataType private constructor(name: String,
           Base64.getDecoder().decode(value)
           success(value)
         } catch (e: IllegalArgumentException) {
+          logger.debug { e }
           failure("not a valid Base64 encoded string")
         }
     }
@@ -43,8 +47,14 @@ class Base64DataType private constructor(name: String,
     return Base64.getEncoder().encodeToString(randomBytes)
   }
 
-  private fun closestMultipleOf4(value: Int) =
-    if (value > 4) ((value - 1) / 4) * 4 else 4
+  private fun closestMultipleOf4(value: Int): Int {
+    val remainder = value % 4
+    return if (remainder < 2) {
+      value - remainder
+    } else {
+      value + (4 - remainder)
+    }
+  }
 
   companion object {
     fun create(
