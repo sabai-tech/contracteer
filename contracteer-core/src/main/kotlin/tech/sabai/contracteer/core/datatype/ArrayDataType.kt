@@ -8,7 +8,9 @@ class ArrayDataType private constructor(name: String,
                                         val itemDataType: DataType<out Any>,
                                         isNullable: Boolean,
                                         allowedValues: AllowedValues? = null):
-    DataType<List<Any?>>(name, "array", isNullable, List::class.java as Class<List<Any?>>, allowedValues) {
+    DataType<List<Any?>>(name, "array", isNullable, List::class.java, allowedValues) {
+
+  override fun isFullyStructured() = false
 
   override fun doValidate(value: List<Any?>): Result<List<Any?>> =
     value.accumulateWithIndex { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }.map { value }

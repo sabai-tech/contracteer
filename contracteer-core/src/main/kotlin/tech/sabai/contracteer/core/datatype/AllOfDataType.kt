@@ -4,19 +4,22 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
-import java.lang.System.*
+import java.lang.System.lineSeparator
 
 @Suppress("UNCHECKED_CAST")
 class AllOfDataType private constructor(name: String,
-                                        val subTypes: List<CompositeDataType<Map<String, Any?>>>,
+                                        subTypes: List<DataType<Map<String, Any?>>>,
                                         isNullable: Boolean,
                                         val discriminator: Discriminator?,
                                         allowedValues: AllowedValues? = null):
     CompositeDataType<Map<String, Any?>>(name,
                                          "allOf",
                                          isNullable,
+                                         subTypes,
                                          Map::class.java as Class<Map<String, Any?>>,
                                          allowedValues) {
+
+  override fun isFullyStructured() = true
 
   override fun doValidate(value: Map<String, Any?>) =
     validateWithDiscriminator(value)
@@ -36,12 +39,6 @@ class AllOfDataType private constructor(name: String,
     return discriminator?.let { randomValue + (it.propertyName to it.getMappingName(name)) } ?: randomValue
   }
 
-  override fun isStructured() = true
-
-  override fun hasDiscriminatorProperty(name: String) =
-    if (subTypes.map { it.hasDiscriminatorProperty(name) }.any { it.isSuccess() }) success(name)
-    else failure("Discriminator property '$name' is missing or is not a 'string'")
-
   private fun validateWithDiscriminator(value: Map<String, Any?>) =
     when {
       discriminator == null                                                                 -> success()
@@ -54,7 +51,7 @@ class AllOfDataType private constructor(name: String,
       else                                                                                  -> success(value)
     }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<CompositeDataType<Map<String, Any?>>, Result<Map<String, Any?>>>): Result<Map<String, Any?>> {
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Map<String, Any?>>, Result<Map<String, Any?>>>): Result<Map<String, Any?>> {
     val errorMessages = dataTypeErrors.map { (dataType, result) ->
       "Schema '${dataType.name}':${
         result
@@ -67,29 +64,31 @@ class AllOfDataType private constructor(name: String,
 
   companion object {
     fun create(name: String = "Inline 'allOf' Schema",
-               subTypes: List<CompositeDataType<Map<String, Any?>>>,
+               subTypes: List<DataType<Map<String, Any?>>>,
                isNullable: Boolean = false,
                discriminator: Discriminator? = null,
                enum: List<Any?> = emptyList()) =
       subTypes.validate(discriminator)
         .flatMap {
-          AllOfDataType(name, subTypes, isNullable, discriminator).let { dataType ->
-            if (enum.isEmpty()) success(dataType)
-            else AllowedValues
-              .create(enum, dataType)
-              .map { AllOfDataType(name, subTypes, isNullable, discriminator, allowedValues = it) }
+          val defaultDataType = AllOfDataType(name, subTypes, isNullable, discriminator)
+          if (enum.isEmpty()) {
+            success(defaultDataType)
+          } else {
+            AllowedValues
+              .create(enum, defaultDataType)
+              .map { AllOfDataType(name, subTypes, isNullable, discriminator, it) }
           }
         }
 
-    private fun List<CompositeDataType<*>>.validate(discriminator: Discriminator?) =
-      discriminator?.let {
-        val discriminatorResults = map { it.hasDiscriminatorProperty(discriminator.propertyName) }
-        val successes = discriminatorResults.count { it.isSuccess() }
-        when {
-          successes == 1 -> success(discriminator)
-          successes > 1  -> failure("Discriminator property '${discriminator.propertyName}' is defined in multiple 'allOf' sub schemas")
-          else           -> discriminatorResults.combineResults()
-        }
-      } ?: success()
+    private fun List<DataType<out Any>>.validate(discriminator: Discriminator?): Result<Discriminator> {
+      if (discriminator == null) return success()
+      val results = map { discriminator.validate(it) }
+      val successes = results.count { it.isSuccess() }
+      return when {
+        successes == 1 -> success(discriminator)
+        successes > 1  -> failure("Discriminator property '${discriminator.propertyName}' is defined in multiple 'allOf' sub schemas")
+        else           -> results.combineResults().retypeError()
+      }
+    }
   }
 }

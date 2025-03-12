@@ -10,9 +10,10 @@ import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.JsonPathBody.jsonPath
 import org.mockserver.model.Parameter.param
 import tech.sabai.contracteer.core.contract.*
-import tech.sabai.contracteer.verifier.DataTypeFixture.integerDataType
-import tech.sabai.contracteer.verifier.DataTypeFixture.objectDataType
-import tech.sabai.contracteer.verifier.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.verifier.TestFixture.body
+import tech.sabai.contracteer.verifier.TestFixture.integerDataType
+import tech.sabai.contracteer.verifier.TestFixture.objectDataType
+import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -44,11 +45,11 @@ class HttpRequesterTest {
         queryParameters = listOf(ContractParameter("q", integerDataType())),
         cookies = listOf(ContractParameter("val", integerDataType())),
         headers = listOf(ContractParameter("x-my-header", stringDataType())),
-        body = Body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("prop" to integerDataType())))
+        body = body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("prop" to integerDataType())))
       ),
       ContractResponse(
         statusCode = 200,
-        body = Body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("property" to integerDataType())))
+        body = body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("property" to integerDataType())))
       )
     )
 

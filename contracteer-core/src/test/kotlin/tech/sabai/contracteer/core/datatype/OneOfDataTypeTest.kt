@@ -2,11 +2,11 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.DataTypeFixture.booleanDataType
-import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
-import tech.sabai.contracteer.core.DataTypeFixture.objectDataType
-import tech.sabai.contracteer.core.DataTypeFixture.oneOfDataType
-import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.core.TestFixture.booleanDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.oneOfDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.core.normalize
 
 class OneOfDataTypeTest {
@@ -162,47 +162,6 @@ class OneOfDataTypeTest {
 
   @Nested
   inner class WithDiscriminator {
-
-    @Test
-    fun `creation fails when discriminator property is missing`() {
-      // when
-      val result = OneOfDataType.create(
-        subTypes = listOf(dog, cat),
-        discriminator = Discriminator("unknown")
-      )
-      // then
-      assert(result.isFailure())
-    }
-
-    @Test
-    fun `creation fails when discriminator property is not a string`() {
-      // when
-      val result = OneOfDataType.create(
-        subTypes = listOf(dog,
-                          cat,
-                          objectDataType(properties = mapOf("type" to integerDataType()),
-                                         requiredProperties = setOf("type"))),
-        discriminator = Discriminator("type")
-      )
-
-      // then
-      assert(result.isFailure())
-    }
-
-    @Test
-    fun `creation fails when discriminator property is not a required property`() {
-      // when
-      val result = OneOfDataType.create(
-        subTypes = listOf(cat,
-                          objectDataType(properties = mapOf("type" to stringDataType(),
-                                                            "hunts" to booleanDataType(),
-                                                            "age" to integerDataType()),
-                                         requiredProperties = setOf("hunts",
-                                                                    "age"))),
-        discriminator = Discriminator("type"))
-      // then
-      assert(result.isFailure())
-    }
 
     @Test
     fun `creation fails when discriminator mapping references unknown sub datatype`() {

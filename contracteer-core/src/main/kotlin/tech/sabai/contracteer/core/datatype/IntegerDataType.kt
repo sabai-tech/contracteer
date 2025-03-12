@@ -11,6 +11,8 @@ class IntegerDataType private constructor(name: String,
                                           allowedValues: AllowedValues? = null):
     DataType<BigDecimal>(name, "integer", isNullable, BigDecimal::class.java, allowedValues) {
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: BigDecimal) =
     if (value.isInteger().not()) failure("not a valid integer.")
     else range.contains(value)

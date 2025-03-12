@@ -3,23 +3,7 @@ package tech.sabai.contracteer.core.swagger
 import io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.headers.Header
-import io.swagger.v3.oas.models.media.ArraySchema
-import io.swagger.v3.oas.models.media.BinarySchema
-import io.swagger.v3.oas.models.media.BooleanSchema
-import io.swagger.v3.oas.models.media.ByteArraySchema
-import io.swagger.v3.oas.models.media.ComposedSchema
-import io.swagger.v3.oas.models.media.Content
-import io.swagger.v3.oas.models.media.DateSchema
-import io.swagger.v3.oas.models.media.DateTimeSchema
-import io.swagger.v3.oas.models.media.EmailSchema
-import io.swagger.v3.oas.models.media.IntegerSchema
-import io.swagger.v3.oas.models.media.MediaType
-import io.swagger.v3.oas.models.media.NumberSchema
-import io.swagger.v3.oas.models.media.ObjectSchema
-import io.swagger.v3.oas.models.media.PasswordSchema
-import io.swagger.v3.oas.models.media.Schema
-import io.swagger.v3.oas.models.media.StringSchema
-import io.swagger.v3.oas.models.media.UUIDSchema
+import io.swagger.v3.oas.models.media.*
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
@@ -27,24 +11,9 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.contract.*
-import tech.sabai.contracteer.core.datatype.CompositeDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
-import tech.sabai.contracteer.core.swagger.converter.AllOfSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.AnyOfSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.ArraySchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.Base64SchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.BinarySchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.BooleanSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.DateSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.DateTimeSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.EmailSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.IntegerSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.NumberSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.ObjectSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.OneOfSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.StringSchemaConverter
-import tech.sabai.contracteer.core.swagger.converter.UuidSchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.*
 
 
 internal fun MediaType.safeExamples() =
@@ -129,7 +98,7 @@ internal fun Schema<*>.convertToDataType(): Result<DataType<out Any>> =
       is ObjectSchema                                   -> ObjectSchemaConverter.convert(fullyResolved)
       is PasswordSchema                                 -> StringSchemaConverter.convert(fullyResolved, "string/password")
       is UUIDSchema                                     -> UuidSchemaConverter.convert(fullyResolved)
-      else               -> failure("Schema ${fullyResolved!!::class.java.simpleName} is not yet supported")
+      else                                              -> failure("Schema ${fullyResolved!!::class.java.simpleName} is not yet supported")
     }
   }
 
@@ -163,23 +132,22 @@ internal fun Operation.generateRequestCookies(exampleKey: String? = null) =
     .toContractParameters(exampleKey)
 
 internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result<List<Body>> =
-  (requestBody?.content?.map { (contentType, mediaType) ->
-    val example = mediaType.contractExample(exampleKey)
-    mediaType.schema.convertToDataType()
-      .flatMap { it!!.validateContentType(contentType) }
-      .flatMap { it!!.validateExample(example) }
-      .map { Body(ContentType(contentType), it!!, example) }
-  } ?: emptyList()).combineResults()
+  if (requestBody?.content != null) {
+    requestBody.content
+      .map { (contentType, mediaType) ->
+        mediaType.schema
+          .convertToDataType()
+          .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
+      }.combineResults()
+  } else success(emptyList())
 
-internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Result<List<Body>> {
-  return (content?.map { (contentType, mediaType) ->
-    val example = mediaType.contractExample(exampleKey)
-    mediaType.schema.convertToDataType()
-      .flatMap { it!!.validateContentType(contentType) }
-      .flatMap { it!!.validateExample(example) }
-      .map { Body(ContentType(contentType), it!!, example) }
-  } ?: emptyList()).combineResults()
-}
+internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Result<List<Body>> =
+  if (content != null) {
+    content.map { (contentType, mediaType) ->
+      mediaType.schema.convertToDataType()
+        .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
+    }.combineResults()
+  } else success(emptyList())
 
 internal fun ApiResponse.generateResponseHeaders(exampleKey: String? = null) =
   safeHeaders().map { (name, header) ->
@@ -202,9 +170,3 @@ private fun DataType<*>.validateExample(example: Example?, propertyName: String?
   else validate(example.normalizedValue)
     .let { if (propertyName != null) it.forProperty(propertyName) else it }
     .map { this }
-
-private fun <T> DataType<T>.validateContentType(contentType: String) =
-  if (contentType.lowercase().contains("json") && (this !is CompositeDataType || !this.isStructured()))
-    failure("Content type $contentType supports only 'object' or 'array' schema")
-  else
-    success(this)

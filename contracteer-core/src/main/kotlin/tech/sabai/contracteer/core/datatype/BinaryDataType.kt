@@ -11,6 +11,8 @@ class BinaryDataType private constructor(name: String,
                                          allowedValues: AllowedValues? = null):
     DataType<String>(name, "string/binary", isNullable, String::class.java, allowedValues) {
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: String): Result<String> =
     lengthRange
       .contains(value.length.toBigDecimal())

@@ -1,15 +1,28 @@
 package tech.sabai.contracteer.core.datatype
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.DataTypeFixture.booleanDataType
-import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
-import tech.sabai.contracteer.core.DataTypeFixture.objectDataType
-import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.core.TestFixture.booleanDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 
 class ObjectDataTypeTest {
 
   @Test
-  fun `validates null value if it is nullable`() {
+  fun `creation fails when a required property is not defined as a property`() {
+    // when
+    val result = ObjectDataType.create(name = "cat",
+                                       properties = mapOf("hunts" to booleanDataType(),
+                                                          "age" to integerDataType()),
+                                       requiredProperties = setOf("hunts", "age", "type"))
+    // then
+    assert(result.isFailure())
+    assert(result.errors().first().contains("'type'"))
+  }
+
+  @Test
+  fun `validation succeeds for a null value when nullable`() {
     // given
     val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()), isNullable = true)
 
@@ -21,7 +34,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `does not validate null value if it is not nullable`() {
+  fun `validation fails for a null value when not nullable`() {
     // given
     val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()), isNullable = false)
 
@@ -33,7 +46,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `does not validate value whose type is not Map`() {
+  fun `validation fails when a value is not of type Map`() {
     // given
     val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()))
 
@@ -45,7 +58,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `validates a value of type Map`() {
+  fun `validation succeeds when a value is of type Map`() {
     // given
     val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()))
 
@@ -57,7 +70,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `validates a map when a non required property is not present`() {
+  fun `validation succeeds when a non required property is not present`() {
     // given
     val objectDataType = objectDataType(
       properties = mapOf(
@@ -73,7 +86,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `validates a map when a non required and non nullable property is not present`() {
+  fun `validation succeeds when a non required and non nullable property is not present`() {
     // given
     val objectDataType = objectDataType(
       properties = mapOf(
@@ -89,7 +102,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `does not validate when a property is not of the right type`() {
+  fun `validation fails when a property is not of the expected type`() {
     // given
     val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()))
 
@@ -101,7 +114,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `does not validate when a non nullable property is null`() {
+  fun `validation fails when a non nullable property is null`() {
     // given
     val objectDataType = objectDataType(properties = mapOf(
       "prop" to integerDataType(isNullable = false),
@@ -118,7 +131,7 @@ class ObjectDataTypeTest {
   }
 
   @Test
-  fun `does not validate when a required property is missing`() {
+  fun `validation fails when a required property is missing`() {
     // given
     val objectDataType = objectDataType(
       properties = mapOf(
@@ -135,42 +148,57 @@ class ObjectDataTypeTest {
     assert(listOf("is required", "prop").all { result.errors().first().contains(it) })
   }
 
-  @Test
-  fun `validates a Map with enum values`() {
-    // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()),
-                                        enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2)))
+  @Nested
+  inner class WithEnum {
 
-    // when
-    val result = objectDataType.validate(mapOf("prop" to 1))
+    @Test
+    fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
+      // when
+      val result = ObjectDataType.create(properties = mapOf("prop" to integerDataType(), "prop2" to integerDataType()),
+                                         requiredProperties = setOf("prop2"),
+                                         enum = listOf(mapOf("prop" to 1, "prop2" to "2"), mapOf("prop" to 2)))
 
-    // then
-    assert(result.isSuccess())
-  }
+      // then
+      assert(result.isFailure())
+    }
 
-  @Test
-  fun `does not validate a Map with enum values`() {
-    // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()),
-                                        enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2)))
+    @Test
+    fun `validation succeeds when the value is included in the enum`() {
+      // given
+      val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()),
+                                          enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2)))
 
-    // when
-    val result = objectDataType.validate(mapOf("john" to 5))
+      // when
+      val result = objectDataType.validate(mapOf("prop" to 1))
 
-    // then
-    assert(result.isFailure())
-  }
+      // then
+      assert(result.isSuccess())
+    }
 
-  @Test
-  fun `generates random value with enum values`() {
-    // given
-    val enum = listOf(mapOf("prop" to "value1"), mapOf("prop" to "value2"))
-    val objectDataType = objectDataType(properties = mapOf("prop" to stringDataType()), enum = enum)
+    @Test
+    fun `validation fails when the value is not included in the enum`() {
+      // given
+      val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()),
+                                          enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2)))
 
-    // when
-    val result = objectDataType.randomValue()
+      // when
+      val result = objectDataType.validate(mapOf("john" to 5))
 
-    // then
-    assert(enum.contains(result))
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates valid random value that matches one of the enumerated values`() {
+      // given
+      val enum = listOf(mapOf("prop" to "value1"), mapOf("prop" to "value2"))
+      val objectDataType = objectDataType(properties = mapOf("prop" to stringDataType()), enum = enum)
+
+      // when
+      val result = objectDataType.randomValue()
+
+      // then
+      assert(enum.contains(result))
+    }
   }
 }

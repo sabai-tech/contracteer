@@ -3,14 +3,17 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.accumulate
 
 class OneOfDataType private constructor(name: String,
-                                        val subTypes: List<DataType<out Any>>,
+                                        subTypes: List<DataType<out Any>>,
                                         val discriminator: Discriminator?,
                                         isNullable: Boolean,
                                         allowedValues: AllowedValues? = null):
-    CompositeDataType<Any>(name, "oneOf", isNullable, Object::class.java, allowedValues) {
+    CompositeDataType<Any>(name, "oneOf", isNullable, subTypes, Object::class.java, allowedValues) {
+
+  override fun isFullyStructured() =
+    subTypes.all { it.isFullyStructured() }
 
   override fun doValidate(value: Any): Result<Any> =
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
@@ -21,21 +24,10 @@ class OneOfDataType private constructor(name: String,
     return if (discriminator == null) {
       chosenType.randomValue()
     } else {
-      (chosenType as CompositeDataType<Map<String, Any?>>).randomValue() +
+      (chosenType as DataType<Map<String, Any?>>).randomValue() +
       (discriminator.propertyName to (discriminator.getMappingName(chosenType.name)))
     }
   }
-
-  override fun isStructured() =
-    subTypes.all { it is CompositeDataType && it.isStructured() }
-
-  override fun hasDiscriminatorProperty(name: String) =
-    if (!isStructured()) failure("Discriminator property '$name' is missing")
-    else subTypes
-      .filterIsInstance<CompositeDataType<*>>()
-      .map { it.hasDiscriminatorProperty(name) }
-      .combineResults()
-      .map { name }
 
   private fun validateWithDiscriminator(value: Any) =
     when {
@@ -94,14 +86,9 @@ class OneOfDataType private constructor(name: String,
 
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
       when {
-        discriminator == null                                  -> success()
-        any { it !is CompositeDataType || !it.isStructured() } -> failure("Discriminator can only be used with 'object', 'anyOf', 'oneOf' or 'allOf' schema")
-        namesNotContains(discriminator.dataTypeNames())        -> failure("Discriminator mapping references schemas not defined in 'anyOf'")
-        else                                                   ->
-          map { it as CompositeDataType }
-            .map { it.hasDiscriminatorProperty(discriminator.propertyName) }
-            .combineResults()
-            .map { discriminator }
+        discriminator == null                           -> success()
+        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'anyOf'")
+        else                                            -> accumulate { discriminator.validate(it) }.map { discriminator }
       }
 
     private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =

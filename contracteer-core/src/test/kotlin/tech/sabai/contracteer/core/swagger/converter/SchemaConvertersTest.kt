@@ -276,6 +276,19 @@ class SchemaConvertersTest {
     assert(contractResults.isFailure())
   }
 
+  @Test
+  fun `generate contracts with allOf inheritance`() {
+    // when
+    val loadContracts = Path("src/test/resources/datatype/allOf_inheritance.yaml").loadContracts()
+    val contracts = loadContracts.value!!
+    // then
+    assert(contracts.size == 1)
+    assert(contracts.first().request.body!!.dataType is AnyOfDataType)
+    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.size == 3)
+    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.all { it.name == "Dog" || it.name == "Cat" || it.name == "Lizard" } )
+    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.all { it is AllOfDataType } )
+  }
+
   private fun getDataType(contractResults: Result<List<Contract>>) =
     contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"]
   private fun DataType<*>.asObjectDataType() = this as ObjectDataType

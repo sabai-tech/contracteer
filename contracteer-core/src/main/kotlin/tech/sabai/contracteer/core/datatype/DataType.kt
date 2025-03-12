@@ -27,6 +27,7 @@ sealed class DataType<T>(
   @Suppress("UNCHECKED_CAST")
   internal fun randomValue(): T = allowedValues?.randomValue() as T ?: doRandomValue()
 
+  abstract fun isFullyStructured():Boolean
   protected abstract fun doValidate(value: T): Result<T>
   protected abstract fun doRandomValue(): T
 }

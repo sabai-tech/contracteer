@@ -4,14 +4,14 @@ import io.mockk.every
 import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
-import tech.sabai.contracteer.core.contract.Body
 import tech.sabai.contracteer.core.contract.ContentType
 import tech.sabai.contracteer.core.contract.ContractParameter
 import tech.sabai.contracteer.core.contract.ContractResponse
-import tech.sabai.contracteer.verifier.DataTypeFixture.arrayDataType
-import tech.sabai.contracteer.verifier.DataTypeFixture.integerDataType
-import tech.sabai.contracteer.verifier.DataTypeFixture.objectDataType
-import tech.sabai.contracteer.verifier.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.verifier.TestFixture.arrayDataType
+import tech.sabai.contracteer.verifier.TestFixture.body
+import tech.sabai.contracteer.verifier.TestFixture.integerDataType
+import tech.sabai.contracteer.verifier.TestFixture.objectDataType
+import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.Test
 
 class ContractResponseValidatorTest {
@@ -128,7 +128,7 @@ class ContractResponseValidatorTest {
   fun `Validates body with JSON Content-Type`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body(contentType = ContentType("application/json"),
+                                            body = body(contentType = ContentType("application/json"),
                                                         dataType = objectDataType(properties = mapOf(
                                                           "name" to stringDataType(),
                                                           "age" to integerDataType()))))
@@ -149,7 +149,7 @@ class ContractResponseValidatorTest {
   fun `Validates body with JSON Content-Type and missing optional properties`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body(contentType = ContentType("application/json"),
+                                            body = body(contentType = ContentType("application/json"),
                                                         dataType = objectDataType(
                                                           properties = mapOf(
                                                             "name" to stringDataType(),
@@ -172,7 +172,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate body with JSON Content-Type and missing required properties`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body(contentType =ContentType("application/json"),
+                                            body = body(contentType =ContentType("application/json"),
                                                         dataType = objectDataType(
                                                           properties = mapOf(
                                                             "name" to stringDataType(),
@@ -197,7 +197,7 @@ class ContractResponseValidatorTest {
   fun `Validates body with JSON Content-Type and array as root element`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body(ContentType("application/json"),
+                                            body = body(ContentType("application/json"),
                                                         arrayDataType(itemDataType = integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
@@ -216,7 +216,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate when content-type does not match contract`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body(ContentType("text/plain"),
+                                            body = body(ContentType("text/plain"),
                                                         objectDataType(properties = mapOf("name" to stringDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK
@@ -256,7 +256,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate when Contract Response defines a Content-Type but Response has no Content-Type`() {
     // given
     val responseContract = ContractResponse(statusCode = 200,
-                                            body = Body(ContentType("application/json"),
+                                            body = body(ContentType("application/json"),
                                                         objectDataType(properties = mapOf("name" to stringDataType()))))
     val response = mockk<Response>()
     every { response.status } returns Status.OK

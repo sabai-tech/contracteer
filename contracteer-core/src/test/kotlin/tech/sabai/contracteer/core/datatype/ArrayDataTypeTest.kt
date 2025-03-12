@@ -1,9 +1,9 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.DataTypeFixture.arrayDataType
-import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
-import tech.sabai.contracteer.core.DataTypeFixture.stringDataType
+import tech.sabai.contracteer.core.TestFixture.arrayDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.core.normalize
 
 class ArrayDataTypeTest {

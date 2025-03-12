@@ -11,6 +11,8 @@ import kotlin.random.Random
 class DateTimeDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
     DataType<String>(name, "string/date-time", isNullable, String::class.java, allowedValues) {
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: String) =
     try {
       OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)

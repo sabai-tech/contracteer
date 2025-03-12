@@ -15,20 +15,20 @@ open class ContractParameter(
   fun value(): Any? = if (hasExample()) example!!.normalizedValue else dataType.randomValue()
 
   fun stringValue(): String {
-    return when (dataType) {
-      is ObjectDataType -> TODO("Not yet implemented")
-      is ArrayDataType  -> TODO("Not yet implemented")
-      else              -> value().toString()
+    return when {
+      dataType.isFullyStructured() -> TODO("Not yet implemented")
+      dataType is ArrayDataType    -> TODO("Not yet implemented")
+      else                         -> value().toString()
     }
   }
 
   internal fun parseOrNull(value: String) =
     when (dataType) {
-      is BooleanDataType                                                                        -> value.toBooleanStrictOrNull()
-      is NumberDataType, is IntegerDataType                                                     -> value.toBigDecimalOrNull()
+      is BooleanDataType                                                        -> value.toBooleanStrictOrNull()
+      is NumberDataType, is IntegerDataType                                     -> value.toBigDecimalOrNull()
       is StringDataType, is UuidDataType, is Base64DataType,
-      is BinaryDataType, is EmailDataType, is DateTimeDataType, is DateDataType                 -> value
-      is CompositeDataType, is ArrayDataType -> TODO("Not yet implemented")
+      is BinaryDataType, is EmailDataType, is DateTimeDataType, is DateDataType -> value
+      is CompositeDataType, is ObjectDataType, is ArrayDataType                 -> TODO("Not yet implemented")
     }
 }
 

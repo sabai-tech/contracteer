@@ -10,6 +10,8 @@ class NumberDataType private constructor(name: String,
                                          allowedValues: AllowedValues? = null):
     DataType<BigDecimal>(name, "number", isNullable, BigDecimal::class.java, allowedValues) {
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: BigDecimal) = range.contains(value)
 
   override fun doRandomValue(): BigDecimal = range.randomIntegerValue()

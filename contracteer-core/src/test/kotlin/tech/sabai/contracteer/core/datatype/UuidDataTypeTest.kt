@@ -1,7 +1,7 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.DataTypeFixture.uuidDataType
+import tech.sabai.contracteer.core.TestFixture.uuidDataType
 import java.util.*
 
 class UuidDataTypeTest {

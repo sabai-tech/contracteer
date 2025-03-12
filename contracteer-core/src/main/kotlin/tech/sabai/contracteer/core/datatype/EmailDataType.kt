@@ -22,6 +22,8 @@ class EmailDataType private constructor(name: String,
      "(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|" +
      "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+))\$").toRegex()
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: String): Result<String> =
     lengthRange.contains(value.length.toBigDecimal()).let { result ->
       when {

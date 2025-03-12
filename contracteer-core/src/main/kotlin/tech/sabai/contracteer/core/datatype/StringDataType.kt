@@ -12,6 +12,8 @@ class StringDataType private constructor(name: String,
 
   private val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: String) =
     lengthRange
       .contains(value.length.toBigDecimal())

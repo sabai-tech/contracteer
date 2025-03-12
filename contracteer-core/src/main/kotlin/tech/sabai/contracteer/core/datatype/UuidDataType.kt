@@ -10,6 +10,8 @@ class UuidDataType private constructor(name: String = "Inline 'string/uuid' Sche
                                        allowedValues: AllowedValues? = null):
     DataType<String>(name, "string/uuid", isNullable, String::class.java, allowedValues) {
 
+  override fun isFullyStructured() = false
+
   override fun doValidate(value: String) =
     try {
       fromString(value)

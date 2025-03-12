@@ -11,12 +11,13 @@ class ObjectDataType private constructor(name: String,
                                          val requiredProperties: Set<String> = emptySet(),
                                          isNullable: Boolean = false,
                                          allowedValues: AllowedValues? = null):
-    CompositeDataType<Map<String, Any?>>(name,
-                                         "object",
-                                         isNullable,
-                                         Map::class.java as Class<Map<String, Any?>>,
-                                         allowedValues) {
+    DataType<Map<String, Any?>>(name,
+                                "object",
+                                isNullable,
+                                Map::class.java as Class<Map<String, Any?>>,
+                                allowedValues) {
 
+  override fun isFullyStructured() = true
 
   override fun doValidate(value: Map<String, Any?>): Result<Map<String, Any?>> =
     properties.accumulate {
@@ -33,15 +34,6 @@ class ObjectDataType private constructor(name: String,
   override fun doRandomValue() =
     properties.mapValues { it.value.randomValue() }
 
-  override fun isStructured() = true
-
-  override fun hasDiscriminatorProperty(name: String) =
-    when {
-      !isRequired(name)                   -> failure("Discriminator property '$name' is missing")
-      properties[name] !is StringDataType -> failure("Discriminator property '$name' must be of type 'string'. Found '${properties[name]!!.openApiType}'")
-      else                                -> success(name)
-    }
-
   companion object {
     fun create(
       name: String = "Inline 'object' Schema",
@@ -49,12 +41,22 @@ class ObjectDataType private constructor(name: String,
       requiredProperties: Set<String> = emptySet(),
       isNullable: Boolean = false,
       enum: List<Any?> = emptyList()
-    ) =
-      ObjectDataType(name, properties, requiredProperties, isNullable).let { dataType ->
-        if (enum.isEmpty()) success(dataType)
-        else AllowedValues
-          .create(enum, dataType)
-          .map { ObjectDataType(name, properties, requiredProperties, isNullable, it) }
+    ): Result<ObjectDataType> {
+      val undefinedProperties = requiredProperties.filter { it !in properties.keys }
+
+      return if (undefinedProperties.isNotEmpty()) {
+        failure(
+          "Schema '${name}' contains required properties which are undefined: " +
+          undefinedProperties.joinToString("', '", "'", "'")
+        )
+      } else {
+        ObjectDataType(name, properties, requiredProperties, isNullable).let { dataType ->
+          if (enum.isEmpty()) success(dataType)
+          else AllowedValues
+            .create(enum, dataType)
+            .map { ObjectDataType(name, properties, requiredProperties, isNullable, it) }
+        }
       }
+    }
   }
 }

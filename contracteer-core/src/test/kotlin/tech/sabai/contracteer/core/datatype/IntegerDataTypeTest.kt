@@ -2,7 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.DataTypeFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.normalize
 
 class IntegerDataTypeTest {

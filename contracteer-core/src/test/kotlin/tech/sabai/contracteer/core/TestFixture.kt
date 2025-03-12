@@ -1,13 +1,16 @@
 package tech.sabai.contracteer.core
 
+import tech.sabai.contracteer.core.contract.Body
+import tech.sabai.contracteer.core.contract.ContentType
+import tech.sabai.contracteer.core.contract.Example
 import tech.sabai.contracteer.core.datatype.*
 import java.math.BigDecimal
 
-object DataTypeFixture {
+object TestFixture {
 
   fun allOfDataType(
     name: String = "allOf",
-    subTypes: List<ObjectDataType>,
+    subTypes: List<DataType<Map<String, Any?>>>,
     isNullable: Boolean = false,
     discriminator: Discriminator? = null,
     enum: List<Any?> = emptyList()) =
@@ -55,7 +58,7 @@ object DataTypeFixture {
                     maxLength: Int? = null) =
     EmailDataType.create("email", isNullable, minLength, maxLength, enum).value!!
 
-  fun integerDataType(name: String= "integer",
+  fun integerDataType(name: String = "integer",
                       isNullable: Boolean = false,
                       enum: List<BigDecimal?> = emptyList(),
                       minimum: BigDecimal? = null,
@@ -79,7 +82,7 @@ object DataTypeFixture {
                      enum: List<Any?> = emptyList()) =
     ObjectDataType.create(name, properties, requiredProperties, isNullable, enum).value!!
 
-  fun oneOfDataType(name: String ="oneOf",
+  fun oneOfDataType(name: String = "oneOf",
                     subTypes: List<DataType<out Any>>,
                     discriminator: Discriminator? = null,
                     isNullable: Boolean = false,
@@ -96,4 +99,7 @@ object DataTypeFixture {
   fun uuidDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =
     UuidDataType.create("uuid", isNullable, enum).value!!
+
+  fun body(contentType: ContentType, dataType: DataType<out Any>, example: Example? = null) =
+    Body.create(contentType, dataType, example).value!!
 }
