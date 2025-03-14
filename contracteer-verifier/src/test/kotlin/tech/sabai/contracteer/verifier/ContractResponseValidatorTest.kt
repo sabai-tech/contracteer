@@ -5,12 +5,12 @@ import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
 import tech.sabai.contracteer.core.contract.ContentType
-import tech.sabai.contracteer.core.contract.ContractParameter
 import tech.sabai.contracteer.core.contract.ContractResponse
 import tech.sabai.contracteer.verifier.TestFixture.arrayDataType
 import tech.sabai.contracteer.verifier.TestFixture.body
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
+import tech.sabai.contracteer.verifier.TestFixture.parameter
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.Test
 
@@ -56,8 +56,8 @@ class ContractResponseValidatorTest {
     val responseContract = ContractResponse(
       statusCode = 202,
       headers = listOf(
-        ContractParameter("x-test", integerDataType()),
-        ContractParameter("Location", stringDataType()),)
+        parameter("x-test", integerDataType()),
+        parameter("Location", stringDataType()),)
     )
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
@@ -75,7 +75,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate invalid Response header`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType())))
+      ContractResponse(202, headers = listOf(parameter("x-test", integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.headers } returns listOf("x-test" to "John")
@@ -94,7 +94,7 @@ class ContractResponseValidatorTest {
   fun `Validates successfully optional Response header is missing`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType())))
+      ContractResponse(202, headers = listOf(parameter("x-test", integerDataType())))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.header("Content-Type") } returns null
@@ -111,7 +111,7 @@ class ContractResponseValidatorTest {
   fun `Does not validate successfully when required Response header is missing`() {
     // given
     val responseContract =
-      ContractResponse(202, headers = listOf(ContractParameter("x-test", integerDataType(), true)))
+      ContractResponse(202, headers = listOf(parameter("x-test", integerDataType(), true)))
     val response = mockk<Response>()
     every { response.status } returns Status.ACCEPTED
     every { response.header("Content-Type") } returns null

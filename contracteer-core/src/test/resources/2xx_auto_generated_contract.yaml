@@ -35,7 +35,6 @@ paths:
               properties:
                 prop1:
                   type: string
-
       responses:
         200:
           description: Product details

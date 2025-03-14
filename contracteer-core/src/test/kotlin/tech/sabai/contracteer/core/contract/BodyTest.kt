@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.contract
 
+import org.junit.jupiter.api.Nested
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.body
 import tech.sabai.contracteer.core.TestFixture.integerDataType
@@ -10,22 +11,16 @@ import kotlin.test.Test
 class BodyTest {
 
   @Test
-  fun `null string matches nullable Body`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(properties = mapOf("id" to integerDataType()), isNullable = true)
-    )
-
+  fun `creation fails when content-type and datatype are not compatible`() {
     // when
-    val result = null.matches(body)
+    val result = Body.create(ContentType("application/json"), dataType = integerDataType())
 
     // then
-    assert(result.isSuccess())
+    assert(result.isFailure())
   }
 
   @Test
-  fun `null string does not match non nullable Body`() {
+  fun `validation fails for null value when not nullable`() {
     // given
     val body = body(
       contentType = ContentType("application/json"),
@@ -35,14 +30,14 @@ class BodyTest {
     )
 
     // when
-    val result = null.matches(body)
+    val result = body.validate(null)
 
     // then
     assert(result.isFailure())
   }
 
   @Test
-  fun `Json Object string matches body when all properties match`() {
+  fun `validation succeeds for json object when content-type is json`() {
     // given
     val body = body(
       contentType = ContentType("application/json"),
@@ -53,32 +48,14 @@ class BodyTest {
     )
 
     // when
-    val result = """{"foo": 42, "bar": 99}""".trimIndent().matches(body)
+    val result = body.validate("""{"foo": 42, "bar": 99}""".trimIndent())
 
     // then
     assert(result.isSuccess())
   }
 
   @Test
-  fun `Json Object string does not match body when some properties do not match`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(
-        properties = mapOf(
-          "foo" to integerDataType(),
-          "bar" to integerDataType()))
-    )
-
-    // when
-    val result = """{"foo": 'John', "bar": true}""".trimIndent().matches(body)
-
-    // then
-    assert(result.isFailure())
-  }
-
-  @Test
-  fun `Json Array matches when all items match`() {
+  fun `validation succeeds for json array when content-type is json`() {
     // given
     val body = body(
       contentType = ContentType("application/json"),
@@ -86,14 +63,14 @@ class BodyTest {
     )
 
     // when
-    val result = """[42, 99]""".trimIndent().matches(body)
+    val result = body.validate("""[42, 99]""".trimIndent())
 
     // then
     assert(result.isSuccess())
   }
 
   @Test
-  fun `Json Array does not match when some items do not match`() {
+  fun `validation fails for non json value when content-type is json`() {
     // given
     val body = body(
       contentType = ContentType("application/json"),
@@ -101,139 +78,149 @@ class BodyTest {
     )
 
     // when
-    val result = """[42, "John", 100]""".trimIndent().matches(body)
+    val result = body.validate("""John""".trimIndent())
 
     // then
     assert(result.isFailure())
   }
 
   @Test
-  fun `null string matches example body with null value`() {
+  fun `validation succeeds for string value when content-type is not json `() {
     // given
     val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(
-        properties = mapOf("name" to stringDataType()),
-        isNullable = true
-      ),
-      example = Example(null)
+      contentType = ContentType("plain/text"),
+      dataType = stringDataType()
     )
+
     // when
-    val result = null.matchesExample(body)
+    val result = body.validate("""John""".trimIndent())
 
     // then
     assert(result.isSuccess())
   }
 
-  @Test
-  fun `null string does match example body with non null value`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(
-        properties = mapOf("name" to stringDataType())
-      ),
-      example = Example(mapOf("name" to "John"))
-    )
-    // when
-    val result = null.matchesExample(body)
+  @Nested
+  inner class WithExample {
 
-    // then
-    assert(result.isFailure())
-  }
+    @Test
+    fun `creation fails when example is not of the expected type`() {
+      // when
+      val result = Body.create(
+        contentType = ContentType("application/json"),
+        dataType = objectDataType(properties = mapOf("example" to integerDataType())),
+        example = Example(42)
+      )
 
-  @Test
-  fun `Json Object string matches Body example value`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(
-        properties = mapOf("name" to stringDataType())
-      ),
-      example = Example(mapOf("name" to "John"))
-    )
-    // when
-    val result = """{"name":"John"}""".matchesExample(body)
+      // then
+      assert(result.isFailure())
+    }
 
-    // then
-    assert(result.isSuccess())
-  }
+    @Test
+    fun `validation succeeds for null value when body example has null value`() {
+      // given
+      val body = body(
+        contentType = ContentType("application/json"),
+        dataType = objectDataType(
+          properties = mapOf("name" to stringDataType()),
+          isNullable = true
+        ),
+        example = Example(null)
+      )
+      // when
+      val result = body.validate(null)
 
-  @Test
-  fun `Json Object string does not match when some property are equals to example value`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(
-        properties = mapOf(
-          "name" to stringDataType(),
-          "age" to integerDataType()
-        )
-      ),
-      example = Example(mapOf("name" to "John", "age" to 20))
+      // then
+      assert(result.isSuccess())
+    }
 
-    )
-    // when
-    val result = """{"name":"John","age":42}""".matchesExample(body)
+    @Test
+    fun `validation fails for null value when example value is not null`() {
+      // given
+      val body = body(
+        contentType = ContentType("application/json"),
+        dataType = objectDataType(
+          properties = mapOf("name" to stringDataType())
+        ),
+        example = Example(mapOf("name" to "John"))
+      )
+      // when
+      val result = body.validate(null)
 
-    // then
-    assert(result.isFailure())
-    assert(result.errors().size == 1)
-    listOf("age", "20", "42").all { result.errors().first().contains(it) }
-  }
+      // then
+      assert(result.isFailure())
+    }
 
-  @Test
-  fun `Json Object string does not match when some example properties are missing`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = objectDataType(
-        properties = mapOf(
-          "name" to stringDataType(),
-          "age" to integerDataType()
-        )
-      ),
-      example = Example(mapOf("name" to "John", "age" to 42))
-    )
-    // when
-    val result = """{"name":"John"}""".matchesExample(body)
+    @Test
+    fun `validation succeeds when json object is equal to the example value`() {
+      // given
+      val body = body(
+        contentType = ContentType("application/json"),
+        dataType = objectDataType(
+          properties = mapOf("name" to stringDataType())
+        ),
+        example = Example(mapOf("name" to "John"))
+      )
+      // when
+      val result = body.validate("""{"name":"John"}""")
 
-    // then
-    assert(result.isFailure())
-    assert(result.errors().size == 1)
-    listOf("age", "is missing").all { result.errors().first().contains(it) }
-  }
+      // then
+      assert(result.isSuccess())
+    }
 
-  @Test
-  fun `Json Array string matches body example value`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = arrayDataType(itemDataType = integerDataType()),
-      example = Example(arrayOf(20, 42))
-    )
-    // when
-    val result = """[20,42]""".matchesExample(body)
 
-    // then
-    assert(result.isSuccess())
-  }
+    @Test
+    fun `validation fails when json object value does not match example value`() {
+      // given
+      val body = body(
+        contentType = ContentType("application/json"),
+        dataType = objectDataType(
+          properties = mapOf(
+            "name" to stringDataType(),
+            "age" to integerDataType()
+          )
+        ),
+        example = Example(mapOf("name" to "John", "age" to 20))
 
-  @Test
-  fun `Json Array string does not match body example value`() {
-    // given
-    val body = body(
-      contentType = ContentType("application/json"),
-      dataType = arrayDataType(itemDataType = integerDataType()),
-      example = Example(arrayOf(20, 42))
-    )
+      )
+      // when
+      val result = body.validate("""{"name":"John","age":42}""")
 
-    // when
-    val result = """[20,43]""".matchesExample(body)
+      // then
+      assert(result.isFailure())
+      assert(result.errors().size == 1)
+      listOf("age", "20", "42").all { result.errors().first().contains(it) }
+    }
 
-    // then
-    assert(result.isFailure())
-    assert(result.errors().size == 1)
-    assert(listOf("1", "42", "43").all { result.errors().first().contains(it) })
+    @Test
+    fun `validation fails when json array does not match the example value`() {
+      // given
+      val body = body(
+        contentType = ContentType("application/json"),
+        dataType = arrayDataType(itemDataType = integerDataType()),
+        example = Example(listOf(42, 99, 200))
+      )
+
+      // when
+      val result = body.validate("""[42, 99]""".trimIndent())
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when json array is equal to the example value`() {
+      // given
+      val body = body(
+        contentType = ContentType("application/json"),
+        dataType = arrayDataType(itemDataType = integerDataType()),
+        example = Example(listOf(42, 99))
+      )
+
+      // when
+      val result = body.validate("""[42, 99]""".trimIndent())
+
+      // then
+      assert(result.isSuccess())
+    }
   }
 }

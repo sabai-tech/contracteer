@@ -104,25 +104,25 @@ class MockServer(private val contracts: List<Contract>,
       when {
         value == null && it.isRequired -> failure(it.name, "is missing")
         value == null                  -> success()
-        it.hasExample()                -> value.matchesExample(it)
-        else                           -> value.matches(it)
+        else                           -> it.validate(value)
       }
     }
 
   private fun Body.verify(req: Request): Result<Any?> {
     val requestContentType = req.contentType() ?: return failure("Request Header 'Content-type' is missing")
 
-    return contentType.validate(requestContentType).flatMap {
-      if (hasExample()) req.bodyString().matchesExample(this)
-      else req.bodyString().matches(this)
-    }.mapErrors { "Request $it" }
+    return contentType
+      .validate(requestContentType)
+      .flatMap { this.validate(req.bodyString()) }
+      .mapErrors { "Request $it" }
   }
 
 
   private fun Contract.verifyAcceptRequestHeader(acceptHeader: String?): Result<Contract> =
     if (response.body == null || acceptHeader.isNullOrEmpty() || acceptHeader == "*/*") success()
     else {
-      response.body!!.contentType.validate(acceptHeader)
+      response.body!!.contentType
+        .validate(acceptHeader)
         .map { this }
         .mapErrors { "Request Header 'Accept' does not match: Expected: ${response.body!!.contentType}, actual: $acceptHeader" }
     }

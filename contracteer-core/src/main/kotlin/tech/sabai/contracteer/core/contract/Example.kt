@@ -12,22 +12,22 @@ private const val VALUE_DOES_NOT_MATCH = "value does not match. Expected: %s, Ac
 class Example(value: Any?) {
   val normalizedValue = value?.normalize()
 
-  fun matches(other: Any?) = normalizedValue.matchesValue(other?.normalize())
+  fun validate(other: Any?) = normalizedValue.matchValue(other?.normalize())
 
-  private fun Any?.matchesValue(other: Any?): Result<Any?> =
+  private fun Any?.matchValue(other: Any?): Result<Any?> =
     when {
       this == other                           -> success(this)
-      this is Map<*, *> && other is Map<*, *> -> matches(other)
-      this is List<*> && other is List<*>     -> matches(other)
+      this is Map<*, *> && other is Map<*, *> -> matchMap(other)
+      this is List<*> && other is List<*>     -> matchList(other)
       else                                    -> failure(VALUE_DOES_NOT_MATCH.format(this, other))
     }
 
-  private fun Map<*, *>.matches(other: Map<*, *>): Result<Map<*, *>> =
+  private fun Map<*, *>.matchMap(other: Map<*, *>): Result<Map<*, *>> =
     if (this.keys != other.keys) failure("Property names are not equal")
-    else accumulate { it.value.matchesValue(other[it.key]).forProperty(it.key.toString()) }.map { other }
+    else accumulate { it.value.matchValue(other[it.key]).forProperty(it.key.toString()) }.map { other }
 
-  private fun List<*>.matches(other: List<*>): Result<List<*>> =
+  private fun List<*>.matchList(other: List<*>): Result<List<*>> =
     if (size != other.size) failure("Array size does not match")
-    else accumulateWithIndex { index, item -> item.matchesValue(other[index]).forIndex(index) }.map { other }
+    else accumulateWithIndex { index, item -> item.matchValue(other[index]).forIndex(index) }.map { other }
 }
 

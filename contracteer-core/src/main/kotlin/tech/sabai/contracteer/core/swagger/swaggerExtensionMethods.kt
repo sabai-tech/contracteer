@@ -25,11 +25,17 @@ internal fun MediaType.contractExample(exampleKey: String?): Example? =
 internal fun Parameter.safeExamples() =
   examples ?: emptyMap()
 
+internal fun Parameter.safeIsRequired() =
+  required ?: false
+
 internal fun Parameter.contractExample(exampleKey: String?): Example? =
   exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
 
 internal fun Header.safeExamples() =
   examples ?: emptyMap()
+
+internal fun Header.safeIsRequired() =
+  required ?: false
 
 internal fun Header.contractExample(exampleKey: String?): Example? =
   exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
@@ -108,13 +114,10 @@ internal fun io.swagger.v3.oas.models.media.Discriminator.safeMapping() =
 internal fun Operation.generatePathParameters(exampleKey: String? = null) =
   safeParameters()
     .filter { it.`in` == "path" }
-    .map { param ->
-      // TODO manage param.required
-      val example = param.contractExample(exampleKey)
-      param.schema.convertToDataType()
-        .flatMap { it!!.validateExample(example, param.name) }
-        .map { PathParameter(param.name, it!!, example) }
+    .map {
+      if(it.safeIsRequired()) success(it) else failure("${it.name} is required")
     }.combineResults()
+    .flatMap { it!!.toContractParameters(exampleKey) }
 
 internal fun Operation.generateQueryParameters(exampleKey: String? = null) =
   safeParameters()
@@ -150,23 +153,16 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
   } else success(emptyList())
 
 internal fun ApiResponse.generateResponseHeaders(exampleKey: String? = null) =
-  safeHeaders().map { (name, header) ->
+  safeHeaders()
+    .map { (name, header) ->
     val example = header.contractExample(exampleKey)
     header.schema.convertToDataType()
-      .flatMap { it!!.validateExample(example, name) }
-      .map { ContractParameter(name, it!!, header.required ?: false, example) }
+      .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), example) }
   }.combineResults()
 
 internal fun List<Parameter>.toContractParameters(exampleKey: String?): Result<List<ContractParameter>> =
   map { param ->
     val example = param.contractExample(exampleKey)
     param.schema.convertToDataType()
-      .flatMap { it!!.validateExample(example, param.name) }
-      .map { ContractParameter(param.name, it!!, param.required ?: false, example) }
+      .flatMap { ContractParameter.create(param.name, it!!, param.safeIsRequired(), example) }
   }.combineResults()
-
-private fun DataType<*>.validateExample(example: Example?, propertyName: String? = null): Result<DataType<*>> =
-  if (example == null) success(this)
-  else validate(example.normalizedValue)
-    .let { if (propertyName != null) it.forProperty(propertyName) else it }
-    .map { this }

@@ -11,7 +11,7 @@ class ExampleTest {
     val example = Example(null)
 
     // when
-    val result = example.matches(null)
+    val result = example.validate(null)
 
     // then
     assert(result.isSuccess())
@@ -23,7 +23,7 @@ class ExampleTest {
     val example = Example(1)
 
     // when
-    val result = example.matches(1)
+    val result = example.validate(1)
 
     // then
     assert(result.isSuccess())
@@ -35,7 +35,7 @@ class ExampleTest {
     val example = Example(1)
 
     // when
-    val result = example.matches(2)
+    val result = example.validate(2)
 
     // then
     assert(result.isFailure())
@@ -47,7 +47,7 @@ class ExampleTest {
     val example = Example(arrayOf(1, 2))
 
     // when
-    val result = example.matches(arrayOf(1, 2, 42))
+    val result = example.validate(arrayOf(1, 2, 42))
 
     // then
     assert(result.isFailure())
@@ -61,7 +61,7 @@ class ExampleTest {
     val example = Example(arrayOf("John", "Doe"))
 
     // when
-    val result = example.matches(arrayOf(1, 2))
+    val result = example.validate(arrayOf(1, 2))
 
     // then
     assert(result.isFailure())
@@ -76,7 +76,7 @@ class ExampleTest {
     val example = Example(arrayOf("John", "Doe"))
 
     // when
-    val result = example.matches(arrayOf("John", "42"))
+    val result = example.validate(arrayOf("John", "42"))
 
     // then
     assert(result.isFailure())
@@ -90,7 +90,7 @@ class ExampleTest {
     val example = Example(arrayOf("John", "Doe"))
 
     // when
-    val result = example.matches(arrayOf("John", "Doe"))
+    val result = example.validate(arrayOf("John", "Doe"))
 
     // then
     assert(result.isSuccess())
@@ -105,7 +105,7 @@ class ExampleTest {
       arrayOf(99, 101)))
 
     // when
-    val result = example.matches(arrayOf(
+    val result = example.validate(arrayOf(
       arrayOf(1, 2),
       arrayOf(42, 101))
     )
@@ -126,7 +126,7 @@ class ExampleTest {
             "age" to 42)))
 
     // when
-    val result = example.matches(arrayOf(
+    val result = example.validate(arrayOf(
       mapOf("id" to 1,
             "age" to 20),
       mapOf("id" to 2,
@@ -148,7 +148,7 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.matches(mapOf(
+    val result = example.validate(mapOf(
       "id" to "John",
       "address" to 20,
     ))
@@ -168,7 +168,7 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.matches(mapOf(
+    val result = example.validate(mapOf(
       "name" to "John",
       "age" to true,
     ))
@@ -188,7 +188,7 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.matches(mapOf(
+    val result = example.validate(mapOf(
       "name" to "John",
       "age" to 20
     ))
@@ -207,7 +207,7 @@ class ExampleTest {
       )))
 
     // when
-    val result = example.matches(mapOf(
+    val result = example.validate(mapOf(
       "user" to mapOf(
         "name" to "John",
         "age" to 21
@@ -229,7 +229,7 @@ class ExampleTest {
     ))
 
     // when
-    val result = example.matches(mapOf(
+    val result = example.validate(mapOf(
       "name" to "John",
       "productIds" to arrayOf(1, 2, 42, 4, 5, 6)
     ))

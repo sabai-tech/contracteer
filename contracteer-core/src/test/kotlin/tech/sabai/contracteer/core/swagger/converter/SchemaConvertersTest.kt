@@ -233,7 +233,6 @@ class SchemaConvertersTest {
     assert(oneOfDataType.discriminator == Discriminator("type", mapOf("DOG" to "dog")))
   }
 
-
   @Test
   fun `extract allOfDataType`() {
     // when
@@ -267,6 +266,7 @@ class SchemaConvertersTest {
     // then
     assert(contractResults.isFailure())
   }
+
   @Test
   fun `does not extract allOfDataType when sub datatypes are not structured`() {
     // when
@@ -291,5 +291,7 @@ class SchemaConvertersTest {
 
   private fun getDataType(contractResults: Result<List<Contract>>) =
     contractResults.value!!.first().request.body!!.dataType.asObjectDataType().properties["prop1"]
-  private fun DataType<*>.asObjectDataType() = this as ObjectDataType
+
+  private fun DataType<*>.asObjectDataType() =
+    this as ObjectDataType
 }

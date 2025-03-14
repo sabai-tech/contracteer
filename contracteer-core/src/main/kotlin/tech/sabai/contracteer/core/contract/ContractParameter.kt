@@ -3,16 +3,16 @@ package tech.sabai.contracteer.core.contract
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.parse
 
-open class ContractParameter(
+@ConsistentCopyVisibility
+data class ContractParameter private constructor(
   val name: String,
-  val dataType: DataType<*>,
+  val dataType: DataType<out Any>,
   val isRequired: Boolean = false,
   val example: Example? = null) {
 
-  fun hasExample() = example != null
-
-  fun value(): Any? = if (hasExample()) example!!.normalizedValue else dataType.randomValue()
+  fun value(): Any? = if (example != null) example.normalizedValue else dataType.randomValue()
 
   fun stringValue(): String {
     return when {
@@ -22,40 +22,26 @@ open class ContractParameter(
     }
   }
 
-  internal fun parseOrNull(value: String) =
-    when (dataType) {
-      is BooleanDataType                                                        -> value.toBooleanStrictOrNull()
-      is NumberDataType, is IntegerDataType                                     -> value.toBigDecimalOrNull()
-      is StringDataType, is UuidDataType, is Base64DataType,
-      is BinaryDataType, is EmailDataType, is DateTimeDataType, is DateDataType -> value
-      is CompositeDataType, is ObjectDataType, is ArrayDataType                 -> TODO("Not yet implemented")
+  fun validate(stringValue: String?) =
+    if (stringValue == null && !dataType.isNullable) failure(name, "Cannot be null")
+    else {
+     dataType.parse(stringValue)
+        .flatMap { example?.validate(it) ?: dataType.validate(it) }
+        .forProperty(name)
+        .map { stringValue }
     }
-}
 
-class PathParameter(
-  name: String,
-  dataType: DataType<*>,
-  example: Example? = null): ContractParameter(name, dataType, true, example)
-
-fun String?.matches(parameter: ContractParameter) = when {
-  this == null && parameter.dataType.isNullable -> success()
-  this == null                                  -> failure(parameter.name, "Cannot be null")
-  else                                          -> {
-    val value = parameter.parseOrNull(this)
-    if (value != null) parameter.dataType.validate(value)
-    else failure(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
+  companion object {
+    fun create(name: String,
+               dataType: DataType<out Any>,
+               isRequired: Boolean = false,
+               example: Example? = null) =
+      if (example == null) success(ContractParameter(name, dataType, isRequired))
+      else {
+        dataType
+          .validate(example.normalizedValue)
+          .forProperty(name)
+          .map { ContractParameter(name, dataType, isRequired, example) }
+      }
   }
 }
-
-fun String?.matchesExample(parameter: ContractParameter) = when {
-  parameter.example == null                                 -> failure(parameter.name, "Example is not defined")
-  this == null && !parameter.dataType.isNullable            -> failure(parameter.name, "Cannot be null")
-  this == null && parameter.example.normalizedValue == null -> success()
-  else                                                      -> validateEqualsExampleValue(parameter, this!!)
-}
-
-private fun validateEqualsExampleValue(parameter: ContractParameter, value: String) =
-  when (val parsedValue = parameter.parseOrNull(value)) {
-    null -> failure(parameter.name, "Wrong type. Expected type: ${parameter.dataType.openApiType}")
-    else -> parameter.example!!.matches(parsedValue).forProperty(parameter.name)
-  }

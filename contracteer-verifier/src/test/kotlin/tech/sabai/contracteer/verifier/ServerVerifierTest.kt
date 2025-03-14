@@ -12,6 +12,7 @@ import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.verifier.TestFixture.body
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
+import tech.sabai.contracteer.verifier.TestFixture.pathParameter
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.Test
 
@@ -21,7 +22,7 @@ class ServerVerifierTest {
     request = ContractRequest(
       method = "GET",
       path = "/product/{id}",
-      pathParameters = listOf(PathParameter("id", IntegerDataType.create().value!!))),
+      pathParameters = listOf(pathParameter("id", IntegerDataType.create().value!!))),
     response = ContractResponse(
       statusCode = 200,
       body = body(contentType = ContentType("application/json"),

@@ -2,6 +2,7 @@ package tech.sabai.contracteer.mockserver
 
 import tech.sabai.contracteer.core.contract.Body
 import tech.sabai.contracteer.core.contract.ContentType
+import tech.sabai.contracteer.core.contract.ContractParameter
 import tech.sabai.contracteer.core.contract.Example
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.IntegerDataType
@@ -29,4 +30,10 @@ object TestFixture {
 
   fun body(contentType: ContentType, dataType: DataType<out Any>, example: Example? = null) =
     Body.create(contentType, dataType, example).value!!
+
+  fun pathParameter(name: String, dataType: DataType<out Any>, example: Example? = null) =
+    ContractParameter.create(name, dataType, true, example).value!!
+
+  fun parameter(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, example: Example? = null) =
+    ContractParameter.create(name, dataType, isRequired, example).value!!
 }

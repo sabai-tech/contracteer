@@ -13,6 +13,8 @@ import tech.sabai.contracteer.core.contract.*
 import tech.sabai.contracteer.verifier.TestFixture.body
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
+import tech.sabai.contracteer.verifier.TestFixture.parameter
+import tech.sabai.contracteer.verifier.TestFixture.pathParameter
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -41,10 +43,10 @@ class HttpRequesterTest {
       ContractRequest(
         method = "POST",
         path = "/test/{id}",
-        pathParameters = listOf(PathParameter("id", integerDataType())),
-        queryParameters = listOf(ContractParameter("q", integerDataType())),
-        cookies = listOf(ContractParameter("val", integerDataType())),
-        headers = listOf(ContractParameter("x-my-header", stringDataType())),
+        pathParameters = listOf(pathParameter("id", integerDataType())),
+        queryParameters = listOf(parameter("q", integerDataType())),
+        cookies = listOf(parameter("val", integerDataType())),
+        headers = listOf(parameter("x-my-header", stringDataType())),
         body = body(contentType = ContentType("application/json"), objectDataType(properties = mapOf("prop" to integerDataType())))
       ),
       ContractResponse(
