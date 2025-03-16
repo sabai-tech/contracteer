@@ -4,21 +4,22 @@ import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi.AUTO
 import tech.sabai.contracteer.core.contract.Contract
-import tech.sabai.contracteer.core.swagger.loadContracts
-import java.io.File
+import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
-@Command(name = "server-verifier",
+@Command(name = "Contracteer Verifier",
          mixinStandardHelpOptions = true,
          version = ["0.0.1"],
-         description = ["validates server responses against a given OpenAPI 3 specifications."])
+         description = [
+           "Verifies that a server implementation conforms to an OpenAPI 3 specification"
+         ])
 class VerifierCli: Callable<Int> {
 
   @Option(
     names = ["--server-url"],
     required = false,
-    description = ["Server Url (default: \${DEFAULT-VALUE})"])
+    description = ["Base URL of the server to verify (default: \${DEFAULT-VALUE})"])
   private var serverUrl = "http://localhost"
 
   @Option(
@@ -27,11 +28,16 @@ class VerifierCli: Callable<Int> {
     description = ["Server port (default: \${DEFAULT-VALUE})"])
   private var serverPort = 8080
 
-  @Parameters(index = "0", description = ["Path of the Open Api 3 file "])
-  lateinit var specFile: File
+  @Parameters(index = "0",
+              description = [
+                "Specifies the location of an OpenAPI 3 specification,",
+                "either as a local file path or a remote URL."
+              ]
+  )
+  lateinit var path: String
 
   override fun call(): Int {
-    val result = specFile.loadContracts()
+    val result = OpenApiLoader.loadContracts(path)
     return when {
       result.isSuccess() -> runContractTests(result.value!!)
       else               -> printErrors(result.errors())
@@ -39,7 +45,7 @@ class VerifierCli: Callable<Int> {
   }
 
   private fun printErrors(errors: List<String>): Int {
-    println(AUTO.string("@|bold,red Invalid file:|@"))
+    println(AUTO.string("@|bold,red ❌ Verification failed:|@"))
     errors.forEach { println(AUTO.string("     - @|yellow $it|@")) }
     return 2
   }
@@ -48,13 +54,13 @@ class VerifierCli: Callable<Int> {
     var exitCode = 0
     val serverVerifier = ServerVerifier(ServerConfiguration(serverUrl, serverPort))
     println()
-    println(AUTO.string("=== Verify @|bold,green $serverUrl:$serverPort|@ with @|bold '${specFile.name}'|@ ==="))
+    println(AUTO.string("=== Verify @|bold,green $serverUrl:$serverPort|@ with @|bold '${path}'|@ ==="))
     contracts.forEach { contract ->
       print("* Validating ${contract.description()}: ")
       val testResult = serverVerifier.verify(contract)
-      if (testResult.isSuccess()) println(AUTO.string("@|bold,green SUCCESS|@"))
+      if (testResult.isSuccess()) println(AUTO.string("@|bold,green ✅ SUCCESS|@"))
       else {
-        println(AUTO.string("@|bold,red ERROR|@"))
+        println(AUTO.string("@|bold,red ❌ ERROR|@"))
         testResult.errors().forEach { println(AUTO.string("    - @|yellow $it|@")) }
         exitCode = 2
         println()

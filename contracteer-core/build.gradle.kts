@@ -5,6 +5,7 @@ dependencies {
 
   testImplementation ("ch.qos.logback:logback-classic:1.5.16")
   testImplementation(kotlin("test"))
+  testImplementation("org.mock-server:mockserver-netty-no-dependencies:5.15.0")
 }
 
 kotlin {

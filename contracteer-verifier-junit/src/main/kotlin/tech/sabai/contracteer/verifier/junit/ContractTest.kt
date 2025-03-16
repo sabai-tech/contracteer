@@ -7,8 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith
  * Marks a test method as a dynamic Contract Test Template.
  *
  * When a method is annotated with `@ContractTest`, it is treated as a test template that will be
- * invoked multiple times—once for each contract discovered in the OpenAPI specification file specified
- * by [openApiSpecPath]. For each contract, the following process occurs:
+ * invoked multiple times—once for each contract discovered in the OpenAPI 3 Definition file specified
+ * by [openApiPath]. For each contract, the following process occurs:
  *
  * 1. **Preparation:** The body of the annotated test method is executed. This allows you to prepare
  *    the server, configure mocks, or perform any necessary setup before contract verification.
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith
  *   with [ContractServerPort]. If both are provided (i.e. a non-zero value is obtained from the field annotated
  *   with [ContractServerPort]), that value will override this static port. **Default:** `8080`.
  *
- * @property openApiSpecPath Path of the OpenAPI Specification from which contracts are loaded
+ * @property openApiPath Path of the OpenAPI Definition from which contracts are loaded
  **/
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
@@ -32,5 +32,5 @@ import org.junit.jupiter.api.extension.ExtendWith
 annotation class ContractTest(
   val serverUrl: String = "http://localhost",
   val serverPort: Int = 8080,
-  val openApiSpecPath: String,
+  val openApiPath: String,
 )

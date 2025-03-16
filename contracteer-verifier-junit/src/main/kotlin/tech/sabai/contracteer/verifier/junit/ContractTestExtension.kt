@@ -3,9 +3,8 @@ package tech.sabai.contracteer.verifier.junit
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
-import tech.sabai.contracteer.core.swagger.loadContracts
+import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.lang.System.lineSeparator
-import java.nio.file.Path
 import java.util.stream.Stream
 
 internal class ContractTestExtension: TestTemplateInvocationContextProvider {
@@ -17,7 +16,7 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
     val annotation = context.requiredTestMethod.getAnnotation(ContractTest::class.java)
                      ?: throw IllegalStateException("Missing @ContractTest on test method")
 
-    val contractsResult = Path.of(annotation.openApiSpecPath).loadContracts()
+    val contractsResult = OpenApiLoader.loadContracts(annotation.openApiPath)
 
     if (contractsResult.isFailure()) {
       throw IllegalArgumentException(

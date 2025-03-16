@@ -4,15 +4,14 @@ import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.swagger.loadContracts
-import kotlin.io.path.Path
+import tech.sabai.contracteer.core.swagger.OpenApiLoader
 
 class SchemaConvertersTest {
 
   @Test
   fun `extract IntegerDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/integer_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/integer_datatype.yaml")
     val integerDataType = getDataType(contractResults) as IntegerDataType
 
     // then
@@ -28,7 +27,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract NumberDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/number_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/number_datatype.yaml")
     val numberDataType = getDataType(contractResults) as NumberDataType
 
     // then
@@ -44,7 +43,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract StringDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string__datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string__datatype.yaml")
     val stringDataType = getDataType(contractResults) as StringDataType
 
     // then
@@ -60,7 +59,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract Base64DataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string_base64_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string_base64_datatype.yaml")
     val base64DataType = getDataType(contractResults) as Base64DataType
 
     // then
@@ -76,7 +75,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract BinaryDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string_binary_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string_binary_datatype.yaml")
     val binaryDataType = getDataType(contractResults) as BinaryDataType
 
     // then
@@ -92,7 +91,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract UuidDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string_uuid_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string_uuid_datatype.yaml")
     val uuidDataType = getDataType(contractResults) as UuidDataType
 
     // then
@@ -104,7 +103,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract EmailDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string_email_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string_email_datatype.yaml")
     val emailDataType = getDataType(contractResults) as EmailDataType
 
     // then
@@ -120,7 +119,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract DateDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string_date_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string_date_datatype.yaml")
     val dateDataType = getDataType(contractResults) as DateDataType
 
     // then
@@ -132,7 +131,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract DateTimeDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/string_datetime_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/string_datetime_datatype.yaml")
     val dateTimeDataType = getDataType(contractResults) as DateTimeDataType
 
     // then
@@ -144,7 +143,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract BooleanDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/boolean_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/boolean_datatype.yaml")
     val booleanDataType = getDataType(contractResults) as BooleanDataType
 
     // then
@@ -155,7 +154,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract ArrayDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/array_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/array_datatype.yaml")
     val arrayDataType = getDataType(contractResults) as ArrayDataType
 
     // then
@@ -168,7 +167,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract ObjectDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/object_datatype.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/object_datatype.yaml")
     val objectDataType = getDataType(contractResults) as ObjectDataType
 
     // then
@@ -184,7 +183,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract anyOfDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/anyOf.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/anyOf.yaml")
     val anyOfDataType = getDataType(contractResults) as AnyOfDataType
 
     // then
@@ -198,7 +197,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract anyOfDataType_with_discriminator`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/anyOf_discriminator.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/anyOf_discriminator.yaml")
     val anyOfDataType = getDataType(contractResults) as AnyOfDataType
 
     // then
@@ -207,10 +206,10 @@ class SchemaConvertersTest {
     assert(anyOfDataType.discriminator == Discriminator("type", mapOf("DOG" to "dog")))
   }
 
- @Test
+  @Test
   fun `extract oneOfDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/oneOf.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/oneOf.yaml")
     val oneOfDataType = getDataType(contractResults) as OneOfDataType
 
     // then
@@ -224,7 +223,7 @@ class SchemaConvertersTest {
   @Test
   fun `extract oneOfDataType with discriminator`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/oneOf_discriminator.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/oneOf_discriminator.yaml")
     val oneOfDataType = getDataType(contractResults) as OneOfDataType
 
     // then
@@ -236,32 +235,33 @@ class SchemaConvertersTest {
   @Test
   fun `extract allOfDataType`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/allOf.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/allOf.yaml")
     val allOfDataType = getDataType(contractResults) as AllOfDataType
 
     // then
     assert(allOfDataType.subTypes.size == 2)
-    assert(allOfDataType.subTypes.all { it.name == "pet" || it.name == "Inline Schema" } )
-    assert(allOfDataType.allowedValues!!.contains(mapOf("name" to "kitty", "age" to 3 )).isSuccess())
+    assert(allOfDataType.subTypes.all { it.name == "pet" || it.name == "Inline Schema" })
+    assert(allOfDataType.allowedValues!!.contains(mapOf("name" to "kitty", "age" to 3)).isSuccess())
     assert(allOfDataType.allowedValues.contains(mapOf("name" to "medor", "age" to 4)).isSuccess())
   }
 
   @Test
   fun `extract allOfDataType with discriminator`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/allOf_discriminator.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/allOf_discriminator.yaml")
     val allOfDataType = getDataType(contractResults) as AllOfDataType
 
     // then
     assert(allOfDataType.subTypes.size == 2)
-    assert(allOfDataType.subTypes.all { it.name == "Pet" || it.name == "Inline Schema" } )
+    assert(allOfDataType.subTypes.all { it.name == "Pet" || it.name == "Inline Schema" })
     assert(allOfDataType.discriminator == Discriminator("petType", mapOf("dog" to "Dog")))
   }
 
   @Test
   fun `does not extract allOfDataType when there are multiple discriminators`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/allOf_multiple_discriminators_error.yaml").loadContracts()
+    val contractResults =
+      OpenApiLoader.loadContracts("src/test/resources/datatype/allOf_multiple_discriminators_error.yaml")
 
     // then
     assert(contractResults.isFailure())
@@ -270,7 +270,7 @@ class SchemaConvertersTest {
   @Test
   fun `does not extract allOfDataType when sub datatypes are not structured`() {
     // when
-    val contractResults = Path("src/test/resources/datatype/allOf_subtypes_error.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/allOf_subtypes_error.yaml")
 
     // then
     assert(contractResults.isFailure())
@@ -279,14 +279,14 @@ class SchemaConvertersTest {
   @Test
   fun `generate contracts with allOf inheritance`() {
     // when
-    val loadContracts = Path("src/test/resources/datatype/allOf_inheritance.yaml").loadContracts()
+    val loadContracts = OpenApiLoader.loadContracts("src/test/resources/datatype/allOf_inheritance.yaml")
     val contracts = loadContracts.value!!
     // then
     assert(contracts.size == 1)
     assert(contracts.first().request.body!!.dataType is AnyOfDataType)
     assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.size == 3)
-    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.all { it.name == "Dog" || it.name == "Cat" || it.name == "Lizard" } )
-    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.all { it is AllOfDataType } )
+    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.all { it.name == "Dog" || it.name == "Cat" || it.name == "Lizard" })
+    assert((contracts.first().request.body!!.dataType as AnyOfDataType).subTypes.all { it is AllOfDataType })
   }
 
   private fun getDataType(contractResults: Result<List<Contract>>) =

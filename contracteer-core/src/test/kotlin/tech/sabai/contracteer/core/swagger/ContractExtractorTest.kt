@@ -1,22 +1,62 @@
 package tech.sabai.contracteer.core.swagger
 
-import tech.sabai.contracteer.core.Result
-import tech.sabai.contracteer.core.contract.Contract
+import org.mockserver.integration.ClientAndServer
+import org.mockserver.integration.ClientAndServer.startClientAndServer
+import org.mockserver.model.HttpRequest.request
+import org.mockserver.model.HttpResponse.response
+import org.mockserver.model.MediaType.APPLICATION_JSON
 import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.datatype.IntegerDataType
+import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.normalize
-import java.nio.file.Path
-import kotlin.io.path.Path
+import java.io.File
 import kotlin.test.Test
 
 
 class ContractExtractorTest {
 
   @Test
+  fun `loading contracts fails when file does not exist`() {
+    // when
+    val result = OpenApiLoader.loadContracts("src/test/resources/not_found.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().first().contains("File not found"))
+  }
+
+  @Test
+  fun `loading contracts fails when URl does not exist`() {
+    // given
+    val server = startServer()
+
+    // when
+    val result = OpenApiLoader.loadContracts("http://localhost:8080/not_found.yaml")
+
+    // then
+    assert(result.isFailure())
+    server.stop()
+  }
+
+  @Test
+  fun `loading contracts succeeds from an existing remote url`() {
+    // given
+    val server = startServer()
+
+    // when
+    val contracts = OpenApiLoader.loadContracts("http://localhost:${server.port}/oas3.yaml")
+
+    // then
+    assert(contracts.isSuccess())
+    assert(contracts.value!!.size == 2)
+    server.stop()
+  }
+
+  @Test
   fun `auto generated contract for 2xx status code`() {
     // when
-    val contractResults =
-      Path("src/test/resources/2xx_auto_generated_contract.yaml").loadContracts()
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/2xx_auto_generated_contract.yaml")
     val contract = contractResults.value!!.first()
 
     // then
@@ -61,9 +101,9 @@ class ContractExtractorTest {
   }
 
   @Test
-  fun `loading fails when path parameter is not required`() {
+  fun `loading contracts fails when path parameter is set not required`() {
     // when
-    val result = Path("path_parameter_required_error.yaml").loadContracts()
+    val result = OpenApiLoader.loadContracts("path_parameter_required_error.yaml")
     // then
     assert(result.isFailure())
   }
@@ -71,7 +111,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contract for each combination of request-response content-type`() {
     // when
-    val contracts = Path("src/test/resources/multiple_content_type.yaml").loadContracts().value!!
+    val contracts = OpenApiLoader.loadContracts("src/test/resources/multiple_content_type.yaml").value!!
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }
@@ -87,7 +127,7 @@ class ContractExtractorTest {
   fun `do not generate contract with only response example`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/response_body_example_only.yaml").loadContracts().value!!
+      OpenApiLoader.loadContracts("src/test/resources/examples/response_body_example_only.yaml").value!!
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -95,7 +135,7 @@ class ContractExtractorTest {
   @Test
   fun `do not generate contract with only parameter example`() {
     // when
-    val contracts = Path("src/test/resources/examples/parameter_example_only.yaml").loadContracts().value!!
+    val contracts = OpenApiLoader.loadContracts("src/test/resources/examples/parameter_example_only.yaml").value!!
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -104,7 +144,7 @@ class ContractExtractorTest {
   fun `do not generate contract with only request body example`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/request_body_example_only.yaml").loadContracts().value!!
+      OpenApiLoader.loadContracts("src/test/resources/examples/request_body_example_only.yaml").value!!
     // then
     assert(contracts.none { it.exampleKey != null })
   }
@@ -113,7 +153,7 @@ class ContractExtractorTest {
   fun `mix auto generated 2xx_contract with example based contract`() {
     // when
     val contracts =
-      Path("src/test/resources/examples/mix_2xx_auto_generated_contract_and_example_based_contract.yaml").loadContracts().value!!
+      OpenApiLoader.loadContracts("src/test/resources/examples/mix_2xx_auto_generated_contract_and_example_based_contract.yaml").value!!
     // then
     assert(contracts.size == 2)
     assert(contracts.filter { it.exampleKey == null }.size == 1)
@@ -126,8 +166,7 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple examples`() {
     // when
-    val loadContracts = Path("src/test/resources/examples/multiple_examples.yaml").loadContracts()
-    val contracts = loadContracts.value!!
+    val contracts = OpenApiLoader.loadContracts("src/test/resources/examples/multiple_examples.yaml").value!!
     // then
     assert(contracts.size == 2)
     assert(contracts.find { it.exampleKey == "GET_DETAILS" } != null)
@@ -137,8 +176,8 @@ class ContractExtractorTest {
   @Test
   fun `generate contracts with multiple content-type and same example key for all`() {
     // when
-    val loadContracts = Path("src/test/resources/examples/multiple_content_type_with_same_example.yaml").loadContracts()
-    val contracts = loadContracts.value!!
+    val contracts =
+      OpenApiLoader.loadContracts("src/test/resources/examples/multiple_content_type_with_same_example.yaml").value!!
     // then
     assert(contracts.size == 4)
     assert(contracts.map { it.request.body!!.contentType.value to it.response.body!!.contentType.value }
@@ -153,7 +192,7 @@ class ContractExtractorTest {
   @Test
   fun `does not generate contracts when 2xx response is missing`() {
     // when
-    val result: Result<List<Contract>> = Path.of("src/test/resources/missing_2xx_response.yaml").loadContracts()
+    val result = OpenApiLoader.loadContracts("src/test/resources/missing_2xx_response.yaml")
 
     // then
     assert(result.isFailure())
@@ -163,7 +202,7 @@ class ContractExtractorTest {
   @Test
   fun `does not load Open API when examples are invalid`() {
     // when
-    val result = Path.of("src/test/resources/examples/invalid_examples.yaml").loadContracts()
+    val result = OpenApiLoader.loadContracts("src/test/resources/examples/invalid_examples.yaml")
 
     // then
     assert(result.isFailure())
@@ -180,7 +219,7 @@ class ContractExtractorTest {
   @Test
   fun `does not fail when loading unsupported OAS feature`() {
     // when
-    val result = Path.of("src/test/resources/unsupported_oas_features.yaml").loadContracts()
+    val result = OpenApiLoader.loadContracts("src/test/resources/unsupported_oas_features.yaml")
 
     // then
     assert(result.isSuccess())
@@ -189,3 +228,22 @@ class ContractExtractorTest {
 }
 
 private fun List<ContractParameter>.asMap() = associateBy { it.name }
+
+fun startServer(): ClientAndServer {
+  val mockServer = startClientAndServer()
+  mockServer
+    .`when`(
+      request()
+        .withMethod("GET")
+        .withPath("/oas3.yaml")
+    )
+    .respond(
+      response()
+        .withStatusCode(200)
+        .withBody(
+          File("src/test/resources/examples/mix_2xx_auto_generated_contract_and_example_based_contract.yaml").readText(),
+          APPLICATION_JSON
+        )
+    )
+  return mockServer
+}

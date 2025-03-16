@@ -10,7 +10,7 @@ import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.contract.ContractRequest
 import tech.sabai.contracteer.core.contract.ContractResponse
 
-data class SwaggerContext(
+data class SwaggerOperationContext(
   val path: String,
   val method: HttpMethod,
   val operation: Operation,

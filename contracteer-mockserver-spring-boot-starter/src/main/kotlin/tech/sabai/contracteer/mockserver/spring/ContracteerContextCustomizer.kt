@@ -1,13 +1,12 @@
 package tech.sabai.contracteer.mockserver.spring
 
-import tech.sabai.contracteer.core.swagger.loadContracts
 import tech.sabai.contracteer.mockserver.MockServer
 import org.springframework.boot.test.util.TestPropertyValues
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextClosedEvent
 import org.springframework.test.context.ContextCustomizer
 import org.springframework.test.context.MergedContextConfiguration
-import java.io.File
+import tech.sabai.contracteer.core.swagger.OpenApiLoader
 
 internal class ContracteerContextCustomizer(
   private val contracteerContractsMockServerAnnotations: List<ContracteerMockServer>): ContextCustomizer {
@@ -15,7 +14,7 @@ internal class ContracteerContextCustomizer(
   override fun customizeContext(context: ConfigurableApplicationContext, mergedConfig: MergedContextConfiguration) {
 
     contracteerContractsMockServerAnnotations.forEach { annotation ->
-      val contractsResult = File(annotation.specificationFilePath).loadContracts()
+      val contractsResult = OpenApiLoader.loadContracts(annotation.openApiPath)
       if (contractsResult.isFailure())
         throw IllegalArgumentException("Error while loading Contracts: ${System.lineSeparator()}" + contractsResult
           .errors()

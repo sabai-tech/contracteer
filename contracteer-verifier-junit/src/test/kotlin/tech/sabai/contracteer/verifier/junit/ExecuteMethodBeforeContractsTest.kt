@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeAll
 
 class ExecuteMethodBeforeContractsTest {
 
-  @ContractTest(openApiSpecPath = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml")
+  @ContractTest(openApiPath = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml")
   fun `execute method before contracts test`() {
     serverPort = server.port()
   }
