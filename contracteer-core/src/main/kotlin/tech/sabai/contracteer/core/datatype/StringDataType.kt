@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import kotlin.math.absoluteValue
 
 class StringDataType private constructor(name: String,
                                          openApiType: String,
@@ -21,7 +22,7 @@ class StringDataType private constructor(name: String,
       .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
 
   override fun doRandomValue(): String =
-    (1..lengthRange.randomIntegerValue().toLong().coerceAtMost(10)).map { candidateChars.random() }.joinToString("")
+    (1..lengthRange.randomIntegerValue().toLong().absoluteValue.coerceAtMost(10)).map { candidateChars.random() }.joinToString("")
 
   companion object {
     fun create(
