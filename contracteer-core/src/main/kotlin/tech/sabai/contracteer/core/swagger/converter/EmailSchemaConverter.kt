@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.EmailDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
-object EmailSchemaConverter {
+internal object EmailSchemaConverter {
   fun convert(schema: EmailSchema) =
     EmailDataType.create(
       name = schema.name,

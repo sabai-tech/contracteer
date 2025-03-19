@@ -6,7 +6,7 @@ import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 import java.util.*
 
-object Base64SchemaConverter {
+internal object Base64SchemaConverter {
   fun convert(schema: ByteArraySchema) =
     Base64DataType.create(
       name = schema.name,

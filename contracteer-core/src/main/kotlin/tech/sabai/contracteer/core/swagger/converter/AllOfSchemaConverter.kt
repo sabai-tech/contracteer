@@ -9,27 +9,23 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.swagger.*
 
 @Suppress("UNCHECKED_CAST")
-object AllOfSchemaConverter {
-  fun convert(composedSchema: ComposedSchema): Result<AllOfDataType> {
+internal object AllOfSchemaConverter {
+  fun convert(composedSchema: ComposedSchema, recursiveDepth: Int): Result<AllOfDataType> {
     if (composedSchema.allOf == null) return failure("'allOf' must be defined.")
 
     return composedSchema.allOf
-      .map { it.fullyResolve() }
-      .combineResults()
-      .flatMap { schemas ->
-        val subTypesResult = schemas!!.map { it.convertToDataType() }.combineResults()
-        val discriminators = schemas
-          .filter { it.name != null && it.name != "Inline Schema" }
-          .mapNotNull { it.toContracteerDiscriminator() }
-
+      .mapIndexed { index, subSchema ->
+        SchemaConverter.convertToDataType(subSchema, "${composedSchema.name} - allOf #$index", recursiveDepth - 1)
+      }.combineResults()
+      .flatMap { subDataTypes ->
+        val discriminators = composedSchema.allOf.mapNotNull { SchemaConverter.convertToDiscriminator(it) }
         when {
-          subTypesResult.isFailure()                             -> subTypesResult.retypeError()
-          subTypesResult.value!!.any { !it.isFullyStructured() } -> failure("Only 'object', 'allOf', 'anyOf' and 'oneOf' schemas are supported for 'allOf'")
-          discriminators.size > 1                                -> failure("Only 1 discriminator is allowed")
-          else                                                   -> {
+          subDataTypes!!.any { !it.isFullyStructured() } -> failure("Only 'object', 'allOf', 'anyOf' and 'oneOf' schemas are supported for 'allOf'")
+          discriminators.size > 1                        -> failure("Only 1 discriminator is allowed")
+          else                                           -> {
             AllOfDataType.create(
               name = composedSchema.name,
-              subTypes = subTypesResult.value.map { it as DataType<Map<String, Any?>> },
+              subTypes = subDataTypes.map { it as DataType<Map<String, Any?>> },
               isNullable = composedSchema.safeNullable(),
               discriminator = discriminators.firstOrNull(),
               enum = composedSchema.safeEnum())

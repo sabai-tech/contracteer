@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.UuidDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
-object UuidSchemaConverter {
+internal object UuidSchemaConverter {
   fun convert(schema: UUIDSchema) =
     UuidDataType.create(
       name = schema.name,

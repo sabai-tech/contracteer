@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.BinaryDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
-object BinarySchemaConverter {
+internal object BinarySchemaConverter {
   fun convert(schema: BinarySchema) =
     BinaryDataType.create(
       name = schema.name,

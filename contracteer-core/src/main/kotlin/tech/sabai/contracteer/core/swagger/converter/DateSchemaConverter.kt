@@ -7,7 +7,7 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 
-object DateSchemaConverter {
+internal object DateSchemaConverter {
   fun convert(schema: DateSchema) =
     DateDataType.create(
       name = schema.name,

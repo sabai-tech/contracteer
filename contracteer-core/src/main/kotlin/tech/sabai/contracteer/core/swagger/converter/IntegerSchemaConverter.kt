@@ -9,7 +9,7 @@ import tech.sabai.contracteer.core.swagger.safeExclusiveMinimum
 import tech.sabai.contracteer.core.swagger.safeNullable
 import java.math.BigDecimal
 
-object IntegerSchemaConverter {
+internal object IntegerSchemaConverter {
   fun convert(schema: IntegerSchema) =
     IntegerDataType.create(
       name = schema.name,

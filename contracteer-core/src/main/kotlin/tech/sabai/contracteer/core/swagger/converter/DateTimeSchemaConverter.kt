@@ -6,7 +6,7 @@ import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
-object DateTimeSchemaConverter {
+internal object DateTimeSchemaConverter {
   fun convert(schema: DateTimeSchema) =
     DateTimeDataType.create(
       name = schema.name,

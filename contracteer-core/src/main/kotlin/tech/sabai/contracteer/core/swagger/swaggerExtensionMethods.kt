@@ -1,20 +1,24 @@
 package tech.sabai.contracteer.core.swagger
 
+import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.headers.Header
-import io.swagger.v3.oas.models.media.*
+import io.swagger.v3.oas.models.media.Content
+import io.swagger.v3.oas.models.media.Discriminator
+import io.swagger.v3.oas.models.media.MediaType
+import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
-import tech.sabai.contracteer.core.contract.*
-import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.Discriminator
-import tech.sabai.contracteer.core.swagger.converter.*
-
+import tech.sabai.contracteer.core.contract.Body
+import tech.sabai.contracteer.core.contract.ContentType
+import tech.sabai.contracteer.core.contract.ContractParameter
+import tech.sabai.contracteer.core.contract.Example
+import tech.sabai.contracteer.core.swagger.converter.SchemaConverter
 
 internal fun MediaType.safeExamples() =
   examples ?: emptyMap()
@@ -76,47 +80,20 @@ internal fun Schema<*>.safeExclusiveMinimum() =
 internal fun Schema<*>.safeExclusiveMaximum() =
   exclusiveMaximum ?: false
 
-internal fun Schema<*>.fullyResolve() =
-  this.`$ref`?.let { SharedComponents.findSchema(it) } ?: success(this.apply { name = name ?: "Inline Schema" })
+internal fun Schema<*>.shortRef() =
+  this.`$ref`?.replace(COMPONENTS_SCHEMAS_REF, "")
 
-internal fun Schema<*>.toContracteerDiscriminator() =
-  discriminator?.let {
-    Discriminator(it.propertyName,
-                  it.safeMapping().mapValues { mapping -> mapping.value.replace(COMPONENTS_SCHEMAS_REF, "") })
-  }
+internal fun Components?.safeSchemas() =
+  this?.schemas ?: emptyMap()
 
-internal fun Schema<*>.convertToDataType(): Result<DataType<out Any>> =
-  fullyResolve().flatMap { fullyResolved ->
-    when (fullyResolved) {
-      is ArraySchema                                    -> ArraySchemaConverter.convert(fullyResolved)
-      is BinarySchema                                   -> BinarySchemaConverter.convert(fullyResolved)
-      is ByteArraySchema                                -> Base64SchemaConverter.convert(fullyResolved)
-      is BooleanSchema                                  -> BooleanSchemaConverter.convert(fullyResolved)
-      is ComposedSchema if(fullyResolved.allOf != null) -> AllOfSchemaConverter.convert(fullyResolved)
-      is ComposedSchema if(fullyResolved.anyOf != null) -> AnyOfSchemaConverter.convert(fullyResolved)
-      is ComposedSchema if(fullyResolved.oneOf != null) -> OneOfSchemaConverter.convert(fullyResolved)
-      is DateSchema                                     -> DateSchemaConverter.convert(fullyResolved)
-      is DateTimeSchema                                 -> DateTimeSchemaConverter.convert(fullyResolved)
-      is EmailSchema                                    -> EmailSchemaConverter.convert(fullyResolved)
-      is IntegerSchema                                  -> IntegerSchemaConverter.convert(fullyResolved)
-      is NumberSchema                                   -> NumberSchemaConverter.convert(fullyResolved)
-      is StringSchema                                   -> StringSchemaConverter.convert(fullyResolved, "string")
-      is ObjectSchema                                   -> ObjectSchemaConverter.convert(fullyResolved)
-      is PasswordSchema                                 -> StringSchemaConverter.convert(fullyResolved, "string/password")
-      is UUIDSchema                                     -> UuidSchemaConverter.convert(fullyResolved)
-      else                                              -> failure("Schema ${fullyResolved!!::class.java.simpleName} is not yet supported")
-    }
-  }
-
-internal fun io.swagger.v3.oas.models.media.Discriminator.safeMapping() =
+internal fun Discriminator.safeMapping() =
   mapping ?: emptyMap()
 
 internal fun Operation.generatePathParameters(exampleKey: String? = null) =
   safeParameters()
     .filter { it.`in` == "path" }
-    .map {
-      if(it.safeIsRequired()) success(it) else failure("${it.name} is required")
-    }.combineResults()
+    .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
+    .combineResults()
     .flatMap { it!!.toContractParameters(exampleKey) }
 
 internal fun Operation.generateQueryParameters(exampleKey: String? = null) =
@@ -138,8 +115,8 @@ internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result
   if (requestBody?.content != null) {
     requestBody.content
       .map { (contentType, mediaType) ->
-        mediaType.schema
-          .convertToDataType()
+        SchemaConverter
+          .convertToDataType(mediaType.schema, "Request body Inline Schema")
           .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
       }.combineResults()
   } else success(emptyList())
@@ -147,7 +124,8 @@ internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result
 internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Result<List<Body>> =
   if (content != null) {
     content.map { (contentType, mediaType) ->
-      mediaType.schema.convertToDataType()
+      SchemaConverter
+        .convertToDataType(mediaType.schema, "Response body Inline Schema ")
         .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
     }.combineResults()
   } else success(emptyList())
@@ -155,14 +133,15 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
 internal fun ApiResponse.generateResponseHeaders(exampleKey: String? = null) =
   safeHeaders()
     .map { (name, header) ->
-    val example = header.contractExample(exampleKey)
-    header.schema.convertToDataType()
-      .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), example) }
-  }.combineResults()
+      val example = header.contractExample(exampleKey)
+      SchemaConverter.convertToDataType(header.schema, "Response header '$name' Inline Schema ")
+        .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), example) }
+    }.combineResults()
 
 internal fun List<Parameter>.toContractParameters(exampleKey: String?): Result<List<ContractParameter>> =
   map { param ->
     val example = param.contractExample(exampleKey)
-    param.schema.convertToDataType()
+    SchemaConverter
+      .convertToDataType(param.schema, "Parameter '${param.name}' Inline Schema ")
       .flatMap { ContractParameter.create(param.name, it!!, param.safeIsRequired(), example) }
   }.combineResults()

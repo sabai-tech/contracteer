@@ -240,7 +240,7 @@ class SchemaConvertersTest {
 
     // then
     assert(allOfDataType.subTypes.size == 2)
-    assert(allOfDataType.subTypes.all { it.name == "pet" || it.name == "Inline Schema" })
+    assert(allOfDataType.subTypes.all { it.name == "pet" || it.name == "Inline Schema - allOf #0" })
     assert(allOfDataType.allowedValues!!.contains(mapOf("name" to "kitty", "age" to 3)).isSuccess())
     assert(allOfDataType.allowedValues.contains(mapOf("name" to "medor", "age" to 4)).isSuccess())
   }
@@ -253,7 +253,7 @@ class SchemaConvertersTest {
 
     // then
     assert(allOfDataType.subTypes.size == 2)
-    assert(allOfDataType.subTypes.all { it.name == "Pet" || it.name == "Inline Schema" })
+    assert(allOfDataType.subTypes.all { it.name == "Pet" || it.name == "Dog - allOf #1" })
     assert(allOfDataType.discriminator == Discriminator("petType", mapOf("dog" to "Dog")))
   }
 

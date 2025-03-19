@@ -8,11 +8,7 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.contract.Contract
 import java.io.File
-import java.net.ConnectException
-import java.net.HttpURLConnection
-import java.net.SocketTimeoutException
-import java.net.URI
-import java.net.URL
+import java.net.*
 
 object OpenApiLoader {
 
@@ -42,10 +38,7 @@ object OpenApiLoader {
     return when {
       parseResult == null               -> failure("Failed to parse OpenAPI 3 Definition content")
       parseResult.messages.isNotEmpty() -> failure(*parseResult.messages.toTypedArray())
-      else                              -> {
-        SharedComponents.components = parseResult.openAPI.components
-        success(parseResult.openAPI)
-      }
+      else                              -> success(parseResult.openAPI)
     }
   }
 

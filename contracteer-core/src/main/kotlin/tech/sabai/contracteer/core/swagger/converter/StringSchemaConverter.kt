@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
-object StringSchemaConverter {
+internal object StringSchemaConverter {
   fun convert(schema: Schema<String>, openApiType: String) =
     StringDataType.create(
       name = schema.name,

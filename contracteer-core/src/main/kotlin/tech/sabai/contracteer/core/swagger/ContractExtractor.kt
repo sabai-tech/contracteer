@@ -8,18 +8,22 @@ import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.swagger.converter.SchemaConverter
 import java.lang.System.lineSeparator
 
 private val logger = KotlinLogging.logger {}
 
-internal fun OpenAPI.generateContracts(): Result<List<Contract>> =
-  paths
-    .flatMap { it.toSwaggerOperationContext() }
-    .combineResults()
-    .map { (it ?: emptyList()).flatten() }
-    .map { removeUnsupportedContracts(it!!) }
-    .map { logSuccess(it!!) }
-    .also { logIfFailure(it) }
+internal fun OpenAPI.generateContracts() =
+  SchemaConverter.setSharedSchemas(components.safeSchemas())
+    .let {
+      paths
+        .flatMap { it.toSwaggerOperationContext() }
+        .combineResults()
+        .map { (it ?: emptyList()).flatten() }
+        .map { removeUnsupportedContracts(it!!) }
+        .map { logSuccess(it!!) }
+        .also { logIfFailure(it) }
+    }
 
 private fun Map.Entry<String, PathItem>.toSwaggerOperationContext() =
   value.readOperationsMap().flatMap { (method, operation) ->

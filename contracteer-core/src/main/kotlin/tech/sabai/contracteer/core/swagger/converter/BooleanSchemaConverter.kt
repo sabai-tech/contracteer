@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.BooleanDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
-object BooleanSchemaConverter {
+internal object BooleanSchemaConverter {
   fun convert(schema: BooleanSchema) =
     BooleanDataType.create(
       name = schema.name,

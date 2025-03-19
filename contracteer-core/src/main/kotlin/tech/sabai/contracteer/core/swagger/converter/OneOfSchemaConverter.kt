@@ -4,22 +4,22 @@ import io.swagger.v3.oas.models.media.ComposedSchema
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.OneOfDataType
-import tech.sabai.contracteer.core.swagger.toContracteerDiscriminator
-import tech.sabai.contracteer.core.swagger.convertToDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
 object OneOfSchemaConverter {
-  fun convert(schema: ComposedSchema) =
+  fun convert(schema: ComposedSchema, recursiveDepth: Int) =
     if (schema.oneOf == null) failure("'anyOf' must be not null")
     else schema.oneOf
-      .map { it.convertToDataType() }
+      .mapIndexed { index, sub ->
+        SchemaConverter.convertToDataType(sub, "${schema.name} - allOf #$index", recursiveDepth - 1)
+      }
       .combineResults()
       .flatMap { subTypes ->
         OneOfDataType.create(
           name = schema.name,
           subTypes = subTypes!!,
-          discriminator = schema.toContracteerDiscriminator(),
+          discriminator = SchemaConverter.convertToDiscriminator(schema),
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum())
       }

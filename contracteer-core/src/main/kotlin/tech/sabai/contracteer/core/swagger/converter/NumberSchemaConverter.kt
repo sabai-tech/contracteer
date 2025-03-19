@@ -7,7 +7,7 @@ import tech.sabai.contracteer.core.swagger.safeExclusiveMaximum
 import tech.sabai.contracteer.core.swagger.safeExclusiveMinimum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
-object NumberSchemaConverter {
+internal object NumberSchemaConverter {
   fun convert(schema: NumberSchema) =
     NumberDataType.create(
       name = schema.name,
