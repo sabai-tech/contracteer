@@ -7,11 +7,12 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.safeProperties
 
 object ObjectSchemaConverter {
   fun convert(schema: ObjectSchema, recursiveDepth: Int): Result<ObjectDataType> {
     val propertyDataTypeResults =
-      schema.properties.mapValues { SchemaConverter.convertToDataType(it.value, recursiveDepth = recursiveDepth - 1) }
+      schema.safeProperties().mapValues { SchemaConverter.convertToDataType(it.value, recursiveDepth = recursiveDepth - 1) }
     return propertyDataTypeResults.values
       .combineResults()
       .flatMap {
