@@ -14,7 +14,7 @@ class BooleanDataType private constructor(name: String, isNullable: Boolean, all
 
   companion object {
     fun create(
-      name: String = "Inline 'boolean' Schema",
+      name: String,
       isNullable: Boolean = false,
       enum: List<Boolean?> = emptyList()
     ) =

@@ -69,7 +69,7 @@ class OneOfDataType private constructor(name: String,
     failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinToString { "'$it'" })
 
   companion object {
-    fun create(name: String = "Inline 'oneOf' Schema",
+    fun create(name: String,
                subTypes: List<DataType<out Any>>,
                discriminator: Discriminator? = null,
                isNullable: Boolean = false,
@@ -87,8 +87,8 @@ class OneOfDataType private constructor(name: String,
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
       when {
         discriminator == null                           -> success()
-        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'anyOf'")
-        else                                            -> accumulate { discriminator.validate(it) }.map { discriminator }
+        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'oneOf'")
+        else                                            -> accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
       }
 
     private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =

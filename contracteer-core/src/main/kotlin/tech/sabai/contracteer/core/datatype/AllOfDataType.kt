@@ -63,7 +63,7 @@ class AllOfDataType private constructor(name: String,
   }
 
   companion object {
-    fun create(name: String = "Inline 'allOf' Schema",
+    fun create(name: String,
                subTypes: List<DataType<Map<String, Any?>>>,
                isNullable: Boolean = false,
                discriminator: Discriminator? = null,
@@ -82,7 +82,7 @@ class AllOfDataType private constructor(name: String,
 
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?): Result<Discriminator> {
       if (discriminator == null) return success()
-      val results = map { discriminator.validate(it) }
+      val results = map { discriminator.validate(it).forProperty(it.name) }
       val successes = results.count { it.isSuccess() }
       return when {
         successes == 1 -> success(discriminator)

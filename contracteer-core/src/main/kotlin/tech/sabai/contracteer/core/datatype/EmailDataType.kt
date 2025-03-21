@@ -44,14 +44,14 @@ class EmailDataType private constructor(name: String,
 
   companion object {
     fun create(
-      name: String = "Inline 'string/email' Schema",
+      name: String,
       isNullable: Boolean = false,
       minLength: Int? = 6,
       maxLength: Int? = null,
       enum: List<String?> = emptyList(),
     ) =
       when {
-        (minLength != null && minLength < 6) || (maxLength != null && maxLength < 6) -> failure("schema '$name': 'minLength' and 'maxLength' must be at least 6 to form a valid email.")
+        (minLength != null && minLength < 6) || (maxLength != null && maxLength < 6) -> failure("'minLength' and 'maxLength' must be at least 6 to form a valid email.")
         else                                                                         ->
           Range.create((minLength ?: 6).toBigDecimal(), maxLength?.toBigDecimal())
             .flatMap { range ->
@@ -60,7 +60,6 @@ class EmailDataType private constructor(name: String,
               if (enum.isEmpty()) success(dataType)
               else AllowedValues.create(enum, dataType).map { EmailDataType(name, isNullable, range, it) }
             }
-            .mapErrors { "schema '$name': $it" }
       }
   }
 }

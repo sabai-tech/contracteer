@@ -10,27 +10,27 @@ import tech.sabai.contracteer.core.swagger.*
 
 @Suppress("UNCHECKED_CAST")
 internal object AllOfSchemaConverter {
-  fun convert(composedSchema: ComposedSchema, recursiveDepth: Int): Result<AllOfDataType> {
-    if (composedSchema.allOf == null) return failure("'allOf' must be defined.")
+  fun convert(schema: ComposedSchema, maxRecursiveDepth: Int): Result<AllOfDataType> {
+    if (schema.allOf == null) return failure("'allOf' must be defined.")
 
-    return composedSchema.allOf
+    return schema.allOf
       .mapIndexed { index, subSchema ->
-        SchemaConverter.convertToDataType(subSchema, "${composedSchema.name} - allOf #$index", recursiveDepth - 1)
+        SchemaConverter.convertToDataType(subSchema, "allOf #$index", maxRecursiveDepth - 1)
       }.combineResults()
       .flatMap { subDataTypes ->
-        val discriminators = composedSchema.allOf.mapNotNull { SchemaConverter.convertToDiscriminator(it) }
+        val discriminators = schema.allOf.mapNotNull { SchemaConverter.convertToDiscriminator(it) }
         when {
           subDataTypes!!.any { !it.isFullyStructured() } -> failure("Only 'object', 'allOf', 'anyOf' and 'oneOf' schemas are supported for 'allOf'")
           discriminators.size > 1                        -> failure("Only 1 discriminator is allowed")
           else                                           -> {
             AllOfDataType.create(
-              name = composedSchema.name,
+              name = schema.name,
               subTypes = subDataTypes.map { it as DataType<Map<String, Any?>> },
-              isNullable = composedSchema.safeNullable(),
+              isNullable = schema.safeNullable(),
               discriminator = discriminators.firstOrNull(),
-              enum = composedSchema.safeEnum())
+              enum = schema.safeEnum())
           }
         }
-      }
+      }.forProperty("${schema.name}")
   }
 }

@@ -70,6 +70,7 @@ class AllOfDataTypeTest {
     fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
       // when
       val result = AllOfDataType.create(
+        name = "allOf",
         subTypes = listOf(pet, cat),
         enum = listOf(
           mapOf("hunts" to true, "name" to "kitty", "age" to 1, "petType" to "cat"),

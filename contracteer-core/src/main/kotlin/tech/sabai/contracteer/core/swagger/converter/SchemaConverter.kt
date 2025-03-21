@@ -28,24 +28,15 @@ object SchemaConverter {
   }
 
   fun convertToDataType(schema: Schema<*>,
-                        defaultName: String = "Inline Schema",
+                        defaultName: String,
                         recursiveDepth: Int = RECURSIVE_MAX_DEPTH): Result<DataType<out Any>> {
     val ref = schema.shortRef()
     return when {
-      recursiveDepth < 0             ->
-        failure("Max recursive depth reached")
-
-      ref == null                    ->
-        convertSchema(schema, defaultName, recursiveDepth)
-
-      dataTypeCache.containsKey(ref) ->
-        success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
-
-      sharedSchemas.containsKey(ref) ->
-        convertSchema(sharedSchemas[ref]!!, ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
-
-      else                           ->
-        failure("Schema ${schema.`$ref`} not found")
+      recursiveDepth < 0             -> failure("Max recursive depth reached")
+      ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
+      dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
+      sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!, ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
+      else                           -> failure("Schema ${schema.`$ref`} not found")
     }
   }
 

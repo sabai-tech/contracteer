@@ -18,7 +18,7 @@ class NumberDataType private constructor(name: String,
 
   companion object {
     fun create(
-      name: String = "Inline 'number' Schema",
+      name: String,
       isNullable: Boolean = false,
       enum: List<BigDecimal?> = emptyList(),
       minimum: BigDecimal? = null,
@@ -35,6 +35,6 @@ class NumberDataType private constructor(name: String,
                 .create(enum, NumberDataType(name, isNullable, range!!))
                 .map { allowedValues -> NumberDataType(name, isNullable, range, allowedValues) }
           }
-        }.mapErrors { "schema '$name': $it" }
+        }
   }
 }

@@ -65,7 +65,7 @@ class AnyOfDataType private constructor(name: String,
     }.joinToString(separator = System.lineSeparator()))
 
   companion object {
-    fun create(name: String = "Inline 'anyOf' Schema",
+    fun create(name: String,
                subTypes: List<DataType<out Any>>,
                discriminator: Discriminator? = null,
                isNullable: Boolean = false,
@@ -84,7 +84,7 @@ class AnyOfDataType private constructor(name: String,
       when {
         discriminator == null                           -> success()
         namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'anyOf'")
-        else                                            -> accumulate { discriminator.validate(it) }.map { discriminator }
+        else                                            -> accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
       }
 
     private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =

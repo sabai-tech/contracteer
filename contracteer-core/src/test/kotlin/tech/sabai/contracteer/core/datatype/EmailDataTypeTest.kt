@@ -113,7 +113,7 @@ class EmailDataTypeTest {
     @Test
     fun `does not create when maxLength is negative`() {
       // when
-      val result = EmailDataType.create(maxLength = -1)
+      val result = EmailDataType.create(name = "email", maxLength = -1)
 
       // then
       assert(result.isFailure())
@@ -122,7 +122,7 @@ class EmailDataTypeTest {
     @Test
     fun `does not create when minLength is less than 6`() {
       // when
-      val result = EmailDataType.create(minLength = 3)
+      val result = EmailDataType.create(name = "email", minLength = 3)
 
       // then
       assert(result.isFailure())
@@ -130,7 +130,7 @@ class EmailDataTypeTest {
     @Test
     fun `defaults to 6 when minLength is null`() {
       // when
-      val result = EmailDataType.create(minLength = null)
+      val result = EmailDataType.create(name = "email", minLength = null)
 
       // then
       assert(result.isSuccess())

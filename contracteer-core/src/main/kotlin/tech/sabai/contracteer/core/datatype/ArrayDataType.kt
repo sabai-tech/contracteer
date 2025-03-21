@@ -19,7 +19,7 @@ class ArrayDataType private constructor(name: String,
     List((1..5).random()) { itemDataType.randomValue() }
 
   companion object {
-    fun create(name: String = "Inline 'array' Schema",
+    fun create(name: String ,
                itemDataType: DataType<out Any>,
                isNullable: Boolean = false,
                enum: List<Any?> = emptyList()) =

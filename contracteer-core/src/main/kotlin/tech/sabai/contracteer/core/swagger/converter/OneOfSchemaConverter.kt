@@ -8,11 +8,12 @@ import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
 object OneOfSchemaConverter {
-  fun convert(schema: ComposedSchema, recursiveDepth: Int) =
-    if (schema.oneOf == null) failure("'anyOf' must be not null")
+  fun convert(schema: ComposedSchema, maxRecursiveDepth: Int) =
+    if (schema.oneOf == null) failure("'oneOf' must be not null")
     else schema.oneOf
       .mapIndexed { index, sub ->
-        SchemaConverter.convertToDataType(sub, "${schema.name} - allOf #$index", recursiveDepth - 1)
+        val convertToDataType = SchemaConverter.convertToDataType(sub, "oneOf #$index", maxRecursiveDepth - 1)
+        convertToDataType
       }
       .combineResults()
       .flatMap { subTypes ->
@@ -21,6 +22,7 @@ object OneOfSchemaConverter {
           subTypes = subTypes!!,
           discriminator = SchemaConverter.convertToDiscriminator(schema),
           isNullable = schema.safeNullable(),
-          enum = schema.safeEnum())
-      }
+          enum = schema.safeEnum()
+        )
+      }.forProperty("${schema.name}")
 }

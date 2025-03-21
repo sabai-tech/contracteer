@@ -37,7 +37,7 @@ class DateTimeDataType private constructor(name: String, isNullable: Boolean, al
 
   companion object {
     fun create(
-      name: String = "Inline 'string/date-time' Schema",
+      name: String,
       isNullable: Boolean = false,
       enum: List<String?> = emptyList()
     ) =

@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import java.util.UUID.fromString
 import java.util.UUID.randomUUID
 
-class UuidDataType private constructor(name: String = "Inline 'string/uuid' Schema",
+class UuidDataType private constructor(name: String,
                                        isNullable: Boolean = false,
                                        allowedValues: AllowedValues? = null):
     DataType<String>(name, "string/uuid", isNullable, String::class.java, allowedValues) {
@@ -16,7 +16,7 @@ class UuidDataType private constructor(name: String = "Inline 'string/uuid' Sche
     try {
       fromString(value)
       success(value)
-    } catch (e: IllegalArgumentException) {
+    } catch (_: IllegalArgumentException) {
       failure("not a valid UUID")
     }
 

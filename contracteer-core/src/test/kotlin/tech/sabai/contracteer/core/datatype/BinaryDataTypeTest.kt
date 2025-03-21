@@ -33,7 +33,8 @@ class BinaryDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val binaryDataType = BinaryDataType.create(isNullable = true).value!!
+    val binaryDataType = BinaryDataType.create(
+      name = "binary", isNullable = true).value!!
 
     // when
     val result = binaryDataType.validate(null)
@@ -45,7 +46,7 @@ class BinaryDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val binaryDataType = BinaryDataType.create(isNullable = false).value!!
+    val binaryDataType = BinaryDataType.create(name = "binary", isNullable = false).value!!
 
     // when
     val result = binaryDataType.validate(null)
@@ -59,7 +60,7 @@ class BinaryDataTypeTest {
     @Test
     fun `does not create when enum length is not in the length range`() {
       // when
-      val result = BinaryDataType.create(minLength = 1, maxLength = 2, enum = listOf("aë<â¿á$(", "î¯X[äjr~H"))
+      val result = BinaryDataType.create(name = "binary", minLength = 1, maxLength = 2, enum = listOf("aë<â¿á$(", "î¯X[äjr~H"))
 
       // then
       assert(result.isFailure())
@@ -109,7 +110,7 @@ class BinaryDataTypeTest {
     @Test
     fun `does not create when maxLength is negative`() {
       // when
-      val result = BinaryDataType.create(maxLength = -1)
+      val result = BinaryDataType.create(name = "binary",maxLength = -1)
 
       // then
       assert(result.isFailure())

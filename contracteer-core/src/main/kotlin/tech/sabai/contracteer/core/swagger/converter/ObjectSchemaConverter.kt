@@ -10,9 +10,13 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 import tech.sabai.contracteer.core.swagger.safeProperties
 
 object ObjectSchemaConverter {
-  fun convert(schema: ObjectSchema, recursiveDepth: Int): Result<ObjectDataType> {
-    val propertyDataTypeResults =
-      schema.safeProperties().mapValues { SchemaConverter.convertToDataType(it.value, recursiveDepth = recursiveDepth - 1) }
+  fun convert(schema: ObjectSchema, maxRecursiveDepth: Int): Result<ObjectDataType> {
+    val propertyDataTypeResults = schema
+      .safeProperties()
+      .mapValues { (name, subSchema) ->
+        SchemaConverter.convertToDataType(subSchema, name, maxRecursiveDepth - 1)
+      }
+
     return propertyDataTypeResults.values
       .combineResults()
       .flatMap {
@@ -23,6 +27,6 @@ object ObjectSchemaConverter {
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum().map { it.normalize() }
         )
-      }
+      }.forProperty("${schema.name}")
   }
 }

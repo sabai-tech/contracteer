@@ -73,7 +73,11 @@ class Base64DataTypeTest {
     @Test
     fun `does not create when enum length is not in the length range`() {
       // when
-      val result = Base64DataType.create(minLength = 1, maxLength = 2, enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+      val result = Base64DataType.create(
+        name = "base64",
+        minLength = 1,
+        maxLength = 2,
+        enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
 
       // then
       assert(result.isFailure())
@@ -123,7 +127,8 @@ class Base64DataTypeTest {
     @Test
     fun `does not create when maxLength is negative`() {
       // when
-      val result = Base64DataType.create(maxLength = -1)
+      val result = Base64DataType.create(
+        name = "base64",maxLength = -1)
 
       // then
       assert(result.isFailure())
@@ -132,7 +137,8 @@ class Base64DataTypeTest {
     @Test
     fun `does not create when minLength is less than 4`() {
       // when
-      val result = Base64DataType.create(minLength = 3)
+      val result = Base64DataType.create(
+        name = "base64", minLength = 3)
 
       // then
       assert(result.isFailure())
@@ -141,7 +147,8 @@ class Base64DataTypeTest {
     @Test
     fun `does not create when minLength is not a multiple of 4`() {
       // when
-      val result = Base64DataType.create(minLength = 13)
+      val result = Base64DataType.create(
+        name = "base64",minLength = 13)
 
       // then
       assert(result.isFailure())
@@ -150,7 +157,8 @@ class Base64DataTypeTest {
     @Test
     fun `does not create when maxLength is not a multiple of 4`() {
       // when
-      val result = Base64DataType.create(maxLength = 11)
+      val result = Base64DataType.create(
+        name = "base64",maxLength = 11)
 
       // then
       assert(result.isFailure())

@@ -119,7 +119,7 @@ internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result
     requestBody.content
       .map { (contentType, mediaType) ->
         SchemaConverter
-          .convertToDataType(mediaType.schema, "Request body Inline Schema")
+          .convertToDataType(mediaType.schema, "")
           .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
       }.combineResults()
   } else success(emptyList())
@@ -128,7 +128,7 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
   if (content != null) {
     content.map { (contentType, mediaType) ->
       SchemaConverter
-        .convertToDataType(mediaType.schema, "Response body Inline Schema ")
+        .convertToDataType(mediaType.schema, "")
         .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
     }.combineResults()
   } else success(emptyList())
@@ -137,7 +137,7 @@ internal fun ApiResponse.generateResponseHeaders(exampleKey: String? = null) =
   safeHeaders()
     .map { (name, header) ->
       val example = header.contractExample(exampleKey)
-      SchemaConverter.convertToDataType(header.schema, "Response header '$name' Inline Schema ")
+      SchemaConverter.convertToDataType(header.schema, "")
         .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), example) }
     }.combineResults()
 
@@ -145,6 +145,6 @@ internal fun List<Parameter>.toContractParameters(exampleKey: String?): Result<L
   map { param ->
     val example = param.contractExample(exampleKey)
     SchemaConverter
-      .convertToDataType(param.schema, "Parameter '${param.name}' Inline Schema ")
+      .convertToDataType(param.schema, "").forProperty(param.name)
       .flatMap { ContractParameter.create(param.name, it!!, param.safeIsRequired(), example) }
   }.combineResults()

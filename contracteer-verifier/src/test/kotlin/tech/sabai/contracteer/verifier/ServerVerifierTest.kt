@@ -22,7 +22,7 @@ class ServerVerifierTest {
     request = ContractRequest(
       method = "GET",
       path = "/product/{id}",
-      pathParameters = listOf(pathParameter("id", IntegerDataType.create().value!!))),
+      pathParameters = listOf(pathParameter("id", IntegerDataType.create(name = "integer").value!!))),
     response = ContractResponse(
       statusCode = 200,
       body = body(contentType = ContentType("application/json"),

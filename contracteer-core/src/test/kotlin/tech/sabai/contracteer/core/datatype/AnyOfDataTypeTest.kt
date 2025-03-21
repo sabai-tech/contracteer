@@ -73,6 +73,7 @@ class AnyOfDataTypeTest {
     fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
       // when
       val result = AnyOfDataType.create(
+        name = "anyOf",
         subTypes = listOf(dog, cat, quantity, name),
         enum = listOf("John", 42, true)
       )
@@ -137,6 +138,7 @@ class AnyOfDataTypeTest {
     fun `creation fails when discriminator mapping references unknown sub datatype`() {
       // when
       val result = AnyOfDataType.create(
+        name = "anyOf",
         subTypes = listOf(dog, cat),
         discriminator = Discriminator("type",
                                       mapOf("DOG" to "lizard")
@@ -150,6 +152,7 @@ class AnyOfDataTypeTest {
     fun `creation fails when discriminator is provided and not all sub datatypes are composite structured`() {
       // when
       val result = AnyOfDataType.create(
+        name = "anyOf",
         subTypes = listOf(dog, cat, quantity, name),
         discriminator = Discriminator("type")
       )
@@ -162,6 +165,7 @@ class AnyOfDataTypeTest {
     fun `creation succeeds when sub datatypes are a composite structured datatype`() {
       // when
       val result = AnyOfDataType.create(
+        name = "anyOf",
         subTypes = listOf(
           dog,
           anyOfDataType(

@@ -29,7 +29,7 @@ class DateDataType private constructor(name: String, isNullable: Boolean, allowe
 
   companion object {
     fun create(
-      name: String = "Inline 'string/date' Schema",
+      name: String,
       isNullable: Boolean = false,
       enum: List<String?> = emptyList()
     ) =

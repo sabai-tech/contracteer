@@ -126,7 +126,7 @@ class IntegerDataTypeTest {
     @Test
     fun `creation fails when range boundaries are non-integer`() {
       // when
-      val result = IntegerDataType.create(minimum = 10.1.toBigDecimal(), maximum = 11.2.toBigDecimal())
+      val result = IntegerDataType.create(name = "integer", minimum = 10.1.toBigDecimal(), maximum = 11.2.toBigDecimal())
 
       // then
       assert(result.isFailure())

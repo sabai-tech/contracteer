@@ -24,20 +24,20 @@ class BinaryDataType private constructor(name: String,
 
   companion object {
     fun create(
-      name: String = "Inline 'string/binary' Schema",
+      name: String,
       isNullable: Boolean = false,
       enum: List<String?> = emptyList(),
       minLength: Int? = 0,
       maxLength: Int? = null,
     ) =
       if ((minLength != null && minLength < 0) || (maxLength != null && maxLength < 0))
-        failure("schema '$name': 'minLength' and 'maxlength' must be equal or greater than zero.")
+        failure("'minLength' and 'maxlength' must be equal or greater than zero.")
       else
         Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
           .flatMap { range ->
             val dataType = BinaryDataType(name, isNullable, range!!)
             if (enum.isEmpty()) success(dataType)
             else AllowedValues.create(enum, dataType).map { BinaryDataType(name, isNullable, range, it) }
-          }.mapErrors { "schema '$name': $it" }
+          }
   }
 }

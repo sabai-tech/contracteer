@@ -88,8 +88,7 @@ class ContractExtractorTest {
     assert(contract.request.body != null)
     assert(contract.request.body!!.contentType.value == "application/json")
     assert(contract.request.body.dataType is ObjectDataType)
-    assert((contract.request.body.dataType as ObjectDataType).name == "Request body Inline Schema")
-    assert((contract.request.body.dataType).properties["prop1"] is StringDataType)
+    assert((contract.request.body.dataType as ObjectDataType).properties["prop1"] is StringDataType)
 
     //   Response
     assert(contract.response.statusCode == 200)

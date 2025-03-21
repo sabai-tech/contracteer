@@ -59,7 +59,12 @@ class StringDataTypeTest {
     @Test
     fun `does not create when enum length is not in the length range`() {
       // when
-      val result = StringDataType.create(openApiType = "string", minLength = 1, maxLength = 2, enum = listOf("ABC", "DEF"))
+      val result = StringDataType.create(
+        name = "string",
+        openApiType = "string",
+        minLength = 1,
+        maxLength = 2,
+        enum = listOf("ABC", "DEF"))
 
       // then
       assert(result.isFailure())
@@ -109,7 +114,7 @@ class StringDataTypeTest {
     @Test
     fun `does not create when maxLength is negative`() {
       // when
-      val result = StringDataType.create(openApiType = "string", maxLength = -1)
+      val result = StringDataType.create(name = "string", openApiType = "string", maxLength = -1)
 
       // then
       assert(result.isFailure())

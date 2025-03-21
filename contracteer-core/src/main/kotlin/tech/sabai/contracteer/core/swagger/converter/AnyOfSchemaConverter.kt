@@ -9,11 +9,11 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 
 internal object AnyOfSchemaConverter {
 
-  fun convert(schema: ComposedSchema, recursiveDepth: Int) =
+  fun convert(schema: ComposedSchema, maxRecursiveDepth: Int) =
     if (schema.anyOf == null) failure("'anyOf' must be not null")
     else schema.anyOf
       .mapIndexed { index, sub ->
-        SchemaConverter.convertToDataType(sub, "${schema.name} - anyOf #$index", recursiveDepth - 1)
+        SchemaConverter.convertToDataType(sub, "anyOf #$index", maxRecursiveDepth - 1)
       }
       .combineResults()
       .flatMap { subTypes ->
@@ -22,6 +22,7 @@ internal object AnyOfSchemaConverter {
           subTypes = subTypes!!,
           discriminator = SchemaConverter.convertToDiscriminator(schema),
           isNullable = schema.safeNullable(),
-          enum = schema.safeEnum())
-      }
+          enum = schema.safeEnum()
+        )
+      }.forProperty("${schema.name}")
 }

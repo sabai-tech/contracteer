@@ -7,9 +7,9 @@ import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeNullable
 
 internal object ArraySchemaConverter {
-  fun convert(schema: ArraySchema, recursiveDepth: Int) =
+  fun convert(schema: ArraySchema, maxRecursiveDepth: Int) =
     SchemaConverter
-      .convertToDataType(schema.items, recursiveDepth = recursiveDepth - 1)
+      .convertToDataType(schema.items, schema.name, maxRecursiveDepth - 1)
       .flatMap { itemDataType ->
         ArrayDataType.create(
           name = schema.name,

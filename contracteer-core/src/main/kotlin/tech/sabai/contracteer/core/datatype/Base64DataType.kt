@@ -60,14 +60,14 @@ class Base64DataType private constructor(name: String,
 
   companion object {
     fun create(
-      name: String = "Inline 'string/byte' Schema",
+      name: String,
       isNullable: Boolean = false,
       enum: List<String?> = emptyList(),
       minLength: Int? = 4,
       maxLength: Int? = null) =
       when {
-        (minLength != null && minLength < 4) || (maxLength != null && maxLength < 4)           -> failure("schema '$name': 'minLength' and 'maxLength' must be at least 4 for Base64 encoded strings.")
-        (minLength != null && minLength % 4 != 0) || (maxLength != null && maxLength % 4 != 0) -> failure("schema '$name': 'minLength' and 'maxLength' must be multiples of 4 for Base64 encoded strings.")
+        (minLength != null && minLength < 4) || (maxLength != null && maxLength < 4)           -> failure("'minLength' and 'maxLength' must be at least 4 for Base64 encoded strings.")
+        (minLength != null && minLength % 4 != 0) || (maxLength != null && maxLength % 4 != 0) -> failure("'minLength' and 'maxLength' must be multiples of 4 for Base64 encoded strings.")
         else                                                                                   ->
           Range.create((minLength ?: 4).toBigDecimal(), maxLength?.toBigDecimal())
             .flatMap { range ->
@@ -75,7 +75,6 @@ class Base64DataType private constructor(name: String,
               if (enum.isEmpty()) success(dataType)
               else AllowedValues.create(enum, dataType).map { Base64DataType(name, isNullable, range, it) }
             }
-            .mapErrors { "schema '$name': $it" }
       }
   }
 }

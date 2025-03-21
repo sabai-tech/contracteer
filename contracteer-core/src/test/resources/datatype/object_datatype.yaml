@@ -26,6 +26,7 @@ paths:
                   - name: "john"
                     age: 30
                   - name: "jane"
+                  additionalProperties: false
       responses:
         200:
           description: OK

@@ -154,7 +154,8 @@ class ObjectDataTypeTest {
     @Test
     fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
       // when
-      val result = ObjectDataType.create(properties = mapOf("prop" to integerDataType(), "prop2" to integerDataType()),
+      val result = ObjectDataType.create(name = "object",
+                                         properties = mapOf("prop" to integerDataType(), "prop2" to integerDataType()),
                                          requiredProperties = setOf("prop2"),
                                          enum = listOf(mapOf("prop" to 1, "prop2" to "2"), mapOf("prop" to 2)))
 

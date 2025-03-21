@@ -36,7 +36,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' is missing"))
+    assert(result.errors().first().contains("'type' must be defined as required"))
   }
 
   @Test
@@ -53,7 +53,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' is missing"))
+    assert(result.errors().first().contains("'type' must be defined as required"))
   }
 
   @Test
@@ -154,7 +154,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' is missing"))
+    assert(result.errors().first().contains("'type' must be defined as required"))
   }
 
   @Test
@@ -199,7 +199,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' is missing"))
+    assert(result.errors().first().contains("'type' must be defined as required"))
   }
 
   @Test

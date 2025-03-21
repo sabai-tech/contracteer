@@ -36,7 +36,7 @@ class ObjectDataType private constructor(name: String,
 
   companion object {
     fun create(
-      name: String = "Inline 'object' Schema",
+      name: String,
       properties: Map<String, DataType<out Any>>,
       requiredProperties: Set<String> = emptySet(),
       isNullable: Boolean = false,
@@ -46,7 +46,7 @@ class ObjectDataType private constructor(name: String,
 
       return if (undefinedProperties.isNotEmpty()) {
         failure(
-          "Schema '${name}' contains required properties which are undefined: " +
+          "undefined required properties: " +
           undefinedProperties.joinToString("', '", "'", "'")
         )
       } else {
