@@ -35,7 +35,7 @@ object SchemaConverter {
       recursiveDepth < 0             -> failure("Max recursive depth reached")
       ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
-      sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!, ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
+      sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!,ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
       else                           -> failure("Schema ${schema.`$ref`} not found")
     }
   }
@@ -67,6 +67,7 @@ object SchemaConverter {
       is DateTimeSchema                          -> DateTimeSchemaConverter.convert(schema)
       is EmailSchema                             -> EmailSchemaConverter.convert(schema)
       is IntegerSchema                           -> IntegerSchemaConverter.convert(schema)
+      is MapSchema                               -> MapSchemaConverter.convert(schema, recursiveDepth)
       is NumberSchema                            -> NumberSchemaConverter.convert(schema)
       is StringSchema                            -> StringSchemaConverter.convert(schema, "string")
       is ObjectSchema                            -> ObjectSchemaConverter.convert(schema, recursiveDepth)

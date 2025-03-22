@@ -84,7 +84,7 @@ internal fun Schema<*>.shortRef() =
   this.`$ref`?.replace(COMPONENTS_SCHEMAS_REF, "")
 
 internal fun Schema<*>.safeProperties() =
-  properties?:emptyMap()
+  properties ?: emptyMap()
 
 internal fun Components?.safeSchemas() =
   this?.schemas ?: emptyMap()

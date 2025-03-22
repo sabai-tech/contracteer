@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.joinWithQuotes
 
 class OneOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
@@ -66,7 +67,7 @@ class OneOfDataType private constructor(name: String,
 
 
   private fun buildMultipleMatchError(dataTypeSuccess: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
-    failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinToString { "'$it'" })
+    failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinWithQuotes())
 
   companion object {
     fun create(name: String,
@@ -88,7 +89,8 @@ class OneOfDataType private constructor(name: String,
       when {
         discriminator == null                           -> success()
         namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'oneOf'")
-        else                                            -> accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
+        else                                            ->
+          accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
       }
 
     private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =

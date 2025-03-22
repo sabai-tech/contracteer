@@ -79,9 +79,18 @@ object TestFixture {
   fun objectDataType(name: String = "object",
                      properties: Map<String, DataType<out Any>>,
                      requiredProperties: Set<String> = emptySet(),
+                     allowAdditionalProperties: Boolean = true,
                      isNullable: Boolean = false,
                      enum: List<Any?> = emptyList()) =
-    ObjectDataType.create(name, properties, requiredProperties, isNullable, enum).value!!
+    ObjectDataType.create(name, properties, requiredProperties, allowAdditionalProperties, isNullable, enum).value!!
+
+  fun mapDataType(name: String = "object",
+                     properties: Set<String> = emptySet(),
+                     requiredProperties: Set<String> = emptySet(),
+                     valueDatatype: DataType<out Any>,
+                     isNullable: Boolean = false,
+                     enum: List<Any?> = emptyList()) =
+    MapDataType.create(name, properties, requiredProperties, valueDatatype, isNullable, enum).value!!
 
   fun oneOfDataType(name: String = "oneOf",
                     subTypes: List<DataType<out Any>>,

@@ -17,5 +17,5 @@ internal object ArraySchemaConverter {
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum().map { it.normalize() }
         )
-      }
+      }.forProperty(schema.name)
 }

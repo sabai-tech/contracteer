@@ -12,8 +12,7 @@ object OneOfSchemaConverter {
     if (schema.oneOf == null) failure("'oneOf' must be not null")
     else schema.oneOf
       .mapIndexed { index, sub ->
-        val convertToDataType = SchemaConverter.convertToDataType(sub, "oneOf #$index", maxRecursiveDepth - 1)
-        convertToDataType
+        SchemaConverter.convertToDataType(sub, "oneOf #$index", maxRecursiveDepth - 1)
       }
       .combineResults()
       .flatMap { subTypes ->

@@ -24,5 +24,5 @@ internal object AnyOfSchemaConverter {
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum()
         )
-      }.forProperty("${schema.name}")
+      }.forProperty(schema.name)
 }

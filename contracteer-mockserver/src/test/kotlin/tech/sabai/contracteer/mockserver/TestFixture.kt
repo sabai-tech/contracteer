@@ -18,9 +18,10 @@ object TestFixture {
 
   fun objectDataType(properties: Map<String, DataType<out Any>>,
                      requiredProperties: Set<String> = emptySet(),
+                     additionalProperties: Boolean = true,
                      isNullable: Boolean = false,
                      enum: List<Any?> = emptyList()) =
-    ObjectDataType.create("object", properties, requiredProperties, isNullable, enum).value!!
+    ObjectDataType.create("object", properties, requiredProperties, additionalProperties, isNullable, enum).value!!
 
   fun stringDataType(isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),

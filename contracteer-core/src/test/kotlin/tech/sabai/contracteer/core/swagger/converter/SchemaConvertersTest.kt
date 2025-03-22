@@ -175,9 +175,25 @@ class SchemaConvertersTest {
     assert(objectDataType.properties["name"]!! is StringDataType)
     assert(objectDataType.properties["age"]!! is IntegerDataType)
     assert(objectDataType.requiredProperties == setOf("name"))
+    assert(objectDataType.allowAdditionalProperties == false)
     assert(objectDataType.allowedValues != null)
     assert(objectDataType.allowedValues!!.contains(mapOf("name" to "john", "age" to 30)).isSuccess())
     assert(objectDataType.allowedValues.contains(mapOf("name" to "jane")).isSuccess())
+  }
+
+  @Test
+  fun `extract MapDataType`() {
+    // when
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/datatype/map_datatype.yaml")
+    val mapDataType = getDataType(contractResults) as MapDataType
+
+    // then
+    assert(mapDataType.properties == setOf("name"))
+    assert(mapDataType.requiredProperties == setOf("name"))
+    assert(mapDataType.valueDataType is StringDataType)
+    assert(mapDataType.allowedValues != null)
+    assert(mapDataType.allowedValues!!.contains(mapOf("name" to "john", "lastname" to "doe")).isSuccess())
+    assert(mapDataType.allowedValues.contains(mapOf("name" to "jane", "email" to "jane@doe.com")).isSuccess())
   }
 
   @Test

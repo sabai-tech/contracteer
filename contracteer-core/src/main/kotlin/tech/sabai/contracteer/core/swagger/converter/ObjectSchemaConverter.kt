@@ -24,9 +24,10 @@ object ObjectSchemaConverter {
           name = schema.name,
           properties = propertyDataTypeResults.mapValues { it.value.value!! },
           requiredProperties = schema.required?.toSet() ?: emptySet(),
+          allowAdditionalProperties = (schema.additionalProperties as Boolean?) != false,
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum().map { it.normalize() }
         )
-      }.forProperty("${schema.name}")
+      }.forProperty(schema.name)
   }
 }

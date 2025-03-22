@@ -15,6 +15,8 @@ class ObjectDataTypeTest {
     val result = ObjectDataType.create(name = "cat",
                                        properties = mapOf("hunts" to booleanDataType(),
                                                           "age" to integerDataType()),
+                                       allowAdditionalProperties = false,
+                                       isNullable = false,
                                        requiredProperties = setOf("hunts", "age", "type"))
     // then
     assert(result.isFailure())
@@ -148,6 +150,18 @@ class ObjectDataTypeTest {
     assert(listOf("is required", "prop").all { result.errors().first().contains(it) })
   }
 
+  @Test
+  fun `validation fails when extra properties are provided and additionalProperties is disabled`() {
+    // given
+    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()), allowAdditionalProperties = false)
+
+    // when
+    val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to 2, "prop3" to 3))
+
+    // then
+    assert(result.isFailure())
+  }
+
   @Nested
   inner class WithEnum {
 
@@ -157,6 +171,8 @@ class ObjectDataTypeTest {
       val result = ObjectDataType.create(name = "object",
                                          properties = mapOf("prop" to integerDataType(), "prop2" to integerDataType()),
                                          requiredProperties = setOf("prop2"),
+                                         allowAdditionalProperties = true,
+                                         isNullable = false,
                                          enum = listOf(mapOf("prop" to 1, "prop2" to "2"), mapOf("prop" to 2)))
 
       // then

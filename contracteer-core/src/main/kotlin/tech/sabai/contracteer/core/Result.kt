@@ -72,11 +72,13 @@ class Result<out T> private constructor(
 
     fun errorMessage() = if (path.isEmpty()) error else "'$path': $error"
 
-    private fun buildPath(propertyName: String) = when {
-      path.isEmpty()       -> propertyName
-      path.startsWith("[") -> "$propertyName${path}"
-      else                 -> "$propertyName.${path}"
-    }
+    private fun buildPath(propertyName: String) =
+      when {
+        propertyName.isEmpty() -> path
+        path.isEmpty()         -> propertyName
+        path.startsWith("[")   -> "$propertyName${path}"
+        else                   -> "$propertyName.${path}"
+      }
   }
 }
 
