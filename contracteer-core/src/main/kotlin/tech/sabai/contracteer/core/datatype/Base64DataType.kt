@@ -17,12 +17,9 @@ class Base64DataType private constructor(name: String,
   override fun isFullyStructured() = false
 
   override fun doValidate(value: String) =
-    lengthRange.contains(value.length.toBigDecimal()).let { result ->
-      if (result.isFailure()) {
-        result
-          .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
-          .retypeError()
-      } else
+    lengthRange.contains(value.length.toBigDecimal())
+      .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
+      .andThen {
         try {
           Base64.getDecoder().decode(value)
           success(value)

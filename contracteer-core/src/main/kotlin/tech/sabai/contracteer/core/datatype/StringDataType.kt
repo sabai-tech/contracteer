@@ -18,8 +18,8 @@ class StringDataType private constructor(name: String,
   override fun doValidate(value: String) =
     lengthRange
       .contains(value.length.toBigDecimal())
-      .map { value }
       .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
+      .map { value }
 
   override fun doRandomValue(): String =
     (1..lengthRange.randomIntegerValue().toLong().absoluteValue.coerceAtMost(10))

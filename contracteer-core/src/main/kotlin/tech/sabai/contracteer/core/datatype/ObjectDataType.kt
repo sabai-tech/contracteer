@@ -26,11 +26,11 @@ class ObjectDataType private constructor(name: String,
     return if (extraProperties.isNotEmpty() && !allowAdditionalProperties)
       failure("additional properties are not allowed. Unexpected properties: " + extraProperties.joinWithQuotes())
     else
-      properties.accumulate {
+      properties.accumulate { (property, dataType) ->
         when {
-          !value.containsKey(it.key) && !isRequired(it.key) -> success(value)
-          !value.containsKey(it.key)                        -> failure(it.key, "is required")
-          else                                              -> it.value.validate(value[it.key]).forProperty(it.key)
+          !value.containsKey(property) && !isRequired(property) -> success(value)
+          !value.containsKey(property)                          -> failure(property, "is required")
+          else                                                  -> dataType.validate(value[property]).forProperty(property)
         }
       }.map { value }
   }

@@ -13,25 +13,23 @@ class EmailDataType private constructor(name: String,
   private val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
   private val emailRegex =
-    ("^(?:[a-zA-Z0-9!#\$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#\$%&'*+/=?^_`{|}~-]+)*|" +
+    ("^(?:[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+)*|" +
      "\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|" +
      "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@" +
      "(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+[a-zA-Z]{2,}|" +
      "\\[(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})\\.){3}" +
      "(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2}|[a-zA-Z0-9-]*[a-zA-Z0-9]:" +
      "(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|" +
-     "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+))\$").toRegex()
+     "\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+))$").toRegex()
 
   override fun isFullyStructured() = false
 
-  override fun doValidate(value: String): Result<String> =
-    lengthRange.contains(value.length.toBigDecimal()).let { result ->
-      when {
-        result.isFailure()        -> result.mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
-        emailRegex.matches(value) -> success(value)
-        else                      -> failure<Any>("not a valid email")
-      }.retypeError()
-    }
+  override fun doValidate(value: String) =
+    lengthRange.contains(value.length.toBigDecimal())
+      .mapErrors { "Invalid string length: ${value.length}. Expected length within ${lengthRange}." }
+      .andThen<String> {
+        if (emailRegex.matches(value)) success(value) else failure("not a valid email")
+      }
 
   override fun doRandomValue(): String {
     val length = lengthRange.randomIntegerValue().toLong().coerceAtMost(50)
