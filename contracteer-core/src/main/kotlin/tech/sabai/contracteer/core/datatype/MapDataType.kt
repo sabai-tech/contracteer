@@ -32,7 +32,7 @@ class MapDataType private constructor(name: String,
 
   override fun doRandomValue(): Map<String, Any> {
     val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-    return (0..Random.nextInt(1000000)).associate {
+    return (0..Random.nextInt(10)).associate {
       (1..Random.nextInt(10) + 1).map { candidateChars.random() }.joinToString("") to valueDataType.randomValue()
     }.plus(
       requiredProperties.associate { it to valueDataType.randomValue() }
