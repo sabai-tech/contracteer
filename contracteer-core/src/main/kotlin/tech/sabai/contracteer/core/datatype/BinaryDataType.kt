@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.datatype
 
-import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 class BinaryDataType private constructor(name: String,
@@ -13,14 +13,14 @@ class BinaryDataType private constructor(name: String,
 
   override fun isFullyStructured() = false
 
-  override fun doValidate(value: String): Result<String> =
+  override fun doValidate(value: String) =
     lengthRange
       .contains(value.length.toBigDecimal())
-      .map { value }
       .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
+      .map { value }
 
   override fun doRandomValue(): String =
-    ByteArray(lengthRange.randomIntegerValue().toInt().coerceAtMost(100)).also { Random.nextBytes(it) }.toString(Charsets.ISO_8859_1)
+    ByteArray(lengthRange.randomIntegerValue().toInt().absoluteValue.coerceAtMost(100)).also { Random.nextBytes(it) }.toString(Charsets.ISO_8859_1)
 
   companion object {
     fun create(
