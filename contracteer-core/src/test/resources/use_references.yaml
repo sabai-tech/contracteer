@@ -1,0 +1,76 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products/{id}:
+    parameters:
+      - $ref: "#/components/parameters/id"
+    get:
+      requestBody:
+        $ref: "#/components/requestBodies/get_request_body"
+
+      responses:
+        200:
+          $ref: "#/components/responses/ok"
+components:
+  schemas:
+    product_details:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+      examples:
+        GET_DETAILS:
+          $ref: "#/components/examples/get_details_request"
+  requestBodies:
+    get_request_body:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              prop1:
+                type: string
+  responses:
+    ok:
+      description: Product details
+      headers:
+        x-optional:
+          schema:
+            type: integer
+          examples:
+            GET_DETAILS:
+              $ref: "#/components/examples/get_details_response_header"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/product_details"
+          examples:
+            GET_DETAILS:
+              $ref: "#/components/examples/product_details_response"
+  examples:
+    get_details_request:
+      value: 999
+    get_details_response_header:
+      value: 999
+    product_details_response:
+      value:
+        id: 999
+        name: "product"
+        quantity: 12
+
+

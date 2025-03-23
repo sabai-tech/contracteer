@@ -22,7 +22,7 @@ class StringDataType private constructor(name: String,
       .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
 
   override fun doRandomValue(): String =
-    (0..lengthRange.randomIntegerValue().toLong().absoluteValue.coerceAtMost(10))
+    (1..lengthRange.randomIntegerValue().toLong().absoluteValue.coerceAtMost(10))
       .map { candidateChars.random() }
       .joinToString("")
 

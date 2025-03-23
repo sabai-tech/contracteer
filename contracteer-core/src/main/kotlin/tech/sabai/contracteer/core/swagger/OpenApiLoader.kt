@@ -36,7 +36,7 @@ object OpenApiLoader {
   private fun parse(content: String): Result<OpenAPI> {
     val parseResult = OpenAPIV3Parser().readContents(content, emptyList(), ParseOptions().apply { isResolve = true })
     return when {
-      parseResult == null               -> failure("Failed to parse OpenAPI 3 Definition content")
+      parseResult == null               -> failure("Failed to parse OpenAPI 3 Definition")
       parseResult.messages.isNotEmpty() -> failure(*parseResult.messages.toTypedArray())
       else                              -> success(parseResult.openAPI)
     }

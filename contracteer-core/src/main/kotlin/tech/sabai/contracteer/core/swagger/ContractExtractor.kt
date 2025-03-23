@@ -8,14 +8,17 @@ import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.swagger.converter.SchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.example.ExampleConverter
+import tech.sabai.contracteer.core.swagger.converter.parameter.ParameterConverter
+import tech.sabai.contracteer.core.swagger.converter.requestbody.RequestBodyConverter
 import java.lang.System.lineSeparator
 
 private val logger = KotlinLogging.logger {}
 
 internal fun OpenAPI.generateContracts() =
-  SchemaConverter.setSharedSchemas(components.safeSchemas())
-    .let {
+  initSharedComponents()
+    .run {
       paths
         .flatMap { it.toSwaggerOperationContext() }
         .combineResults()
@@ -25,12 +28,28 @@ internal fun OpenAPI.generateContracts() =
         .also { logIfFailure(it) }
     }
 
+private fun OpenAPI.initSharedComponents() {
+  SchemaConverter.setSharedSchemas(components.safeSchemas())
+  ParameterConverter.sharedParameters = components.safeParameters()
+  RequestBodyConverter.sharedRequestBodies = components.safeRequestBodies()
+  ExampleConverter.setSharedExamples(components.safeExamples())
+  ApiResponseResolver.sharedApiResponses = components.safeResponses()
+}
+
 private fun Map.Entry<String, PathItem>.toSwaggerOperationContext() =
-  value.readOperationsMap().flatMap { (method, operation) ->
-    operation.responses.map { (code, response) ->
-      SwaggerOperationContext(key, method, operation, code, response).generateContracts()
+  value.readOperationsMap()
+    .flatMap { (method, operation) ->
+      operation
+        .responses
+        .map { (code, response) ->
+          ApiResponseResolver.resolveResponse(response).flatMap {
+            SwaggerOperationContext(key, method, operation, code, it!!).generateContracts()
+          }
+        }
     }
-  }
+
+private fun removeUnsupportedContracts(contracts: List<Contract>): List<Contract>? =
+  contracts.filter { !it.hasUnsupportedContentType() && !it.hasUnsupportedParameters() }
 
 private fun logIfFailure(result: Result<List<Contract>>) {
   if (result.isFailure()) {
@@ -39,9 +58,6 @@ private fun logIfFailure(result: Result<List<Contract>>) {
     }
   }
 }
-
-private fun removeUnsupportedContracts(contracts: List<Contract>): List<Contract>? =
-  contracts.filter { !it.hasUnsupportedContentType() && !it.hasUnsupportedParameters() }
 
 private fun Contract.hasUnsupportedContentType(): Boolean {
   val isUnsupportedResponseContentType = response.body?.contentType?.value == "application/xml"
@@ -82,5 +98,3 @@ private fun logSuccess(contracts: List<Contract>) =
       }
     }
   }
-
-

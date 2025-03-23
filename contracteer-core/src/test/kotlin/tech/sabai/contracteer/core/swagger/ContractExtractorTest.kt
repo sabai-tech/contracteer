@@ -54,6 +54,39 @@ class ContractExtractorTest {
   }
 
   @Test
+  fun `supports $ref`() {
+    // when
+    val contractResults = OpenApiLoader.loadContracts("src/test/resources/use_references.yaml")
+    val contract = contractResults.value!!.first()
+
+    // then
+    assert(contractResults.value.size == 1)
+    //   Request
+    assert(contract.request.method == "GET")
+    assert(contract.request.path == "/products/{id}")
+
+    //    Parameters
+    assert(contract.request.pathParameters.size == 1)
+    assert(contract.request.pathParameters.first().name == "id")
+    assert(contract.request.pathParameters.first().isRequired)
+    assert(contract.request.pathParameters.first().dataType is IntegerDataType)
+    assert(contract.request.pathParameters.first().example!!.normalizedValue == 999.normalize())
+
+    // Body
+    assert(contract.request.body != null)
+    assert(contract.request.body!!.contentType.value == "application/json")
+    assert(contract.request.body.dataType is ObjectDataType)
+    assert((contract.request.body.dataType as ObjectDataType).properties["prop1"] is StringDataType)
+
+    //   Response
+    assert(contract.response.statusCode == 200)
+    //      Headers
+    assert(contract.response.headers.asMap()["x-optional"]!!.isRequired.not())
+    assert(contract.response.headers.asMap()["x-optional"]!!.dataType is IntegerDataType)
+    assert(contract.response.headers.asMap()["x-optional"]!!.example!!.normalizedValue == 999.normalize())
+  }
+
+  @Test
   fun `auto generated contract for 2xx status code`() {
     // when
     val contractResults = OpenApiLoader.loadContracts("src/test/resources/2xx_auto_generated_contract.yaml")

@@ -17,14 +17,19 @@ import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.contract.Body
 import tech.sabai.contracteer.core.contract.ContentType
 import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.Example
-import tech.sabai.contracteer.core.swagger.converter.SchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
+import tech.sabai.contracteer.core.swagger.converter.example.ExampleConverter
+import tech.sabai.contracteer.core.swagger.converter.parameter.ParameterConverter
+import tech.sabai.contracteer.core.swagger.converter.requestbody.RequestBodyConverter
 
 internal fun MediaType.safeExamples() =
   examples ?: emptyMap()
 
-internal fun MediaType.contractExample(exampleKey: String?): Example? =
-  exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
+internal fun MediaType.contractExample(exampleKey: String?) =
+  if (exampleKey == null || !safeExamples().keys.contains(exampleKey))
+    success()
+  else
+    ExampleConverter.convert(safeExamples()[exampleKey]!!)
 
 internal fun Parameter.safeExamples() =
   examples ?: emptyMap()
@@ -32,17 +37,17 @@ internal fun Parameter.safeExamples() =
 internal fun Parameter.safeIsRequired() =
   required ?: false
 
-internal fun Parameter.contractExample(exampleKey: String?): Example? =
-  exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
-
 internal fun Header.safeExamples() =
   examples ?: emptyMap()
 
 internal fun Header.safeIsRequired() =
   required ?: false
 
-internal fun Header.contractExample(exampleKey: String?): Example? =
-  exampleKey?.let { safeExamples()[exampleKey]?.let { Example(it.value) } }
+internal fun Header.contractExample(exampleKey: String?) =
+  if (exampleKey == null || !safeExamples().keys.contains(exampleKey))
+    success()
+  else
+    ExampleConverter.convert(safeExamples()[exampleKey]!!)
 
 internal fun List<Parameter>.exampleKeys() =
   flatMap { it.safeExamples().keys }.toSet()
@@ -89,6 +94,18 @@ internal fun Schema<*>.safeProperties() =
 internal fun Components?.safeSchemas() =
   this?.schemas ?: emptyMap()
 
+internal fun Components?.safeParameters() =
+  this?.parameters ?: emptyMap()
+
+internal fun Components?.safeRequestBodies() =
+  this?.requestBodies ?: emptyMap()
+
+internal fun Components?.safeExamples() =
+  this?.examples ?: emptyMap()
+
+internal fun Components?.safeResponses() =
+  this?.responses ?: emptyMap()
+
 internal fun Discriminator.safeMapping() =
   mapping ?: emptyMap()
 
@@ -97,54 +114,54 @@ internal fun Operation.generatePathParameters(exampleKey: String? = null) =
     .filter { it.`in` == "path" }
     .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
     .combineResults()
-    .flatMap { it!!.toContractParameters(exampleKey) }
+    .flatMap { it!!.map { ParameterConverter.convert(it, exampleKey) }.combineResults() }
 
 internal fun Operation.generateQueryParameters(exampleKey: String? = null) =
   safeParameters()
     .filter { it.`in` == "query" }
-    .toContractParameters(exampleKey)
+    .map { ParameterConverter.convert(it, exampleKey) }
+    .combineResults()
 
 internal fun Operation.generateRequestHeaders(exampleKey: String? = null) =
   safeParameters()
     .filter { it.`in` == "header" }
-    .toContractParameters(exampleKey)
+    .map { ParameterConverter.convert(it, exampleKey) }
+    .combineResults()
 
 internal fun Operation.generateRequestCookies(exampleKey: String? = null) =
   safeParameters()
     .filter { it.`in` == "cookie" }
-    .toContractParameters(exampleKey)
+    .map { ParameterConverter.convert(it, exampleKey) }
+    .combineResults()
 
-internal fun Operation.generateRequestBodies(exampleKey: String? = null): Result<List<Body>> =
-  if (requestBody?.content != null) {
-    requestBody.content
-      .map { (contentType, mediaType) ->
-        SchemaConverter
-          .convertToDataType(mediaType.schema, "")
-          .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
-      }.combineResults()
-  } else success(emptyList())
+internal fun Operation.generateRequestBodies(exampleKey: String? = null) =
+  if (requestBody == null)
+    success(emptyList())
+  else
+    RequestBodyConverter.convert(this.requestBody!!, exampleKey)
+
 
 internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Result<List<Body>> =
-  if (content != null) {
+  if (content == null)
+    success(emptyList())
+  else
     content.map { (contentType, mediaType) ->
-      SchemaConverter
-        .convertToDataType(mediaType.schema, "")
-        .flatMap { Body.create(ContentType(contentType), it!!, mediaType.contractExample(exampleKey)) }
+      mediaType
+        .contractExample(exampleKey)
+        .flatMap { resolvedExample ->
+          SchemaConverter
+            .convertToDataType(mediaType.schema, "")
+            .flatMap { Body.create(ContentType(contentType), it!!, resolvedExample) }
+        }
     }.combineResults()
-  } else success(emptyList())
+
 
 internal fun ApiResponse.generateResponseHeaders(exampleKey: String? = null) =
   safeHeaders()
     .map { (name, header) ->
-      val example = header.contractExample(exampleKey)
-      SchemaConverter.convertToDataType(header.schema, "")
-        .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), example) }
+      header.contractExample(exampleKey)
+        .flatMap { resolvedExample ->
+          SchemaConverter.convertToDataType(header.schema, "")
+            .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), resolvedExample) }
+        }
     }.combineResults()
-
-internal fun List<Parameter>.toContractParameters(exampleKey: String?): Result<List<ContractParameter>> =
-  map { param ->
-    val example = param.contractExample(exampleKey)
-    SchemaConverter
-      .convertToDataType(param.schema, "").forProperty(param.name)
-      .flatMap { ContractParameter.create(param.name, it!!, param.safeIsRequired(), example) }
-  }.combineResults()

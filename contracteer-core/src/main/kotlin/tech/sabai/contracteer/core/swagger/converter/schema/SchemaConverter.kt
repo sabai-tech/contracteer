@@ -1,7 +1,7 @@
-package tech.sabai.contracteer.core.swagger.converter
+package tech.sabai.contracteer.core.swagger.converter.schema
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF
+import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
@@ -11,20 +11,18 @@ import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.swagger.safeMapping
 import tech.sabai.contracteer.core.swagger.shortRef
 
-private val logger = KotlinLogging.logger {}
-
-private const val RECURSIVE_MAX_DEPTH = 10
-
 object SchemaConverter {
+  private val logger = KotlinLogging.logger {}
+  private const val RECURSIVE_MAX_DEPTH = 10
   private var sharedSchemas: Map<String, Schema<*>> = emptyMap()
   private val dataTypeCache: MutableMap<String, DataType<out Any>> = mutableMapOf()
   private val discriminatorCache: MutableMap<String, Discriminator> = mutableMapOf()
 
-  fun setSharedSchemas(schemas: Map<String, Schema<*>>) {
-    this.sharedSchemas = schemas
+  internal fun setSharedSchemas(sharedSchemas: Map<String, Schema<*>>) {
+    this.sharedSchemas = sharedSchemas
     dataTypeCache.clear()
     discriminatorCache.clear()
-    addDiscriminators(schemas)
+    addDiscriminators(sharedSchemas)
   }
 
   fun convertToDataType(schema: Schema<*>,
@@ -35,8 +33,8 @@ object SchemaConverter {
       recursiveDepth < 0             -> failure("Max recursive depth reached")
       ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
-      sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!,ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
-      else                           -> failure("Schema ${schema.`$ref`} not found")
+      sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!, ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
+      else                           -> failure("Schema '${schema.`$ref`}' in not found 'components/schemas' section")
     }
   }
 
@@ -45,14 +43,11 @@ object SchemaConverter {
     else schema.discriminator?.let {
       Discriminator(
         it.propertyName,
-        it.safeMapping().mapValues { mapping -> mapping.value.replace(COMPONENTS_SCHEMAS_REF, "") }
+        it.safeMapping().mapValues { mapping -> mapping.value.replace(Components.COMPONENTS_SCHEMAS_REF, "") }
       )
     }
 
-
-  private fun convertSchema(schema: Schema<*>,
-                            schemaName: String,
-                            recursiveDepth: Int): Result<DataType<out Any>> {
+  private fun convertSchema(schema: Schema<*>, schemaName: String, recursiveDepth: Int): Result<DataType<out Any>> {
     schema.name = schemaName
     logger.debug { "Creating Datatype for Schema '${schema.name}' with max recursive depth $recursiveDepth" }
     return when (schema) {
@@ -73,7 +68,8 @@ object SchemaConverter {
       is ObjectSchema                            -> ObjectSchemaConverter.convert(schema, recursiveDepth)
       is PasswordSchema                          -> StringSchemaConverter.convert(schema, "string/password")
       is UUIDSchema                              -> UuidSchemaConverter.convert(schema)
-      else                                       -> failure("Schema ${schema::class.java.simpleName} is not yet supported")
+      else                                       -> Result.Companion.failure(schema.name,
+                                                                             "Schema with type '${schema.type}' is not supported")
     }
   }
 

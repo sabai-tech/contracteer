@@ -1,4 +1,4 @@
-package tech.sabai.contracteer.core.swagger.converter
+package tech.sabai.contracteer.core.swagger.converter.schema
 
 import io.swagger.v3.oas.models.media.DateSchema
 import tech.sabai.contracteer.core.datatype.DateDataType
