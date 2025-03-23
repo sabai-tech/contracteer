@@ -50,11 +50,7 @@ components:
       description: Product details
       headers:
         x-optional:
-          schema:
-            type: integer
-          examples:
-            GET_DETAILS:
-              $ref: "#/components/examples/get_details_response_header"
+          $ref: "#/components/headers/get_details_header"
       content:
         application/json:
           schema:
@@ -72,5 +68,13 @@ components:
         id: 999
         name: "product"
         quantity: 12
+
+  headers:
+    get_details_header:
+        schema:
+          type: integer
+        examples:
+          GET_DETAILS:
+            $ref: "#/components/examples/get_details_response_header"
 
 

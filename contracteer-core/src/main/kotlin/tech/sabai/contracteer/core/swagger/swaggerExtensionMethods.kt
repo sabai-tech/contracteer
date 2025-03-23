@@ -16,11 +16,11 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.contract.Body
 import tech.sabai.contracteer.core.contract.ContentType
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
 import tech.sabai.contracteer.core.swagger.converter.example.ExampleConverter
 import tech.sabai.contracteer.core.swagger.converter.parameter.ParameterConverter
 import tech.sabai.contracteer.core.swagger.converter.requestbody.RequestBodyConverter
+import tech.sabai.contracteer.core.swagger.converter.responseheader.HeaderConverter
+import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
 
 internal fun MediaType.safeExamples() =
   examples ?: emptyMap()
@@ -42,12 +42,6 @@ internal fun Header.safeExamples() =
 
 internal fun Header.safeIsRequired() =
   required ?: false
-
-internal fun Header.contractExample(exampleKey: String?) =
-  if (exampleKey == null || !safeExamples().keys.contains(exampleKey))
-    success()
-  else
-    ExampleConverter.convert(safeExamples()[exampleKey]!!)
 
 internal fun List<Parameter>.exampleKeys() =
   flatMap { it.safeExamples().keys }.toSet()
@@ -106,6 +100,9 @@ internal fun Components?.safeExamples() =
 internal fun Components?.safeResponses() =
   this?.responses ?: emptyMap()
 
+internal fun Components?.safeHeaders() =
+  this?.headers ?: emptyMap()
+
 internal fun Discriminator.safeMapping() =
   mapping ?: emptyMap()
 
@@ -155,13 +152,5 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
         }
     }.combineResults()
 
-
 internal fun ApiResponse.generateResponseHeaders(exampleKey: String? = null) =
-  safeHeaders()
-    .map { (name, header) ->
-      header.contractExample(exampleKey)
-        .flatMap { resolvedExample ->
-          SchemaConverter.convertToDataType(header.schema, "")
-            .flatMap { ContractParameter.create(name, it!!, header.safeIsRequired(), resolvedExample) }
-        }
-    }.combineResults()
+  safeHeaders().map { (name, header) -> HeaderConverter.convert(name, header, exampleKey) }.combineResults()

@@ -12,6 +12,7 @@ import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
 import tech.sabai.contracteer.core.swagger.converter.example.ExampleConverter
 import tech.sabai.contracteer.core.swagger.converter.parameter.ParameterConverter
 import tech.sabai.contracteer.core.swagger.converter.requestbody.RequestBodyConverter
+import tech.sabai.contracteer.core.swagger.converter.responseheader.HeaderConverter
 import java.lang.System.lineSeparator
 
 private val logger = KotlinLogging.logger {}
@@ -34,6 +35,7 @@ private fun OpenAPI.initSharedComponents() {
   RequestBodyConverter.sharedRequestBodies = components.safeRequestBodies()
   ExampleConverter.sharedExamples = components.safeExamples()
   ApiResponseResolver.sharedApiResponses = components.safeResponses()
+  HeaderConverter.sharedHeaders = components.safeHeaders()
 }
 
 private fun Map.Entry<String, PathItem>.toSwaggerOperationContext() =
