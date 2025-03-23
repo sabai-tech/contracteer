@@ -11,16 +11,21 @@ import tech.sabai.contracteer.core.swagger.contractExample
 import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
 
 object RequestBodyConverter {
+  private const val RECURSIVE_MAX_DEPTH = 10
+  private const val COMPONENTS_REQUEST_BODY_BASE_REF = "#/components/requestBodies/"
 
-  const val COMPONENTS_REQUEST_BODY_BASE_REF = "#/components/requestBodies/"
   lateinit var sharedRequestBodies: Map<String, RequestBody>
 
-  fun convert(requestBody: RequestBody, exampleKey: String?): Result<List<Body>> {
+  fun convert(requestBody: RequestBody,
+              exampleKey: String?,
+              maxRecursiveDepth: Int = RECURSIVE_MAX_DEPTH): Result<List<Body>> {
     val ref = requestBody.shortRef()
     return when {
-      ref == null                          -> convertRequestBody(requestBody, exampleKey)
-      sharedRequestBodies.containsKey(ref) -> convertRequestBody(sharedRequestBodies[ref]!!, exampleKey)
-      else                                 -> failure("Request Body ${requestBody.`$ref`} in 'components/requestBodies' section")
+      maxRecursiveDepth < 0                    -> failure("Max recursive depth reached for request bodies")
+      ref == null                              -> convertRequestBody(requestBody, exampleKey)
+      sharedRequestBodies[ref]?.`$ref` != null -> convert(sharedRequestBodies[ref]!!, exampleKey, maxRecursiveDepth - 1)
+      sharedRequestBodies[ref] != null         -> convertRequestBody(sharedRequestBodies[ref]!!, exampleKey)
+      else                                     -> failure("Request Body ${requestBody.`$ref`} in 'components/requestBodies' section")
     }
   }
 

@@ -32,7 +32,7 @@ private fun OpenAPI.initSharedComponents() {
   SchemaConverter.setSharedSchemas(components.safeSchemas())
   ParameterConverter.sharedParameters = components.safeParameters()
   RequestBodyConverter.sharedRequestBodies = components.safeRequestBodies()
-  ExampleConverter.setSharedExamples(components.safeExamples())
+  ExampleConverter.sharedExamples = components.safeExamples()
   ApiResponseResolver.sharedApiResponses = components.safeResponses()
 }
 
@@ -42,7 +42,7 @@ private fun Map.Entry<String, PathItem>.toSwaggerOperationContext() =
       operation
         .responses
         .map { (code, response) ->
-          ApiResponseResolver.resolveResponse(response).flatMap {
+          ApiResponseResolver.resolve(response).flatMap {
             SwaggerOperationContext(key, method, operation, code, it!!).generateContracts()
           }
         }

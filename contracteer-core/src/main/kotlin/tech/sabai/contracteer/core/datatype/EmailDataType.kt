@@ -1,6 +1,5 @@
 package tech.sabai.contracteer.core.datatype
 
-import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 

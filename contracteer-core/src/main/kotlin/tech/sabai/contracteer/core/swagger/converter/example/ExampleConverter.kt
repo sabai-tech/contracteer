@@ -6,19 +6,20 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.contract.Example
 
 object ExampleConverter {
-  const val COMPONENTS_EXAMPLE_BASE_REF = "#/components/examples/"
-  private var exampleCache: Map<String, Example> = emptyMap()
+  private const val COMPONENTS_EXAMPLE_BASE_REF = "#/components/examples/"
+  private const val MAX_RECURSIVE_DEPTH = 10
 
-  fun setSharedExamples(sharedExamples: Map<String, io.swagger.v3.oas.models.examples.Example>) {
-    exampleCache = sharedExamples.mapValues { Example(it.value.value) }
-  }
+  lateinit var sharedExamples: Map<String, io.swagger.v3.oas.models.examples.Example>
 
-  fun convert(example: io.swagger.v3.oas.models.examples.Example): Result<Example> {
+  fun convert(example: io.swagger.v3.oas.models.examples.Example,
+              maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<Example> {
     val ref = example.shortRef()
     return when {
-      ref == null                   -> success(Example(example.value))
-      exampleCache.containsKey(ref) -> success(exampleCache[ref])
-      else                          -> failure("Example '${example.`$ref`}' not found in 'components/examples' section")
+      maxRecursiveDepth < 0               -> failure("Max recursive depth reached for Example")
+      ref == null                         -> success(Example(example.value))
+      sharedExamples[ref]?.`$ref` != null -> convert(sharedExamples[ref]!!, maxRecursiveDepth - 1)
+      sharedExamples[ref] != null         -> success(Example(sharedExamples[ref]!!.value))
+      else                                -> failure("Example '${example.`$ref`}' not found in 'components/examples' section")
     }
   }
 

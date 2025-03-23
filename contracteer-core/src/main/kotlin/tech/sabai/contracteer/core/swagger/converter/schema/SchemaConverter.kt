@@ -13,7 +13,7 @@ import tech.sabai.contracteer.core.swagger.shortRef
 
 object SchemaConverter {
   private val logger = KotlinLogging.logger {}
-  private const val RECURSIVE_MAX_DEPTH = 10
+  private const val MAX_RECURSIVE_DEPTH = 10
   private var sharedSchemas: Map<String, Schema<*>> = emptyMap()
   private val dataTypeCache: MutableMap<String, DataType<out Any>> = mutableMapOf()
   private val discriminatorCache: MutableMap<String, Discriminator> = mutableMapOf()
@@ -27,10 +27,10 @@ object SchemaConverter {
 
   fun convertToDataType(schema: Schema<*>,
                         defaultName: String,
-                        recursiveDepth: Int = RECURSIVE_MAX_DEPTH): Result<DataType<out Any>> {
+                        recursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<DataType<out Any>> {
     val ref = schema.shortRef()
     return when {
-      recursiveDepth < 0             -> failure("Max recursive depth reached")
+      recursiveDepth < 0             -> failure("Max recursive depth reached for Schema")
       ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
       sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!, ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }

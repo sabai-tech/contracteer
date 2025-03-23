@@ -10,15 +10,20 @@ import tech.sabai.contracteer.core.swagger.converter.example.ExampleConverter
 import tech.sabai.contracteer.core.swagger.safeIsRequired
 
 object ParameterConverter {
-  const val COMPONENTS_PARAMETER_BASE_REF = "#/components/parameters/"
+  private const val COMPONENTS_PARAMETER_BASE_REF = "#/components/parameters/"
+  private const val MAX_RECURSIVE_DEPTH = 10
   lateinit var sharedParameters: Map<String, Parameter>
 
-  fun convert(parameter: Parameter, exampleKey: String?): Result<ContractParameter> {
+  fun convert(parameter: Parameter,
+              exampleKey: String?,
+              maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<ContractParameter> {
     val ref = parameter.shortRef()
     return when {
-      ref == null                       -> convertParameter(parameter, exampleKey)
-      sharedParameters.containsKey(ref) -> convertParameter(sharedParameters[ref]!!, exampleKey)
-      else                              -> failure("Parameter' ${parameter.`$ref`}' not found in 'components/parameters' section")
+      maxRecursiveDepth < 0                 -> failure("Max recursive depth reached for Parameter")
+      ref == null                           -> convertParameter(parameter, exampleKey)
+      sharedParameters[ref]?.`$ref` != null -> convert(sharedParameters[ref]!!, exampleKey, maxRecursiveDepth - 1)
+      sharedParameters[ref] != null         -> convertParameter(sharedParameters[ref]!!, exampleKey)
+      else                                  -> failure("Parameter' ${parameter.`$ref`}' not found in 'components/parameters' section")
     }
   }
 
