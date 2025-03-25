@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.Base64DataType
 import tech.sabai.contracteer.core.datatype.BinaryDataType
@@ -48,7 +49,7 @@ fun DataType<out Any>.parse(value: String?) =
       is ObjectDataType, is ArrayDataType -> failure(name, "'object' and 'array' are not supported yet")
       is BooleanDataType                                  -> value.asBoolean()
       is NumberDataType, is IntegerDataType               -> value.asBigDecimal()
-      is StringDataType,
+      is AnyDataType, is StringDataType,
       is UuidDataType, is Base64DataType,
       is BinaryDataType, is EmailDataType,
       is DateTimeDataType, is DateDataType                -> success(value)

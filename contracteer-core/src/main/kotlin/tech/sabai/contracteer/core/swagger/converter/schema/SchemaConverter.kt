@@ -6,10 +6,12 @@ import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.swagger.safeMapping
 import tech.sabai.contracteer.core.swagger.shortRef
+import java.math.BigDecimal
 
 object SchemaConverter {
   private val logger = KotlinLogging.logger {}
@@ -67,9 +69,24 @@ object SchemaConverter {
       is ObjectSchema, is MapSchema              -> ObjectSchemaConverter.convert(schema, recursiveDepth)
       is PasswordSchema                          -> StringSchemaConverter.convert(schema, "string/password")
       is UUIDSchema                              -> UuidSchemaConverter.convert(schema)
-      else                                       -> Result.Companion.failure(schema.name, "Schema with type '${schema.type}' is not supported")
+      else                                       -> tryToInterfereSchemaType(schema, recursiveDepth)
     }
   }
+
+  @Suppress("UNCHECKED_CAST")
+  private fun tryToInterfereSchemaType(schema: Schema<*>, recursiveDepth: Int): Result<DataType<out Any>> =
+    when {
+      schema.properties != null ->
+        ObjectSchemaConverter
+          .convert(schema, recursiveDepth)
+          .also { logger.warn { "Schema '${schema.name}' does not have a 'type' property defined, but defines properties. Considering it as an object schema." } }
+      schema.type == "string"   -> StringSchemaConverter.convert(schema as Schema<String>, "string")
+      schema.type == "number"   -> NumberSchemaConverter.convert(schema as Schema<BigDecimal>)
+      schema.type == "boolean"  -> BooleanSchemaConverter.convert(schema as Schema<Boolean>)
+      schema.isAnyType()        -> success(AnyDataType).also { logger.warn { "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type." } }
+      else                      -> failure("Error interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete. Please verify that it adheres to the expected object schema structure")
+    }
+
 
   @Suppress("UNCHECKED_CAST")
   private fun addDiscriminators(schemas: Map<String, Schema<*>>) {
@@ -81,4 +98,23 @@ object SchemaConverter {
         .toMap() as Map<String, Discriminator>
     )
   }
+
+  fun Schema<*>.isAnyType() =
+    type == null &&
+    properties.isNullOrEmpty() &&
+    additionalProperties == null &&
+    format == null &&
+    title == null &&
+    description == null &&
+    maximum == null &&
+    minimum == null &&
+    exclusiveMaximum == null &&
+    exclusiveMinimum == null &&
+    pattern == null &&
+    minLength == null &&
+    maxLength == null &&
+    multipleOf == null &&
+    default == null &&
+    example == null &&
+    `enum`.isNullOrEmpty()
 }
