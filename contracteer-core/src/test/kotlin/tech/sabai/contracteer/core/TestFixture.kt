@@ -80,17 +80,10 @@ object TestFixture {
                      properties: Map<String, DataType<out Any>>,
                      requiredProperties: Set<String> = emptySet(),
                      allowAdditionalProperties: Boolean = true,
+                     additionalPropertiesDataType: DataType<out Any>? = null,
                      isNullable: Boolean = false,
                      enum: List<Any?> = emptyList()) =
-    ObjectDataType.create(name, properties, requiredProperties, allowAdditionalProperties, isNullable, enum).value!!
-
-  fun mapDataType(name: String = "object",
-                     properties: Set<String> = emptySet(),
-                     requiredProperties: Set<String> = emptySet(),
-                     valueDatatype: DataType<out Any>,
-                     isNullable: Boolean = false,
-                     enum: List<Any?> = emptyList()) =
-    MapDataType.create(name, properties, requiredProperties, valueDatatype, isNullable, enum).value!!
+    ObjectDataType.create(name, properties, requiredProperties, allowAdditionalProperties, additionalPropertiesDataType, isNullable, enum).value!!
 
   fun oneOfDataType(name: String = "oneOf",
                     subTypes: List<DataType<out Any>>,
@@ -112,9 +105,6 @@ object TestFixture {
 
   fun body(contentType: ContentType, dataType: DataType<out Any>, example: Example? = null) =
     Body.create(contentType, dataType, example).value!!
-
-  fun pathParameter(name: String, dataType: DataType<out Any>, example: Example? = null) =
-    ContractParameter.create(name, dataType, true, example).value!!
 
   fun parameter(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, example: Example? = null) =
     ContractParameter.create(name, dataType, isRequired, example).value!!

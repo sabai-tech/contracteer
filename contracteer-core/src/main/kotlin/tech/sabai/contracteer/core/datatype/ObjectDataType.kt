@@ -11,6 +11,7 @@ class ObjectDataType private constructor(name: String,
                                          val properties: Map<String, DataType<out Any>>,
                                          val requiredProperties: Set<String> = emptySet(),
                                          val allowAdditionalProperties: Boolean,
+                                         val additionalPropertiesDataType: DataType<out Any>?,
                                          isNullable: Boolean,
                                          allowedValues: AllowedValues? = null):
     DataType<Map<String, Any?>>(name,
@@ -21,25 +22,31 @@ class ObjectDataType private constructor(name: String,
 
   override fun isFullyStructured() = true
 
-  override fun doValidate(value: Map<String, Any?>): Result<Map<String, Any?>> {
-    val extraProperties = value.keys - properties.keys
-    return if (extraProperties.isNotEmpty() && !allowAdditionalProperties)
-      failure("additional properties are not allowed. Unexpected properties: " + extraProperties.joinWithQuotes())
-    else
-      properties.accumulate { (property, dataType) ->
-        when {
-          !value.containsKey(property) && !isRequired(property) -> success(value)
-          !value.containsKey(property)                          -> failure(property, "is required")
-          else                                                  -> dataType.validate(value[property]).forProperty(property)
-        }
-      }.map { value }
-  }
-
-  private fun isRequired(key: String) =
-    requiredProperties.contains(key)
+  override fun doValidate(value: Map<String, Any?>) =
+    validateProperties(value) andThen { validateAdditionalProperties(value) }
 
   override fun doRandomValue() =
     properties.mapValues { it.value.randomValue() }
+
+  private fun validateProperties(value: Map<String, Any?>): Result<Map<String, Any>> =
+    properties.accumulate { (property, dataType) ->
+      when {
+        !value.containsKey(property) && !requiredProperties.contains(property) -> success(value)
+        !value.containsKey(property)                                           -> failure(property, "is required")
+        else                                                                   ->
+          dataType.validate(value[property]).forProperty(property)
+      }
+    }
+
+  private fun validateAdditionalProperties(value: Map<String, Any?>): Result<Map<String, Any?>> {
+    val extraProperties = value.keys - properties.keys
+    return when {
+      extraProperties.isNotEmpty() && !allowAdditionalProperties -> failure("additional properties are not allowed. Unexpected properties: " + extraProperties.joinWithQuotes())
+      additionalPropertiesDataType == null                       -> success(value)
+      else                                                       ->
+        extraProperties.accumulate { additionalPropertiesDataType.validate(value[it]).forProperty(it) }.map { value }
+    }
+  }
 
   companion object {
     fun create(
@@ -47,21 +54,33 @@ class ObjectDataType private constructor(name: String,
       properties: Map<String, DataType<out Any>>,
       requiredProperties: Set<String> = emptySet(),
       allowAdditionalProperties: Boolean,
+      additionalPropertiesDataType: DataType<out Any>? = null,
       isNullable: Boolean,
       enum: List<Any?> = emptyList()
     ): Result<ObjectDataType> {
       val undefinedProperties = requiredProperties - properties.keys
+      if (undefinedProperties.isNotEmpty()) return failure("undefined required properties: " + undefinedProperties.joinWithQuotes())
 
-      return if (undefinedProperties.isNotEmpty()) {
-        failure("undefined required properties: " + undefinedProperties.joinWithQuotes())
-      } else {
-        ObjectDataType(name, properties, requiredProperties, allowAdditionalProperties, isNullable).let { dataType ->
-          if (enum.isEmpty()) success(dataType)
-          else AllowedValues
-            .create(enum, dataType)
-            .map { ObjectDataType(name, properties, requiredProperties, allowAdditionalProperties, isNullable, it) }
-        }
-      }
+      val default = ObjectDataType(name,
+                                   properties,
+                                   requiredProperties,
+                                   allowAdditionalProperties,
+                                   additionalPropertiesDataType,
+                                   isNullable)
+      return if (enum.isEmpty())
+        success(default)
+      else
+        AllowedValues
+          .create(enum, default)
+          .map {
+            ObjectDataType( name,
+              properties,
+              requiredProperties,
+              allowAdditionalProperties,
+              additionalPropertiesDataType,
+              isNullable,
+              it)
+          }
     }
   }
 }

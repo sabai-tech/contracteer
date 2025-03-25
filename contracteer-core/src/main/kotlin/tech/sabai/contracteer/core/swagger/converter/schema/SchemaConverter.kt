@@ -62,14 +62,12 @@ object SchemaConverter {
       is DateTimeSchema                          -> DateTimeSchemaConverter.convert(schema)
       is EmailSchema                             -> EmailSchemaConverter.convert(schema)
       is IntegerSchema                           -> IntegerSchemaConverter.convert(schema)
-      is MapSchema                               -> MapSchemaConverter.convert(schema, recursiveDepth)
       is NumberSchema                            -> NumberSchemaConverter.convert(schema)
       is StringSchema                            -> StringSchemaConverter.convert(schema, "string")
-      is ObjectSchema                            -> ObjectSchemaConverter.convert(schema, recursiveDepth)
+      is ObjectSchema, is MapSchema              -> ObjectSchemaConverter.convert(schema, recursiveDepth)
       is PasswordSchema                          -> StringSchemaConverter.convert(schema, "string/password")
       is UUIDSchema                              -> UuidSchemaConverter.convert(schema)
-      else                                       -> Result.Companion.failure(schema.name,
-                                                                             "Schema with type '${schema.type}' is not supported")
+      else                                       -> Result.Companion.failure(schema.name, "Schema with type '${schema.type}' is not supported")
     }
   }
 

@@ -82,7 +82,7 @@ class Result<out T> private constructor(
   }
 }
 
-fun <E, R> List<E>.accumulate(transform: (E) -> Result<R>): Result<R> =
+fun <E, R> Collection<E>.accumulate(transform: (E) -> Result<R>): Result<R> =
   fold(success()) { acc, element -> acc combineWith transform(element) }
 
 fun <K, V, R> Map<out K, V>.accumulate(transform: (Map.Entry<K, V>) -> Result<R>): Result<Map<K, R>> =

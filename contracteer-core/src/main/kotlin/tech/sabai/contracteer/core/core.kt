@@ -13,7 +13,6 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.DateDataType
 import tech.sabai.contracteer.core.datatype.DateTimeDataType
 import tech.sabai.contracteer.core.datatype.EmailDataType
-import tech.sabai.contracteer.core.datatype.MapDataType
 import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.core.datatype.NumberDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
@@ -46,7 +45,7 @@ fun DataType<out Any>.parse(value: String?) =
   else {
     when (this) {
       is CompositeDataType,
-      is ObjectDataType, is MapDataType, is ArrayDataType -> failure(name, "'object' and 'array' are not supported yet")
+      is ObjectDataType, is ArrayDataType -> failure(name, "'object' and 'array' are not supported yet")
       is BooleanDataType                                  -> value.asBoolean()
       is NumberDataType, is IntegerDataType               -> value.asBigDecimal()
       is StringDataType,

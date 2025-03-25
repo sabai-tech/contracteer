@@ -18,15 +18,11 @@ paths:
                   properties:
                     name:
                       type: string
-                  required:
-                    - name
-                  enum:
-                  - name: "john"
-                    lastname: "doe"
-                  - name: "jane"
-                    email: "jane@doe.com"
+                    age:
+                      type: integer
                   additionalProperties:
                     type: string
+
       responses:
         200:
           description: OK

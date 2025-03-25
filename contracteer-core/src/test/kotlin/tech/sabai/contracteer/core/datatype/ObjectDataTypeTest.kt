@@ -150,17 +150,81 @@ class ObjectDataTypeTest {
     assert(listOf("is required", "prop").all { result.errors().first().contains(it) })
   }
 
-  @Test
-  fun `validation fails when extra properties are provided and additionalProperties is disabled`() {
-    // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()), allowAdditionalProperties = false)
+  @Nested
+  inner class WithAdditionalProperties {
 
-    // when
-    val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to 2, "prop3" to 3))
+    @Test
+    fun `validation fails when extra properties are provided and additionalProperties is disabled`() {
+      // given
+      val objectDataType =
+        objectDataType(properties = mapOf("prop" to integerDataType()), allowAdditionalProperties = false)
 
-    // then
-    assert(result.isFailure())
+      // when
+      val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to 2, "prop3" to 3))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation fails when extra properties are not of the expected type`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("prop" to integerDataType()),
+        allowAdditionalProperties = true,
+        additionalPropertiesDataType = stringDataType())
+
+      // when
+      val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to true, "prop3" to 3.5))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when extra properties datatype is not specified`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("prop" to integerDataType()),
+        allowAdditionalProperties = true)
+
+      // when
+      val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to true, "prop3" to 3.5))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation succeeds when allow additional properties is true but there is no extra properties`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("prop" to integerDataType()),
+        allowAdditionalProperties = true)
+
+      // when
+      val result = objectDataType.validate(mapOf("prop" to 1))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation succeeds when allow additional properties datatype is specified but there is no extra properties`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("prop" to integerDataType()),
+        allowAdditionalProperties = true,
+        additionalPropertiesDataType = stringDataType())
+
+      // when
+      val result = objectDataType.validate(mapOf("prop" to 1))
+
+      // then
+      assert(result.isSuccess())
+    }
   }
+
 
   @Nested
   inner class WithEnum {
