@@ -41,7 +41,7 @@ class ObjectDataType private constructor(name: String,
   private fun validateAdditionalProperties(value: Map<String, Any?>): Result<Map<String, Any?>> {
     val extraProperties = value.keys - properties.keys
     return when {
-      extraProperties.isNotEmpty() && !allowAdditionalProperties -> failure("additional properties are not allowed. Unexpected properties: " + extraProperties.joinWithQuotes())
+      extraProperties.isNotEmpty() && !allowAdditionalProperties -> failure("Additional properties are not allowed. Unexpected properties: " + extraProperties.joinWithQuotes())
       additionalPropertiesDataType == null                       -> success(value)
       else                                                       ->
         extraProperties.accumulate { additionalPropertiesDataType.validate(value[it]).forProperty(it) }.map { value }
@@ -59,8 +59,7 @@ class ObjectDataType private constructor(name: String,
       enum: List<Any?> = emptyList()
     ): Result<ObjectDataType> {
       val undefinedProperties = requiredProperties - properties.keys
-      if (undefinedProperties.isNotEmpty()) return failure("undefined required properties: " + undefinedProperties.joinWithQuotes())
-
+      if (undefinedProperties.isNotEmpty()) return failure("The following required properties are not defined in the schema: " + undefinedProperties.joinWithQuotes())
       val default = ObjectDataType(name,
                                    properties,
                                    requiredProperties,

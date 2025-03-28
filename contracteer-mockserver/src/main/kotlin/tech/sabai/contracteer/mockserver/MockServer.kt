@@ -7,6 +7,7 @@ import org.http4k.core.ContentType.Companion.TEXT_PLAIN
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
 import org.http4k.core.cookie.cookie
 import org.http4k.filter.DebuggingFilters.PrintRequestAndResponse
+import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
@@ -33,11 +34,7 @@ class MockServer(private val contracts: List<Contract>,
       .map { (pathAndMethod, contracts) -> createRouteHandler(pathAndMethod.first, pathAndMethod.second, contracts) }
 
     logger.info { "Starting Contracteer mock server" }
-
-    http4kServer = PrintRequestAndResponse()
-      .then(routes(*routeHandlers.toTypedArray()))
-      .asServer(SunHttp(port))
-      .start()
+    http4kServer = httpHandlerFrom(routeHandlers).asServer(SunHttp(port)).start()
     logger.info { "Contracteer mock server started on port ${this.port()}" }
   }
 
@@ -53,6 +50,12 @@ class MockServer(private val contracts: List<Contract>,
     check(::http4kServer.isInitialized) { "Contracteer mock server is not started yet." }
     return http4kServer.port()
   }
+
+  private fun httpHandlerFrom(routeHandlers: List<RoutingHttpHandler>) =
+    if (logger.isDebugEnabled())
+      PrintRequestAndResponse().then(routes(*routeHandlers.toTypedArray()))
+    else
+      routes(*routeHandlers.toTypedArray())
 
   private fun createRouteHandler(path: String, method: Method, matchingContracts: List<Contract>) =
     path bind method to { request ->

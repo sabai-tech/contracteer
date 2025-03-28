@@ -45,11 +45,11 @@ data class SwaggerOperationContext(
   }
 
   private fun createRequests(exampleKey: String? = null): List<Result<ContractRequest>> {
-    val pathParameters = operation.generatePathParameters(exampleKey)
-    val queryParameters = operation.generateQueryParameters(exampleKey)
-    val headers = operation.generateRequestHeaders(exampleKey)
-    val cookies = operation.generateRequestCookies(exampleKey)
-    val bodies = operation.generateRequestBodies(exampleKey)
+    val pathParameters = operation.generatePathParameters(exampleKey).forProperty("path")
+    val queryParameters = operation.generateQueryParameters(exampleKey).forProperty("query")
+    val headers = operation.generateRequestHeaders(exampleKey).forProperty("header")
+    val cookies = operation.generateRequestCookies(exampleKey).forProperty("cookie")
+    val bodies = operation.generateRequestBodies(exampleKey).forProperty("body")
 
     return if (allAreSuccess(pathParameters, queryParameters, cookies, headers, bodies)) {
       val request = ContractRequest(method.name,
@@ -61,45 +61,45 @@ data class SwaggerOperationContext(
       bodies.value!!.map { success(request.withBody(it)) }.ifEmpty { listOf(success(request)) }
     } else {
       listOf(
-        pathParameters.mapAndRetypeErrorIfAny(requestErrorMessage("path parameter", exampleKey)),
-        queryParameters.mapAndRetypeErrorIfAny(requestErrorMessage("query parameter", exampleKey)),
-        headers.mapAndRetypeErrorIfAny(requestErrorMessage("header", exampleKey)),
-        cookies.mapAndRetypeErrorIfAny(requestErrorMessage("cookie", exampleKey)),
-        bodies.mapAndRetypeErrorIfAny(requestErrorMessage("body", exampleKey))
+        pathParameters.mapAndRetypeErrorIfAny(requestErrorMessage(exampleKey)),
+        queryParameters.mapAndRetypeErrorIfAny(requestErrorMessage(exampleKey)),
+        headers.mapAndRetypeErrorIfAny(requestErrorMessage(exampleKey)),
+        cookies.mapAndRetypeErrorIfAny(requestErrorMessage(exampleKey)),
+        bodies.mapAndRetypeErrorIfAny(requestErrorMessage(exampleKey))
       )
     }
   }
 
   private fun createResponses(exampleKey: String? = null): List<Result<ContractResponse>> {
-    val headers = apiResponse.generateResponseHeaders(exampleKey)
-    val bodies = apiResponse.generateResponseBodies(exampleKey)
+    val headers = apiResponse.generateResponseHeaders(exampleKey).forProperty("header")
+    val bodies = apiResponse.generateResponseBodies(exampleKey).forProperty("body")
 
     return if (allAreSuccess(headers, bodies)) {
       val response = ContractResponse(statusCode.toInt(), headers.value!!)
       bodies.value!!.map { success(response.withBody(it)) }.ifEmpty { listOf(success(response)) }
     } else {
       listOf(
-        headers.mapAndRetypeErrorIfAny(responseErrorMessage("header", exampleKey)),
-        bodies.mapAndRetypeErrorIfAny(responseErrorMessage("body", exampleKey))
+        headers.mapAndRetypeErrorIfAny(responseErrorMessage(exampleKey)),
+        bodies.mapAndRetypeErrorIfAny(responseErrorMessage(exampleKey))
       )
     }
   }
 
-  private fun requestErrorMessage(requestPart: String, exampleKey: String?): String =
+  private fun requestErrorMessage(exampleKey: String?): String =
     if (exampleKey != null)
-      "path: ${path}, method: ${method}, example: $exampleKey, request $requestPart"
+      "$method $path [example: '$exampleKey'] | request"
     else
-      "path: ${path}, method: ${method}, request $requestPart"
+      "$method $path | request"
 
-  private fun responseErrorMessage(responsePart: String, exampleKey: String?) =
+  private fun responseErrorMessage(exampleKey: String?): String =
     if (exampleKey != null)
-      "path: ${path}, method: ${method}, response status code: ${statusCode}, example: $exampleKey, response: $responsePart"
+      "$method $path -> $statusCode [example: '$exampleKey' ] | response"
     else
-      "path: ${path}, method: ${method}, response status code: ${statusCode}, response: $responsePart"
+      "$method $path -> $statusCode | response"
 
   private fun allAreSuccess(vararg results: Result<*>): Boolean =
     results.all { it.isSuccess() }
 
-  private fun <U> Result<Any>.mapAndRetypeErrorIfAny(prefix: String): Result<U> =
-    mapErrors { "$prefix -> $it" }.retypeError()
+  private fun <U> Result<Any>.mapAndRetypeErrorIfAny(path: String): Result<U> =
+    mapErrors { "$path ▸ $it" }.retypeError()
 }

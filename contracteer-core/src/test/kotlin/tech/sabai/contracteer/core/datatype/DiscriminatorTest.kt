@@ -20,7 +20,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first() == "Discriminator can only be used with 'object', 'anyOf', 'oneOf' or 'allOf' schema")
+    assert(result.errors().first().contains("Invalid schema for discriminator"))
   }
 
   @Test
@@ -109,7 +109,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' is defined in multiple 'allOf' sub schemas"))
+    assert(result.errors().first().contains("Ambiguous discriminator. Property 'type' "))
   }
 
   @Test

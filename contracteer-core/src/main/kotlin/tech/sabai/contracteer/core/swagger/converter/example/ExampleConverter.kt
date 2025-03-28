@@ -15,7 +15,7 @@ object ExampleConverter {
               maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<Example> {
     val ref = example.shortRef()
     return when {
-      maxRecursiveDepth < 0               -> failure("Max recursive depth reached for Example")
+      maxRecursiveDepth < 0               -> failure("Maximum recursive depth reached while converting Example.")
       ref == null                         -> success(Example(example.value))
       sharedExamples[ref]?.`$ref` != null -> convert(sharedExamples[ref]!!, maxRecursiveDepth - 1)
       sharedExamples[ref] != null         -> success(Example(sharedExamples[ref]!!.value))

@@ -14,7 +14,7 @@ class IntegerDataType private constructor(name: String,
   override fun isFullyStructured() = false
 
   override fun doValidate(value: BigDecimal) =
-    if (value.isInteger().not()) failure("not a valid integer.")
+    if (!value.isInteger()) failure("The provided value is not an integer.")
     else range.contains(value)
 
 

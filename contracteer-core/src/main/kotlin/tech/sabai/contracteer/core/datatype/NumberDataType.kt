@@ -24,17 +24,15 @@ class NumberDataType private constructor(name: String,
       minimum: BigDecimal? = null,
       maximum: BigDecimal? = null,
       exclusiveMinimum: Boolean = false,
-      exclusiveMaximum: Boolean = false
-    ): Result<NumberDataType> =
+      exclusiveMaximum: Boolean = false): Result<NumberDataType> =
       Range.create(minimum, maximum, exclusiveMinimum, exclusiveMaximum)
         .flatMap { range ->
-          when {
-            enum.isEmpty()              -> success(NumberDataType(name, isNullable, range!!))
-            else                        ->
-              AllowedValues
-                .create(enum, NumberDataType(name, isNullable, range!!))
-                .map { allowedValues -> NumberDataType(name, isNullable, range, allowedValues) }
-          }
+          if (enum.isEmpty())
+            success(NumberDataType(name, isNullable, range!!))
+          else
+            AllowedValues
+              .create(enum, NumberDataType(name, isNullable, range!!))
+              .map { allowedValues -> NumberDataType(name, isNullable, range, allowedValues) }
         }
   }
 }

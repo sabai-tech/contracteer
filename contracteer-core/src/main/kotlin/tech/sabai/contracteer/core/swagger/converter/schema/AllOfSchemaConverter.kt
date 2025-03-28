@@ -10,6 +10,7 @@ import tech.sabai.contracteer.core.swagger.*
 
 @Suppress("UNCHECKED_CAST")
 internal object AllOfSchemaConverter {
+
   fun convert(schema: ComposedSchema, maxRecursiveDepth: Int): Result<AllOfDataType> {
     if (schema.allOf == null) return failure("'allOf' must be defined.")
 
@@ -20,8 +21,8 @@ internal object AllOfSchemaConverter {
       .flatMap { subDataTypes ->
         val discriminators = schema.allOf.mapNotNull { SchemaConverter.convertToDiscriminator(it) }
         when {
-          subDataTypes!!.any { !it.isFullyStructured() } -> failure("Only 'object', 'allOf', 'anyOf' and 'oneOf' schemas are supported for 'allOf'")
-          discriminators.size > 1                        -> failure("Only 1 discriminator is allowed")
+          subDataTypes!!.any { !it.isFullyStructured() } -> failure("Only 'object', 'allOf', 'anyOf' and 'oneOf' schemas are supported for 'allOf'.")
+          discriminators.size > 1                        -> failure("Only 1 discriminator is allowed in 'allOf'.")
           else                                           -> {
             AllOfDataType.create(
               name = schema.name,

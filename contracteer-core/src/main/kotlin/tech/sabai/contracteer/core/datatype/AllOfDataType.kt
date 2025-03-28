@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.joinWithQuotes
 import java.lang.System.lineSeparator
 
 @Suppress("UNCHECKED_CAST")
@@ -45,21 +46,22 @@ class AllOfDataType private constructor(name: String,
       value[discriminator.propertyName] == null                                             -> failure("Discriminator property '${discriminator.propertyName}' is required")
       value[discriminator.propertyName] !is String                                          -> failure("Discriminator property '${discriminator.propertyName}' must be of type 'string'")
       discriminator.getDataTypeNameFor(value[discriminator.propertyName] as String) != name -> failure(
-        "Invalid value for discriminator property '${discriminator.propertyName}'. Expected: '${
-          discriminator.getMappingName(name)
-        }', but found: '${value[discriminator.propertyName]}'.")
+        "Invalid value for discriminator property '${discriminator.propertyName}'. " +
+        "Expected '${discriminator.getMappingName(name)}', but found '${value[discriminator.propertyName]}'.")
       else                                                                                  -> success(value)
     }
 
   private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Map<String, Any?>>, Result<Map<String, Any?>>>): Result<Map<String, Any?>> {
-    val errorMessages = dataTypeErrors.map { (dataType, result) ->
-      "Schema '${dataType.name}':${
-        result
-          .errors()
-          .joinToString(lineSeparator() + "     - ", lineSeparator() + "     - ")
-      }"
-    }.joinToString(lineSeparator())
-    return failure(errorMessages)
+    val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
+    val detailedErrors = dataTypeErrors.map { (dataType, result) ->
+      "${lineSeparator()}  - Schema '${dataType.name}':" + result.errors().joinToString(
+        prefix = "${lineSeparator()}      - ",
+        separator = "${lineSeparator()}      - "
+      )
+    }.joinToString("")
+    return failure(
+      "No matching schema found. The provided value did not match any of the candidate schemas ($schemaNames):${lineSeparator()}$detailedErrors"
+    )
   }
 
   companion object {
@@ -86,7 +88,7 @@ class AllOfDataType private constructor(name: String,
       val successes = results.count { it.isSuccess() }
       return when {
         successes == 1 -> success(discriminator)
-        successes > 1  -> failure("Discriminator property '${discriminator.propertyName}' is defined in multiple 'allOf' sub schemas")
+        successes > 1  -> failure("Ambiguous discriminator. The discriminator property '${discriminator.propertyName}' is present in multiple 'allOf' sub-schemas.")
         else           -> results.combineResults().retypeError()
       }
     }

@@ -17,8 +17,8 @@ class DateTimeDataType private constructor(name: String, isNullable: Boolean, al
     try {
       OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
       success(value)
-    } catch (e: Exception) {
-      failure("not a valid date-time")
+    } catch (_: Exception) {
+      failure("Invalid date-time. The provided string is not in the ISO DATE TIME WITH OFFSET format (e.g., 2023-06-01T15:30:00+01:00).")
     }
 
   override fun doRandomValue(): String {

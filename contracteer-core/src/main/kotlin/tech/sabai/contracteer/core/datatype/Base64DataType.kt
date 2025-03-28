@@ -18,16 +18,16 @@ class Base64DataType private constructor(name: String,
 
   override fun doValidate(value: String) =
     lengthRange.contains(value.length.toBigDecimal())
-      .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
+      .mapErrors { "Invalid length. Expected a value within $lengthRange, but got ${value.length}." }
       .andThen {
         try {
           Base64.getDecoder().decode(value)
           success(value)
         } catch (e: IllegalArgumentException) {
           logger.debug { e }
-          failure("not a valid Base64 encoded string")
+          failure("Invalid Base64 encoding. The provided string is not a valid Base64 encoded value.")
         }
-    }
+      }
 
   override fun doRandomValue(): String {
     val minEncodedLength = closestMultipleOf4(lengthRange.randomIntegerValue().toInt()).coerceAtMost(100)

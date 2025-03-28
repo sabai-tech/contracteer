@@ -15,7 +15,7 @@ import java.math.BigDecimal
 
 object SchemaConverter {
   private val logger = KotlinLogging.logger {}
-  private const val MAX_RECURSIVE_DEPTH = 10
+  private const val MAX_RECURSIVE_DEPTH = 25
   private var sharedSchemas: Map<String, Schema<*>> = emptyMap()
   private val dataTypeCache: MutableMap<String, DataType<out Any>> = mutableMapOf()
   private val discriminatorCache: MutableMap<String, Discriminator> = mutableMapOf()
@@ -32,11 +32,11 @@ object SchemaConverter {
                         recursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<DataType<out Any>> {
     val ref = schema.shortRef()
     return when {
-      recursiveDepth < 0             -> failure("Max recursive depth reached for Schema")
+      recursiveDepth < 0             -> failure("Maximum recursive depth reached while converting Schema")
       ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
       sharedSchemas.containsKey(ref) -> convertSchema(sharedSchemas[ref]!!, ref, recursiveDepth).map { it!!.also { dataTypeCache[ref] = it } }
-      else                           -> failure("Schema '${schema.`$ref`}' in not found 'components/schemas' section")
+      else                           -> failure("Schema '${schema.`$ref`}' not found in 'components/schemas' section")
     }
   }
 
@@ -79,12 +79,12 @@ object SchemaConverter {
       schema.properties != null ->
         ObjectSchemaConverter
           .convert(schema, recursiveDepth)
-          .also { logger.warn { "Schema '${schema.name}' does not have a 'type' property defined, but defines properties. Considering it as an object schema." } }
+          .also { logger.warn { "Schema '${schema.name}' does not have a 'type' property defined, but defines properties. Considering it as an 'object' schema." } }
       schema.type == "string"   -> StringSchemaConverter.convert(schema as Schema<String>, "string")
       schema.type == "number"   -> NumberSchemaConverter.convert(schema as Schema<BigDecimal>)
       schema.type == "boolean"  -> BooleanSchemaConverter.convert(schema as Schema<Boolean>)
       schema.isAnyType()        -> success(AnyDataType).also { logger.warn { "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type." } }
-      else                      -> failure("Error interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete. Please verify that it adheres to the expected object schema structure")
+      else                      -> failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
     }
 
 

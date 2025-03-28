@@ -67,7 +67,7 @@ class ArrayDataTypeTest {
     // then
     assert(result.isFailure())
     assert(result.errors().size == 1)
-    assert(listOf("[1]", "Cannot be null").all { result.errors().first().contains(it) })
+    assert(listOf("[1]", "Value cannot be null").all { result.errors().first().contains(it) })
   }
 
   @Test

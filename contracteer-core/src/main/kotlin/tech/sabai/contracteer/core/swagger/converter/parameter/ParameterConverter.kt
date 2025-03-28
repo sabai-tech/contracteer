@@ -19,7 +19,7 @@ object ParameterConverter {
               maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<ContractParameter> {
     val ref = parameter.shortRef()
     return when {
-      maxRecursiveDepth < 0                 -> failure("Max recursive depth reached for Parameter")
+      maxRecursiveDepth < 0                 -> failure("Maximum recursive depth reached while converting Parameter")
       ref == null                           -> convertParameter(parameter, exampleKey)
       sharedParameters[ref]?.`$ref` != null -> convert(sharedParameters[ref]!!, exampleKey, maxRecursiveDepth - 1)
       sharedParameters[ref] != null         -> convertParameter(sharedParameters[ref]!!, exampleKey)

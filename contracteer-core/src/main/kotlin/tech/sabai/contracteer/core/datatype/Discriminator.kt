@@ -23,12 +23,12 @@ data class Discriminator(
 
   fun validate(dataType: DataType<out Any>): Result<DataType<out Any>> =
     when {
-      !dataType.isFullyStructured() -> failure("Discriminator can only be used with 'object', 'anyOf', 'oneOf' or 'allOf' schema")
+      !dataType.isFullyStructured() -> failure("Invalid schema for discriminator. Only 'object', 'anyOf', 'oneOf', or 'allOf' schemas are supported.")
       dataType is ObjectDataType    -> validateObjectDataType(dataType)
       dataType is AnyOfDataType     -> dataType.subTypes.map { validate(it) }.combineResults().map { dataType }
       dataType is OneOfDataType     -> dataType.subTypes.map { validate(it) }.combineResults().map { dataType }
       dataType is AllOfDataType     -> validateAllOf(dataType)
-      else                          -> failure("Discriminator can only be used with 'object', 'anyOf', 'oneOf' or 'allOf' schema")
+      else                          -> failure("Invalid schema for discriminator. Only 'object', 'anyOf', 'oneOf', or 'allOf' schemas are supported.")
     }
 
   private fun validateAllOf(dataType: AllOfDataType): Result<AllOfDataType> {
@@ -36,15 +36,15 @@ data class Discriminator(
     val successes = results.count { it.isSuccess() }
     return when {
       successes == 1 -> success(dataType)
-      successes > 1  -> failure("Discriminator property '${propertyName}' is defined in multiple 'allOf' sub schemas")
+      successes > 1  -> failure("Ambiguous discriminator. Property '${propertyName}' appears in multiple 'allOf' sub-schemas.")
       else           -> results.combineResults().retypeError()
     }
   }
 
   private fun validateObjectDataType(dataType: ObjectDataType) =
     when {
-      !dataType.requiredProperties.contains(propertyName)  -> failure("discriminator property '$propertyName' must be defined as required")
-      dataType.properties[propertyName] !is StringDataType -> failure("discriminator property '$propertyName' must be of type 'string'. Found '${dataType.properties[propertyName]!!.openApiType}'")
+      !dataType.requiredProperties.contains(propertyName)  -> failure("discriminator property '$propertyName' must be defined as required in the schema.")
+      dataType.properties[propertyName] !is StringDataType -> failure("discriminator property '$propertyName' must be of type 'string' but found '${dataType.properties[propertyName]!!.openApiType}'")
       else                                                 -> success(dataType)
     }
 }

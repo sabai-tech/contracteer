@@ -25,7 +25,7 @@ class Range private constructor(
     }
     return when {
       lowerOk && upperOk -> success(value)
-      else               -> failure("not in the range of $this")
+      else               -> failure("The value is not within the range of $this")
     }
   }
 
@@ -41,7 +41,7 @@ class Range private constructor(
   }
 
   fun randomIntegerValue(): BigDecimal {
-    if (!containsIntegers()) throw IllegalArgumentException("Cannot generate Random Integer for the range: $this")
+    if (!containsIntegers()) throw IllegalArgumentException("Cannot generate random integer for the range $this as it does not contain any integer value.")
 
     val intMinimum = effectiveMinimum().setScale(0, CEILING)
     var intMaximum = effectiveMaximum().setScale(0, FLOOR)
@@ -99,7 +99,7 @@ class Range private constructor(
                exclusiveMaximum: Boolean = false): Result<Range> {
       return when {
         minimum != null && maximum != null && minimum > maximum                                            -> failure("'minimum' ($minimum) must be less than or equal to 'maximum' ($maximum)")
-        minimum != null && maximum != null && minimum == maximum && (exclusiveMinimum || exclusiveMaximum) -> failure("if 'minimum' equals 'maximum', 'exclusiveMinimum' and 'exclusiveMaximum' must be set to false")
+        minimum != null && maximum != null && minimum == maximum && (exclusiveMinimum || exclusiveMaximum) -> failure("when 'minimum' equals 'maximum', both 'exclusiveMinimum' and 'exclusiveMaximum' must be false")
         else                                                                                               ->
           success(Range(minimum, maximum, exclusiveMinimum, exclusiveMaximum))
       }

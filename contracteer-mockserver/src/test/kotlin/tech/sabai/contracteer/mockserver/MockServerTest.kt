@@ -255,7 +255,7 @@ class MockServerTest {
         .contentType("text/plain")
         .body(allOf(
           containsString(contract.description()),
-          containsString("value does not match. Expected: 42, Actual: 123")
+          containsString("Value mismatch. Expected <42> but received <123>")
         ))
     }
 

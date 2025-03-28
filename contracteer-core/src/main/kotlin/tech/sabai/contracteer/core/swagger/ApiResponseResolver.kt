@@ -15,11 +15,11 @@ object ApiResponseResolver {
   fun resolve(response: ApiResponse, maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<ApiResponse> {
     val ref = response.shortRef()
     return when {
-      maxRecursiveDepth < 0                   -> failure("Max recursive depth reached for Api Response")
+      maxRecursiveDepth < 0                   -> failure("Maximum recursive depth reached while converting Api Response")
       ref == null                             -> success(response)
       sharedApiResponses[ref]?.`$ref` != null -> resolve(sharedApiResponses[ref]!!, maxRecursiveDepth - 1)
       sharedApiResponses[ref] != null         -> success(sharedApiResponses[ref]!!)
-      else                                    -> failure("Response '${response.`$ref`}' not found")
+      else                                    -> failure("Response '${response.`$ref`}' not found in section components/responses")
     }
   }
 

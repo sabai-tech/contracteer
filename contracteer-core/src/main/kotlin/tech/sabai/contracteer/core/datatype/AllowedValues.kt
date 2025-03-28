@@ -10,7 +10,7 @@ class AllowedValues private constructor(values: List<Any?>) {
 
   fun contains(value: Any?) =
     if (allowedValues.contains(value.normalize())) success(value)
-    else failure("value '${value.formatValue()}' is not allowed. Possible values: ${allowedValues.formatValue()}")
+    else failure("Invalid value '${value.formatValue()}'. Allowed values are ${allowedValues.formatValue()}.")
 
   fun randomValue(): Any = allowedValues.filterNotNull().random()
 

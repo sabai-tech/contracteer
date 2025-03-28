@@ -1,8 +1,13 @@
 package tech.sabai.contracteer.verifier
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Level.*
+import ch.qos.logback.classic.Logger
+import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Help.Ansi.AUTO
+import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.contract.Contract
 import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.util.concurrent.Callable
@@ -16,6 +21,14 @@ import kotlin.system.exitProcess
          ])
 class VerifierCli: Callable<Int> {
 
+  @Parameters(index = "0",
+              description = [
+                "Specifies the location of an OpenAPI 3 specification,",
+                "either as a local file path or a remote URL."
+              ]
+  )
+  lateinit var path: String
+
   @Option(
     names = ["--server-url"],
     required = false,
@@ -28,15 +41,16 @@ class VerifierCli: Callable<Int> {
     description = ["Server port (default: \${DEFAULT-VALUE})"])
   private var serverPort = 8080
 
-  @Parameters(index = "0",
-              description = [
-                "Specifies the location of an OpenAPI 3 specification,",
-                "either as a local file path or a remote URL."
-              ]
+  @Option(
+    names = ["-l", "--log-level"],
+    description = ["Set the log level. Available values: TRACE, DEBUG, INFO, WARN, ERROR, OFF, ALL. Default: \${DEFAULT-VALUE}"],
+    converter = [LevelConverter::class],
+    defaultValue = "INFO"
   )
-  lateinit var path: String
+  private var logLevel: Level = INFO
 
   override fun call(): Int {
+    configureLogging(logLevel)
     val result = OpenApiLoader.loadContracts(path)
     return when {
       result.isSuccess() -> runContractTests(result.value!!)
@@ -45,28 +59,58 @@ class VerifierCli: Callable<Int> {
   }
 
   private fun printErrors(errors: List<String>): Int {
-    println(AUTO.string("@|bold,red ❌ Verification failed:|@"))
-    errors.forEach { println(AUTO.string("     - @|yellow $it|@")) }
-    return 2
+    println(AUTO.string("@|bold,red   ❌ Verification failed:|@"))
+    errors.forEach { println(AUTO.string("     ↳ @|yellow $it|@")) }
+    return 1
   }
 
   private fun runContractTests(contracts: List<Contract>): Int {
-    var exitCode = 0
     val serverVerifier = ServerVerifier(ServerConfiguration(serverUrl, serverPort))
     println()
-    println(AUTO.string("=== Verify @|bold,green $serverUrl:$serverPort|@ with @|bold '${path}'|@ ==="))
-    contracts.forEach { contract ->
-      print("* Validating ${contract.description()}: ")
-      val testResult = serverVerifier.verify(contract)
-      if (testResult.isSuccess()) println(AUTO.string("@|bold,green ✅ SUCCESS|@"))
-      else {
-        println(AUTO.string("@|bold,red ❌ ERROR|@"))
-        testResult.errors().forEach { println(AUTO.string("    - @|yellow $it|@")) }
-        exitCode = 2
-        println()
-      }
+    println(AUTO.string("\uD83D\uDE80 Verifying Contracts:"))
+    println(AUTO.string("Server: @|bold,green $serverUrl:$serverPort|@"))
+    println(AUTO.string("Spec: @|bold,green ${path}|@"))
+    println()
+
+    val results = contracts.map { contract ->
+      contract to serverVerifier.verify(contract).also { printVerificationResult(contract, it) }
     }
-    return exitCode
+
+    println()
+    println(AUTO.string("@|bold Result: |@"))
+    val failures = results.filter { it.second.isFailure() }
+    if (failures.isNotEmpty()) {
+      println(AUTO.string("   ⚠\uFE0F @|yellow ${failures.size}|@ errors found during verification."))
+      println(AUTO.string("   ✅ @|yellow ${contracts.size - failures.size}|@ contracts successfully verified."))
+      return 1
+    } else {
+      println(AUTO.string("   \uD83C\uDF89 All contracts successfully verified!"))
+      return 0
+    }
+  }
+
+  private fun printVerificationResult(contract: Contract, result: Result<Contract>) {
+    if (logLevel == DEBUG) println()
+    if (result.isSuccess()) {
+      println(AUTO.string("   ✅ ${contract.description()}"))
+    } else {
+      println(AUTO.string("@|bold,red   ❌ ${contract.description()}|@"))
+      result.errors().forEach { println(AUTO.string("     ↳ @|yellow $it|@")) }
+    }
+
+    if (logLevel == DEBUG) {
+      println(AUTO.string("<===========================================================================================>"))
+      println()
+    }
+  }
+
+  private fun configureLogging(level: Level) {
+    val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
+    rootLogger.level = level
+  }
+
+  class LevelConverter: ITypeConverter<Level> {
+    override fun convert(value: String): Level = toLevel(value, INFO)
   }
 
   companion object {

@@ -17,7 +17,7 @@ class UuidDataType private constructor(name: String,
       fromString(value)
       success(value)
     } catch (_: IllegalArgumentException) {
-      failure("not a valid UUID")
+      failure("the provided string is not a valid UUID")
     }
 
   override fun doRandomValue() = randomUUID().toString()

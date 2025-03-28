@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.joinWithQuotes
+import java.lang.System.*
 
 class OneOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
@@ -56,18 +57,24 @@ class OneOfDataType private constructor(name: String,
     }
   }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> {
+    val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
+    val detailedErrors = dataTypeErrors.map { (dataType, result) ->
+      "${lineSeparator()}  - Schema '${dataType.name}':" + result.errors().joinToString(
+        prefix = "${lineSeparator()}      - ",
+        separator = "${lineSeparator()}      - "
+      )
+    }.joinToString("")
+    return failure("No matching schema. Value did not match candidate schemas ($schemaNames):${lineSeparator()}$detailedErrors")
+  }
+
+  private fun buildMultipleMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
     failure(
-      dataTypeErrors.map {
-        "Schema '${it.key.name}'" +
-        it.value.errors().joinToString(
-          prefix = "${System.lineSeparator()}     - ",
-          separator = "${System.lineSeparator()}     - ")
-      }.joinToString(separator = System.lineSeparator()))
-
-
-  private fun buildMultipleMatchError(dataTypeSuccess: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
-    failure("Multiple Schema match: " + dataTypeSuccess.map { it.key.name }.joinWithQuotes())
+      "Ambiguous match for 'oneOf'. The provided value matches multiple schemas (${
+        dataTypeErrors
+          .map { it.key.name }
+          .joinWithQuotes()
+      }).")
 
   companion object {
     fun create(name: String,
@@ -88,7 +95,7 @@ class OneOfDataType private constructor(name: String,
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
       when {
         discriminator == null                           -> success()
-        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'oneOf'")
+        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping error. The discriminator references schemas not present in 'oneOf'")
         else                                            ->
           accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
       }

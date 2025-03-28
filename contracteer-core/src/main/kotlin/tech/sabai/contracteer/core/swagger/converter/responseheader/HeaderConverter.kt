@@ -21,11 +21,11 @@ object HeaderConverter {
               maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<ContractParameter> {
     val ref = header.shortRef()
     return when {
-      maxRecursiveDepth < 0              -> failure("Max recursive depth reached for Response Header")
+      maxRecursiveDepth < 0              -> failure("Maximum recursive depth reached while converting Response Header")
       ref == null                        -> convertHeader(name, header, exampleKey)
       sharedHeaders[ref]?.`$ref` != null -> convert(name, sharedHeaders[ref]!!, exampleKey, maxRecursiveDepth - 1)
       sharedHeaders[ref] != null         -> convertHeader(name, sharedHeaders[ref]!!, exampleKey)
-      else                               -> failure("Parameter' ${header.`$ref`}' not found in 'components/parameters' section")
+      else                               -> failure("Response Header '${header.`$ref`}' not found in 'components/headers' section")
     }
   }
 

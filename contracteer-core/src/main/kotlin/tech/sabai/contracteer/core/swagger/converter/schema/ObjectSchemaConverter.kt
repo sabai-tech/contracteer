@@ -14,7 +14,7 @@ object ObjectSchemaConverter {
   fun convert(schema: Schema<*>, maxRecursiveDepth: Int): Result<ObjectDataType> {
     val propertyDataTypeResults = schema
       .safeProperties()
-      .mapValues { (name, subSchema) -> SchemaConverter.convertToDataType(subSchema, name, maxRecursiveDepth - 1) }
+      .mapValues { (name, subSchema) -> SchemaConverter.convertToDataType(subSchema, name, maxRecursiveDepth - 1).forProperty(name) }
 
     val allowAdditionalProperties = (schema.additionalProperties as? Boolean?) != false
     val additionalPropertiesSchema = schema.additionalProperties.takeIf { it !is Boolean } as Schema<*>?

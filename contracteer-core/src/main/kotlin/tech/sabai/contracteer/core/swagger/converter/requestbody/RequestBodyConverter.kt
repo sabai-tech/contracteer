@@ -21,7 +21,7 @@ object RequestBodyConverter {
               maxRecursiveDepth: Int = RECURSIVE_MAX_DEPTH): Result<List<Body>> {
     val ref = requestBody.shortRef()
     return when {
-      maxRecursiveDepth < 0                    -> failure("Max recursive depth reached for request bodies")
+      maxRecursiveDepth < 0                    -> failure("Maximum recursive depth reached while converting Body")
       ref == null                              -> convertRequestBody(requestBody, exampleKey)
       sharedRequestBodies[ref]?.`$ref` != null -> convert(sharedRequestBodies[ref]!!, exampleKey, maxRecursiveDepth - 1)
       sharedRequestBodies[ref] != null         -> convertRequestBody(sharedRequestBodies[ref]!!, exampleKey)

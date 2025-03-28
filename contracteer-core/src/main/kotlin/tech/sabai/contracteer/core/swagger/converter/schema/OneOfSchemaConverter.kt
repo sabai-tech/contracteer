@@ -9,7 +9,7 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 
 object OneOfSchemaConverter {
   fun convert(schema: ComposedSchema, maxRecursiveDepth: Int) =
-    if (schema.oneOf == null) failure("'oneOf' must be not null")
+    if (schema.oneOf == null) failure("'oneOf' must be defined")
     else schema.oneOf
       .mapIndexed { index, sub ->
         SchemaConverter.convertToDataType(sub, "oneOf #$index", maxRecursiveDepth - 1)

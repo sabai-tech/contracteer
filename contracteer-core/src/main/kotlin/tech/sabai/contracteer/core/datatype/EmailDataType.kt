@@ -25,9 +25,9 @@ class EmailDataType private constructor(name: String,
 
   override fun doValidate(value: String) =
     lengthRange.contains(value.length.toBigDecimal())
-      .mapErrors { "Invalid string length: ${value.length}. Expected length within ${lengthRange}." }
+      .mapErrors { "The provided string has a length of ${value.length} but expected a value within ${lengthRange}." }
       .andThen<String> {
-        if (emailRegex.matches(value)) success(value) else failure("not a valid email")
+        if (emailRegex.matches(value)) success(value) else failure("Invalid email. The provided string is not a valid email address.")
       }
 
   override fun doRandomValue(): String {

@@ -16,7 +16,7 @@ class BinaryDataType private constructor(name: String,
   override fun doValidate(value: String) =
     lengthRange
       .contains(value.length.toBigDecimal())
-      .mapErrors { "Invalid string length: ${value.length}. Expected length within $lengthRange." }
+      .mapErrors { "Invalid length. Expected a value within $lengthRange, but got ${value.length}." }
       .map { value }
 
   override fun doRandomValue(): String =
@@ -31,7 +31,7 @@ class BinaryDataType private constructor(name: String,
       maxLength: Int? = null,
     ) =
       if ((minLength != null && minLength < 0) || (maxLength != null && maxLength < 0))
-        failure("'minLength' and 'maxlength' must be equal or greater than zero.")
+        failure("'minLength' and 'maxlength' must be greater than or equal to zero.")
       else
         Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
           .flatMap { range ->

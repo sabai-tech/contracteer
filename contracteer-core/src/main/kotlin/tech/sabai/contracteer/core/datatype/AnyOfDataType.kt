@@ -4,6 +4,8 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.joinWithQuotes
+import java.lang.System.lineSeparator
 
 class AnyOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
@@ -56,13 +58,16 @@ class AnyOfDataType private constructor(name: String,
     }
   }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Map<String, Any?>> =
-    failure(dataTypeErrors.map {
-      "Schema '${it.key.name}'" +
-      it.value.errors().joinToString(
-        prefix = "${System.lineSeparator()}     - ",
-        separator = "${System.lineSeparator()}     - ")
-    }.joinToString(separator = System.lineSeparator()))
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Map<String, Any?>> {
+    val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
+    val detailedErrors = dataTypeErrors.map { (dataType, result) ->
+      "${lineSeparator()}  - Schema '${dataType.name}':" + result.errors().joinToString(
+        prefix = "${lineSeparator()}      - ",
+        separator = "${lineSeparator()}      - "
+      )
+    }.joinToString("")
+    return failure("No matching schema. Value did not match candidate schemas ($schemaNames):${lineSeparator()}$detailedErrors")
+  }
 
   companion object {
     fun create(name: String,
@@ -83,8 +88,9 @@ class AnyOfDataType private constructor(name: String,
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
       when {
         discriminator == null                           -> success()
-        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping references schemas not defined in 'anyOf'")
-        else                                            -> accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
+        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping error. The discriminator references schemas not present in 'anyOf'")
+        else                                            ->
+          accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
       }
 
     private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =

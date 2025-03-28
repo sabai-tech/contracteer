@@ -15,8 +15,8 @@ class DateDataType private constructor(name: String, isNullable: Boolean, allowe
     try {
       LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
       success(value)
-    } catch (e: Exception) {
-      failure("not a valid date")
+    } catch (_: Exception) {
+      failure("Invalid date. The provided string is not in the 'format YYYY-MM-DD'")
     }
 
   override fun doRandomValue(): String {

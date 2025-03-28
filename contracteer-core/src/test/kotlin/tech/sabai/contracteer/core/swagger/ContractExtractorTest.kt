@@ -23,7 +23,7 @@ class ContractExtractorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("File not found"))
+    assert(result.errors().first().contains("file not found"))
   }
 
   @Test
@@ -240,12 +240,13 @@ class ContractExtractorTest {
     assert(result.isFailure())
     assert(result.errors().size == 5)
     assert(result.errors().containsAll(listOf(
-      "path: /products, method: POST, example: CREATE_PRODUCT, request body -> 'id': Wrong type. Expected type: 'integer'",
-      "path: /products/{id}, method: GET, response status code: 200, example: GET_DETAILS, response: body -> 'quantity': Wrong type. Expected type: 'integer'",
-      "path: /products/{id}, method: GET, response status code: 404, example: ASYNC, response: header -> 'location': Wrong type. Expected type: 'string'",
-      "path: /products/{id}, method: GET, example: NOT_FOUND, request path parameter -> 'id': Wrong type. Expected type: 'integer'",
-      "path: /products/{id}, method: GET, response status code: 404, example: NOT_FOUND, response: body -> 'error': Wrong type. Expected type: 'string'",
+      "POST /products [example: 'CREATE_PRODUCT'] | request ▸ 'body.id': Type mismatch, expected type 'integer'",
+      "GET /products/{id} -> 200 [example: 'GET_DETAILS' ] | response ▸ 'body.quantity': Type mismatch, expected type 'integer'",
+      "GET /products/{id} -> 404 [example: 'ASYNC' ] | response ▸ 'header.location': Type mismatch, expected type 'string'",
+      "GET /products/{id} [example: 'NOT_FOUND'] | request ▸ 'path.id': Type mismatch, expected type 'integer'",
+      "GET /products/{id} -> 404 [example: 'NOT_FOUND' ] | response ▸ 'body.error': Type mismatch, expected type 'string'"
     )))
+
   }
 
   @Test

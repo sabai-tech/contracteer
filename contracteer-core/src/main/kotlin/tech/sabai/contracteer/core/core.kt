@@ -62,5 +62,5 @@ private fun String.asBoolean() =
 private fun String.asBigDecimal() =
   toBigDecimalOrNull()?.let { success(it) } ?: failure("Wrong type. Expected type: 'number' or 'integer'")
 
-fun Collection<String>.joinWithQuotes(): String =
+fun Collection<*>.joinWithQuotes(): String =
   joinToString(separator = "', '", prefix = "'", postfix = "'")
