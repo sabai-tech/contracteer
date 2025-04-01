@@ -1,28 +1,39 @@
 plugins {
-  id ("com.github.johnrengelman.shadow") version "8.1.1"
+  `java-library`
+  id("kotlin-conventions")
+  alias(libs.plugins.shadow)
+  alias(libs.plugins.graalvm)
   kotlin("kapt")
 }
 
 dependencies {
   api(project(":contracteer-core"))
-  implementation(platform("org.http4k:http4k-bom:5.13.2.0"))
-  implementation("org.http4k:http4k-core")
-  implementation("info.picocli:picocli:4.7.6")
-  implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
-  implementation ("ch.qos.logback:logback-classic:1.5.16")
 
-  kapt("info.picocli:picocli-codegen:4.7.6")
+  implementation(platform(libs.http4k.bom))
+  implementation(libs.http4k.core)
+  implementation(libs.picocli)
+  implementation(libs.logback.classic)
 
-  testImplementation(kotlin("test"))
-  testImplementation("org.mock-server:mockserver-netty-no-dependencies:5.15.0")
-  testImplementation("io.mockk:mockk:1.13.13")
+  kapt(libs.picocli.codegen)
+
+  testImplementation(libs.mockserver.netty)
+  testImplementation(libs.mockk)
 }
 
-tasks.withType<Test> {
-  useJUnitPlatform()
-}
 
 tasks.shadowJar {
   archiveClassifier.set("cli")
   manifest.attributes["Main-Class"] = "tech.sabai.contracteer.verifier.VerifierCli"
+}
+
+graalvmNative {
+  toolchainDetection.set(true)
+  binaries {
+    named("main") {
+      mainClass.set("tech.sabai.contracteer.verifier.VerifierCli")
+      sharedLibrary.set(false)
+      fallback.set(false)
+      useFatJar.set(true)
+    }
+  }
 }

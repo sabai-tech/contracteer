@@ -1,1 +1,0 @@
-rootProject.name="contracteer-verifier-junit"

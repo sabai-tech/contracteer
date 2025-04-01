@@ -1,25 +1,21 @@
 plugins {
-  id("com.github.johnrengelman.shadow") version "8.1.1"
+  `java-library`
+  id("kotlin-conventions")
+  alias(libs.plugins.shadow)
   kotlin("kapt")
 }
 
 dependencies {
   api(project(":contracteer-core"))
 
-  implementation(platform("org.http4k:http4k-bom:5.38.0.0"))
-  implementation("org.http4k:http4k-core")
-  implementation("info.picocli:picocli:4.7.6")
-  implementation("io.github.oshai:kotlin-logging-jvm:7.0.3")
-  implementation ("ch.qos.logback:logback-classic:1.5.16")
+  implementation(platform(libs.http4k.bom))
+  implementation(libs.http4k.core)
+  implementation(libs.picocli)
+  implementation(libs.logback.classic)
 
-  kapt("info.picocli:picocli-codegen:4.7.6")
+  kapt(libs.picocli.codegen)
 
-  testImplementation(kotlin("test"))
-  testImplementation("io.rest-assured:rest-assured:5.5.0")
-}
-
-tasks.withType<Test> {
-  useJUnitPlatform()
+  testImplementation(libs.rest.assured)
 }
 
 tasks.shadowJar {
