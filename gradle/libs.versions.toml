@@ -6,7 +6,6 @@ graalvm = { id = "org.graalvm.buildtools.native", version.ref = "graalvm" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-power-assert = { id = "org.jetbrains.kotlin.plugin.power-assert", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 
@@ -23,7 +22,6 @@ mockk = "1.13.13"
 mockserver = "5.15.0"
 picocli = "4.7.6"
 rest-assured = "5.5.0"
-shadow = "8.1.1"
 spring-boot = "3.4.4"
 swagger = "2.1.25"
 test-logger = "4.0.0"

@@ -1,9 +1,8 @@
 plugins {
-  application
   id("kotlin-conventions")
   alias(libs.plugins.graalvm)
-  alias(libs.plugins.shadow)
   kotlin("kapt")
+  distribution
 }
 
 dependencies {
@@ -21,14 +20,11 @@ kapt {
   }
 }
 
-application {
-  mainClass.set("tech.sabai.contracteer.cli.CliKt")
-}
-
 graalvmNative {
   binaries {
     named("main") {
-      imageName.set("contracteer")
+      mainClass = "tech.sabai.contracteer.cli.CliKt"
+      imageName.set("contracteer-${project.version}")
       quickBuild.set(true)
       sharedLibrary.set(false)
       fallback.set(false)

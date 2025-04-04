@@ -1,6 +1,5 @@
 plugins {
-  id("kotlin-conventions")
-  `java-library`
+  id("library-conventions")
   alias(libs.plugins.spring.boot)
   alias(libs.plugins.kotlin.spring)
 }

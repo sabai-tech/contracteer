@@ -1,0 +1,46 @@
+project:
+  name: contracteer
+  description: The musketeer of your API contracts.
+  longDescription: |
+    A tool for validating API contracts and running mock servers based on OpenAPI 3 Specifications
+  authors:
+    - Christophe Amory
+  license: GPL-3.0-only
+  inceptionYear: "2024"
+  tags:
+    - kotlin
+    - graalvm
+    - cli
+  links:
+    homepage: https://github.com/Sabai-Technologies/contracteer
+  languages:
+    java:
+      groupId: tech.sabai.contracteer
+      version: "21"
+      multiProject: true
+
+deploy:
+  maven:
+    mavenCentral:
+      contracteer:
+        active: ALWAYS
+        url: https://central.sonatype.com/api/v1/publisher
+        stagingRepositories:
+          - build/staging-deploy
+        applyMavenCentralRules: true
+
+signing:
+  active: ALWAYS
+  armored: true
+  artifacts: true
+
+files:
+  artifacts:
+    - path: contracteer-core/build/libs/contracteer-core-{{projectVersion}}.jar
+    - path: contracteer-mockserver/build/libs/contracteer-mockserver-{{projectVersion}}.jar
+    - path: contracteer-mockserver-spring-boot-starter/build/libs/contracteer-mockserver-spring-boot-starter-{{projectVersion}}.jar
+    - path: contracteer-verifier/build/libs/contracteer-verifier-{{projectVersion}}.jar
+    - path: contracteer-verifier-junit/build/libs/contracteer-verifier-junit-{{projectVersion}}.jar
+
+checksum:
+  individual: true

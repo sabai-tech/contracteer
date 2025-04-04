@@ -7,7 +7,7 @@ import picocli.CommandLine.Model.UsageMessageSpec.*
 @Command(
   name = "contracteer",
   headerHeading = "\n",
-  header = ["Contracteer - the musketeer of your contracts"],
+  header = ["Contracteer - the musketeer of your API contracts"],
   synopsisHeading = "\n@|bold,cyan Usage|@:\n  ",
   descriptionHeading = "\n@|bold,cyan Description|@:\n  ",
   description = ["A tool for validating API contracts and running mock servers based on OpenAPI 3 Specifications."],

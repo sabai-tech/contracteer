@@ -1,7 +1,5 @@
 plugins {
-  `java-library`
-  id("kotlin-conventions")
-  kotlin("kapt")
+  id("library-conventions")
 }
 
 dependencies {
