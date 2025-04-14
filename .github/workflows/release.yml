@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version"
+        required: true
+        type: string
+
+env:
+  JRELEASER_PROJECT_VERSION: ${{ inputs.version }}
+  RELEASE_VERSION: ${{ inputs.version }}
+
+jobs:
+  build_native_image:
+    if: github.ref == 'refs/heads/main'
+    name: Build Contracteer CLI for ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: ubuntu-22.04-arm
+            platform: linux-aarch_64
+          - os: windows-latest
+            platform: windows-x86_64
+          - os: macos-13
+            platform: osx-x86_64
+          - os: macos-latest
+            platform: osx-aarch_64
+    runs-on:
+      - ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java, GraalVM, and Gradle
+        uses: ./.github/actions/setup-java-gradle
+        with:
+          java-version: '23'
+          enable-graalvm: 'true'
+
+      - name: Build native image
+        run: ./gradlew :contracteer-cli:nativeCompile
+
+      - name: Release
+        uses: jreleaser/release-action@v2
+        with:
+          arguments: assemble
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Upload assembled archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: contracteer-${{ matrix.platform }}
+          path: out/jreleaser/assemble/contracteer/archive/*.zip
+
+      - name: Upload JReleaser assemble log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jreleaser-assemble-${{ matrix.platform }}
+          path: |
+            out/jreleaser/output.properties
+            out/jreleaser/trace.log
+
+  release:
+    if: github.ref == 'refs/heads/main'
+    name: Final Release
+    needs: build_native_image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java, GraalVM, and Gradle
+        uses: ./.github/actions/setup-java-gradle
+        with:
+          java-version: '23'
+          enable-graalvm: 'false'
+
+      - name: Download archive
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: out/jreleaser/assemble/contracteer/archive
+
+      - name: Prepare Maven Publication
+        run: ./gradlew publish
+
+      - name: Release
+        uses: jreleaser/release-action@v2
+        with:
+          arguments: full-release
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Upload JReleaser logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jreleaser-release-logs
+          path: |
+            out/jreleaser/output.properties
+            out/jreleaser/trace.log

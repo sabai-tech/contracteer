@@ -12,7 +12,7 @@ project:
     - graalvm
     - cli
   links:
-    homepage: https://github.com/Sabai-Technologies/contracteer
+    homepage: https://github.com/sabai-tech/contracteer
   languages:
     java:
       groupId: tech.sabai.contracteer
@@ -34,6 +34,56 @@ signing:
   armored: true
   artifacts: true
 
+release:
+  github:
+    owner: "camory"
+    name: contracteer
+    tagName: '{{projectVersion}}'
+    releaseName: '{{projectName}} {{projectVersion}}'
+    overwrite: true
+    changelog:
+      formatted: ALWAYS
+      preset: conventional-commits
+      extraProperties:
+        categorizeScopes: "true"
+      hide:
+        categories:
+          - 'merge'
+          - 'allcontributors'
+        contributors:
+          - 'GitHub'
+          - 'allcontributors'
+          - 'dependabot'
+
+assemble:
+  archive:
+    contracteer:
+      active: ALWAYS
+      attachPlatform: true
+      fileSets:
+        - input: '.'
+          includes:
+            - 'LICENSE'
+        - input: "contracteer-cli/build/native/nativeCompile"
+          output: 'bin'
+          includes: [ 'contracteer' ]
+
+matrix:
+  rows:
+    - { platform: linux-aarch_64 }
+    - { platform: linux-x86_64 }
+    - { platform: osx-aarch_64 }
+    - { platform: osx-x86_64 }
+    - { platform: windows-x86_64 }
+
+distributions:
+  contracteer:
+    executable:
+      windowsExtension: exe
+    applyDefaultMatrix: true
+    artifactPattern:
+      path: 'out/jreleaser/assemble/contracteer/archive/{{distributionName}}-{{projectVersion}}-{{matrix.platform}}.zip'
+
 files:
   artifacts:
     - path: contracteer-core/build/libs/contracteer-core-{{projectVersion}}.jar
@@ -44,3 +94,15 @@ files:
 
 checksum:
   individual: true
+
+packagers:
+  brew:
+    active: ALWAYS
+    repository:
+      owner: camory
+      name: homebrew-contracteer
+      username: github-actions
+    formulaName: contracteer
+    multiPlatform: true
+    livecheck:
+      - 'url "https://github.com/sabai-tech/contracteer/releases/latest"'
