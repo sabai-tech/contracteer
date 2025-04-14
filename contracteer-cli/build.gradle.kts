@@ -33,3 +33,20 @@ graalvmNative {
     }
   }
 }
+
+tasks.register("generateVersionFile") {
+  val outputDir = layout.buildDirectory.dir("generated/resources/version")
+  outputs.dir(outputDir)
+  doLast {
+    val file = outputDir.get().file("version.txt").asFile
+    file.parentFile.mkdirs()
+    file.writeText(project.version.toString())
+  }
+}
+
+tasks.named("processResources") {
+  dependsOn("generateVersionFile")
+}
+
+sourceSets["main"].resources.srcDir(layout.buildDirectory.dir("generated/resources/version"))
+

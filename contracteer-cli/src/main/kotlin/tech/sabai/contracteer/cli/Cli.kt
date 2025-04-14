@@ -5,6 +5,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Model.UsageMessageSpec.*
 
 @Command(
+  versionProvider = VersionProvider::class,
   name = "contracteer",
   headerHeading = "\n",
   header = ["Contracteer - the musketeer of your API contracts"],
