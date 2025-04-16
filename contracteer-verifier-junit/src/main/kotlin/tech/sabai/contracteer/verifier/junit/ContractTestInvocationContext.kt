@@ -24,7 +24,7 @@ internal class ContractTestInvocationContext(
         override fun interceptTestTemplateMethod(invocation: InvocationInterceptor.Invocation<Void>,
                                                  context: ReflectiveInvocationContext<Method>,
                                                  extensionContext: ExtensionContext) {
-          val annotation = extensionContext.requiredTestMethod.getAnnotation(ContractTest::class.java)
+          val annotation = extensionContext.requiredTestMethod.getAnnotation(ContracteerTest::class.java)
                            ?: throw IllegalStateException("Missing @ContractTest on test method")
 
           // Execute the user's test method body (e.g. to set up mocks or prepare the server)
@@ -51,7 +51,7 @@ internal class ContractTestInvocationContext(
 
   private fun extractAnnotatedServerPort(extensionContext: ExtensionContext): Int? {
     val testClass = extensionContext.requiredTestClass
-    val portField = testClass.declaredFields.find { it.isAnnotationPresent(ContractServerPort::class.java) }
+    val portField = testClass.declaredFields.find { it.isAnnotationPresent(ContracteerServerPort::class.java) }
 
     return if (portField != null) {
       portField.isAccessible = true

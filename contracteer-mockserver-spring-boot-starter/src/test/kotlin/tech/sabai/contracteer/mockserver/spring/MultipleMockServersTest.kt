@@ -11,11 +11,11 @@ import kotlin.test.Test
 
 @SpringBootTest(classes = [TestApp::class])
 @ContracteerMockServer(
-  openApiPath = "src/test/resources/oas3_definition.yaml",
+  openApiDoc = "src/test/resources/oas3_definition.yaml",
   portProperty = "mock.server1.port",
 )
 @ContracteerMockServer(
-  openApiPath = "src/test/resources/oas3_definition.yaml",
+  openApiDoc = "src/test/resources/oas3_definition.yaml",
   portProperty = "mock.server2.port",
 )
 class MultipleMockServersTest {

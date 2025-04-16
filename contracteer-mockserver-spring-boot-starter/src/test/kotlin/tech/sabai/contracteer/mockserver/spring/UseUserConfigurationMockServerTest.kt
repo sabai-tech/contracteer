@@ -11,7 +11,7 @@ import kotlin.test.Test
 
 @SpringBootTest(classes = [TestApp::class])
 @ContracteerMockServer(
-  openApiPath = "src/test/resources/oas3_definition.yaml",
+  openApiDoc = "src/test/resources/oas3_definition.yaml",
   port = 45678,
   portProperty = "mock.server.port",
   baseUrlProperty = "mock.server.baseUrl"

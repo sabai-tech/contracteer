@@ -10,7 +10,7 @@ import java.lang.annotation.Inherited
  *
  * **Usage Details:**
  * - The server can be configured to listen on either a fixed port or a randomly assigned port.
- * - The OpenAPI 3 Definition file, which may be provided as a local file path or remote URL, determines
+ * - The OpenAPI 3 Document file, which may be provided as a local file path or remote URL, determines
  *   the contracts to be served.
  * - Spring properties can be used to inject the actual port and base URL of the mock server into the
  *   application context.
@@ -19,7 +19,7 @@ import java.lang.annotation.Inherited
  * - A value of `0` indicates that a random available port will be chosen.
  * - A positive value specifies a fixed port.
  *
- * @property openApiPath The file path or URL to the OpenAPI 3 Definition file from which contracts are loaded.
+ * @property openApiDoc The file path or URL to the OpenAPI 3 Document file from which contracts are loaded.
  *
  * @property portProperty The name of the Spring property used to inject the actual port value of the mock server.
  * Default is `"contracteer.mockserver.port"`.
@@ -34,7 +34,7 @@ import java.lang.annotation.Inherited
 @JvmRepeatable(ContracteerMockServers::class)
 annotation class ContracteerMockServer(
   val port: Int = 0,
-  val openApiPath: String,
+  val openApiDoc: String,
   val portProperty: String = "contracteer.mockserver.port",
   val baseUrlProperty: String = "contracteer.mockserver.baseUrl"
 )

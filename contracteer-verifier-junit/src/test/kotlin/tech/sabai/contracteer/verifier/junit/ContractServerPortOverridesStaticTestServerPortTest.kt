@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeAll
 
 class ContractServerPortOverridesStaticTestServerPortTest {
 
-  @ContractTest(
-    openApiPath = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml",
+  @ContracteerTest(
+    openApiDoc = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml",
     serverPort = 8888)
   fun `contracts server port annotation overrides static server port`() {
   }
@@ -15,7 +15,7 @@ class ContractServerPortOverridesStaticTestServerPortTest {
   companion object {
     private lateinit var server: Http4kServer
 
-    @field:ContractServerPort
+    @field:ContracteerServerPort
     private var serverPort: Int = 0
 
     @JvmStatic

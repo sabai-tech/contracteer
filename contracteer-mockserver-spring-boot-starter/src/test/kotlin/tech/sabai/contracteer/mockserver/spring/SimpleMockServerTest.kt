@@ -10,7 +10,7 @@ import kotlin.test.Test
 
 
 @SpringBootTest(classes = [TestApp::class])
-@ContracteerMockServer(openApiPath = "src/test/resources/oas3_definition.yaml")
+@ContracteerMockServer(openApiDoc = "src/test/resources/oas3_definition.yaml")
 class SimpleMockServerTest {
 
   @Autowired

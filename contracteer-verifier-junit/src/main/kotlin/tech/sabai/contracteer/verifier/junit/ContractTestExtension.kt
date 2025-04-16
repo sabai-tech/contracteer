@@ -10,13 +10,13 @@ import java.util.stream.Stream
 internal class ContractTestExtension: TestTemplateInvocationContextProvider {
 
   override fun supportsTestTemplate(context: ExtensionContext) =
-    context.requiredTestMethod.getAnnotation(ContractTest::class.java) != null
+    context.requiredTestMethod.getAnnotation(ContracteerTest::class.java) != null
 
   override fun provideTestTemplateInvocationContexts(context: ExtensionContext): Stream<TestTemplateInvocationContext> {
-    val annotation = context.requiredTestMethod.getAnnotation(ContractTest::class.java)
+    val annotation = context.requiredTestMethod.getAnnotation(ContracteerTest::class.java)
                      ?: throw IllegalStateException("Missing @ContractTest on test method")
 
-    val contractsResult = OpenApiLoader.loadContracts(annotation.openApiPath)
+    val contractsResult = OpenApiLoader.loadContracts(annotation.openApiDoc)
 
     if (contractsResult.isFailure()) {
       throw IllegalArgumentException(

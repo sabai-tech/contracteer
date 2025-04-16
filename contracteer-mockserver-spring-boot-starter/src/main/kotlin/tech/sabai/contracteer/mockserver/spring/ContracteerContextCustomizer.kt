@@ -14,7 +14,7 @@ internal class ContracteerContextCustomizer(
   override fun customizeContext(context: ConfigurableApplicationContext, mergedConfig: MergedContextConfiguration) {
 
     contracteerContractsMockServerAnnotations.forEach { annotation ->
-      val contractsResult = OpenApiLoader.loadContracts(annotation.openApiPath)
+      val contractsResult = OpenApiLoader.loadContracts(annotation.openApiDoc)
       if (contractsResult.isFailure())
         throw IllegalArgumentException("Error while loading Contracts: ${System.lineSeparator()}" + contractsResult
           .errors()
