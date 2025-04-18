@@ -40,6 +40,7 @@ jobs:
         with:
           java-version: '23'
           enable-graalvm: 'true'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build native image
         run: ./gradlew :contracteer-cli:nativeCompile
@@ -81,6 +82,7 @@ jobs:
         with:
           java-version: '23'
           enable-graalvm: 'false'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download archive
         uses: actions/download-artifact@v4

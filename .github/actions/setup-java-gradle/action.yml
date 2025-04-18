@@ -8,6 +8,10 @@ inputs:
     description: Whether to setup GraalVM
     required: false
     default: 'false'
+  github-token:
+    description: GitHub token for API authentication
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -24,7 +28,7 @@ runs:
       with:
         java-version: ${{ inputs.java-version }}
         distribution: 'graalvm-community'
-        github-token: ${{ env.GITHUB_TOKEN }}
+        github-token: ${{ inputs.github-token }}
         native-image-job-reports: 'true'
 
     - name: Setup Gradle
