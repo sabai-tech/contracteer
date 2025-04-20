@@ -80,7 +80,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Java, GraalVM, and Gradle
+      - name: Setup Java and Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
           java-version: '23'
@@ -107,6 +107,8 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
           JRELEASER_MAVENCENTRAL_USERNAME: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
+          JRELEASER_MAVENCENTRAL_STAGE: ${{ vars.JRELEASER_MAVENCENTRAL_STAGE }}
+          JRELEASER_DRY_RUN: ${{ vars.JRELEASER_DRY_RUN }}
 
       - name: Upload JReleaser logs
         if: always()

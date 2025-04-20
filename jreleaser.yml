@@ -36,7 +36,7 @@ signing:
 
 release:
   github:
-    owner: "camory"
+    owner: sabai-tech
     name: contracteer
     tagName: '{{projectVersion}}'
     releaseName: '{{projectName}} {{projectVersion}}'
@@ -66,7 +66,7 @@ assemble:
             - 'LICENSE'
         - input: "contracteer-cli/build/native/nativeCompile"
           output: 'bin'
-          includes: [ 'contracteer' ]
+          includes: [ 'contracteer', 'contracteer.exe' ]
 
 matrix:
   rows:
@@ -99,7 +99,7 @@ packagers:
   brew:
     active: ALWAYS
     repository:
-      owner: camory
+      owner: sabai-tech
       name: homebrew-contracteer
       username: github-actions
     formulaName: contracteer
