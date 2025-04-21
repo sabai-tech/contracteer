@@ -25,6 +25,22 @@ reliable testing early in the development lifecycle. Contributions should align 
 
 ---
 
+## 📦 Project Modules
+
+| Module                                         | Description                                                                                                     |
+|------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| **contracteer-core**                           | Core functionalities and OpenAPI spec parsing                                                                   |
+| **contracteer-cli**                            | CLI engine for running mock servers and verifications                                                           |
+| **contracteer-mockserver**                     | Mock server generation for contract-based testing                                                               |
+| **contracteer-mockserver-spring-boot-starter** | Seamless mock server integration with Spring Boot                                                               |
+| **contracteer-verifier**                       | Automated verification that compares actual API responses to expected behaviors defined in the OpenAPI Document |
+| **contracteer-verifier-junit**                 | JUnit 5 integration for automated contract verification tests                                                   |
+
+---
+
+
+Core validation engine that compares actual API responses to expected behaviors defined in the OpenAPI contract |
+
 ## 🛠 Development Setup
 
 ### Requirements

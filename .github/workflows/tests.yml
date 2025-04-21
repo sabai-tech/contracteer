@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - '**'
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'LICENSE'
+      - '.github/**'
 jobs:
   test:
     name: Test Updated Modules

@@ -1,12 +1,20 @@
 # Contracteer
+![Build Status](https://img.shields.io/github/actions/workflow/status/sabai-tech/contracteer/tests.yml?branch=main)  
+![Maven Central](https://img.shields.io/maven-central/v/tech.sabai.contracteer/contracteer-core)  
+![License](https://img.shields.io/github/license/sabai-tech/contracteer)
 
-**Contracteer** is a powerful, Kotlin-based toolkit designed for **contract-first API development and testing** using the OpenAPI 3 specification. 
+**Contracteer** is a powerful, Kotlin-based toolkit designed for **contract-first API development and testing** using the OpenAPI 3 specification.
 It enables developers to create, verify, and maintain API contracts efficiently, promoting consistency, early detection of integration issues, and streamlined collaboration.
 
-![License](https://img.shields.io/github/license/sabai-tech/contracteer)
-![Build Status](https://img.shields.io/github/actions/workflow/status/sabai-tech/contracteer/release.yml?branch=main)
-![Latest Release](https://img.shields.io/github/v/release/sabai-tech/contracteer)
-![Maven Central](https://img.shields.io/maven-central/v/tech.sabai.contracteer/contracteer-core?label=Maven%20Central)
+- [✨ Why Contracteer?](#-why-contracteer)
+- [📚 Full Documentation](#-full-documentation)
+- [🚀 Quick Start](#-quick-start)
+    - [JUnit Integration — Verify Your API Implementation](#junit-integration--verify-your-api-implementation)
+    - [Spring Boot Integration — Mock an API for Your Client](#spring-boot-integration--mock-an-api-for-your-client)
+    - [CLI - Use Contracteer from the Command Line](#cli---use-contracteer-from-the-command-line)
+- [🤝 Contributing](#-contributing)
+- [📝 License](#-license)
+
 
 ## ✨ Why Contracteer?
 
@@ -16,47 +24,18 @@ It enables developers to create, verify, and maintain API contracts efficiently,
 - **CI/CD Ready**: Seamlessly integrate into continuous integration pipelines.
 - **Framework-Friendly**: Deep integration with popular JVM test frameworks (JUnit, Spring Boot).
 
-## 📦 Modules
+## 📚 Full Documentation
 
-| Module | Artifact | Description |
-|--------|----------|-------------|
-| **contracteer-core** | [`contracteer-core`](https://search.maven.org/search?q=g:tech.sabai.contracteer%20a:contracteer-core) | Core functionalities and OpenAPI spec parsing |
-| **contracteer-cli** | CLI binary | CLI engine for running mock servers and verifications |
-| **contracteer-mockserver** | [`contracteer-mockserver`](https://search.maven.org/search?q=g:tech.sabai.contracteer%20a:contracteer-mockserver) | Mock server generation for contract-based testing |
-| **contracteer-mockserver-spring-boot-starter** | [`spring-boot-starter`](https://search.maven.org/search?q=g:tech.sabai.contracteer%20a:contracteer-mockserver-spring-boot-starter) | Seamless mock server integration with Spring Boot tests |
-| **contracteer-verifier** | [`contracteer-verifier`](https://search.maven.org/search?q=g:tech.sabai.contracteer%20a:contracteer-verifier) | Automated verification of API responses against contracts |
-| **contracteer-verifier-junit** | [`contracteer-verifier-junit`](https://search.maven.org/search?q=g:tech.sabai.contracteer%20a:contracteer-verifier-junit) | JUnit 5 integration for automated contract verification tests |
+Explore more in-depth documentation and examples:
+
+👉 [Contracteer Documentation](https://sabai-tech.github.io/contracteer)
 
 ## 🚀 Quick Start
 
-### CLI Installation
+### JUnit Integration — Verify Your API Implementation
 
-#### Mac OS (via Homebrew)
-```bash
-brew tap sabai-tech/contracteer
-brew install contracteer
-```
-#### Linux/Windows
-Download the latest release zip file from the [Latest Release page](https://github.com/sabai-tech/contracteer/releases/latest)
-```bash
-curl -LO https://github.com/sabai-tech/contracteer/releases/latest/download/contracteer-linux-x86_64.zip
-unzip contracteer-linux-x86_64.zip
-cd contracteer-linux-x86_64/bin
-```
-### CLI Usage
-Run Contracteer Mock Server:
-
-```bash
-contracteer mockserver openapi.yaml --port 9090
-```
-
-Verify API Contracts:
-
-```bash
-contracteer verify openapi.yaml --serverUrl http://localhost --serverPort 8080
-```
-
-### JUnit Integration
+Use this integration when you want to **verify that your application correctly implements the expectations defined in the OpenAPI document**. 
+This is useful for testing actual HTTP responses returned by your server against the expected behavior.
 
 Add to your `build.gradle.kts`
 ```kotlin
@@ -82,12 +61,18 @@ And quickly integrate contract verification into your tests:
     serverPort = 9090
 )
 fun `verify API contracts`() {
-  // You can prepare mocks or insert data before each contract test run.
+  // This function acts as the entry point for Contracteer to generate and run tests.
+  // You can prepare your test data or mock services here.
 }
 ```
-This annotation will invoke one test per contract defined in the OpenAPI 3 Document.
+This annotation will invoke one test per contract derived from your OpenAPI 3 document.
+If your OpenAPI document includes `example` or `examples` values for requests and responses, Contracteer will use them to drive the tests. This allows you to verify your server implementation against meaningful, documented use cases.
 
-### Spring Boot Integration
+### Spring Boot Integration — Mock an API for Your Client
+
+Use this integration when your application is a client that consumes an API defined by an OpenAPI document. 
+This starts a **mock HTTP server that serves responses based on the OpenAPI examples and schemas** defined in your specification. 
+It enables you to test your client-side code safely and consistently without requiring the actual backend.
 
 Add to your `build.gradle.kts`
 ```kotlin
@@ -122,13 +107,41 @@ class MyClientTest {
     // Your tests here
 }
 ```
-This starts the mock server before tests and injects the dynamic port into the Spring context.
+The `portProperty` value defines where the mock server port will be injected in your Spring context, allowing your client to connect dynamically.
 
-## 📚 Full Documentation
+If your OpenAPI document includes `examples` values for requests and responses, those will be used as the basis for mock responses. If no examples are provided, Contracteer will generate mock data based on the schema definitions.
 
-Explore more in-depth documentation and examples:
+If you prefer a standalone solution or want to integrate contract testing in your CI/CD pipeline, you can use the Contracteer CLI.
 
-👉 [Contracteer Documentation](https://sabai-tech.github.io/contracteer)
+### CLI - Use Contracteer from the Command Line
+The Contracteer CLI is a standalone binary ideal for integrating contract verification or mock server startup in your development workflow or CI pipelines.
+
+#### Installation
+
+##### Mac OS (via Homebrew)
+```bash
+brew tap sabai-tech/contracteer
+brew install contracteer
+```
+##### Linux/Windows
+Download the latest release zip file from the [Latest Release page](https://github.com/sabai-tech/contracteer/releases/latest)
+```bash
+curl -LO https://github.com/sabai-tech/contracteer/releases/latest/download/contracteer-linux-x86_64.zip
+unzip contracteer-linux-x86_64.zip
+cd contracteer-linux-x86_64/bin
+```
+#### CLI Usage
+Start a mock server on port 9090 using your OpenAPI definition:
+
+```bash
+contracteer mockserver openapi.yaml --port 9090
+```
+
+Verify that a running server behaves as specified by the operations in the OpenAPI document:
+
+```bash
+contracteer verify openapi.yaml --serverUrl http://localhost --serverPort 8080
+```
 
 ## 🤝 Contributing
 
