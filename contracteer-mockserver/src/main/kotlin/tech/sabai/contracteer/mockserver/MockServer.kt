@@ -20,6 +20,7 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.contract.*
 import tech.sabai.contracteer.core.contract.Body
+import tech.sabai.contracteer.core.parse
 
 class MockServer(private val contracts: List<Contract>,
                  private val port: Int = 0) {
@@ -102,12 +103,15 @@ class MockServer(private val contracts: List<Contract>,
         { (request.body?.verify(req) ?: success()) }
 
   private fun List<ContractParameter>.verify(parameterValueExtractor: (ContractParameter) -> String?) =
-    accumulate {
-      val value = parameterValueExtractor.invoke(it)
-      when {
-        value == null && it.isRequired -> failure(it.name, "is missing")
-        value == null                  -> success()
-        else                           -> it.validate(value)
+    accumulate { parameter ->
+      when (val value = parameterValueExtractor.invoke(parameter)) {
+        null if parameter.isRequired                       -> failure(parameter.name, "is missing")
+        null if parameter.example?.normalizedValue == null -> success(value)
+        else                                               ->
+          parameter.dataType.parse(value)
+            .flatMap { parameter.example?.validate(it) ?: parameter.dataType.validate(it) }
+            .forProperty(parameter.name)
+            .map { value }
       }
     }
 
@@ -116,7 +120,11 @@ class MockServer(private val contracts: List<Contract>,
 
     return contentType
       .validate(requestContentType)
-      .flatMap { this.validate(req.bodyString()) }
+      .andThen {
+        contentType
+          .parseValue(req.bodyString(), dataType)
+          .flatMap { example?.validate(it) ?: dataType.validate(it) }
+      }
       .mapErrors { "Request $it" }
   }
 

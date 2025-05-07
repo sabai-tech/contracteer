@@ -32,7 +32,7 @@ object TestFixture {
     StringDataType.create("string", "string", isNullable, enum, minLength, maxLength).value!!
 
   fun body(contentType: ContentType, dataType: DataType<out Any>, example: Example? = null) =
-    Body.create(contentType, dataType, example).value!!
+    Body.create(contentType, dataType, false, example).value!!
 
   fun pathParameter(name: String, dataType: DataType<out Any>, example: Example? = null) =
     ContractParameter.create(name, dataType, true, example).value!!

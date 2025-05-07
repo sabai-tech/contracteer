@@ -41,7 +41,7 @@ fun Any?.normalize(): Any? =
 
 
 // TODO refactor it when supporting ObjectDataType and ArrayDataType for Parameter
-fun DataType<out Any>.parse(value: String?) =
+fun DataType<out Any>.parse(value: String?): Result<Any> =
   if (value == null) success()
   else {
     when (this) {

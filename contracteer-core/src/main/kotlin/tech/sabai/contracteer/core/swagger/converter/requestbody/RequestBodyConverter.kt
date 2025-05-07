@@ -9,6 +9,7 @@ import tech.sabai.contracteer.core.contract.Body
 import tech.sabai.contracteer.core.contract.ContentType
 import tech.sabai.contracteer.core.swagger.contractExample
 import tech.sabai.contracteer.core.swagger.converter.schema.SchemaConverter
+import tech.sabai.contracteer.core.swagger.safeRequired
 
 object RequestBodyConverter {
   private const val RECURSIVE_MAX_DEPTH = 10
@@ -38,7 +39,7 @@ object RequestBodyConverter {
           .flatMap { resolvedExample ->
             SchemaConverter
               .convertToDataType(mediaType.schema, "")
-              .flatMap { Body.create(ContentType(contentType), it!!, resolvedExample) }
+              .flatMap { Body.create(ContentType(contentType), it!!, body.safeRequired(), resolvedExample) }
           }
       }.combineResults()
   }

@@ -1,9 +1,5 @@
 package tech.sabai.contracteer.core
 
-import tech.sabai.contracteer.core.contract.Body
-import tech.sabai.contracteer.core.contract.ContentType
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.Example
 import tech.sabai.contracteer.core.datatype.*
 import java.math.BigDecimal
 
@@ -102,10 +98,4 @@ object TestFixture {
   fun uuidDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =
     UuidDataType.create("uuid", isNullable, enum).value!!
-
-  fun body(contentType: ContentType, dataType: DataType<out Any>, example: Example? = null) =
-    Body.create(contentType, dataType, example).value!!
-
-  fun parameter(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, example: Example? = null) =
-    ContractParameter.create(name, dataType, isRequired, example).value!!
 }

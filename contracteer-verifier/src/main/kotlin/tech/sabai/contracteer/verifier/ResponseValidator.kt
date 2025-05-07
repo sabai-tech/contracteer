@@ -10,26 +10,30 @@ import tech.sabai.contracteer.core.contract.ContractResponse
 internal class ResponseValidator(private val contractResponse: ContractResponse) {
 
   fun validate(response: Response) =
-    with(contractResponse) {
       validateStatusCode(response.status.code) andThen
           { validateHeaders(response.headers) } andThen
           { validateBody(response) }
-    }
 
-  private fun ContractResponse.validateStatusCode(statusCode: Int) =
-    if (this.statusCode == statusCode) success(statusCode)
-    else failure("Status code does not match. Expected: ${this.statusCode}, Actual: $statusCode")
+  private fun validateStatusCode(statusCode: Int) =
+    if (this.contractResponse.statusCode == statusCode) success(statusCode)
+    else failure("Status code does not match. Expected: ${this.contractResponse.statusCode}, Actual: $statusCode")
 
-  private fun ContractResponse.validateHeaders(headers: Headers) =
-    this.headers.accumulate {
+
+  private fun validateHeaders(headers: Headers) =
+    contractResponse.headers.accumulate {
       when {
-        it.isRequired.not() && headers.hasHeader(it.name).not() -> success()
-        it.isRequired && headers.hasHeader(it.name).not()       -> failure("Response header '${it.name}' is missing")
-        else                                                    -> it.validate(headers.headerValue(it.name))
+        !it.isRequired && !headers.hasHeader(it.name) ->
+          success()
+
+        it.isRequired && !headers.hasHeader(it.name)  ->
+          failure("Response header '${it.name}' is missing")
+
+        else                                          ->
+          it.dataType.validate(headers.headerValue(it.name)).forProperty(it.name)
       }
     }
 
-  private fun ContractResponse.validateBody(response: Response) =
+  private fun validateBody(response: Response) =
     when {
       contractResponse.body == null && response.contentType().isNullOrEmpty()  ->
         success()
@@ -43,7 +47,11 @@ internal class ResponseValidator(private val contractResponse: ContractResponse)
       else                                                                     ->
         contractResponse.body!!.contentType
           .validate(response.contentType()!!)
-          .flatMap { contractResponse.body!!.validate(response.bodyString()) }
+          .andThen {
+            contractResponse.body!!.contentType
+              .parseValue(response.bodyString(), contractResponse.body!!.dataType)
+              .flatMap { contractResponse.body!!.dataType.validate(it) }
+          }
     }
 
 

@@ -13,7 +13,7 @@ sealed class DataType<T>(
   val allowedValues: AllowedValues? = null) {
 
   @Suppress("UNCHECKED_CAST")
-  internal fun validate(value: Any?): Result<T> {
+  fun validate(value: Any?): Result<T> {
     val normalizedValue = value.normalize()
     return when {
       normalizedValue == null && isNullable      -> success()

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.media.Discriminator
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
+import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
@@ -106,6 +107,9 @@ internal fun Components?.safeHeaders() =
 internal fun Discriminator.safeMapping() =
   mapping ?: emptyMap()
 
+internal fun RequestBody.safeRequired() =
+  required ?: false
+
 internal fun Operation.generatePathParameters(exampleKey: String? = null) =
   safeParameters()
     .filter { it.`in` == "path" }
@@ -148,7 +152,7 @@ internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Res
         .flatMap { resolvedExample ->
           SchemaConverter
             .convertToDataType(mediaType.schema, "")
-            .flatMap { Body.create(ContentType(contentType), it!!, resolvedExample) }
+            .flatMap { Body.create(ContentType(contentType), it!!, mediaType.schema.safeNullable(),resolvedExample) }
         }
     }.combineResults()
 
