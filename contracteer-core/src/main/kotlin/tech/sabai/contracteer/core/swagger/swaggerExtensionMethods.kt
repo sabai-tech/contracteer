@@ -115,7 +115,7 @@ internal fun Operation.generatePathParameters(exampleKey: String? = null) =
     .filter { it.`in` == "path" }
     .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
     .combineResults()
-    .flatMap { it!!.map { ParameterConverter.convert(it, exampleKey) }.combineResults() }
+    .flatMap { parameters -> parameters!!.map { ParameterConverter.convert(it, exampleKey) }.combineResults() }
 
 internal fun Operation.generateQueryParameters(exampleKey: String? = null) =
   safeParameters()

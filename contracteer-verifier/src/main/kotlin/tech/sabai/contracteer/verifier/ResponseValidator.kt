@@ -48,8 +48,8 @@ internal class ResponseValidator(private val contractResponse: ContractResponse)
         contractResponse.body!!.contentType
           .validate(response.contentType()!!)
           .andThen {
-            contractResponse.body!!.contentType
-              .parseValue(response.bodyString(), contractResponse.body!!.dataType)
+            contractResponse.body!!.contentType.serde
+              .deserialize(response.bodyString(), contractResponse.body!!.dataType)
               .flatMap { contractResponse.body!!.dataType.validate(it) }
           }
     }

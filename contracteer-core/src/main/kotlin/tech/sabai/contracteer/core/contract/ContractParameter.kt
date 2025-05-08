@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.contract
 
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.serde.BasicSerde
 
 @ConsistentCopyVisibility
 data class ContractParameter private constructor(
@@ -13,12 +13,9 @@ data class ContractParameter private constructor(
 
   fun value(): Any? = if (example != null) example.normalizedValue else dataType.randomValue()
 
-  fun stringValue() =
-    when {
-      dataType.isFullyStructured() -> TODO("Not yet implemented")
-      dataType is ArrayDataType    -> TODO("Not yet implemented")
-      else                         -> value().toString()
-  }
+  fun stringValue() = BasicSerde.serialize(value())
+
+  fun deserialize(value: String?)= BasicSerde.deserialize(value, dataType)
 
   companion object {
     fun create(name: String,

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
 
-class ParameterTest {
+class ContractParameterTest {
 
   @Test
   fun `creation succeeds without example`() {

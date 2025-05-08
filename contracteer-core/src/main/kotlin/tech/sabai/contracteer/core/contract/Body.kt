@@ -1,7 +1,10 @@
 package tech.sabai.contracteer.core.contract
 
+import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.serde.JsonSerde
 
 @ConsistentCopyVisibility
 data class Body private constructor(
@@ -12,7 +15,7 @@ data class Body private constructor(
 
   fun content() = if (example != null) example.normalizedValue else dataType.randomValue()
 
-  fun asString(): String = contentType.serialize(content())
+  fun asString(): String = contentType.serde.serialize(content())
 
   companion object {
     fun create(contentType: ContentType,
@@ -25,5 +28,11 @@ data class Body private constructor(
           if (example == null) success(Body(contentType, dataType, isRequired))
           else dataType.validate(example.normalizedValue).map { Body(contentType, dataType, isRequired, example) }
         }
+
+    fun ContentType.validate(dataType: DataType<out Any>) =
+      if (isJson() && !dataType.isFullyStructured() && dataType !is ArrayDataType)
+        failure("Content type $value supports only 'object', 'anyOf', 'oneOf', 'allOf' or 'array' schema")
+      else
+        success(dataType)
   }
 }

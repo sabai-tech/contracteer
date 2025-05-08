@@ -39,28 +39,5 @@ fun Any?.normalize(): Any? =
     else             -> this
   }
 
-
-// TODO refactor it when supporting ObjectDataType and ArrayDataType for Parameter
-fun DataType<out Any>.parse(value: String?): Result<Any> =
-  if (value == null) success()
-  else {
-    when (this) {
-      is CompositeDataType,
-      is ObjectDataType, is ArrayDataType -> failure(name, "'object' and 'array' are not supported yet")
-      is BooleanDataType                                  -> value.asBoolean()
-      is NumberDataType, is IntegerDataType               -> value.asBigDecimal()
-      is AnyDataType, is StringDataType,
-      is UuidDataType, is Base64DataType,
-      is BinaryDataType, is EmailDataType,
-      is DateTimeDataType, is DateDataType                -> success(value)
-    }
-  }
-
-private fun String.asBoolean() =
-  toBooleanStrictOrNull()?.let { success(it) } ?: failure("Wrong type. Expected type: 'boolean'")
-
-private fun String.asBigDecimal() =
-  toBigDecimalOrNull()?.let { success(it) } ?: failure("Wrong type. Expected type: 'number' or 'integer'")
-
 fun Collection<*>.joinWithQuotes(): String =
   joinToString(separator = "', '", prefix = "'", postfix = "'")

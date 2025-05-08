@@ -76,7 +76,8 @@ private fun Contract.hasUnsupportedParameters() =
    request.cookies +
    request.headers +
    response.headers
-  ).filter { it.dataType is ObjectDataType || it.dataType is ArrayDataType }
+  )
+    .filter { it.dataType.isFullyStructured() || it.dataType is ArrayDataType }
     .onEach { logger.warn { "Contract '${this.description()}' has been excluded: parameter '${it.name}' uses a schema of type 'array' or 'object', which are not yet supported." } }
     .isNotEmpty()
 
