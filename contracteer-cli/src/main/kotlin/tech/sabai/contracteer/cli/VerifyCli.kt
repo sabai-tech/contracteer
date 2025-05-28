@@ -73,7 +73,7 @@ class VerifyCli: BaseCliCommand() {
     if (result.isSuccess()) {
       println(AUTO.string("   ✅ ${contract.description()}"))
     } else {
-      println(AUTO.string("@|bold,red   ❌ ${contract.description()}|@"))
+      println(AUTO.string("@|bold,red    ❌ ${contract.description()}|@"))
       result.errors().forEach { println(AUTO.string("     ↳ @|yellow $it|@")) }
     }
 

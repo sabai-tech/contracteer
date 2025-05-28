@@ -4,7 +4,6 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.serde.JsonSerde
 
 @ConsistentCopyVisibility
 data class Body private constructor(

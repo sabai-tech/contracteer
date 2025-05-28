@@ -48,5 +48,8 @@ tasks.named("processResources") {
   dependsOn("generateVersionFile")
 }
 
-sourceSets["main"].resources.srcDir(layout.buildDirectory.dir("generated/resources/version"))
+tasks.named("sourcesJar") {
+  dependsOn("generateVersionFile")
+}
 
+sourceSets["main"].resources.srcDir(layout.buildDirectory.dir("generated/resources/version"))

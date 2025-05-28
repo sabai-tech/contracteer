@@ -57,7 +57,7 @@ And quickly integrate contract verification into your tests:
 
 ```kotlin
 @ContracteerTest(
-    openApiPath = "src/test/resources/openapi.yaml",
+    openApiDoc = "src/test/resources/openapi.yaml",
     serverPort = 9090
 )
 fun `verify API contracts`() {

@@ -54,11 +54,14 @@ class AllOfDataType private constructor(name: String,
   private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Map<String, Any?>>, Result<Map<String, Any?>>>): Result<Map<String, Any?>> {
     val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
     val detailedErrors = dataTypeErrors.map { (dataType, result) ->
-      "${lineSeparator()}  - Schema '${dataType.name}':" + result.errors().joinToString(
-        prefix = "${lineSeparator()}      - ",
-        separator = "${lineSeparator()}      - "
+      "Schema '${dataType.name}':" + result.errors().joinToString(
+        prefix = "${lineSeparator()}\t\t\t- ",
+        separator = "${lineSeparator()}\t\t\t- "
       )
-    }.joinToString("")
+    }.joinToString(
+      prefix = "\t\t- ",
+      separator = "${lineSeparator()}\t\t- "
+    )
     return failure(
       "No matching schema found. The provided value did not match any of the candidate schemas ($schemaNames):${lineSeparator()}$detailedErrors"
     )
