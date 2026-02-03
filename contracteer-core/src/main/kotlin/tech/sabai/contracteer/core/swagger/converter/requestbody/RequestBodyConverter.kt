@@ -19,18 +19,19 @@ object RequestBodyConverter {
 
   fun convert(requestBody: RequestBody,
               exampleKey: String?,
+              validateExample: Boolean = true,
               maxRecursiveDepth: Int = RECURSIVE_MAX_DEPTH): Result<List<Body>> {
     val ref = requestBody.shortRef()
     return when {
       maxRecursiveDepth < 0                    -> failure("Maximum recursive depth reached while converting Body")
-      ref == null                              -> convertRequestBody(requestBody, exampleKey)
-      sharedRequestBodies[ref]?.`$ref` != null -> convert(sharedRequestBodies[ref]!!, exampleKey, maxRecursiveDepth - 1)
-      sharedRequestBodies[ref] != null         -> convertRequestBody(sharedRequestBodies[ref]!!, exampleKey)
+      ref == null                              -> convertRequestBody(requestBody, exampleKey, validateExample)
+      sharedRequestBodies[ref]?.`$ref` != null -> convert(sharedRequestBodies[ref]!!, exampleKey, validateExample, maxRecursiveDepth - 1)
+      sharedRequestBodies[ref] != null         -> convertRequestBody(sharedRequestBodies[ref]!!, exampleKey, validateExample)
       else                                     -> failure("Request Body ${requestBody.`$ref`} in 'components/requestBodies' section")
     }
   }
 
-  private fun convertRequestBody(body: RequestBody, exampleKey: String?): Result<List<Body>> {
+  private fun convertRequestBody(body: RequestBody, exampleKey: String?, validateExample: Boolean): Result<List<Body>> {
     return if (body.content == null)
       success(emptyList())
     else
@@ -39,7 +40,7 @@ object RequestBodyConverter {
           .flatMap { resolvedExample ->
             SchemaConverter
               .convertToDataType(mediaType.schema, "")
-              .flatMap { Body.create(ContentType(contentType), it!!, body.safeRequired(), resolvedExample) }
+              .flatMap { Body.create(ContentType(contentType), it!!, body.safeRequired(), resolvedExample, validateExample) }
           }
       }.combineResults()
   }

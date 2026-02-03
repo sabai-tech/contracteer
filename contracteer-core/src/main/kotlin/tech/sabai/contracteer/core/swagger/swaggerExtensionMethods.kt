@@ -110,36 +110,36 @@ internal fun Discriminator.safeMapping() =
 internal fun RequestBody.safeRequired() =
   required ?: false
 
-internal fun Operation.generatePathParameters(exampleKey: String? = null) =
+internal fun Operation.generatePathParameters(exampleKey: String? = null, validateExample: Boolean = true) =
   safeParameters()
     .filter { it.`in` == "path" }
     .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
     .combineResults()
-    .flatMap { parameters -> parameters!!.map { ParameterConverter.convert(it, exampleKey) }.combineResults() }
+    .flatMap { parameters -> parameters!!.map { ParameterConverter.convert(it, exampleKey, validateExample) }.combineResults() }
 
-internal fun Operation.generateQueryParameters(exampleKey: String? = null) =
+internal fun Operation.generateQueryParameters(exampleKey: String? = null, validateExample: Boolean = true) =
   safeParameters()
     .filter { it.`in` == "query" }
-    .map { ParameterConverter.convert(it, exampleKey) }
+    .map { ParameterConverter.convert(it, exampleKey, validateExample) }
     .combineResults()
 
-internal fun Operation.generateRequestHeaders(exampleKey: String? = null) =
+internal fun Operation.generateRequestHeaders(exampleKey: String? = null, validateExample: Boolean = true) =
   safeParameters()
     .filter { it.`in` == "header" }
-    .map { ParameterConverter.convert(it, exampleKey) }
+    .map { ParameterConverter.convert(it, exampleKey, validateExample) }
     .combineResults()
 
-internal fun Operation.generateRequestCookies(exampleKey: String? = null) =
+internal fun Operation.generateRequestCookies(exampleKey: String? = null, validateExample: Boolean = true) =
   safeParameters()
     .filter { it.`in` == "cookie" }
-    .map { ParameterConverter.convert(it, exampleKey) }
+    .map { ParameterConverter.convert(it, exampleKey, validateExample) }
     .combineResults()
 
-internal fun Operation.generateRequestBodies(exampleKey: String? = null) =
+internal fun Operation.generateRequestBodies(exampleKey: String? = null, validateExample: Boolean = true) =
   if (requestBody == null)
     success(emptyList())
   else
-    RequestBodyConverter.convert(this.requestBody!!, exampleKey)
+    RequestBodyConverter.convert(this.requestBody!!, exampleKey, validateExample)
 
 
 internal fun ApiResponse.generateResponseBodies(exampleKey: String? = null): Result<List<Body>> =

@@ -45,15 +45,15 @@ data class SwaggerOperationContext(
   }
 
   private fun createRequests(exampleKey: String? = null): List<Result<ContractRequest>> {
-    val pathParameters = operation.generatePathParameters(exampleKey).forProperty("path")
-    val queryParameters = operation.generateQueryParameters(exampleKey).forProperty("query")
-    val headers = operation.generateRequestHeaders(exampleKey).forProperty("header")
-    val cookies = operation.generateRequestCookies(exampleKey).forProperty("cookie")
-    val bodies = operation.generateRequestBodies(exampleKey).forProperty("body")
+    val validateExample = statusCode != "400"
+    val pathParameters = operation.generatePathParameters(exampleKey, validateExample).forProperty("path")
+    val queryParameters = operation.generateQueryParameters(exampleKey, validateExample).forProperty("query")
+    val headers = operation.generateRequestHeaders(exampleKey, validateExample).forProperty("header")
+    val cookies = operation.generateRequestCookies(exampleKey, validateExample).forProperty("cookie")
+    val bodies = operation.generateRequestBodies(exampleKey, validateExample).forProperty("body")
 
     return if (allAreSuccess(pathParameters, queryParameters, cookies, headers, bodies)) {
-      val request = ContractRequest(method.name,
-                                    path,
+      val request = ContractRequest(method.name, path,
                                     pathParameters.value!!,
                                     queryParameters.value!!,
                                     headers.value!!,

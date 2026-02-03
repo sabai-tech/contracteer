@@ -20,15 +20,22 @@ data class Body private constructor(
     fun create(contentType: ContentType,
                dataType: DataType<out Any>,
                isRequired: Boolean = false,
-               example: Example? = null) =
+               example: Example? = null,
+               validateExample: Boolean = true) =
       contentType
         .validate(dataType)
         .flatMap {
-          if (example == null) success(Body(contentType, dataType, isRequired))
-          else dataType.validate(example.normalizedValue).map { Body(contentType, dataType, isRequired, example) }
+          when {
+            example == null  -> success(Body(contentType, dataType, isRequired))
+            !validateExample -> success(Body(contentType, dataType, isRequired, example))
+            else             ->
+              dataType
+                .validate(example.normalizedValue)
+                .map { Body(contentType, dataType, isRequired, example) }
+          }
         }
 
-    fun ContentType.validate(dataType: DataType<out Any>) =
+    private fun ContentType.validate(dataType: DataType<out Any>) =
       if (isJson() && !dataType.isFullyStructured() && dataType !is ArrayDataType)
         failure("Content type $value supports only 'object', 'anyOf', 'oneOf', 'allOf' or 'array' schema")
       else

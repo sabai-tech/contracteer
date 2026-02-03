@@ -250,6 +250,43 @@ class ContractExtractorTest {
   }
 
   @Test
+  fun `allows intentionally invalid request examples for 400 Bad Request contracts`() {
+    // when
+    val result = OpenApiLoader.loadContracts("src/test/resources/examples/400_bad_request_with_invalid_example.yaml")
+
+    // then
+    assert(result.isSuccess())
+    val contracts = result.value!!
+
+    assert(contracts.size == 6)
+
+    assert(contracts.find { it.response.statusCode == 200 && it.exampleKey == null } != null)
+
+    val badRequestContracts = contracts.filter { it.response.statusCode == 400 }
+    assert(badRequestContracts.size == 5)
+
+    val missingFieldContract = badRequestContracts.find { it.exampleKey == "INVALID_BODY_MISSING_FIELD" }
+    val missingFieldBody = missingFieldContract!!.request.body!!.example!!.normalizedValue as Map<*, *>
+    assert(missingFieldBody.containsKey("age").not())
+
+    val invalidQueryContract = badRequestContracts.find { it.exampleKey == "INVALID_QUERY" }
+    val queryParam = invalidQueryContract!!.request.queryParameters.find { it.name == "filter" }
+    assert(queryParam!!.example!!.normalizedValue == 123.normalize())
+
+    val invalidPathContract = badRequestContracts.find { it.exampleKey == "INVALID_PATH" }
+    val pathParam = invalidPathContract!!.request.pathParameters.find { it.name == "id" }
+    assert(pathParam!!.example!!.normalizedValue == "not-a-number")
+
+    val invalidHeaderContract = badRequestContracts.find { it.exampleKey == "INVALID_HEADER" }
+    val header = invalidHeaderContract!!.request.headers.find { it.name == "X-Custom-Header" }
+    assert(header!!.example!!.normalizedValue == 999.normalize())
+
+    val invalidCookieContract = badRequestContracts.find { it.exampleKey == "INVALID_COOKIE" }
+    val cookie = invalidCookieContract!!.request.cookies.find { it.name == "session" }
+    assert(cookie!!.example!!.normalizedValue == 456.normalize())
+  }
+
+  @Test
   fun `does not fail when loading unsupported OAS feature`() {
     // when
     val result = OpenApiLoader.loadContracts("src/test/resources/unsupported_oas_features.yaml")

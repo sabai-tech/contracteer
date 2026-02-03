@@ -15,19 +15,22 @@ data class ContractParameter private constructor(
 
   fun stringValue() = BasicSerde.serialize(value())
 
-  fun deserialize(value: String?)= BasicSerde.deserialize(value, dataType)
+  fun deserialize(value: String?) = BasicSerde.deserialize(value, dataType)
 
   companion object {
     fun create(name: String,
                dataType: DataType<out Any>,
                isRequired: Boolean = false,
-               example: Example? = null) =
-      if (example == null) success(ContractParameter(name, dataType, isRequired))
-      else {
-        dataType
-          .validate(example.normalizedValue)
-          .forProperty(name)
-          .map { ContractParameter(name, dataType, isRequired, example) }
+               example: Example? = null,
+               validateExample: Boolean = true) =
+      when {
+        example == null  -> success(ContractParameter(name, dataType, isRequired))
+        !validateExample -> success(ContractParameter(name, dataType, isRequired, example))
+        else             ->
+          dataType
+            .validate(example.normalizedValue)
+            .forProperty(name)
+            .map { ContractParameter(name, dataType, isRequired, example) }
       }
   }
 }

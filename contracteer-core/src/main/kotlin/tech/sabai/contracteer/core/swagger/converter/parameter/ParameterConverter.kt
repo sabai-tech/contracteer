@@ -16,18 +16,19 @@ object ParameterConverter {
 
   fun convert(parameter: Parameter,
               exampleKey: String?,
+              validateExample: Boolean = true,
               maxRecursiveDepth: Int = MAX_RECURSIVE_DEPTH): Result<ContractParameter> {
     val ref = parameter.shortRef()
     return when {
       maxRecursiveDepth < 0                 -> failure("Maximum recursive depth reached while converting Parameter")
-      ref == null                           -> convertParameter(parameter, exampleKey)
-      sharedParameters[ref]?.`$ref` != null -> convert(sharedParameters[ref]!!, exampleKey, maxRecursiveDepth - 1)
-      sharedParameters[ref] != null         -> convertParameter(sharedParameters[ref]!!, exampleKey)
+      ref == null                           -> convertParameter(parameter, exampleKey, validateExample)
+      sharedParameters[ref]?.`$ref` != null -> convert(sharedParameters[ref]!!, exampleKey, validateExample, maxRecursiveDepth - 1)
+      sharedParameters[ref] != null         -> convertParameter(sharedParameters[ref]!!, exampleKey, validateExample)
       else                                  -> failure("Parameter' ${parameter.`$ref`}' not found in 'components/parameters' section")
     }
   }
 
-  private fun convertParameter(parameter: Parameter, exampleKey: String?) =
+  private fun convertParameter(parameter: Parameter, exampleKey: String?, validateExample: Boolean) =
     when {
       exampleKey == null                                  -> success()
       !parameter.safeExamples().keys.contains(exampleKey) -> success()
@@ -35,7 +36,7 @@ object ParameterConverter {
     }.flatMap { resolvedExample ->
       SchemaConverter
         .convertToDataType(parameter.schema, "")
-        .flatMap { ContractParameter.create(parameter.name, it!!, parameter.safeIsRequired(), resolvedExample) }
+        .flatMap { ContractParameter.create(parameter.name, it!!, parameter.safeIsRequired(), resolvedExample, validateExample) }
     }
 
   private fun Parameter.shortRef() =
