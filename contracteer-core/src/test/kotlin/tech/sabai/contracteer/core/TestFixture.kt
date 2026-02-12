@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core
 
 import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.math.BigDecimal
 
 object TestFixture {
@@ -98,4 +99,20 @@ object TestFixture {
   fun uuidDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =
     UuidDataType.create("uuid", isNullable, enum).value!!
+}
+
+// Test assertion helpers
+fun <T> Result<T>.assertSuccess(): T {
+  assert(isSuccess()) { "Expected success but got errors: ${errors()}" }
+  return value!!
+}
+
+fun <T> Result<T>.assertFailure(): List<String> {
+  assert(isFailure()) { "Expected failure but got success with value: $value" }
+  return errors()
+}
+
+fun <T> List<T>.assertSingle(): T {
+  assert(size == 1) { "Expected single element but got $size" }
+  return single()
 }

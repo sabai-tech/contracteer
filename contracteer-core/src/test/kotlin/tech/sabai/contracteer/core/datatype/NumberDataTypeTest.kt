@@ -20,7 +20,7 @@ class NumberDataTypeTest {
   }
 
   @Test
-  fun `validation succeeds  an integer value`() {
+  fun `validation succeeds for an integer value`() {
     // given
     val numberDataType = numberDataType()
 
@@ -98,10 +98,10 @@ class NumberDataTypeTest {
     fun `generates valid random value with enum`() {
       // given
       val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
-      val dateDataType = numberDataType(enum = enum)
+      val numberDataType = numberDataType(enum = enum)
 
       // when
-      val result = dateDataType.randomValue()
+      val result = numberDataType.randomValue()
 
       // then
       assert(enum.map { it.normalize() }.contains(result))

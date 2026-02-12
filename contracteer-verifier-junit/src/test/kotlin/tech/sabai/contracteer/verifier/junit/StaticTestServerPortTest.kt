@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeAll
 class StaticTestServerPortTest {
 
   @ContracteerTest(
-    openApiDoc = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml",
+    openApiDoc = "src/test/resources/api_with_scenario_and_schema_based_responses.yaml",
     serverPort = 9090)
   fun `verify contracts using static server port`() {
   }

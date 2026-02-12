@@ -2,61 +2,92 @@ package tech.sabai.contracteer.verifier
 
 import org.http4k.core.Headers
 import org.http4k.core.Response
+import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
-import tech.sabai.contracteer.core.contract.ContractResponse
+import tech.sabai.contracteer.core.operation.BodySchema
+import tech.sabai.contracteer.core.operation.ParameterElement.Header
+import tech.sabai.contracteer.core.operation.ParameterSchema
+import tech.sabai.contracteer.core.operation.ResponseSchema
+import tech.sabai.contracteer.verifier.VerificationCase.ScenarioBased
+import tech.sabai.contracteer.verifier.VerificationCase.SchemaBased
 
-internal class ResponseValidator(private val contractResponse: ContractResponse) {
+private fun Headers.hasHeader(name: String) = any { it.first.equals(name, ignoreCase = true) }
+private fun Headers.headerValue(name: String) = find { it.first.equals(name, ignoreCase = true) }?.second
+private fun Response.contentType(): String? = header("Content-Type")
 
-  fun validate(response: Response) =
-      validateStatusCode(response.status.code) andThen
-          { validateHeaders(response.headers) } andThen
-          { validateBody(response) }
+internal object ResponseValidator {
+  fun validate(case: VerificationCase, response: Response): Result<Unit> {
+    return when (case) {
+      is ScenarioBased ->
+        validateResponse(case.scenario.statusCode, case.responseSchema, response)
+      is SchemaBased   ->
+        validateResponse(case.statusCode, case.responseSchema, response)
+    }
+  }
 
-  private fun validateStatusCode(statusCode: Int) =
-    if (this.contractResponse.statusCode == statusCode) success(statusCode)
-    else failure("Status code does not match. Expected: ${this.contractResponse.statusCode}, Actual: $statusCode")
+  private fun validateResponse(
+    expectedStatusCode: Int,
+    responseSchema: ResponseSchema,
+    response: Response
+  ): Result<Unit> {
+    return validateStatusCode(expectedStatusCode, response.status.code)
+      .andThen { validateHeaders(responseSchema.headers, response.headers) }
+      .andThen { validateBody(responseSchema.bodies, response) }
+  }
 
+  private fun validateStatusCode(expected: Int, actual: Int): Result<Unit> {
+    return if (expected == actual) {
+      success()
+    } else {
+      failure("Status code does not match. Expected: $expected, Actual: $actual")
+    }
+  }
 
-  private fun validateHeaders(headers: Headers) =
-    contractResponse.headers.accumulate {
+  private fun validateHeaders(
+    headerSchemas: List<ParameterSchema>,
+    responseHeaders: Headers
+  ): Result<Unit> {
+    return headerSchemas.accumulate { paramSchema ->
+      val element = paramSchema.element as Header
       when {
-        !it.isRequired && !headers.hasHeader(it.name) ->
-          success()
-
-        it.isRequired && !headers.hasHeader(it.name)  ->
-          failure("Response header '${it.name}' is missing")
-
-        else                                          ->
-          it.dataType.validate(headers.headerValue(it.name)).forProperty(it.name)
+        !paramSchema.isRequired && !responseHeaders.hasHeader(element.name) -> success()
+        paramSchema.isRequired && !responseHeaders.hasHeader(element.name)  -> failure("Response header '${element.name}' is missing")
+        else                                                                ->
+          paramSchema.serde
+            .deserialize(responseHeaders.headerValue(element.name), paramSchema.dataType)
+            .flatMap { paramSchema.dataType.validate(it) }
+            .forProperty(element.name)
+            .map { }
       }
     }
+  }
 
-  private fun validateBody(response: Response) =
-    when {
-      contractResponse.body == null && response.contentType().isNullOrEmpty()  ->
-        success()
+  private fun validateBody(
+    bodySchemas: List<BodySchema>,
+    response: Response
+  ): Result<Unit> {
+    val responseContentType = response.contentType()
 
-      contractResponse.body == null && !response.contentType().isNullOrEmpty() ->
-        failure("Expected no Content-Type but found: '${response.contentType()}'")
+    return when {
+      bodySchemas.isEmpty() && responseContentType.isNullOrEmpty()    -> success()
+      bodySchemas.isEmpty() && !responseContentType.isNullOrEmpty()   -> failure("Expected no Content-Type but found: '$responseContentType'")
+      bodySchemas.isNotEmpty() && responseContentType.isNullOrEmpty() -> failure("Content-Type is missing, expected one of: ${bodySchemas.map { it.contentType.value }}")
+      else                                                            -> {
+        val matchingSchema = bodySchemas.find { it.contentType.validate(responseContentType!!).isSuccess() }
 
-      contractResponse.body != null && response.contentType().isNullOrEmpty()  ->
-        failure("Content-Type is missing, expected '${contractResponse.body!!.contentType}'")
-
-      else                                                                     ->
-        contractResponse.body!!.contentType
-          .validate(response.contentType()!!)
-          .andThen {
-            contractResponse.body!!.contentType.serde
-              .deserialize(response.bodyString(), contractResponse.body!!.dataType)
-              .flatMap { contractResponse.body!!.dataType.validate(it) }
-          }
+        if (matchingSchema == null) {
+          failure("Content-Type '$responseContentType' does not match any expected: ${bodySchemas.map { it.contentType.value }}")
+        } else {
+          matchingSchema.contentType.serde
+            .deserialize(response.bodyString(), matchingSchema.dataType)
+            .flatMap { matchingSchema.dataType.validate(it) }
+            .map { }
+        }
+      }
     }
+  }
 
-
-  private fun Headers.hasHeader(name: String) = any { it.first.lowercase() == name.lowercase() }
-  private fun Headers.headerValue(name: String) = find { it.first.lowercase() == name.lowercase() }?.second
-  private fun Response.contentType(): String? = header("Content-Type")
 }
 

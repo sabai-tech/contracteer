@@ -1,0 +1,16 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      responses:
+        200:
+          description: get products
+          content:
+            application/json:
+              schema:
+                type: string

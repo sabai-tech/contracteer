@@ -110,10 +110,10 @@ class IntegerDataTypeTest {
     fun `generates valid random value with enum`() {
       // given
       val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
-      val dateDataType = integerDataType(enum = enum)
+      val integerDataType = integerDataType(enum = enum)
 
       // when
-      val result = dateDataType.randomValue()
+      val result = integerDataType.randomValue()
 
       // then
       assert(enum.map { it.normalize() }.contains(result))

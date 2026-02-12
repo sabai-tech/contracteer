@@ -4,10 +4,11 @@ import ch.qos.logback.classic.Level.DEBUG
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi.AUTO
 import picocli.CommandLine.Option
-import tech.sabai.contracteer.core.Result
-import tech.sabai.contracteer.core.contract.Contract
-import tech.sabai.contracteer.verifier.ServerConfiguration
 import tech.sabai.contracteer.verifier.ServerVerifier
+import tech.sabai.contracteer.verifier.ServerConfiguration
+import tech.sabai.contracteer.verifier.VerificationCase
+import tech.sabai.contracteer.verifier.VerificationCaseFactory
+import tech.sabai.contracteer.verifier.VerificationOutcome
 import kotlin.system.exitProcess
 
 @Command(
@@ -39,42 +40,41 @@ class VerifyCli: BaseCliCommand() {
   private var serverPort = 8080
 
   override fun runCommand() {
-    val result = loadContracts(path)
-    runContractTests(result).also { exitProcess(it) }
+    val operations = loadOperations(path)
+    val cases = operations.flatMap { VerificationCaseFactory.create(it) }
+    runVerification(cases).also { exitProcess(it) }
   }
 
-  private fun runContractTests(contracts: List<Contract>): Int {
-    val serverVerifier = ServerVerifier(ServerConfiguration(serverUrl, serverPort))
+  private fun runVerification(cases: List<VerificationCase>): Int {
+    val verifier = ServerVerifier(ServerConfiguration(serverUrl, serverPort))
     println()
     println(AUTO.string("🚀 Starting contract verification..."))
     println(AUTO.string("Target Server: @|bold,green $serverUrl:$serverPort|@"))
     println(AUTO.string("Specification: @|bold,green ${path}|@"))
     println()
 
-    val results = contracts.map { contract ->
-      contract to serverVerifier.verify(contract).also { printVerificationResult(contract, it) }
-    }
+    val outcomes = cases.map { verifier.verify(it).also { outcome -> printOutcome(outcome) } }
 
     println()
     println(AUTO.string("@|bold,blue Result Summary:|@"))
-    val failures = results.filter { it.second.isFailure() }
+    val failures = outcomes.filter { it.result.isFailure() }
     if (failures.isNotEmpty()) {
       println(AUTO.string("   ⚠\uFE0F @|yellow ${failures.size}|@ errors found during verification."))
-      println(AUTO.string("   ✅ @|yellow ${contracts.size - failures.size}|@ contracts successfully verified."))
+      println(AUTO.string("   ✅ @|yellow ${cases.size - failures.size}|@ verification cases passed."))
       return 1
     } else {
-      println(AUTO.string("   \uD83C\uDF89 All contracts successfully verified!"))
+      println(AUTO.string("   \uD83C\uDF89 All verification cases passed!"))
       return 0
     }
   }
 
-  private fun printVerificationResult(contract: Contract, result: Result<Contract>) {
+  private fun printOutcome(outcome: VerificationOutcome) {
     if (logLevel == DEBUG) println()
-    if (result.isSuccess()) {
-      println(AUTO.string("   ✅ ${contract.description()}"))
+    if (outcome.result.isSuccess()) {
+      println(AUTO.string("   ✅ ${outcome.case.displayName}"))
     } else {
-      println(AUTO.string("@|bold,red    ❌ ${contract.description()}|@"))
-      result.errors().forEach { println(AUTO.string("     ↳ @|yellow $it|@")) }
+      println(AUTO.string("@|bold,red    ❌ ${outcome.case.displayName}|@"))
+      outcome.result.errors().forEach { println(AUTO.string("     ↳ @|yellow $it|@")) }
     }
 
     if (logLevel == DEBUG) {

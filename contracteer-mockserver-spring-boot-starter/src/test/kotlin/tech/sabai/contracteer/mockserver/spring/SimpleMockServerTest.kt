@@ -17,7 +17,7 @@ class SimpleMockServerTest {
   lateinit var environment: Environment
 
   @Test
-  fun `start mockserver on random port`() {
+  fun `starts mockserver with default configuration`() {
     val serverPort = environment["contracteer.mockserver.port"]!!.toInt()
     val serverUrl = environment["contracteer.mockserver.baseUrl"]
 

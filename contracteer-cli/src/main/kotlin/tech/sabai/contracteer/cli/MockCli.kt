@@ -25,6 +25,6 @@ class MockCli: BaseCliCommand() {
   private var port = 8080
 
   override fun runCommand() {
-    MockServer(loadContracts(path), port).start()
+    MockServer(loadOperations(path), port).start()
   }
 }

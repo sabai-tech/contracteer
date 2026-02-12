@@ -1,44 +1,79 @@
 package tech.sabai.contracteer.mockserver
 
-import tech.sabai.contracteer.core.contract.Body
-import tech.sabai.contracteer.core.contract.ContentType
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.Example
-import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
+import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.serde.BasicSerde
 import java.math.BigDecimal
 
 object TestFixture {
 
-  fun integerDataType(isNullable: Boolean = false,
-                      enum: List<BigDecimal?> = emptyList()) =
+  fun integerDataType(isNullable: Boolean = false, enum: List<BigDecimal?> = emptyList()) =
     IntegerDataType.create("integer", isNullable, enum).value!!
 
-  fun objectDataType(properties: Map<String, DataType<out Any>>,
-                     requiredProperties: Set<String> = emptySet(),
-                     allowAdditionalProperties: Boolean = true,
-                     additionalPropertiesDataType: DataType<out Any>? = null,
-                     isNullable: Boolean = false,
-                     enum: List<Any?> = emptyList()) =
-    ObjectDataType.create("object", properties, requiredProperties, allowAdditionalProperties, additionalPropertiesDataType, isNullable, enum).value!!
+  fun stringDataType(
+    isNullable: Boolean = false,
+    enum: List<String?> = emptyList(),
+    minLength: Int? = null,
+    maxLength: Int? = null
+  ) = StringDataType.create("string", "string", isNullable, enum, minLength, maxLength).value!!
 
-  fun stringDataType(isNullable: Boolean = false,
-                     enum: List<String?> = emptyList(),
-                     minLength: Int? = null,
-                     maxLength: Int? = null) =
-    StringDataType.create("string", "string", isNullable, enum, minLength, maxLength).value!!
+  fun objectDataType(
+    properties: Map<String, DataType<out Any>>,
+    requiredProperties: Set<String> = emptySet(),
+    allowAdditionalProperties: Boolean = true,
+    additionalPropertiesDataType: DataType<out Any>? = null,
+    isNullable: Boolean = false,
+    enum: List<Any?> = emptyList()
+  ) = ObjectDataType.create(
+    "object", properties, requiredProperties, allowAdditionalProperties,
+    additionalPropertiesDataType, isNullable, enum
+  ).value!!
 
-  fun body(contentType: ContentType,
-           dataType: DataType<out Any>,
-           isRequired: Boolean = false,
-           example: Example? = null) =
-    Body.create(contentType, dataType, isRequired, example).value!!
+  fun parameterSchema(
+    element: ParameterElement,
+    dataType: DataType<out Any>,
+    isRequired: Boolean = true
+  ) = ParameterSchema(element, dataType, isRequired, BasicSerde)
 
-  fun pathParameter(name: String, dataType: DataType<out Any>, example: Example? = null) =
-    ContractParameter.create(name, dataType, true, example).value!!
+  fun bodySchema(
+    contentType: ContentType = ContentType("application/json"),
+    dataType: DataType<out Any>,
+    isRequired: Boolean = false
+  ) = BodySchema(contentType, dataType, isRequired)
 
-  fun parameter(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, example: Example? = null) =
-    ContractParameter.create(name, dataType, isRequired, example).value!!
+  fun requestSchema(
+    parameters: List<ParameterSchema> = emptyList(),
+    bodies: List<BodySchema> = emptyList()
+  ) = RequestSchema(parameters, bodies)
+
+  fun responseSchema(
+    headers: List<ParameterSchema> = emptyList(),
+    bodies: List<BodySchema> = emptyList()
+  ) = ResponseSchema(headers, bodies)
+
+  fun scenario(
+    path: String,
+    method: String,
+    key: String,
+    statusCode: Int,
+    requestParameterValues: Map<ParameterElement, Any?> = emptyMap(),
+    requestBody: ScenarioBody? = null,
+    responseParameterValues: Map<ParameterElement, Any?> = emptyMap(),
+    responseBody: ScenarioBody? = null
+  ) = Scenario(
+    path = path,
+    method = method,
+    key = key,
+    statusCode = statusCode,
+    request = ScenarioRequest(requestParameterValues, requestBody),
+    response = ScenarioResponse(responseParameterValues, responseBody)
+  )
+
+  fun apiOperation(
+    path: String,
+    method: String,
+    requestSchema: RequestSchema = requestSchema(),
+    responses: Map<Int, ResponseSchema> = emptyMap(),
+    scenarios: List<Scenario> = emptyList()
+  ) = ApiOperation(path, method, requestSchema, responses, scenarios)
 }

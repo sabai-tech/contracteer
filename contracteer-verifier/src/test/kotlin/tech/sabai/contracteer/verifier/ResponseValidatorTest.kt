@@ -4,328 +4,622 @@ import io.mockk.every
 import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
-import tech.sabai.contracteer.core.contract.ContentType
-import tech.sabai.contracteer.core.contract.ContractResponse
-import tech.sabai.contracteer.core.contract.Example
-import tech.sabai.contracteer.verifier.TestFixture.arrayDataType
-import tech.sabai.contracteer.verifier.TestFixture.body
+import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.serde.BasicSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
-import tech.sabai.contracteer.verifier.TestFixture.parameter
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.Test
 
 class ResponseValidatorTest {
 
   @Test
-  fun `Validates successfully Response status code`() {
-    // given
-    val responseContract = ContractResponse(202)
+  fun `validates successfully when status codes match with ScenarioBased`() {
+    // Given
+    val scenario = Scenario(
+      path = "/users",
+      method = "GET",
+      key = "success",
+      statusCode = 200,
+      request = ScenarioRequest(parameterValues = emptyMap(), body = null),
+      response = ScenarioResponse(parameterValues = emptyMap(), body = null)
+    )
+
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.ScenarioBased(
+      scenario = scenario,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
     val response = mockk<Response>()
-    every { response.status } returns Status.ACCEPTED
+    every { response.status } returns Status.OK
     every { response.headers } returns emptyList()
     every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
 
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
+    // When
+    val result = ResponseValidator.validate(target, response)
 
-    // then
-    assert(validationResult.isSuccess())
+    // Then
+    assert(result.isSuccess())
   }
 
   @Test
-  fun `Does not validate when Response status code is different from Contract`() {
-    // given
-    val responseContract = ContractResponse(202)
+  fun `validates successfully when status codes match with SchemaOnly`() {
+    // Given
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 201,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = ResponseSchema(headers = emptyList(), bodies = emptyList())
+    )
+
     val response = mockk<Response>()
     every { response.status } returns Status.CREATED
     every { response.headers } returns emptyList()
     every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
 
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
+    // When
+    val result = ResponseValidator.validate(target, response)
 
-    // then
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains(Regex("(?=.*201)(?=.*202)")))
+    // Then
+    assert(result.isSuccess())
   }
 
   @Test
-  fun `Validates successfully Response headers`() {
-    // given
-    val responseContract = ContractResponse(
-      statusCode = 202,
-      headers = listOf(
-        parameter("x-test", stringDataType()),
-        parameter("Location", stringDataType()),
-      )
-    )
-    val response = mockk<Response>()
-    every { response.status } returns Status.ACCEPTED
-    every { response.headers } returns listOf("x-test" to "42", "location" to "here")
-    every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isSuccess())
-  }
-
-  @Test
-  fun `Validates successfully Response headers with Example`() {
-    // given
-    val responseContract = ContractResponse(
-      statusCode = 202,
-      headers = listOf(
-        parameter("x-test", stringDataType(), example = Example("john")),
-        parameter("Location", stringDataType()),
-      )
-    )
-    val response = mockk<Response>()
-    every { response.status } returns Status.ACCEPTED
-    every { response.headers } returns listOf("x-test" to "test", "location" to "here")
-    every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isSuccess())
-  }
-
-  @Test
-  fun `Does not validate invalid Response header`() {
-    // given
-    val responseContract =
-      ContractResponse(202, headers = listOf(parameter("x-test", integerDataType())))
-    val response = mockk<Response>()
-    every { response.status } returns Status.ACCEPTED
-    every { response.headers } returns listOf("x-test" to "John")
-    every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains("x-test"))
-  }
-
-  @Test
-  fun `Validates successfully optional Response header is missing`() {
-    // given
-    val responseContract =
-      ContractResponse(202, headers = listOf(parameter("x-test", integerDataType())))
-    val response = mockk<Response>()
-    every { response.status } returns Status.ACCEPTED
-    every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
-    every { response.headers } returns emptyList()
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isSuccess())
-  }
-
-  @Test
-  fun `Does not validate successfully when required Response header is missing`() {
-    // given
-    val responseContract =
-      ContractResponse(202, headers = listOf(parameter("x-test", integerDataType(), true)))
-    val response = mockk<Response>()
-    every { response.status } returns Status.ACCEPTED
-    every { response.header("Content-Type") } returns null
-    every { response.bodyString() } returns ""
-    every { response.headers } returns emptyList()
-
-    // expect
-    val validationResult = ResponseValidator(responseContract).validate(response)
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first() == "Response header 'x-test' is missing")
-  }
-
-  @Test
-  fun `Validates body with JSON Content-Type`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200,
-                                            body = body(contentType = ContentType("application/json"),
-                                                        dataType = objectDataType(properties = mapOf(
-                                                          "name" to stringDataType(),
-                                                          "age" to integerDataType()))))
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """{ "name":"John", "age": 25}"""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isSuccess())
-  }
-
-  @Test
-  fun `Validates body with JSON Content-Type with Example`() {
-    // given
-    val responseContract = ContractResponse(
+  fun `fails when status code does not match`() {
+    // Given
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
       statusCode = 200,
-      body = body(
-        contentType = ContentType("application/json"),
-        dataType = objectDataType(properties = mapOf(
-          "name" to stringDataType(),
-          "age" to integerDataType())),
-        example = Example(mapOf("name" to "Jane", "age" to 42))
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = ResponseSchema(headers = emptyList(), bodies = emptyList())
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.CREATED
+    every { response.headers } returns emptyList()
+    every { response.header("Content-Type") } returns null
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first().contains("200"))
+    assert(result.errors().first().contains("201"))
+  }
+
+  @Test
+  fun `validates successfully with required headers using serde deserialization`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = listOf(
+        ParameterSchema(
+          element = ParameterElement.Header("X-Count"),
+          dataType = integerDataType(),
+          isRequired = true,
+          serde = BasicSerde
+        ),
+        ParameterSchema(
+          element = ParameterElement.Header("X-Name"),
+          dataType = stringDataType(),
+          isRequired = true,
+          serde = BasicSerde
+        )
+      ),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns listOf("X-Count" to "42", "X-Name" to "test")
+    every { response.header("Content-Type") } returns null
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `validates successfully with optional headers missing`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = listOf(
+        ParameterSchema(
+          element = ParameterElement.Header("X-Optional"),
+          dataType = stringDataType(),
+          isRequired = false,
+          serde = BasicSerde
+        )
+      ),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns emptyList()
+    every { response.header("Content-Type") } returns null
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `fails when required header is missing`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = listOf(
+        ParameterSchema(
+          element = ParameterElement.Header("X-Required"),
+          dataType = stringDataType(),
+          isRequired = true,
+          serde = BasicSerde
+        )
+      ),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns emptyList()
+    every { response.header("Content-Type") } returns null
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first() == "Response header 'X-Required' is missing")
+  }
+
+  @Test
+  fun `fails when header value does not match datatype after deserialization`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = listOf(
+        ParameterSchema(
+          element = ParameterElement.Header("X-Count"),
+          dataType = integerDataType(),
+          isRequired = true,
+          serde = BasicSerde
+        )
+      ),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns listOf("X-Count" to "not-a-number")
+    every { response.header("Content-Type") } returns null
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first().contains("X-Count"))
+  }
+
+  @Test
+  fun `validates successfully with matching JSON body`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(
+            properties = mapOf(
+              "id" to integerDataType(),
+              "name" to stringDataType()
+            )
+          ),
+          isRequired = true
+        )
       )
     )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = ContentType("application/json"),
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
     val response = mockk<Response>()
     every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """{ "name":"John", "age": 25}"""
+    every { response.headers } returns listOf("Content-Type" to "application/json")
+    every { response.header("Content-Type") } returns "application/json"
+    every { response.bodyString() } returns """{"id": 123, "name": "John"}"""
 
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
+    // When
+    val result = ResponseValidator.validate(target, response)
 
-    // then
-    assert(validationResult.isSuccess())
+    // Then
+    assert(result.isSuccess())
   }
 
   @Test
-  fun `Validates body with JSON Content-Type and missing optional properties`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200,
-                                            body = body(contentType = ContentType("application/json"),
-                                                        dataType = objectDataType(
-                                                          properties = mapOf(
-                                                            "name" to stringDataType(),
-                                                            "age" to integerDataType()),
-                                                          requiredProperties = setOf("name"))))
+  fun `validates successfully when no body expected and no body received`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "DELETE",
+      statusCode = 204,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
     val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """{ "name":"John"}"""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isSuccess())
-  }
-
-  @Test
-  fun `Does not validate body with JSON Content-Type and missing required properties`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200,
-                                            body = body(contentType = ContentType("application/json"),
-                                                        dataType = objectDataType(
-                                                          properties = mapOf(
-                                                            "name" to stringDataType(),
-                                                            "age" to integerDataType()),
-                                                          requiredProperties = setOf("name", "age"))))
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """{ "age":42}"""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains("name"))
-  }
-
-  @Test
-  fun `Validates body with JSON Content-Type and array as root element`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200,
-                                            body = body(ContentType("application/json"),
-                                                        arrayDataType(itemDataType = integerDataType())))
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """[1,2,3]"""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isSuccess())
-  }
-
-  @Test
-  fun `Does not validate when content-type does not match contract`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200,
-                                            body = body(ContentType("text/plain"), stringDataType()))
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """{ "name":"John", "age": 42}"""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains(Regex("(?=.*text/plain)(?=.*application/json; charset=utf-8)")))
-  }
-
-  @Test
-  fun `Does not validate when Contract Response has no Content-Type but Response has Content-Type`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200)
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns "application/json; charset=utf-8"
-    every { response.headers } returns listOf("Content-Type" to "application/json; charset=utf-8")
-    every { response.bodyString() } returns """{ "name":"John", "age": 42}"""
-
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
-
-    // then
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains("Expected no Content-Type"))
-  }
-
-  @Test
-  fun `Does not validate when Contract Response defines a Content-Type but Response has no Content-Type`() {
-    // given
-    val responseContract = ContractResponse(statusCode = 200,
-                                            body = body(ContentType("application/json"),
-                                                        objectDataType(properties = mapOf("name" to stringDataType()))))
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.header("Content-Type") } returns null
+    every { response.status } returns Status.NO_CONTENT
     every { response.headers } returns emptyList()
+    every { response.header("Content-Type") } returns null
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `fails when content-type does not match expected`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+          isRequired = true
+        )
+      )
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = ContentType("application/json"),
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns listOf("Content-Type" to "text/plain")
+    every { response.header("Content-Type") } returns "text/plain"
+    every { response.bodyString() } returns "plain text"
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first().contains("text/plain"))
+    assert(result.errors().first().contains("application/json"))
+  }
+
+  @Test
+  fun `fails when body is expected but content-type is missing`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+          isRequired = true
+        )
+      )
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = ContentType("application/json"),
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns emptyList()
+    every { response.header("Content-Type") } returns null
     every { response.bodyString() } returns ""
 
-    // when
-    val validationResult = ResponseValidator(responseContract).validate(response)
+    // When
+    val result = ResponseValidator.validate(target, response)
 
-    // then
-    assert(validationResult.isFailure())
-    assert(validationResult.errors().size == 1)
-    assert(validationResult.errors().first().contains("Content-Type is missing"))
+    // Then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first().contains("Content-Type is missing"))
+  }
+
+  @Test
+  fun `fails when no body expected but content-type is present`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = emptyList()
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "DELETE",
+      statusCode = 204,
+      requestContentType = null,
+      responseContentType = null,
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.NO_CONTENT
+    every { response.headers } returns listOf("Content-Type" to "application/json")
+    every { response.header("Content-Type") } returns "application/json"
+    every { response.bodyString() } returns "{}"
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isFailure())
+    assert(result.errors().size == 1)
+    assert(result.errors().first().contains("Expected no Content-Type"))
+  }
+
+  @Test
+  fun `validates with multiple content types and finds matching schema`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = emptyList(),
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+          isRequired = true
+        ),
+        BodySchema(
+          contentType = ContentType("application/xml"),
+          dataType = stringDataType(),
+          isRequired = true
+        )
+      )
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "GET",
+      statusCode = 200,
+      requestContentType = null,
+      responseContentType = ContentType("application/xml"),
+      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns listOf("Content-Type" to "application/xml")
+    every { response.header("Content-Type") } returns "application/xml"
+    every { response.bodyString() } returns "<user><name>John</name></user>"
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `full validation with status code headers and body for ScenarioBased`() {
+    // Given
+    val scenario = Scenario(
+      path = "/users/1",
+      method = "GET",
+      key = "validUser",
+      statusCode = 200,
+      request = ScenarioRequest(
+        parameterValues = mapOf(ParameterElement.PathParam("id") to 1),
+        body = null
+      ),
+      response = ScenarioResponse(
+        parameterValues = mapOf(ParameterElement.Header("X-Request-Id") to "req-123"),
+        body = ScenarioBody(
+          contentType = ContentType("application/json"),
+          value = mapOf("id" to 1, "name" to "John")
+        )
+      )
+    )
+
+    val responseSchema = ResponseSchema(
+      headers = listOf(
+        ParameterSchema(
+          element = ParameterElement.Header("X-Request-Id"),
+          dataType = stringDataType(),
+          isRequired = true,
+          serde = BasicSerde
+        )
+      ),
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(
+            properties = mapOf(
+              "id" to integerDataType(),
+              "name" to stringDataType()
+            )
+          ),
+          isRequired = true
+        )
+      )
+    )
+
+    val target = VerificationCase.ScenarioBased(
+      scenario = scenario,
+      requestSchema = RequestSchema(
+        parameters = listOf(
+          ParameterSchema(
+            element = ParameterElement.PathParam("id"),
+            dataType = integerDataType(),
+            isRequired = true,
+            serde = BasicSerde
+          )
+        ),
+        bodies = emptyList()
+      ),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.OK
+    every { response.headers } returns listOf(
+      "X-Request-Id" to "req-123",
+      "Content-Type" to "application/json"
+    )
+    every { response.header("Content-Type") } returns "application/json"
+    every { response.bodyString() } returns """{"id": 1, "name": "John"}"""
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `full validation with status code headers and body for SchemaOnly`() {
+    // Given
+    val responseSchema = ResponseSchema(
+      headers = listOf(
+        ParameterSchema(
+          element = ParameterElement.Header("X-Total-Count"),
+          dataType = integerDataType(),
+          isRequired = true,
+          serde = BasicSerde
+        )
+      ),
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(
+            properties = mapOf(
+              "id" to integerDataType(),
+              "email" to stringDataType()
+            ),
+            requiredProperties = setOf("id", "email")
+          ),
+          isRequired = true
+        )
+      )
+    )
+
+    val target = VerificationCase.SchemaBased(
+      path = "/users",
+      method = "POST",
+      statusCode = 201,
+      requestContentType = ContentType("application/json"),
+      responseContentType = ContentType("application/json"),
+      requestSchema = RequestSchema(
+        parameters = emptyList(),
+        bodies = listOf(
+          BodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("email" to stringDataType())),
+            isRequired = true
+          )
+        )
+      ),
+      responseSchema = responseSchema
+    )
+
+    val response = mockk<Response>()
+    every { response.status } returns Status.CREATED
+    every { response.headers } returns listOf(
+      "X-Total-Count" to "42",
+      "Content-Type" to "application/json"
+    )
+    every { response.header("Content-Type") } returns "application/json"
+    every { response.bodyString() } returns """{"id": 999, "email": "test@example.com"}"""
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    assert(result.isSuccess())
   }
 }

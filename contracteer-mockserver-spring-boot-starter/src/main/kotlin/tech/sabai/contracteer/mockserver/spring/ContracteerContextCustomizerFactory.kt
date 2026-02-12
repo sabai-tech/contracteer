@@ -9,10 +9,10 @@ import org.springframework.test.context.ContextCustomizerFactory
 internal class ContracteerContextCustomizerFactory: ContextCustomizerFactory {
   override fun createContextCustomizer(testClass: Class<*>,
                                        configAttributes: MutableList<ContextConfigurationAttributes>): ContextCustomizer? {
-    val annotations = getContracteerContractsMokServerAnnotations(testClass)
+    val annotations = getContracteerMockServerAnnotations(testClass)
     return if (annotations.isNotEmpty()) ContracteerContextCustomizer(annotations) else null
   }
 
-  private fun getContracteerContractsMokServerAnnotations(testClass: Class<*>): List<ContracteerMockServer> =
+  private fun getContracteerMockServerAnnotations(testClass: Class<*>): List<ContracteerMockServer> =
     AnnotatedElementUtils.findMergedRepeatableAnnotations(testClass, ContracteerMockServer::class.java).toList()
 }

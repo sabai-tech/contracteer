@@ -1,9 +1,5 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.contract.Body
-import tech.sabai.contracteer.core.contract.ContentType
-import tech.sabai.contracteer.core.contract.ContractParameter
-import tech.sabai.contracteer.core.contract.Example
 import tech.sabai.contracteer.core.datatype.*
 import java.math.BigDecimal
 
@@ -30,13 +26,4 @@ object TestFixture {
                      minLength: Int? = null,
                      maxLength: Int? = null) =
     StringDataType.create("string", "string", isNullable, enum, minLength, maxLength).value!!
-
-  fun body(contentType: ContentType, dataType: DataType<out Any>, example: Example? = null) =
-    Body.create(contentType, dataType, false, example).value!!
-
-  fun pathParameter(name: String, dataType: DataType<out Any>, example: Example? = null) =
-    ContractParameter.create(name, dataType, true, example).value!!
-
-  fun parameter(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, example: Example? = null) =
-    ContractParameter.create(name, dataType, isRequired, example).value!!
 }

@@ -2,14 +2,11 @@ package tech.sabai.contracteer.mockserver
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.http4k.core.*
-import org.http4k.core.ContentType
 import org.http4k.core.ContentType.Companion.TEXT_PLAIN
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
-import org.http4k.core.cookie.cookie
 import org.http4k.filter.DebuggingFilters.PrintRequestAndResponse
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
-import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.SunHttp
@@ -17,21 +14,21 @@ import org.http4k.server.asServer
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.accumulate
-import tech.sabai.contracteer.core.contract.*
-import tech.sabai.contracteer.core.contract.Body
+import tech.sabai.contracteer.core.operation.ApiOperation
+import tech.sabai.contracteer.core.operation.BodySchema
+import tech.sabai.contracteer.core.operation.ResponseSchema
+import tech.sabai.contracteer.core.operation.Scenario
 
-class MockServer(private val contracts: List<Contract>,
+class MockServer(private val operations: List<ApiOperation>,
                  private val port: Int = 0) {
 
   private lateinit var http4kServer: Http4kServer
   private val logger = KotlinLogging.logger {}
 
   fun start() {
-    val routeHandlers = contracts
-      .groupBy { it.request.path to Method.valueOf(it.request.method) }
-      .onEach { logger.info { "Registering route: [${it.key.second}] ${it.key.first} with ${it.value.size} contract(s)" } }
-      .map { (pathAndMethod, contracts) -> createRouteHandler(pathAndMethod.first, pathAndMethod.second, contracts) }
+    val routeHandlers = operations
+      .onEach { logger.info { "Registering route: [${it.method.uppercase()}] ${it.path}" } }
+      .map { createRouteHandler(it) }
 
     logger.info { "Starting Contracteer mock server" }
     http4kServer = httpHandlerFrom(routeHandlers).asServer(SunHttp(port)).start()
@@ -57,129 +54,92 @@ class MockServer(private val contracts: List<Contract>,
     else
       routes(*routeHandlers.toTypedArray())
 
-  private fun createRouteHandler(path: String, method: Method, matchingContracts: List<Contract>) =
-    path bind method to { request ->
-      val matchResults = request.matches(matchingContracts)
-      when (matchResults.countSuccess()) {
-        0    -> matchResults.toNonMatchingErrorResponse()
-        1    -> handleSingleSuccess(matchResults.firstSuccess().contract(), request.header("Accept"))
-        else -> handleMultipleSuccesses(matchResults, request.header("Accept"))
-      }
-    }
+  private fun createRouteHandler(operation: ApiOperation) =
+    operation.path bind Method.valueOf(operation.method.uppercase()) to { request -> handleRequest(request, operation) }
 
-  private fun handleSingleSuccess(contract: Contract, acceptHeader: String?): Response {
-    if (acceptHeader.isNullOrEmpty() || acceptHeader == "*/*") return contract.toResponse()
-    return contract
-      .verifyAcceptRequestHeader(acceptHeader)
-      .let { if (it.isSuccess()) contract.toResponse() else contract.notFoundWithErrors(it.errors()) }
+  private fun handleRequest(request: Request, operation: ApiOperation): Response {
+    val validationResult = operation.requestSchema.validate(request)
+    if (validationResult.isFailure()) return validationErrorResponse(operation, validationResult.errors())
+
+    return when (val matchResult = ScenarioMatcher.match(request, operation.scenarios, operation.requestSchema)) {
+      is ScenarioMatchResult.SingleMatch -> handleScenarioResponse(request, matchResult.scenario, operation)
+      is ScenarioMatchResult.NoMatch     -> handleSchemaOnlyResponse(request, operation)
+      is ScenarioMatchResult.Ambiguous   ->
+        teapotResponse(
+          "Ambiguous: multiple scenarios (${matchResult.scenarios.joinToString(", ") { it.key }}) " +
+          "matched the request for ${operation.method.uppercase()} ${operation.path}")
+    }
   }
 
-  private fun handleMultipleSuccesses(matchResults: List<Pair<Contract, Result<Any?>>>,
-                                      acceptHeader: String?): Response {
-    val acceptFiltered = matchResults
-      .filter { it.result().isSuccess() }
-      .map { it.contract() to it.contract().verifyAcceptRequestHeader(acceptHeader) }
-      .filter { it.result().isSuccess() }
-      .map { it.contract() }
-      .groupBy { it.priority() }
-      .maxBy { it.key }
-      .value
+  private fun handleScenarioResponse(request: Request, scenario: Scenario, operation: ApiOperation): Response {
+    val responseSchema = operation.responses[scenario.statusCode]
+                         ?: return teapotResponse("No response schema for status ${scenario.statusCode}")
+
+    val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
+    if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
+    return ResponseGenerator.fromScenario(scenario)
+  }
+
+  private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
+    val unique2xxResult = findUnique2xxResponse(operation)
+    if (unique2xxResult.isFailure()) return teapotResponse(unique2xxResult.errors().first())
+
+    val (statusCode, responseSchema) = unique2xxResult.value!!
+    val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
+    if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
+
+    val bodyResult = selectResponseBody(request.header("Accept"), responseSchema, operation)
+    if (bodyResult.isFailure()) return teapotResponse(bodyResult.errors().first())
+
+    return ResponseGenerator.fromSchema(statusCode, bodyResult.value)
+  }
+
+  private fun findUnique2xxResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> {
+    val successResponses = operation.responses.filterKeys { it in 200..299 }
     return when {
-      acceptFiltered.isEmpty() -> matchResults.map { it.contract() }.toMultipleSuccessMatchingErrorResponse()
-      acceptFiltered.size == 1 -> acceptFiltered.first().toResponse()
-      else                     -> acceptFiltered.toMultipleSuccessMatchingErrorResponse()
+      successResponses.isEmpty() ->
+        failure("No 2xx response schema defined for ${operation.method.uppercase()} ${operation.path}")
+      successResponses.size > 1 ->
+        failure(
+          "Ambiguous: multiple 2xx response codes (${successResponses.keys.sorted().joinToString(", ")}) " +
+          "for ${operation.method.uppercase()} ${operation.path}. Use scenarios to disambiguate.")
+      else -> success(successResponses.entries.first().toPair())
     }
   }
 
-  private fun Request.matches(contracts: List<Contract>) =
-    contracts.map { it to it.validate(this) }
+  private fun verifyAcceptHeader(acceptHeader: String?, responseSchema: ResponseSchema): Result<Unit> {
+    if (acceptHeader.isNullOrEmpty() || acceptHeader == "*/*") return success()
+    if (responseSchema.bodies.isEmpty()) return success()
 
-  private fun Contract.validate(req: Request) =
-    request.pathParameters.verify { req.path(it.name) } andThen
-        { request.queryParameters.verify { req.query(it.name) } } andThen
-        { request.headers.verify { req.header(it.name) } } andThen
-        { request.cookies.verify { req.cookie(it.name)?.value } } andThen
-        { (request.body?.verify(req) ?: success()) }
-
-  private fun List<ContractParameter>.verify(parameterValueExtractor: (ContractParameter) -> String?) =
-    accumulate { parameter ->
-      when (val value = parameterValueExtractor.invoke(parameter)) {
-        null if parameter.isRequired                       -> failure(parameter.name, "is missing")
-        null if parameter.example?.normalizedValue == null -> success(value)
-        else                                               ->
-          parameter.deserialize(value)
-            .flatMap { parameter.example?.validate(it) ?: parameter.dataType.validate(it) }
-            .forProperty(parameter.name)
-            .map { value }
-      }
+    if (responseSchema.bodies.none { it.contentType.validate(acceptHeader).isSuccess() }) {
+      return failure(
+        "Accept header '$acceptHeader' does not match any response content type: " +
+        responseSchema.bodies.joinToString(", ") { it.contentType.value })
     }
-
-  private fun Body.verify(req: Request): Result<Any?> {
-    val requestContentType = req.contentType() ?: return failure("Request Header 'Content-type' is missing")
-
-    return contentType
-      .validate(requestContentType)
-      .andThen {
-        contentType.serde
-          .deserialize(req.bodyString(), dataType)
-          .flatMap { example?.validate(it) ?: dataType.validate(it) }
-      }
-      .mapErrors { "Request $it" }
+    return success()
   }
 
+  private fun selectResponseBody(acceptHeader: String?, responseSchema: ResponseSchema, operation: ApiOperation): Result<BodySchema?> {
+    if (responseSchema.bodies.isEmpty()) return success(null)
+    if (responseSchema.bodies.size == 1) return success(responseSchema.bodies.first())
 
-  private fun Contract.verifyAcceptRequestHeader(acceptHeader: String?): Result<Contract> =
-    if (response.body == null || acceptHeader.isNullOrEmpty() || acceptHeader == "*/*") success()
-    else {
-      response.body!!.contentType
-        .validate(acceptHeader)
-        .map { this }
-        .mapErrors { "Request Header 'Accept' does not match: Expected: ${response.body!!.contentType}, actual: $acceptHeader" }
-    }
+    if (acceptHeader.isNullOrEmpty() || acceptHeader == "*/*")
+      return failure(
+        "Multiple response content types for ${operation.method.uppercase()} ${operation.path}. " +
+        "Use Accept header to disambiguate: ${responseSchema.bodies.joinToString(", ") { it.contentType.value }}")
 
-  private fun Contract.priority() =
-    if (hasExample()) Int.MAX_VALUE else Int.MIN_VALUE // TODO: introduce open api extension to manage priority ?
+    return success(responseSchema.bodies.find { it.contentType.validate(acceptHeader).isSuccess() })
+  }
 
-  private fun Contract.toResponse() =
-    Response(Status.fromCode(response.statusCode)!!).let { baseResponse ->
-      if (response.hasBody())
-        baseResponse.header("Content-type", response.body!!.contentType.value).body(response.body!!.asString())
-      else
-        baseResponse
-    }
-
-  private fun Contract.notFoundWithErrors(errors: List<String>): Response =
+  private fun validationErrorResponse(operation: ApiOperation, errors: List<String>): Response =
     Response(I_M_A_TEAPOT)
-      .contentType(TEXT_PLAIN)
+      .header("Content-Type", TEXT_PLAIN.value)
       .body(
-        "Route not found. Closest non matching contract:${System.lineSeparator()}" +
-        "  - ${description()}${System.lineSeparator()}" +
-        errors.joinToString(System.lineSeparator()) { err -> "      * $err" }
-      )
+        "Request validation failed for ${operation.method.uppercase()} ${operation.path}:${System.lineSeparator()}" +
+        errors.joinToString(System.lineSeparator()) { "  * $it" })
 
-  private fun List<Pair<Contract, Result<Any?>>>.toNonMatchingErrorResponse(): Response =
+  private fun teapotResponse(message: String): Response =
     Response(I_M_A_TEAPOT)
-      .contentType(TEXT_PLAIN)
-      .body(
-        "Route not found. Closest non matching contracts:${System.lineSeparator()}" +
-        joinToString(System.lineSeparator()) { (contract, result) ->
-          "  - ${contract.description()}${System.lineSeparator()}" +
-          result.errors().joinToString(System.lineSeparator()) { err -> "      * $err" }
-        }
-      )
-
-  private fun List<Contract>.toMultipleSuccessMatchingErrorResponse(): Response =
-    Response(I_M_A_TEAPOT)
-      .contentType(TEXT_PLAIN)
-      .body(
-        "Multiple Successfully Matching Contracts:${System.lineSeparator()}" +
-        joinToString(System.lineSeparator()) { "  - ${it.description()}" }
-      )
-
-  private fun Response.contentType(contentType: ContentType) = header("Content-type", contentType.value)
-  private fun Request.contentType(): String? = header("Content-type")
-  private fun Pair<Contract, Result<Any?>>.contract() = first
-  private fun Pair<Contract, Result<Any?>>.result() = second
-  private fun List<Pair<Contract, Result<Any?>>>.countSuccess() = count { it.result().isSuccess() }
-  private fun List<Pair<Contract, Result<Any?>>>.firstSuccess() = first { it.result().isSuccess() }
+      .header("Content-Type", TEXT_PLAIN.value)
+      .body(message)
 }

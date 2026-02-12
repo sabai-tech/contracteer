@@ -9,29 +9,30 @@ import org.springframework.test.context.MergedContextConfiguration
 import tech.sabai.contracteer.core.swagger.OpenApiLoader
 
 internal class ContracteerContextCustomizer(
-  private val contracteerContractsMockServerAnnotations: List<ContracteerMockServer>): ContextCustomizer {
+  private val mockServerAnnotations: List<ContracteerMockServer>): ContextCustomizer {
 
   override fun customizeContext(context: ConfigurableApplicationContext, mergedConfig: MergedContextConfiguration) {
+    mockServerAnnotations.forEach { startMockServer(context, it) }
+  }
 
-    contracteerContractsMockServerAnnotations.forEach { annotation ->
-      val contractsResult = OpenApiLoader.loadContracts(annotation.openApiDoc)
-      if (contractsResult.isFailure())
-        throw IllegalArgumentException("Error while loading Contracts: ${System.lineSeparator()}" + contractsResult
-          .errors()
-          .joinToString(System.lineSeparator()))
+  private fun startMockServer(context: ConfigurableApplicationContext, annotation: ContracteerMockServer) {
+    val operationsResult = OpenApiLoader.loadOperations(annotation.openApiDoc)
+    if (operationsResult.isFailure())
+      throw IllegalArgumentException("Error while loading Operations: ${System.lineSeparator()}" + operationsResult
+        .errors()
+        .joinToString(System.lineSeparator()))
 
-      val mockServer = MockServer(contractsResult.value!!, annotation.port)
-      mockServer.start()
+    val mockServer = MockServer(operationsResult.value!!, annotation.port)
+    mockServer.start()
 
-      TestPropertyValues.of(
-        "${annotation.baseUrlProperty}=http://localhost:${mockServer.port()}",
-        "${annotation.portProperty}=${mockServer.port()}")
-        .applyTo(context.environment)
+    TestPropertyValues.of(
+      "${annotation.baseUrlProperty}=http://localhost:${mockServer.port()}",
+      "${annotation.portProperty}=${mockServer.port()}")
+      .applyTo(context.environment)
 
-      context.addApplicationListener {
-        if (it is ContextClosedEvent) {
-          mockServer.stop()
-        }
+    context.addApplicationListener {
+      if (it is ContextClosedEvent) {
+        mockServer.stop()
       }
     }
   }

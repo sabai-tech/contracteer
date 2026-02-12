@@ -1,0 +1,118 @@
+openapi: 3.0.0
+info:
+  title: User API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /users/{id}:
+    post:
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          examples:
+            INVALID_PATH:
+              value: "not-a-number"
+        - name: filter
+          in: query
+          required: true
+          schema:
+            type: string
+          examples:
+            INVALID_QUERY:
+              value: 123
+        - name: X-Custom-Header
+          in: header
+          required: true
+          schema:
+            type: string
+          examples:
+            INVALID_HEADER:
+              value: 999
+        - name: session
+          in: cookie
+          required: true
+          schema:
+            type: string
+          examples:
+            INVALID_COOKIE:
+              value: 456
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - age
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                age:
+                  type: integer
+                  minimum: 0
+            examples:
+              INVALID_BODY_MISSING_FIELD:
+                value:
+                  name: "Jane Doe"
+                  email: "jane@example.com"
+      responses:
+        '200':
+          description: User created or updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  age:
+                    type: integer
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: string
+              examples:
+                INVALID_BODY_MISSING_FIELD:
+                  value:
+                    error: "Validation failed"
+                    details: "Required field 'age' is missing"
+                INVALID_BODY_WRONG_TYPE:
+                  value:
+                    error: "Validation failed"
+                    details: "Field 'age' must be an integer"
+                INVALID_QUERY:
+                  value:
+                    error: "Validation failed"
+                    details: "Query parameter 'filter' must be a string"
+                INVALID_PATH:
+                  value:
+                    error: "Validation failed"
+                    details: "Path parameter 'id' must be an integer"
+                INVALID_HEADER:
+                  value:
+                    error: "Validation failed"
+                    details: "Header 'X-Custom-Header' must be a string"
+                INVALID_COOKIE:
+                  value:
+                    error: "Validation failed"
+                    details: "Cookie 'session' must be a string"

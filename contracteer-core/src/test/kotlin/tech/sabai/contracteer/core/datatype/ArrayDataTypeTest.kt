@@ -33,7 +33,7 @@ class ArrayDataTypeTest {
   }
 
   @Test
-  fun `does validates value whose type is not array`() {
+  fun `does not validate value whose type is not array`() {
     // given
     val arrayDataType = arrayDataType(itemDataType = stringDataType())
 
@@ -45,7 +45,7 @@ class ArrayDataTypeTest {
   }
 
   @Test
-  fun `does validates array with wrong item type `() {
+  fun `does not validate array with wrong item type`() {
     // given
     val arrayDataType = arrayDataType(itemDataType = stringDataType())
 

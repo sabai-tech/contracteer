@@ -3,7 +3,7 @@ package tech.sabai.contracteer.mockserver.spring
 import java.lang.annotation.Inherited
 
 /**
- * Configures a Contracteer Mock Server that serves contract tests based on an OpenAPI 3 Definition.
+ * Configures a Contracteer Mock Server that serves responses based on an OpenAPI 3 Definition.
  *
  * Use this annotation on a class or annotation to indicate that a Contracteer Mock Server should be instantiated and
  * configured to serve responses as defined in the specified OpenAPI 3 Definition file.
@@ -11,7 +11,7 @@ import java.lang.annotation.Inherited
  * **Usage Details:**
  * - The server can be configured to listen on either a fixed port or a randomly assigned port.
  * - The OpenAPI 3 Document file, which may be provided as a local file path or remote URL, determines
- *   the contracts to be served.
+ *   the operations to be served.
  * - Spring properties can be used to inject the actual port and base URL of the mock server into the
  *   application context.
  *
@@ -19,7 +19,7 @@ import java.lang.annotation.Inherited
  * - A value of `0` indicates that a random available port will be chosen.
  * - A positive value specifies a fixed port.
  *
- * @property openApiDoc The file path or URL to the OpenAPI 3 Document file from which contracts are loaded.
+ * @property openApiDoc The file path or URL to the OpenAPI 3 Document file from which operations are loaded.
  *
  * @property portProperty The name of the Spring property used to inject the actual port value of the mock server.
  * Default is `"contracteer.mockserver.port"`.

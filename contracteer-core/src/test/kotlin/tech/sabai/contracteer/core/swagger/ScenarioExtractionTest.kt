@@ -1,0 +1,135 @@
+package tech.sabai.contracteer.core.swagger
+
+import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.assertSingle
+import tech.sabai.contracteer.core.normalize
+import tech.sabai.contracteer.core.operation.ParameterElement
+import kotlin.test.Test
+
+class ScenarioExtractionTest {
+
+  @Test
+  fun `extracts scenarios with matching request and response example keys`() {
+    // when
+    val operation = loadSingleOperation("multiple_examples.yaml")
+
+    // then
+    assert(operation.scenarios.size == 2)
+
+    val detailsScenario = operation.scenarios.first { it.key == "GET_DETAILS" }
+    assert(detailsScenario.path == "/products/{id}")
+    assert(detailsScenario.method == "GET")
+    assert(detailsScenario.statusCode == 200)
+    assert(detailsScenario.request.parameterValues[ParameterElement.PathParam("id")] == 10.normalize())
+    assert(detailsScenario.request.body == null)
+    assert(detailsScenario.response.body!!.contentType.value == "application/json")
+    assert(detailsScenario.response.body.value == mapOf(
+      "id" to 10,
+      "name" to "La Bouledogue",
+      "quantity" to 5
+    ).normalize())
+
+    val notFoundScenario = operation.scenarios.first { it.key == "NOT_FOUND" }
+    assert(notFoundScenario.statusCode == 404)
+    assert(notFoundScenario.request.parameterValues[ParameterElement.PathParam("id")] == 999.normalize())
+    assert(notFoundScenario.response.body!!.value == mapOf("error" to "NOT FOUND").normalize())
+  }
+
+  @Test
+  fun `does not create scenarios when only request parameter examples exist`() {
+    // when
+    val operation = loadSingleOperation("parameter_example_only.yaml")
+
+    // then
+    assert(operation.scenarios.isEmpty())
+  }
+
+  @Test
+  fun `does not create scenarios when only request body examples exist`() {
+    // when
+    val operation = loadSingleOperation("request_body_example_only.yaml")
+
+    // then
+    assert(operation.scenarios.isEmpty())
+  }
+
+  @Test
+  fun `does not create scenarios when only response body examples exist`() {
+    // when
+    val operation = loadSingleOperation("response_body_example_only.yaml")
+
+    // then
+    assert(operation.scenarios.isEmpty())
+  }
+
+  @Test
+  fun `does not create scenario when example key exists only on response side`() {
+    // when
+    val operation = loadSingleOperation("400_bad_request_with_invalid_example.yaml")
+
+    // then
+    val scenarioKeys = operation.scenarios.map { it.key }.toSet()
+    assert(!scenarioKeys.contains("INVALID_BODY_WRONG_TYPE"))
+  }
+
+  @Test
+  fun `keeps 2xx response schema when only 4xx has scenario`() {
+    // when
+    val operation = loadSingleOperation("2xx_schema_with_4xx_scenario.yaml")
+
+    // then
+    assert(operation.responses.keys.containsAll(setOf(200, 404)))
+    assert(operation.scenarios.size == 1)
+    assert(operation.scenarios.single().statusCode == 404)
+  }
+
+  @Test
+  fun `creates scenarios for each request and response content type combination`() {
+    // when
+    val operation = loadSingleOperation("scenario_cartesian_content_types.yaml")
+
+    // then
+    assert(operation.scenarios.size == 4)
+    val contentTypePairs = operation.scenarios.map {
+      it.request.body!!.contentType.value to it.response.body!!.contentType.value
+    }.toSet()
+    assert(contentTypePairs == setOf(
+      "application/json" to "application/json",
+      "application/json" to "application/vnd.mycompany.myapp.v2+json",
+      "application/vnd.mycompany.myapp.v2+json" to "application/json",
+      "application/vnd.mycompany.myapp.v2+json" to "application/vnd.mycompany.myapp.v2+json"
+    ))
+  }
+
+  @Test
+  fun `does not validate 400 scenario examples against request schema`() {
+    // when
+    val operation = loadSingleOperation("400_bad_request_with_invalid_example.yaml")
+
+    // then
+    val badRequestScenarios = operation.scenarios.filter { it.statusCode == 400 }
+    assert(badRequestScenarios.size == 5)
+
+    val invalidPath = badRequestScenarios.first { it.key == "INVALID_PATH" }
+    assert(invalidPath.request.parameterValues[ParameterElement.PathParam("id")] == "not-a-number")
+
+    val invalidQuery = badRequestScenarios.first { it.key == "INVALID_QUERY" }
+    assert(invalidQuery.request.parameterValues[ParameterElement.QueryParam("filter")] == 123.normalize())
+
+    val invalidHeader = badRequestScenarios.first { it.key == "INVALID_HEADER" }
+    assert(invalidHeader.request.parameterValues[ParameterElement.Header("X-Custom-Header")] == 999.normalize())
+
+    val invalidCookie = badRequestScenarios.first { it.key == "INVALID_COOKIE" }
+    assert(invalidCookie.request.parameterValues[ParameterElement.Cookie("session")] == 456.normalize())
+
+    val invalidBody = badRequestScenarios.first { it.key == "INVALID_BODY_MISSING_FIELD" }
+    val bodyValue = invalidBody.request.body!!.value as Map<*, *>
+    assert(!bodyValue.containsKey("age"))
+  }
+
+  // --- Helpers ---
+  private fun loadSingleOperation(yamlFile: String) =
+    OpenApiLoader.loadOperations("src/test/resources/scenario/$yamlFile")
+      .assertSuccess()
+      .assertSingle()
+}

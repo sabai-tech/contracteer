@@ -25,7 +25,7 @@ class MultipleMockServersTest {
 
 
   @Test
-  fun `start mockserver on random port`() {
+  fun `starts multiple mockservers with repeatable annotation`() {
     assertServerIsRunningWell(environment["mock.server1.port"]!!.toInt())
     assertServerIsRunningWell(environment["mock.server2.port"]!!.toInt())
   }

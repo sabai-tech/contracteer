@@ -6,18 +6,29 @@ import io.swagger.v3.parser.core.models.ParseOptions
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.contract.Contract
+import tech.sabai.contracteer.core.operation.ApiOperation
 import java.io.File
 import java.net.*
 
 object OpenApiLoader {
 
   @JvmStatic
-  fun loadContracts(path: String): Result<List<Contract>> =
+  fun loadOperations(path: String): Result<List<ApiOperation>> =
     path.loadOpenApiDocument()
       .flatMap { parse(it!!) }
       .flatMap { checkFor2xxResponses(it!!) }
-      .flatMap { it!!.generateContracts() }
+      .flatMap {
+        val openAPI = it!!
+        val sharedComponents = SharedComponents(
+          schemas = openAPI.components.safeSchemas(),
+          parameters = openAPI.components.safeParameters(),
+          requestBodies = openAPI.components.safeRequestBodies(),
+          headers = openAPI.components.safeHeaders(),
+          examples = openAPI.components.safeExamples(),
+          responses = openAPI.components.safeResponses()
+        )
+        ApiOperationExtractor(sharedComponents).extract(openAPI)
+      }
 
   private fun String.loadOpenApiDocument() =
     if (isUrl()) loadFromUrl(this) else loadFromFile(this)
@@ -89,4 +100,3 @@ object OpenApiLoader {
         else failure(*it.toTypedArray())
       }
 }
-

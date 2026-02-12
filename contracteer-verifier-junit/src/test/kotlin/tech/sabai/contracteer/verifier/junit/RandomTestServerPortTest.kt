@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeAll
 
 class RandomTestServerPortTest {
 
-  @ContracteerTest(openApiDoc = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml")
+  @ContracteerTest(openApiDoc = "src/test/resources/api_with_scenario_and_schema_based_responses.yaml")
   fun `verify contracts using random server port`() {
   }
 

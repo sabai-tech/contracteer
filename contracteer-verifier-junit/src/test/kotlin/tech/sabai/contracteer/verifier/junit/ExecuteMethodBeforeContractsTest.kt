@@ -6,8 +6,8 @@ import org.junit.jupiter.api.BeforeAll
 
 class ExecuteMethodBeforeContractsTest {
 
-  @ContracteerTest(openApiDoc = "src/test/resources/api_mixing_random_values_and_example_for_4xx_status.yaml")
-  fun `execute method before contracts test`() {
+  @ContracteerTest(openApiDoc = "src/test/resources/api_with_scenario_and_schema_based_responses.yaml")
+  fun `execute method before verification`() {
     serverPort = server.port()
   }
 
@@ -21,7 +21,6 @@ class ExecuteMethodBeforeContractsTest {
     @BeforeAll
     fun startServer() {
       server = TestServer.start(0)
-      serverPort = server.port()
     }
 
     @JvmStatic

@@ -125,10 +125,10 @@ class AllOfDataTypeTest {
         mapOf("hunts" to false, "age" to 2, "name" to "lizard", "petType" to "lizard"),
       )
 
-      val dateDataType = allOfDataType(subTypes = listOf(pet, cat), enum = enum)
+      val allOfDataType = allOfDataType(subTypes = listOf(pet, cat), enum = enum)
 
       // when
-      val result = dateDataType.randomValue()
+      val result = allOfDataType.randomValue()
 
       // then
       assert(enum.map { obj -> obj.map { it.key to it.value.normalize() }.toMap() }.contains(result))

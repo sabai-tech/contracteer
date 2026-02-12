@@ -22,7 +22,7 @@ class UseUserConfigurationMockServerTest {
   lateinit var environment: Environment
 
   @Test
-  fun `start mockserver on random port`() {
+  fun `starts mockserver with custom port and properties`() {
     val serverPort = environment["mock.server.port"]?.toInt()
     val serverUrl = environment["mock.server.baseUrl"]
 
