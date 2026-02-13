@@ -14,42 +14,7 @@ import kotlin.test.Test
 class ResponseValidatorTest {
 
   @Test
-  fun `validates successfully when status codes match with ScenarioBased`() {
-    // Given
-    val scenario = Scenario(
-      path = "/users",
-      method = "GET",
-      key = "success",
-      statusCode = 200,
-      request = ScenarioRequest(parameterValues = emptyMap(), body = null),
-      response = ScenarioResponse(parameterValues = emptyMap(), body = null)
-    )
-
-    val responseSchema = ResponseSchema(
-      headers = emptyList(),
-      bodies = emptyList()
-    )
-
-    val target = VerificationCase.ScenarioBased(
-      scenario = scenario,
-      requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
-      responseSchema = responseSchema
-    )
-
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.headers } returns emptyList()
-    every { response.header("Content-Type") } returns null
-
-    // When
-    val result = ResponseValidator.validate(target, response)
-
-    // Then
-    assert(result.isSuccess())
-  }
-
-  @Test
-  fun `validates successfully when status codes match with SchemaOnly`() {
+  fun `validates successfully when status codes match`() {
     // Given
     val target = VerificationCase.SchemaBased(
       path = "/users",
@@ -486,83 +451,7 @@ class ResponseValidatorTest {
   }
 
   @Test
-  fun `full validation with status code headers and body for ScenarioBased`() {
-    // Given
-    val scenario = Scenario(
-      path = "/users/1",
-      method = "GET",
-      key = "validUser",
-      statusCode = 200,
-      request = ScenarioRequest(
-        parameterValues = mapOf(ParameterElement.PathParam("id") to 1),
-        body = null
-      ),
-      response = ScenarioResponse(
-        parameterValues = mapOf(ParameterElement.Header("X-Request-Id") to "req-123"),
-        body = ScenarioBody(
-          contentType = ContentType("application/json"),
-          value = mapOf("id" to 1, "name" to "John")
-        )
-      )
-    )
-
-    val responseSchema = ResponseSchema(
-      headers = listOf(
-        ParameterSchema(
-          element = ParameterElement.Header("X-Request-Id"),
-          dataType = stringDataType(),
-          isRequired = true,
-          serde = BasicSerde
-        )
-      ),
-      bodies = listOf(
-        BodySchema(
-          contentType = ContentType("application/json"),
-          dataType = objectDataType(
-            properties = mapOf(
-              "id" to integerDataType(),
-              "name" to stringDataType()
-            )
-          ),
-          isRequired = true
-        )
-      )
-    )
-
-    val target = VerificationCase.ScenarioBased(
-      scenario = scenario,
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
-            isRequired = true,
-            serde = BasicSerde
-          )
-        ),
-        bodies = emptyList()
-      ),
-      responseSchema = responseSchema
-    )
-
-    val response = mockk<Response>()
-    every { response.status } returns Status.OK
-    every { response.headers } returns listOf(
-      "X-Request-Id" to "req-123",
-      "Content-Type" to "application/json"
-    )
-    every { response.header("Content-Type") } returns "application/json"
-    every { response.bodyString() } returns """{"id": 1, "name": "John"}"""
-
-    // When
-    val result = ResponseValidator.validate(target, response)
-
-    // Then
-    assert(result.isSuccess())
-  }
-
-  @Test
-  fun `full validation with status code headers and body for SchemaOnly`() {
+  fun `full validation with status code headers and body`() {
     // Given
     val responseSchema = ResponseSchema(
       headers = listOf(

@@ -59,7 +59,13 @@ class MockServer(private val operations: List<ApiOperation>,
 
   private fun handleRequest(request: Request, operation: ApiOperation): Response {
     val validationResult = operation.requestSchema.validate(request)
-    if (validationResult.isFailure()) return validationErrorResponse(operation, validationResult.errors())
+    if (validationResult.isFailure()) {
+      val badRequestSchema = operation.responses[400]
+      return if (badRequestSchema != null)
+        ResponseGenerator.fromSchema(400, badRequestSchema.bodies.firstOrNull())
+      else
+        validationErrorResponse(operation, validationResult.errors())
+    }
 
     return when (val matchResult = ScenarioMatcher.match(request, operation.scenarios, operation.requestSchema)) {
       is ScenarioMatchResult.SingleMatch -> handleScenarioResponse(request, matchResult.scenario, operation)

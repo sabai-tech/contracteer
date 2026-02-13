@@ -2,6 +2,9 @@ package tech.sabai.contracteer.verifier
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.operation.ApiOperation
+import tech.sabai.contracteer.core.operation.BodySchema
+import tech.sabai.contracteer.core.operation.ContentType
+import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
@@ -11,8 +14,9 @@ object VerificationCaseFactory {
   fun create(apiOperation: ApiOperation): List<VerificationCase> {
     val scenarioCases = createScenarioBasedCases(apiOperation)
     val schemaBasedCases = createSchemaBasedCasesIfNeeded(apiOperation)
+    val typeMismatchCases = createTypeMismatchCases(apiOperation)
 
-    return scenarioCases + schemaBasedCases
+    return scenarioCases + schemaBasedCases + typeMismatchCases
   }
 
   private fun createScenarioBasedCases(apiOperation: ApiOperation): List<ScenarioBased> {
@@ -57,6 +61,69 @@ object VerificationCaseFactory {
   private fun isSuccessStatusCode(statusCode: Int): Boolean {
     return statusCode in 200..299
   }
+
+  private fun createTypeMismatchCases(apiOperation: ApiOperation): List<TypeMismatchCase> {
+    val responseSchema = apiOperation.responses[400] ?: return emptyList()
+    val responseContentType = responseSchema.bodies.firstOrNull()?.contentType
+    val requestSchema = apiOperation.requestSchema
+
+    return listOfNotNull(
+      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.pathParameters),
+      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.queryParameters),
+      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.headers),
+      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.cookies),
+      createBodyTypeMismatchCase(apiOperation, responseSchema, responseContentType)
+    )
+  }
+
+  private fun createParameterTypeMismatchCase(
+    apiOperation: ApiOperation,
+    responseSchema: ResponseSchema,
+    responseContentType: ContentType?,
+    parameters: List<ParameterSchema>
+  ): TypeMismatchCase? {
+    val (param, mutatedValue) = findFirstMutableParameter(parameters) ?: return null
+
+    return TypeMismatchCase(
+      path = apiOperation.path,
+      method = apiOperation.method,
+      requestContentType = null,
+      responseContentType = responseContentType,
+      requestSchema = apiOperation.requestSchema,
+      responseSchema = responseSchema,
+      mutatedElement = MutatedElement.Parameter(param.element),
+      mutatedValue = mutatedValue
+    )
+  }
+
+  private fun findFirstMutableParameter(parameters: List<ParameterSchema>): Pair<ParameterSchema, String>? =
+    parameters.firstNotNullOfOrNull { param ->
+      TypeMismatchMutation.mutate(param.dataType)?.let { mutated -> param to mutated }
+    }
+
+  private fun createBodyTypeMismatchCase(
+    apiOperation: ApiOperation,
+    responseSchema: ResponseSchema,
+    responseContentType: ContentType?
+  ): TypeMismatchCase? {
+    val mutableBody = findFirstMutableBody(apiOperation.requestSchema.bodies) ?: return null
+
+    return TypeMismatchCase(
+      path = apiOperation.path,
+      method = apiOperation.method,
+      requestContentType = mutableBody.first.contentType,
+      responseContentType = responseContentType,
+      requestSchema = apiOperation.requestSchema,
+      responseSchema = responseSchema,
+      mutatedElement = MutatedElement.Body,
+      mutatedValue = mutableBody.second
+    )
+  }
+
+  private fun findFirstMutableBody(bodies: List<BodySchema>): Pair<BodySchema, String>? =
+    bodies.firstNotNullOfOrNull { body ->
+      TypeMismatchMutation.mutate(body.dataType)?.let { mutated -> body to mutated }
+    }
 
   private fun createSchemaBasedCases(
     apiOperation: ApiOperation,

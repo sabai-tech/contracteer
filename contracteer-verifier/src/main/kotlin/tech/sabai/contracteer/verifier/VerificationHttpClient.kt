@@ -11,7 +11,9 @@ import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.core.operation.RequestSchema
 import tech.sabai.contracteer.core.operation.ScenarioBody
-import tech.sabai.contracteer.verifier.VerificationCase.*
+import tech.sabai.contracteer.verifier.VerificationCase.ScenarioBased
+import tech.sabai.contracteer.verifier.VerificationCase.SchemaBased
+import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatchCase
 
 internal class VerificationHttpClient(private val serverUrl: String) {
   private val logger = KotlinLogging.logger {}
@@ -21,8 +23,9 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     val client = createClient()
 
     return when (case) {
-      is ScenarioBased -> sendScenarioRequest(client, case)
-      is SchemaBased   -> sendSchemaRequest(client, case)
+      is ScenarioBased    -> sendScenarioRequest(client, case)
+      is SchemaBased      -> sendSchemaRequest(client, case)
+      is TypeMismatchCase -> sendTypeMismatchRequest(client, case)
     }
   }
 
@@ -61,6 +64,49 @@ internal class VerificationHttpClient(private val serverUrl: String) {
       .withAcceptHeader(case.responseContentType)
 
     return client(request)
+  }
+
+  private fun sendTypeMismatchRequest(client: (Request) -> Response, case: TypeMismatchCase): Response {
+    val mutatedElement = case.mutatedElement
+
+    val pathParams = case.requestSchema.pathParameters.associate { param ->
+      val value = when (mutatedElement) {
+        is MutatedElement.Parameter if mutatedElement.element == param.element -> case.mutatedValue
+        else                                                                   -> param.serde.serialize(param.dataType.randomValue())
+      }
+      param.element.name to value
+    }
+
+    val request = Request(
+      method = Method.valueOf(case.method.uppercase()),
+      uri = UriTemplate.from("$serverUrl${case.path}").generate(pathParams))
+      .withTypeMismatchParameters(case)
+      .withTypeMismatchBody(case)
+      .withAcceptHeader(case.responseContentType)
+
+    return client(request)
+  }
+
+  private fun Request.withTypeMismatchParameters(case: TypeMismatchCase): Request {
+    val mutatedElement = case.mutatedElement
+    return case.requestSchema.parameters.fold(this) { req, param ->
+      val isMutated = mutatedElement is MutatedElement.Parameter && mutatedElement.element == param.element
+      val value = if (isMutated) case.mutatedValue else param.serde.serialize(param.dataType.randomValue())
+      when (val element = param.element) {
+        is QueryParam -> req.query(element.name, value)
+        is Header     -> req.header(element.name, value)
+        is Cookie     -> req.cookie(element.name, value)
+        is PathParam  -> req // Already handled in URI template
+      }
+    }
+  }
+
+  private fun Request.withTypeMismatchBody(case: TypeMismatchCase): Request {
+    return if (case.mutatedElement is MutatedElement.Body) {
+      case.requestContentType?.let { header("Content-Type", it.value).body(case.mutatedValue) } ?: this
+    } else {
+      withGeneratedBody(case.requestSchema.bodies.find { it.contentType == case.requestContentType })
+    }
   }
 
   private fun buildPathParameters(
