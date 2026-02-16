@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import java.util.UUID.fromString
 import java.util.UUID.randomUUID
 
+/** OpenAPI `string` type with `format: uuid`. Values must be valid UUIDs. */
 class UuidDataType private constructor(name: String,
                                        isNullable: Boolean = false,
                                        allowedValues: AllowedValues? = null):
@@ -23,6 +24,7 @@ class UuidDataType private constructor(name: String,
   override fun doRandomValue() = randomUUID().toString()
 
   companion object {
+    @JvmStatic
     fun create(name: String, isNullable: Boolean, enum: List<String?>) =
       UuidDataType(name, isNullable).let { dataType ->
         if (enum.isEmpty()) success(dataType)

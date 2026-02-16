@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulateWithIndex
 
+/** OpenAPI `array` type, containing items of a single [itemDataType]. */
 class ArrayDataType private constructor(name: String,
                                         val itemDataType: DataType<out Any>,
                                         isNullable: Boolean,
@@ -19,7 +20,9 @@ class ArrayDataType private constructor(name: String,
     List((1..5).random()) { itemDataType.randomValue() }
 
   companion object {
-    fun create(name: String ,
+    @JvmStatic
+    @JvmOverloads
+    fun create(name: String,
                itemDataType: DataType<out Any>,
                isNullable: Boolean = false,
                enum: List<Any?> = emptyList()) =

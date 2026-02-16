@@ -6,6 +6,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
+/** OpenAPI `string` type with `format: date`. Values must conform to `YYYY-MM-DD`. */
 class DateDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
     DataType<String>(name, "string/date", isNullable, String::class.java, allowedValues) {
 
@@ -28,6 +29,8 @@ class DateDataType private constructor(name: String, isNullable: Boolean, allowe
   }
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,

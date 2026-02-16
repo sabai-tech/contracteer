@@ -2,12 +2,12 @@ package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import tech.sabai.contracteer.verifier.VerificationCase.ScenarioBased
-import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatchCase
+import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatch
 import kotlin.test.Test
 
 class VerificationCaseFactoryTypeMismatchTest {
@@ -17,13 +17,16 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = PathParam("id"), dataType = integerDataType(), isRequired = true, serde = BasicSerde)
+        ParameterSchema(element = PathParam("id"),
+                        dataType = integerDataType(),
+                        isRequired = true,
+                        serde = PlainTextSerde)
       )
     )
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     val pathCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(PathParam("id")) }
@@ -36,13 +39,16 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = QueryParam("page"), dataType = integerDataType(), isRequired = false, serde = BasicSerde)
+        ParameterSchema(element = QueryParam("page"),
+                        dataType = integerDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde)
       )
     )
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     val queryCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(QueryParam("page")) }
@@ -55,13 +61,16 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = Header("X-Request-Id"), dataType = integerDataType(), isRequired = true, serde = BasicSerde)
+        ParameterSchema(element = Header("X-Request-Id"),
+                        dataType = integerDataType(),
+                        isRequired = true,
+                        serde = PlainTextSerde)
       )
     )
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     val headerCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(Header("X-Request-Id")) }
@@ -74,13 +83,16 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = Cookie("session_ttl"), dataType = integerDataType(), isRequired = false, serde = BasicSerde)
+        ParameterSchema(element = Cookie("session_ttl"),
+                        dataType = integerDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde)
       )
     )
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     val cookieCase = typeMismatchCases.find { it.mutatedElement == MutatedElement.Parameter(Cookie("session_ttl")) }
@@ -93,19 +105,33 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = PathParam("id"), dataType = integerDataType(), isRequired = true, serde = BasicSerde),
-        ParameterSchema(element = QueryParam("page"), dataType = integerDataType(), isRequired = false, serde = BasicSerde),
-        ParameterSchema(element = Header("X-Correlation-Id"), dataType = integerDataType(), isRequired = true, serde = BasicSerde),
-        ParameterSchema(element = Cookie("token"), dataType = integerDataType(), isRequired = false, serde = BasicSerde)
+        ParameterSchema(element = PathParam("id"),
+                        dataType = integerDataType(),
+                        isRequired = true,
+                        serde = PlainTextSerde),
+        ParameterSchema(element = QueryParam("page"),
+                        dataType = integerDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde),
+        ParameterSchema(element = Header("X-Correlation-Id"),
+                        dataType = integerDataType(),
+                        isRequired = true,
+                        serde = PlainTextSerde),
+        ParameterSchema(element = Cookie("token"),
+                        dataType = integerDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde)
       ),
       bodies = listOf(
-        BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("name" to stringDataType())), isRequired = true)
+        BodySchema(contentType = ContentType("application/json"),
+                   dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+                   isRequired = true)
       )
     )
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     assert(typeMismatchCases.size == 5)
@@ -121,15 +147,24 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = QueryParam("name"), dataType = stringDataType(), isRequired = false, serde = BasicSerde),
-        ParameterSchema(element = QueryParam("page"), dataType = integerDataType(), isRequired = false, serde = BasicSerde),
-        ParameterSchema(element = QueryParam("limit"), dataType = integerDataType(), isRequired = false, serde = BasicSerde)
+        ParameterSchema(element = QueryParam("name"),
+                        dataType = stringDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde),
+        ParameterSchema(element = QueryParam("page"),
+                        dataType = integerDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde),
+        ParameterSchema(element = QueryParam("limit"),
+                        dataType = integerDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde)
       )
     )
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     assert(typeMismatchCases.size == 1)
@@ -141,8 +176,14 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Given
     val apiOperation = apiOperationWith400(
       parameters = listOf(
-        ParameterSchema(element = QueryParam("name"), dataType = stringDataType(), isRequired = false, serde = BasicSerde),
-        ParameterSchema(element = QueryParam("filter"), dataType = stringDataType(), isRequired = false, serde = BasicSerde)
+        ParameterSchema(element = QueryParam("name"),
+                        dataType = stringDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde),
+        ParameterSchema(element = QueryParam("filter"),
+                        dataType = stringDataType(),
+                        isRequired = false,
+                        serde = PlainTextSerde)
       )
     )
 
@@ -150,7 +191,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     val cases = VerificationCaseFactory.create(apiOperation)
 
     // Then
-    assert(cases.none { it is TypeMismatchCase })
+    assert(cases.none { it is TypeMismatch })
   }
 
   @Test
@@ -171,10 +212,14 @@ class VerificationCaseFactoryTypeMismatchTest {
       ),
       responses = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("id" to integerDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+                     isRequired = true)
         )),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("error" to stringDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+                     isRequired = true)
         ))
       ),
       scenarios = emptyList()
@@ -182,7 +227,7 @@ class VerificationCaseFactoryTypeMismatchTest {
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     assert(typeMismatchCases.size == 1)
@@ -212,7 +257,9 @@ class VerificationCaseFactoryTypeMismatchTest {
       ),
       responses = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("id" to integerDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+                     isRequired = true)
         ))
       ),
       scenarios = emptyList()
@@ -222,7 +269,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     val cases = VerificationCaseFactory.create(apiOperation)
 
     // Then
-    assert(cases.none { it is TypeMismatchCase })
+    assert(cases.none { it is TypeMismatch })
   }
 
   @Test
@@ -244,7 +291,9 @@ class VerificationCaseFactoryTypeMismatchTest {
       responses = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("error" to stringDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+                     isRequired = true)
         ))
       ),
       scenarios = emptyList()
@@ -254,7 +303,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     val cases = VerificationCaseFactory.create(apiOperation)
 
     // Then
-    assert(cases.none { it is TypeMismatchCase })
+    assert(cases.none { it is TypeMismatch })
   }
 
   @Test
@@ -269,10 +318,14 @@ class VerificationCaseFactoryTypeMismatchTest {
       ),
       responses = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("id" to integerDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+                     isRequired = true)
         )),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("error" to stringDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+                     isRequired = true)
         ))
       ),
       scenarios = emptyList()
@@ -282,7 +335,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     val cases = VerificationCaseFactory.create(apiOperation)
 
     // Then
-    assert(cases.none { it is TypeMismatchCase })
+    assert(cases.none { it is TypeMismatch })
   }
 
   @Test
@@ -309,7 +362,9 @@ class VerificationCaseFactoryTypeMismatchTest {
       responses = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("error" to stringDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+                     isRequired = true)
         ))
       ),
       scenarios = emptyList()
@@ -317,7 +372,7 @@ class VerificationCaseFactoryTypeMismatchTest {
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
 
     // Then
     assert(typeMismatchCases.size == 1)
@@ -343,10 +398,14 @@ class VerificationCaseFactoryTypeMismatchTest {
       ),
       responses = mapOf(
         201 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("id" to integerDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+                     isRequired = true)
         )),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("error" to stringDataType())), isRequired = true)
+          BodySchema(contentType = ContentType("application/json"),
+                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+                     isRequired = true)
         ))
       ),
       scenarios = listOf(
@@ -360,8 +419,9 @@ class VerificationCaseFactoryTypeMismatchTest {
             body = ScenarioBody(contentType = ContentType("application/json"), value = mapOf("name" to ""))
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
-            body = ScenarioBody(contentType = ContentType("application/json"), value = mapOf("error" to "name is required"))
+            headers = emptyMap(),
+            body = ScenarioBody(contentType = ContentType("application/json"),
+                                value = mapOf("error" to "name is required"))
           )
         )
       )
@@ -372,13 +432,12 @@ class VerificationCaseFactoryTypeMismatchTest {
 
     // Then
     val scenarioCases = cases.filterIsInstance<ScenarioBased>()
-    val typeMismatchCases = cases.filterIsInstance<TypeMismatchCase>()
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
     assert(scenarioCases.size == 1)
     assert(typeMismatchCases.size == 1)
     assert(scenarioCases[0].displayName.contains("invalidUser"))
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
   }
-
 
 
   private fun apiOperationWith400(
@@ -393,7 +452,9 @@ class VerificationCaseFactoryTypeMismatchTest {
     responses = mapOf(
       200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
       400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-        BodySchema(contentType = ContentType("application/json"), dataType = objectDataType(properties = mapOf("error" to stringDataType())), isRequired = true)
+        BodySchema(contentType = ContentType("application/json"),
+                   dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+                   isRequired = true)
       ))
     ),
     scenarios = emptyList()

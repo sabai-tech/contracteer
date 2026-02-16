@@ -7,6 +7,7 @@ import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.joinWithQuotes
 import java.lang.System.lineSeparator
 
+/** OpenAPI `anyOf` composition. The value must match at least one sub-schema. */
 class AnyOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
                                         val discriminator: Discriminator? = null,
@@ -70,6 +71,8 @@ class AnyOfDataType private constructor(name: String,
   }
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(name: String,
                subTypes: List<DataType<out Any>>,
                discriminator: Discriminator? = null,

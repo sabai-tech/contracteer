@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
+/** OpenAPI `string` type with `format: binary`. Values are raw binary strings. */
 class BinaryDataType private constructor(name: String,
                                          isNullable: Boolean,
                                          val lengthRange: Range,
@@ -20,9 +21,13 @@ class BinaryDataType private constructor(name: String,
       .map { value }
 
   override fun doRandomValue(): String =
-    ByteArray(lengthRange.randomIntegerValue().toInt().absoluteValue.coerceAtMost(100)).also { Random.nextBytes(it) }.toString(Charsets.ISO_8859_1)
+    ByteArray(lengthRange.randomIntegerValue().toInt().absoluteValue.coerceAtMost(100))
+      .also { Random.nextBytes(it) }
+      .toString(Charsets.ISO_8859_1)
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,

@@ -10,9 +10,7 @@ import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ParameterElement.Header
 import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
-import tech.sabai.contracteer.verifier.VerificationCase.ScenarioBased
-import tech.sabai.contracteer.verifier.VerificationCase.SchemaBased
-import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatchCase
+import tech.sabai.contracteer.verifier.VerificationCase.*
 
 private fun Headers.hasHeader(name: String) = any { it.first.equals(name, ignoreCase = true) }
 private fun Headers.headerValue(name: String) = find { it.first.equals(name, ignoreCase = true) }?.second
@@ -21,11 +19,11 @@ private fun Response.contentType(): String? = header("Content-Type")
 internal object ResponseValidator {
   fun validate(case: VerificationCase, response: Response): Result<Unit> {
     return when (case) {
-      is ScenarioBased    ->
+      is ScenarioBased ->
         validateResponse(case.scenario.statusCode, case.responseSchema, response)
-      is SchemaBased      ->
+      is SchemaBased   ->
         validateResponse(case.statusCode, case.responseSchema, response)
-      is TypeMismatchCase ->
+      is TypeMismatch  ->
         validateResponse(400, case.responseSchema, response)
     }
   }

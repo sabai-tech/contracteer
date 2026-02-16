@@ -3,8 +3,14 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.datatype.AllowedValues.Companion.create
 import tech.sabai.contracteer.core.normalize
 
+/**
+ * Represents an OpenAPI `enum` constraint: a fixed set of allowed values for a [DataType].
+ *
+ * Created through the [create] factory method, which validates all values against the target data type.
+ */
 class AllowedValues private constructor(values: List<Any?>) {
   private val allowedValues = values.distinct().map { it.normalize() }
 
@@ -15,6 +21,7 @@ class AllowedValues private constructor(values: List<Any?>) {
   fun randomValue(): Any = allowedValues.filterNotNull().random()
 
   companion object {
+    @JvmStatic
     fun <T, DT: DataType<T>> create(values: List<Any?>, dataType: DT) =
       when {
         values.isEmpty()                              -> failure("'enum' cannot be empty")

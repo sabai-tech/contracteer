@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
+/** OpenAPI `string` type with `format: email`. Values must be valid email addresses. */
 class EmailDataType private constructor(name: String,
                                         isNullable: Boolean,
                                         val lengthRange: Range,
@@ -40,6 +41,8 @@ class EmailDataType private constructor(name: String,
   }
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,

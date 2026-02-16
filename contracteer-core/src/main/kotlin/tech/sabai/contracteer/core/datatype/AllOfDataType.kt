@@ -7,6 +7,7 @@ import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.joinWithQuotes
 import java.lang.System.lineSeparator
 
+/** OpenAPI `allOf` composition. The value must match all sub-schemas simultaneously. */
 @Suppress("UNCHECKED_CAST")
 class AllOfDataType private constructor(name: String,
                                         subTypes: List<DataType<Map<String, Any?>>>,
@@ -68,6 +69,8 @@ class AllOfDataType private constructor(name: String,
   }
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(name: String,
                subTypes: List<DataType<Map<String, Any?>>>,
                isNullable: Boolean = false,

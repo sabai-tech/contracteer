@@ -151,7 +151,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
         .combineResults()
         .map { bodies -> bodies ?: emptyList() }
 
-  private fun ApiResponse.extractExampleHeaderValues(exampleKey: String): Result<Map<ParameterElement, Any?>> =
+  private fun ApiResponse.extractExampleHeaderValues(exampleKey: String): Result<Map<ParameterElement.Header, Any?>> =
     safeHeaders()
       .filter { (_, header) -> header.safeExamples().containsKey(exampleKey) }
       .map { (name, header) ->
@@ -275,7 +275,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   private data class ExampleValues(
     val requestParams: Map<ParameterElement, Any?>,
     val requestBodies: List<ScenarioBody?>,
-    val responseHeaders: Map<ParameterElement, Any?>,
+    val responseHeaders: Map<ParameterElement.Header, Any?>,
     val responseBodies: List<ScenarioBody?>
   )
 
@@ -286,7 +286,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   )
 
   private data class ScenarioResponseExamples(
-    val values: Map<ParameterElement, Any?>,
+    val values: Map<ParameterElement.Header, Any?>,
     val bodies: List<ScenarioBody?>,
     val schema: ResponseSchema
   )

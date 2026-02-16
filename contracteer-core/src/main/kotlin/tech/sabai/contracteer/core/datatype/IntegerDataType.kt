@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import java.math.BigDecimal
 
+/** OpenAPI `integer` type, with optional range constraints. Values are represented as [BigDecimal]. */
 class IntegerDataType private constructor(name: String,
                                           isNullable: Boolean,
                                           val range: Range,
@@ -21,6 +22,8 @@ class IntegerDataType private constructor(name: String,
   override fun doRandomValue(): BigDecimal = range.randomIntegerValue()
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,
@@ -35,8 +38,8 @@ class IntegerDataType private constructor(name: String,
           when {
             minimum != null && !minimum.isInteger() -> failure("minimum must be an integer.")
             maximum != null && !maximum.isInteger() -> failure("maximum must be an integer.")
-            enum.isEmpty()              -> success(IntegerDataType(name, isNullable, range!!))
-            else                        ->
+            enum.isEmpty()                          -> success(IntegerDataType(name, isNullable, range!!))
+            else                                    ->
               AllowedValues
                 .create(enum, IntegerDataType(name, isNullable, range!!))
                 .map { allowedValues -> IntegerDataType(name, isNullable, range, allowedValues) }

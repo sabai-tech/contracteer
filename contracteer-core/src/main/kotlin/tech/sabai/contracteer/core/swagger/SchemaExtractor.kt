@@ -9,16 +9,11 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
-import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.operation.BodySchema
-import tech.sabai.contracteer.core.operation.ParameterElement
+import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.operation.ParameterSchema
-import tech.sabai.contracteer.core.operation.RequestSchema
-import tech.sabai.contracteer.core.operation.ResponseSchema
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
 internal class SchemaExtractor(
@@ -108,7 +103,11 @@ internal class SchemaExtractor(
         .forProperty("body")
 
   private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ParameterSchema>> =
-    response.safeHeaders().map { (name, header) -> header.toParameterSchema(name) }.combineResults().forProperty("header")
+    response
+      .safeHeaders()
+      .map { (name, header) -> header.toParameterSchema(name) }
+      .combineResults()
+      .forProperty("header")
 
   private fun extractResponseBodySchemas(response: ApiResponse): Result<List<BodySchema>> =
     if (response.content == null)
@@ -129,14 +128,14 @@ internal class SchemaExtractor(
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
         .convertToDataType(resolved!!.schema, "")
-        .map { ParameterSchema(element, it!!, resolved.safeIsRequired(), BasicSerde) }
+        .map { ParameterSchema(element, it!!, resolved.safeIsRequired(), PlainTextSerde) }
     }
 
   private fun Header.toParameterSchema(name: String): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
         .convertToDataType(resolved!!.schema, "")
-        .map { ParameterSchema(ParameterElement.Header(name), it!!, resolved.safeIsRequired(), BasicSerde) }
+        .map { ParameterSchema(ParameterElement.Header(name), it!!, resolved.safeIsRequired(), PlainTextSerde) }
     }
 
   private fun validateBodySchemaContentType(contentType: ContentType,

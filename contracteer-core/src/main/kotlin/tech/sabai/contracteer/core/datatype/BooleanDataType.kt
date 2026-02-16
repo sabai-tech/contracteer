@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result.Companion.success
 import kotlin.random.Random
 
+/** OpenAPI `boolean` type. */
 class BooleanDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
     DataType<Boolean>(name, "boolean", isNullable, Boolean::class.javaObjectType, allowedValues) {
 
@@ -13,6 +14,8 @@ class BooleanDataType private constructor(name: String, isNullable: Boolean, all
   override fun doRandomValue() = Random.nextBoolean()
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,

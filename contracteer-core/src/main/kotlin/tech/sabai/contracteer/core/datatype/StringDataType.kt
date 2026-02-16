@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import kotlin.math.absoluteValue
 
+/** OpenAPI `string` type, with optional length constraints and format variants (date, email, uuid, etc.). */
 class StringDataType private constructor(name: String,
                                          openApiType: String,
                                          isNullable: Boolean,
@@ -27,8 +28,10 @@ class StringDataType private constructor(name: String,
       .joinToString("")
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
-      name: String ,
+      name: String,
       openApiType: String,
       isNullable: Boolean = false,
       enum: List<String?> = emptyList(),

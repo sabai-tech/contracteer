@@ -2,13 +2,13 @@ package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
 import kotlin.test.Test
 
-class TypeMismatchCaseTest {
+class TypeMismatchTest {
 
   @Test
   fun `display name for body type mismatch`() {
@@ -85,7 +85,7 @@ class TypeMismatchCaseTest {
     method: String = "POST",
     mutatedElement: MutatedElement,
     mutatedValue: String
-  ) = VerificationCase.TypeMismatchCase(
+  ) = VerificationCase.TypeMismatch(
     path = path,
     method = method,
     requestContentType = ContentType("application/json"),
@@ -96,7 +96,7 @@ class TypeMismatchCaseTest {
           element = PathParam("id"),
           dataType = integerDataType(),
           isRequired = true,
-          serde = BasicSerde
+          serde = PlainTextSerde
         )
       ),
       bodies = listOf(

@@ -2,7 +2,7 @@ package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -27,7 +27,7 @@ class VerificationCaseTest {
           )
         ),
         response = ScenarioResponse(
-          parameterValues = emptyMap(),
+          headers = emptyMap(),
           body = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("id" to 123, "name" to "John")
@@ -39,7 +39,7 @@ class VerificationCaseTest {
             element = PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = listOf(
@@ -81,7 +81,7 @@ class VerificationCaseTest {
           body = null
         ),
         response = ScenarioResponse(
-          parameterValues = emptyMap(),
+          headers = emptyMap(),
           body = null
         )
       ),
@@ -91,7 +91,7 @@ class VerificationCaseTest {
             element = PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = emptyList()
@@ -126,7 +126,7 @@ class VerificationCaseTest {
           )
         ),
         response = ScenarioResponse(
-          parameterValues = emptyMap(),
+          headers = emptyMap(),
           body = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("orderId" to "12345")
@@ -178,7 +178,7 @@ class VerificationCaseTest {
             element = PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = listOf(

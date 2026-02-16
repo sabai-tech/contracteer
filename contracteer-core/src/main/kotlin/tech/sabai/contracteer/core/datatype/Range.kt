@@ -7,6 +7,12 @@ import java.math.BigDecimal
 import java.math.RoundingMode.*
 import kotlin.random.Random
 
+/**
+ * A numeric range defined by optional minimum and maximum bounds, with optional exclusivity.
+ *
+ * Used by numeric and string-length data types to enforce OpenAPI `minimum`, `maximum`,
+ * `exclusiveMinimum`, `exclusiveMaximum`, `minLength`, and `maxLength` constraints.
+ */
 class Range private constructor(
   val minimum: BigDecimal?,
   val maximum: BigDecimal?,
@@ -93,6 +99,8 @@ class Range private constructor(
   companion object {
     private val DEFAULT_WIDTH = BigDecimal(10_000)
 
+    @JvmStatic
+    @JvmOverloads
     fun create(minimum: BigDecimal? = null,
                maximum: BigDecimal? = null,
                exclusiveMinimum: Boolean = false,

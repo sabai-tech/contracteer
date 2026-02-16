@@ -6,14 +6,24 @@ import tech.sabai.contracteer.core.operation.RequestSchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.core.operation.Scenario
 
+/**
+ * A test case for verifying a server implementation against an OpenAPI contract.
+ *
+ * Each subtype represents a different verification strategy:
+ * - [ScenarioBased]: driven by a named scenario from the specification
+ * - [SchemaBased]: generated from the schema when no 2xx scenario exists
+ * - [TypeMismatch]: sends an intentionally malformed request to verify 400 handling
+ */
 sealed class VerificationCase {
+  /** A human-readable description of this verification case, suitable for test output. */
   abstract val displayName: String
 
+  /** A verification case driven by a named [Scenario] from the OpenAPI specification. */
   data class ScenarioBased(
     val scenario: Scenario,
     val requestSchema: RequestSchema,
     val responseSchema: ResponseSchema
-  ) : VerificationCase() {
+  ): VerificationCase() {
     override val displayName: String
       get() {
         val requestContentType = scenario.request.body?.contentType?.let { " (${it.value})" } ?: ""
@@ -22,6 +32,7 @@ sealed class VerificationCase {
       }
   }
 
+  /** A verification case generated from the schema with random values, used when no 2xx scenario exists. */
   data class SchemaBased(
     val path: String,
     val method: String,
@@ -30,7 +41,7 @@ sealed class VerificationCase {
     val responseContentType: ContentType?,
     val requestSchema: RequestSchema,
     val responseSchema: ResponseSchema
-  ) : VerificationCase() {
+  ): VerificationCase() {
     override val displayName: String
       get() {
         val requestCT = requestContentType?.let { " (${it.value})" } ?: ""
@@ -39,7 +50,8 @@ sealed class VerificationCase {
       }
   }
 
-  data class TypeMismatchCase(
+  /** A verification case that sends a type-mismatched value to verify 400 Bad Request handling. */
+  data class TypeMismatch(
     val path: String,
     val method: String,
     val requestContentType: ContentType?,
@@ -48,7 +60,7 @@ sealed class VerificationCase {
     val responseSchema: ResponseSchema,
     val mutatedElement: MutatedElement,
     val mutatedValue: String
-  ) : VerificationCase() {
+  ): VerificationCase() {
     override val displayName: String
       get() {
         val elementLabel = when (val element = mutatedElement) {

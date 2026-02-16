@@ -3,23 +3,10 @@ package tech.sabai.contracteer.core.serde
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.AnyDataType
-import tech.sabai.contracteer.core.datatype.ArrayDataType
-import tech.sabai.contracteer.core.datatype.Base64DataType
-import tech.sabai.contracteer.core.datatype.BinaryDataType
-import tech.sabai.contracteer.core.datatype.BooleanDataType
-import tech.sabai.contracteer.core.datatype.CompositeDataType
-import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.DateDataType
-import tech.sabai.contracteer.core.datatype.DateTimeDataType
-import tech.sabai.contracteer.core.datatype.EmailDataType
-import tech.sabai.contracteer.core.datatype.IntegerDataType
-import tech.sabai.contracteer.core.datatype.NumberDataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.datatype.StringDataType
-import tech.sabai.contracteer.core.datatype.UuidDataType
+import tech.sabai.contracteer.core.datatype.*
 
-object BasicSerde: Serde {
+/** [Serde] implementation for `text/plain` content. Supports scalar types only; objects and arrays are rejected. */
+object PlainTextSerde: Serde {
   override fun serialize(value: Any?) =
     value.toString()
 

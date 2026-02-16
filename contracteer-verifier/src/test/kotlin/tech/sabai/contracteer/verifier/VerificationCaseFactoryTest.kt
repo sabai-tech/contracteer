@@ -1,7 +1,7 @@
 package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -23,7 +23,7 @@ class VerificationCaseFactoryTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = emptyList()
@@ -55,7 +55,7 @@ class VerificationCaseFactoryTest {
             body = null
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = ScenarioBody(
               contentType = ContentType("application/json"),
               value = mapOf("id" to 1, "name" to "John")
@@ -72,7 +72,7 @@ class VerificationCaseFactoryTest {
             body = null
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = null
           )
         )
@@ -215,7 +215,7 @@ class VerificationCaseFactoryTest {
             )
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = ScenarioBody(
               contentType = ContentType("application/json"),
               value = mapOf("orderId" to "12345")

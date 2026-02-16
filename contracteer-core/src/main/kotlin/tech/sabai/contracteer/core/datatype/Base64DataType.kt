@@ -8,6 +8,7 @@ import kotlin.random.Random
 
 private val logger = KotlinLogging.logger {}
 
+/** OpenAPI `string` type with `format: byte`. Values must be valid Base64-encoded strings. */
 class Base64DataType private constructor(name: String,
                                          isNullable: Boolean,
                                          val lengthRange: Range,
@@ -56,6 +57,8 @@ class Base64DataType private constructor(name: String,
   }
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,

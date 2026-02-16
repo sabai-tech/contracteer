@@ -10,8 +10,20 @@ import tech.sabai.contracteer.core.operation.ApiOperation
 import java.io.File
 import java.net.*
 
+/**
+ * Loads and parses an OpenAPI 3.0 specification into a list of [ApiOperation] instances.
+ *
+ * Accepts a file path or an HTTP(S) URL pointing to an OpenAPI document.
+ */
 object OpenApiLoader {
 
+  /**
+   * Parses the OpenAPI document at the given [path] and extracts all API operations.
+   *
+   * @param path a local file path or an HTTP(S) URL to an OpenAPI 3.0 document
+   * @return a [Result] containing the list of extracted [ApiOperation] instances,
+   *         or errors if the document is invalid or cannot be loaded
+   */
   @JvmStatic
   fun loadOperations(path: String): Result<List<ApiOperation>> =
     path.loadOpenApiDocument()

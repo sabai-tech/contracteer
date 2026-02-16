@@ -6,6 +6,7 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.joinWithQuotes
 
+/** OpenAPI `object` type, with named properties, required property constraints, and optional additional properties. */
 @Suppress("UNCHECKED_CAST")
 class ObjectDataType private constructor(name: String,
                                          val properties: Map<String, DataType<out Any>>,
@@ -49,6 +50,8 @@ class ObjectDataType private constructor(name: String,
   }
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       properties: Map<String, DataType<out Any>>,
@@ -72,13 +75,13 @@ class ObjectDataType private constructor(name: String,
         AllowedValues
           .create(enum, default)
           .map {
-            ObjectDataType( name,
-              properties,
-              requiredProperties,
-              allowAdditionalProperties,
-              additionalPropertiesDataType,
-              isNullable,
-              it)
+            ObjectDataType(name,
+                           properties,
+                           requiredProperties,
+                           allowAdditionalProperties,
+                           additionalPropertiesDataType,
+                           isNullable,
+                           it)
           }
     }
   }

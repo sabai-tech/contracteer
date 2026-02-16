@@ -8,6 +8,12 @@ import tech.sabai.contracteer.core.combineResults
 typealias MappingName = String
 typealias DataTypeName = String
 
+/**
+ * Represents an OpenAPI discriminator used to distinguish between sub-schemas in
+ * `oneOf`, `anyOf`, and `allOf` compositions.
+ *
+ * @param propertyName the property whose value determines the target schema
+ */
 data class Discriminator(
   val propertyName: String,
   private val mappings: Map<MappingName, DataTypeName> = mapOf()) {

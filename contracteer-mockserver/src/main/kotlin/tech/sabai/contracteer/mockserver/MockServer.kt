@@ -1,9 +1,12 @@
 package tech.sabai.contracteer.mockserver
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.http4k.core.*
 import org.http4k.core.ContentType.Companion.TEXT_PLAIN
+import org.http4k.core.Method
+import org.http4k.core.Request
+import org.http4k.core.Response
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
+import org.http4k.core.then
 import org.http4k.filter.DebuggingFilters.PrintRequestAndResponse
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
@@ -19,12 +22,23 @@ import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.core.operation.Scenario
 
+/**
+ * An HTTP mock server that serves responses derived from OpenAPI [ApiOperation] definitions.
+ *
+ * The mock server validates incoming requests against the operation's request schema,
+ * matches scenarios for deterministic responses, and falls back to schema-generated
+ * random values when no scenario matches.
+ *
+ * @param operations the API operations to serve
+ * @param port the port to listen on, or 0 for a random available port
+ */
 class MockServer(private val operations: List<ApiOperation>,
                  private val port: Int = 0) {
 
   private lateinit var http4kServer: Http4kServer
   private val logger = KotlinLogging.logger {}
 
+  /** Starts the mock server. */
   fun start() {
     val routeHandlers = operations
       .onEach { logger.info { "Registering route: [${it.method.uppercase()}] ${it.path}" } }
@@ -35,6 +49,7 @@ class MockServer(private val operations: List<ApiOperation>,
     logger.info { "Contracteer mock server started on port ${this.port()}" }
   }
 
+  /** Stops the mock server. */
   fun stop() {
     if (::http4kServer.isInitialized) {
       logger.info { "Stopping Contracteer mock server" }
@@ -43,6 +58,7 @@ class MockServer(private val operations: List<ApiOperation>,
     }
   }
 
+  /** Returns the port the server is listening on. Must be called after [start]. */
   fun port(): Int {
     check(::http4kServer.isInitialized) { "Contracteer mock server is not started yet." }
     return http4kServer.port()
@@ -105,11 +121,11 @@ class MockServer(private val operations: List<ApiOperation>,
     return when {
       successResponses.isEmpty() ->
         failure("No 2xx response schema defined for ${operation.method.uppercase()} ${operation.path}")
-      successResponses.size > 1 ->
+      successResponses.size > 1  ->
         failure(
           "Ambiguous: multiple 2xx response codes (${successResponses.keys.sorted().joinToString(", ")}) " +
           "for ${operation.method.uppercase()} ${operation.path}. Use scenarios to disambiguate.")
-      else -> success(successResponses.entries.first().toPair())
+      else                       -> success(successResponses.entries.first().toPair())
     }
   }
 
@@ -125,7 +141,9 @@ class MockServer(private val operations: List<ApiOperation>,
     return success()
   }
 
-  private fun selectResponseBody(acceptHeader: String?, responseSchema: ResponseSchema, operation: ApiOperation): Result<BodySchema?> {
+  private fun selectResponseBody(acceptHeader: String?,
+                                 responseSchema: ResponseSchema,
+                                 operation: ApiOperation): Result<BodySchema?> {
     if (responseSchema.bodies.isEmpty()) return success(null)
     if (responseSchema.bodies.size == 1) return success(responseSchema.bodies.first())
 

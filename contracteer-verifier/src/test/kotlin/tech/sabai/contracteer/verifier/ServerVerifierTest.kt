@@ -9,7 +9,7 @@ import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -29,7 +29,7 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = emptyList()
@@ -61,7 +61,7 @@ class ServerVerifierTest {
             body = null
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = ScenarioBody(
               contentType = ContentType("application/json"),
               value = mapOf("id" to 1, "name" to "John")
@@ -78,7 +78,7 @@ class ServerVerifierTest {
             body = null
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = null
           )
         )
@@ -118,13 +118,13 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("userId"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           ),
           ParameterSchema(
             element = ParameterElement.PathParam("orderId"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = emptyList()
@@ -152,7 +152,7 @@ class ServerVerifierTest {
             body = null
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = ScenarioBody(
               contentType = ContentType("application/json"),
               value = mapOf("id" to 1, "name" to "Order")
@@ -196,7 +196,7 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = BasicSerde
+            serde = PlainTextSerde
           )
         ),
         bodies = emptyList()
@@ -224,7 +224,7 @@ class ServerVerifierTest {
             body = null
           ),
           response = ScenarioResponse(
-            parameterValues = emptyMap(),
+            headers = emptyMap(),
             body = ScenarioBody(
               contentType = ContentType("application/json"),
               value = mapOf("id" to 1, "name" to "John")

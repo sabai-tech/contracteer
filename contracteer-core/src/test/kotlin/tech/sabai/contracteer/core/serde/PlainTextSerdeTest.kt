@@ -8,12 +8,12 @@ import tech.sabai.contracteer.core.TestFixture.objectDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
 import kotlin.test.Test
 
-class BasicSerdeTest {
+class PlainTextSerdeTest {
 
   @Test
   fun `successfully deserializes null value`() {
     // when
-    val result = BasicSerde.deserialize(null, integerDataType())
+    val result = PlainTextSerde.deserialize(null, integerDataType())
 
     // then
     assert(result.isSuccess())
@@ -23,7 +23,7 @@ class BasicSerdeTest {
   @Test
   fun `fails to deserialize to ArrayDatatype`() {
     // when
-    val result = BasicSerde.deserialize("[1,2,3]", arrayDataType(itemDataType = integerDataType()))
+    val result = PlainTextSerde.deserialize("[1,2,3]", arrayDataType(itemDataType = integerDataType()))
 
     // then
     assert(result.isFailure())
@@ -33,7 +33,7 @@ class BasicSerdeTest {
   fun `fails to deserialize to ObjectDatatype`() {
     // when
     val result =
-      BasicSerde.deserialize("{\"prop1\":42}", objectDataType(properties = mapOf("prop1" to integerDataType())))
+      PlainTextSerde.deserialize("{\"prop1\":42}", objectDataType(properties = mapOf("prop1" to integerDataType())))
 
     // then
     assert(result.isFailure())
@@ -43,7 +43,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully deserializes to IntegerDatatype`() {
     // when
-    val result = BasicSerde.deserialize("42", integerDataType())
+    val result = PlainTextSerde.deserialize("42", integerDataType())
 
     // then
     assert(result.isSuccess())
@@ -52,7 +52,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully deserializes to NumberDatatype`() {
     // when
-    val result = BasicSerde.deserialize("42.5", numberDataType())
+    val result = PlainTextSerde.deserialize("42.5", numberDataType())
 
     // then
     assert(result.isSuccess())
@@ -61,7 +61,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully deserializes to StringDatatype`() {
     // when
-    val result = BasicSerde.deserialize("test", stringDataType())
+    val result = PlainTextSerde.deserialize("test", stringDataType())
 
     // then
     assert(result.isSuccess())
@@ -70,7 +70,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully deserializes to BooleanDatatype`() {
     // when
-    val result = BasicSerde.deserialize("true", booleanDataType())
+    val result = PlainTextSerde.deserialize("true", booleanDataType())
 
     // then
     assert(result.isSuccess())
@@ -79,7 +79,7 @@ class BasicSerdeTest {
   @Test
   fun `fails to deserialize invalid value to BooleanDatatype`() {
     // when
-    val result = BasicSerde.deserialize("notABoolean", booleanDataType())
+    val result = PlainTextSerde.deserialize("notABoolean", booleanDataType())
 
     // then
     assert(result.isFailure())
@@ -88,7 +88,7 @@ class BasicSerdeTest {
   @Test
   fun `fails to deserialize invalid value to IntegerDatatype`() {
     // when
-    val result = BasicSerde.deserialize("notAnInteger", integerDataType())
+    val result = PlainTextSerde.deserialize("notAnInteger", integerDataType())
 
     // then
     assert(result.isFailure())
@@ -97,7 +97,7 @@ class BasicSerdeTest {
   @Test
   fun `fails to deserialize invalid value to NumberDatatype`() {
     // when
-    val result = BasicSerde.deserialize("notANumber", numberDataType())
+    val result = PlainTextSerde.deserialize("notANumber", numberDataType())
 
     // then
     assert(result.isFailure())
@@ -107,7 +107,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully serializes Integer`() {
     // when
-    val result = BasicSerde.serialize(42)
+    val result = PlainTextSerde.serialize(42)
 
     // then
     assert(result == "42")
@@ -116,7 +116,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully serializes String`() {
     // when
-    val result = BasicSerde.serialize("test")
+    val result = PlainTextSerde.serialize("test")
 
     // then
     assert(result == "test")
@@ -125,7 +125,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully serializes BigDecimal`() {
     // when
-    val result = BasicSerde.serialize(42.5.toBigDecimal())
+    val result = PlainTextSerde.serialize(42.5.toBigDecimal())
 
     // then
     assert(result == "42.5")
@@ -134,7 +134,7 @@ class BasicSerdeTest {
   @Test
   fun `successfully serializes Boolean`() {
     // when
-    val result = BasicSerde.serialize(true)
+    val result = PlainTextSerde.serialize(true)
 
     // then
     assert(result == "true")

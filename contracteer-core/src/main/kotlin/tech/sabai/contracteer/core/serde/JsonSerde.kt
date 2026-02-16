@@ -9,6 +9,7 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.normalize
 
+/** [Serde] implementation for `application/json` content. Uses Jackson for serialization and deserialization. */
 object JsonSerde: Serde {
   private val logger = KotlinLogging.logger {}
   private val objectMapper = ObjectMapper()

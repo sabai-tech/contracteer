@@ -1,8 +1,11 @@
 package tech.sabai.contracteer.mockserver
 
-import tech.sabai.contracteer.core.datatype.*
+import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.datatype.IntegerDataType
+import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import java.math.BigDecimal
 
 object TestFixture {
@@ -33,7 +36,7 @@ object TestFixture {
     element: ParameterElement,
     dataType: DataType<out Any>,
     isRequired: Boolean = true
-  ) = ParameterSchema(element, dataType, isRequired, BasicSerde)
+  ) = ParameterSchema(element, dataType, isRequired, PlainTextSerde)
 
   fun bodySchema(
     contentType: ContentType = ContentType("application/json"),
@@ -58,7 +61,7 @@ object TestFixture {
     statusCode: Int,
     requestParameterValues: Map<ParameterElement, Any?> = emptyMap(),
     requestBody: ScenarioBody? = null,
-    responseParameterValues: Map<ParameterElement, Any?> = emptyMap(),
+    responseHeaders: Map<ParameterElement.Header, Any?> = emptyMap(),
     responseBody: ScenarioBody? = null
   ) = Scenario(
     path = path,
@@ -66,7 +69,7 @@ object TestFixture {
     key = key,
     statusCode = statusCode,
     request = ScenarioRequest(requestParameterValues, requestBody),
-    response = ScenarioResponse(responseParameterValues, responseBody)
+    response = ScenarioResponse(responseHeaders, responseBody)
   )
 
   fun apiOperation(

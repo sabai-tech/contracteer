@@ -1,20 +1,25 @@
 package tech.sabai.contracteer.verifier
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import tech.sabai.contracteer.core.operation.ApiOperation
-import tech.sabai.contracteer.core.operation.BodySchema
-import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.operation.ParameterSchema
-import tech.sabai.contracteer.core.operation.ResponseSchema
+import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
+/**
+ * Generates [VerificationCase] instances from an [ApiOperation].
+ *
+ * Produces three kinds of verification cases:
+ * - [VerificationCase.ScenarioBased]: one per scenario defined in the operation
+ * - [VerificationCase.SchemaBased]: generated from the schema when no 2xx scenario exists
+ * - [VerificationCase.TypeMismatch]: generated for 400 Bad Request validation when a 400 response is defined
+ */
 object VerificationCaseFactory {
   private val logger = KotlinLogging.logger {}
 
+  /** Creates all verification cases for the given [apiOperation]. */
   fun create(apiOperation: ApiOperation): List<VerificationCase> {
     val scenarioCases = createScenarioBasedCases(apiOperation)
     val schemaBasedCases = createSchemaBasedCasesIfNeeded(apiOperation)
-    val typeMismatchCases = createTypeMismatchCases(apiOperation)
+    val typeMismatchCases = createTypeMismatchs(apiOperation)
 
     return scenarioCases + schemaBasedCases + typeMismatchCases
   }
@@ -62,29 +67,38 @@ object VerificationCaseFactory {
     return statusCode in 200..299
   }
 
-  private fun createTypeMismatchCases(apiOperation: ApiOperation): List<TypeMismatchCase> {
+  private fun createTypeMismatchs(apiOperation: ApiOperation): List<TypeMismatch> {
     val responseSchema = apiOperation.responses[400] ?: return emptyList()
     val responseContentType = responseSchema.bodies.firstOrNull()?.contentType
     val requestSchema = apiOperation.requestSchema
 
-    return listOfNotNull(
-      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.pathParameters),
-      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.queryParameters),
-      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.headers),
-      createParameterTypeMismatchCase(apiOperation, responseSchema, responseContentType, requestSchema.cookies),
-      createBodyTypeMismatchCase(apiOperation, responseSchema, responseContentType)
+    val cases = listOfNotNull(
+      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.pathParameters),
+      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.queryParameters),
+      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.headers),
+      createParameterTypeMismatch(apiOperation, responseSchema, responseContentType, requestSchema.cookies),
+      createBodyTypeMismatch(apiOperation, responseSchema, responseContentType)
     )
+
+    if (cases.isEmpty()) {
+      logger.warn {
+        "Operation ${apiOperation.method} ${apiOperation.path} defines a 400 response but no type mismatch " +
+        "verification case could be generated (all request elements are non-mutable types such as string)."
+      }
+    }
+
+    return cases
   }
 
-  private fun createParameterTypeMismatchCase(
+  private fun createParameterTypeMismatch(
     apiOperation: ApiOperation,
     responseSchema: ResponseSchema,
     responseContentType: ContentType?,
     parameters: List<ParameterSchema>
-  ): TypeMismatchCase? {
+  ): TypeMismatch? {
     val (param, mutatedValue) = findFirstMutableParameter(parameters) ?: return null
 
-    return TypeMismatchCase(
+    return TypeMismatch(
       path = apiOperation.path,
       method = apiOperation.method,
       requestContentType = null,
@@ -101,14 +115,14 @@ object VerificationCaseFactory {
       TypeMismatchMutation.mutate(param.dataType)?.let { mutated -> param to mutated }
     }
 
-  private fun createBodyTypeMismatchCase(
+  private fun createBodyTypeMismatch(
     apiOperation: ApiOperation,
     responseSchema: ResponseSchema,
     responseContentType: ContentType?
-  ): TypeMismatchCase? {
+  ): TypeMismatch? {
     val mutableBody = findFirstMutableBody(apiOperation.requestSchema.bodies) ?: return null
 
-    return TypeMismatchCase(
+    return TypeMismatch(
       path = apiOperation.path,
       method = apiOperation.method,
       requestContentType = mutableBody.first.contentType,

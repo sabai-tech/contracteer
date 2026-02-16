@@ -13,11 +13,11 @@ import org.http4k.server.asServer
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
-import tech.sabai.contracteer.core.serde.BasicSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
-import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatchCase
+import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatch
 import kotlin.test.Test
 
 class TypeMismatchVerificationTest {
@@ -66,7 +66,7 @@ class TypeMismatchVerificationTest {
     )
 
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCase = cases.filterIsInstance<TypeMismatchCase>().first()
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
     val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
 
     // When
@@ -99,7 +99,10 @@ class TypeMismatchVerificationTest {
       method = "GET",
       requestSchema = RequestSchema(
         parameters = listOf(
-          ParameterSchema(element = PathParam("id"), dataType = integerDataType(), isRequired = true, serde = BasicSerde)
+          ParameterSchema(element = PathParam("id"),
+                          dataType = integerDataType(),
+                          isRequired = true,
+                          serde = PlainTextSerde)
         ),
         bodies = emptyList()
       ),
@@ -117,7 +120,7 @@ class TypeMismatchVerificationTest {
     )
 
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCase = cases.filterIsInstance<TypeMismatchCase>().first()
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
     val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
 
     // When
@@ -151,8 +154,14 @@ class TypeMismatchVerificationTest {
       method = "GET",
       requestSchema = RequestSchema(
         parameters = listOf(
-          ParameterSchema(element = PathParam("id"), dataType = integerDataType(), isRequired = true, serde = BasicSerde),
-          ParameterSchema(element = QueryParam("page"), dataType = integerDataType(), isRequired = false, serde = BasicSerde)
+          ParameterSchema(element = PathParam("id"),
+                          dataType = integerDataType(),
+                          isRequired = true,
+                          serde = PlainTextSerde),
+          ParameterSchema(element = QueryParam("page"),
+                          dataType = integerDataType(),
+                          isRequired = false,
+                          serde = PlainTextSerde)
         ),
         bodies = emptyList()
       ),
@@ -171,7 +180,7 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     // The factory generates 2 cases: one for path, one for query. Get the path one.
-    val pathCase = cases.filterIsInstance<TypeMismatchCase>()
+    val pathCase = cases.filterIsInstance<TypeMismatch>()
       .first { it.mutatedElement == MutatedElement.Parameter(PathParam("id")) }
     val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
 
@@ -226,7 +235,7 @@ class TypeMismatchVerificationTest {
     )
 
     val cases = VerificationCaseFactory.create(apiOperation)
-    val typeMismatchCase = cases.filterIsInstance<TypeMismatchCase>().first()
+    val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
     val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
 
     // When

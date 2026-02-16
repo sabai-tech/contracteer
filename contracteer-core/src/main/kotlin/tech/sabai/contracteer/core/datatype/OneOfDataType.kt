@@ -5,8 +5,9 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.joinWithQuotes
-import java.lang.System.*
+import java.lang.System.lineSeparator
 
+/** OpenAPI `oneOf` composition. The value must match exactly one sub-schema. */
 class OneOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
                                         val discriminator: Discriminator?,
@@ -77,6 +78,8 @@ class OneOfDataType private constructor(name: String,
       }).")
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(name: String,
                subTypes: List<DataType<out Any>>,
                discriminator: Discriminator? = null,

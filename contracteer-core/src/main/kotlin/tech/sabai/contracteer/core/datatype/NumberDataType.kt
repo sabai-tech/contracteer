@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
 import java.math.BigDecimal
 
+/** OpenAPI `number` type, with optional range constraints. Values are represented as [BigDecimal]. */
 class NumberDataType private constructor(name: String,
                                          isNullable: Boolean,
                                          val range: Range,
@@ -17,6 +18,8 @@ class NumberDataType private constructor(name: String,
   override fun doRandomValue(): BigDecimal = range.randomIntegerValue()
 
   companion object {
+    @JvmStatic
+    @JvmOverloads
     fun create(
       name: String,
       isNullable: Boolean = false,

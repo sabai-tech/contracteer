@@ -5,15 +5,10 @@ import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.core.cookie.cookie
 import org.http4k.filter.DebuggingFilters
+import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.operation.BodySchema
-import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.operation.RequestSchema
-import tech.sabai.contracteer.core.operation.ScenarioBody
-import tech.sabai.contracteer.verifier.VerificationCase.ScenarioBased
-import tech.sabai.contracteer.verifier.VerificationCase.SchemaBased
-import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatchCase
+import tech.sabai.contracteer.verifier.VerificationCase.*
 
 internal class VerificationHttpClient(private val serverUrl: String) {
   private val logger = KotlinLogging.logger {}
@@ -23,9 +18,9 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     val client = createClient()
 
     return when (case) {
-      is ScenarioBased    -> sendScenarioRequest(client, case)
-      is SchemaBased      -> sendSchemaRequest(client, case)
-      is TypeMismatchCase -> sendTypeMismatchRequest(client, case)
+      is ScenarioBased -> sendScenarioRequest(client, case)
+      is SchemaBased   -> sendSchemaRequest(client, case)
+      is TypeMismatch  -> sendTypeMismatchRequest(client, case)
     }
   }
 
@@ -66,7 +61,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     return client(request)
   }
 
-  private fun sendTypeMismatchRequest(client: (Request) -> Response, case: TypeMismatchCase): Response {
+  private fun sendTypeMismatchRequest(client: (Request) -> Response, case: TypeMismatch): Response {
     val mutatedElement = case.mutatedElement
 
     val pathParams = case.requestSchema.pathParameters.associate { param ->
@@ -87,7 +82,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     return client(request)
   }
 
-  private fun Request.withTypeMismatchParameters(case: TypeMismatchCase): Request {
+  private fun Request.withTypeMismatchParameters(case: TypeMismatch): Request {
     val mutatedElement = case.mutatedElement
     return case.requestSchema.parameters.fold(this) { req, param ->
       val isMutated = mutatedElement is MutatedElement.Parameter && mutatedElement.element == param.element
@@ -101,7 +96,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     }
   }
 
-  private fun Request.withTypeMismatchBody(case: TypeMismatchCase): Request {
+  private fun Request.withTypeMismatchBody(case: TypeMismatch): Request {
     return if (case.mutatedElement is MutatedElement.Body) {
       case.requestContentType?.let { header("Content-Type", it.value).body(case.mutatedValue) } ?: this
     } else {
