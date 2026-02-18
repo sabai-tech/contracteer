@@ -42,6 +42,7 @@ class ResponseGenerationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
+          headers = listOf(parameterSchema(Header("X-Request-Id"), stringDataType())),
           bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
         )
       ),
@@ -52,6 +53,7 @@ class ResponseGenerationTest {
           key = "specificUser",
           statusCode = 200,
           requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
+          responseHeaders = mapOf(Header("X-Request-Id") to "abc-123"),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("id" to 42, "name" to "John")
@@ -70,6 +72,7 @@ class ResponseGenerationTest {
       .then()
       .assertThat()
       .statusCode(200)
+      .header("X-Request-Id", equalTo("abc-123"))
       .body("id", equalTo(42))
       .body("name", equalTo("John"))
   }
@@ -85,6 +88,7 @@ class ResponseGenerationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
+          headers = listOf(parameterSchema(Header("X-Correlation-Id"), stringDataType())),
           bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
@@ -100,6 +104,7 @@ class ResponseGenerationTest {
       .then()
       .assertThat()
       .statusCode(200)
+      .header("X-Correlation-Id", notNullValue())
       .body("id", notNullValue())
   }
 
@@ -113,7 +118,9 @@ class ResponseGenerationTest {
         bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
-        201 to responseSchema()
+        201 to responseSchema(
+          headers = listOf(parameterSchema(Header("X-Created-Id"), stringDataType()))
+        )
       )
     )
     mockServer = MockServer(listOf(operation))
@@ -128,6 +135,7 @@ class ResponseGenerationTest {
       .then()
       .assertThat()
       .statusCode(201)
+      .header("X-Created-Id", notNullValue())
       .contentType(`is`(emptyOrNullString()))
       .body(`is`(emptyOrNullString()))
   }

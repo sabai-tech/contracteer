@@ -76,9 +76,9 @@ class MockServer(private val operations: List<ApiOperation>,
   private fun handleRequest(request: Request, operation: ApiOperation): Response {
     val validationResult = operation.requestSchema.validate(request)
     if (validationResult.isFailure()) {
-      val badRequestSchema = operation.responses[400]
-      return if (badRequestSchema != null)
-        ResponseGenerator.fromSchema(400, badRequestSchema.bodies.firstOrNull())
+      val badRequestResponseSchema = operation.responses[400]
+      return if (badRequestResponseSchema != null)
+        ResponseGenerator.fromSchema(400, badRequestResponseSchema.headers, badRequestResponseSchema.bodies.firstOrNull())
       else
         validationErrorResponse(operation, validationResult.errors())
     }
@@ -99,7 +99,7 @@ class MockServer(private val operations: List<ApiOperation>,
 
     val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
     if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
-    return ResponseGenerator.fromScenario(scenario)
+    return ResponseGenerator.fromScenario(scenario, responseSchema)
   }
 
   private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
@@ -113,7 +113,7 @@ class MockServer(private val operations: List<ApiOperation>,
     val bodyResult = selectResponseBody(request.header("Accept"), responseSchema, operation)
     if (bodyResult.isFailure()) return teapotResponse(bodyResult.errors().first())
 
-    return ResponseGenerator.fromSchema(statusCode, bodyResult.value)
+    return ResponseGenerator.fromSchema(statusCode, responseSchema.headers, bodyResult.value)
   }
 
   private fun findUnique2xxResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> {

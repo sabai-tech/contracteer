@@ -2,15 +2,15 @@ package tech.sabai.contracteer.mockserver
 
 import org.http4k.core.Response
 import org.http4k.core.Status
-import tech.sabai.contracteer.core.operation.BodySchema
-import tech.sabai.contracteer.core.operation.Scenario
+import tech.sabai.contracteer.core.operation.*
 
 internal object ResponseGenerator {
 
-  fun fromScenario(scenario: Scenario): Response {
+  fun fromScenario(scenario: Scenario, responseSchema: ResponseSchema): Response {
     val response = Response(Status.fromCode(scenario.statusCode)!!)
-    val scenarioBody = scenario.response.body ?: return response
+      .withHeaders(responseSchema.headers, scenario.response.headers)
 
+    val scenarioBody = scenario.response.body ?: return response
     val serializedBody = scenarioBody.contentType.serde.serialize(scenarioBody.value)
 
     return response
@@ -18,8 +18,10 @@ internal object ResponseGenerator {
       .body(serializedBody)
   }
 
-  fun fromSchema(statusCode: Int, bodySchema: BodySchema?): Response {
+  fun fromSchema(statusCode: Int, headers: List<ParameterSchema>, bodySchema: BodySchema?): Response {
     val response = Response(Status.fromCode(statusCode)!!)
+      .withHeaders(headers, emptyMap())
+
     if (bodySchema == null) return response
 
     val randomValue = bodySchema.dataType.randomValue()
@@ -29,4 +31,12 @@ internal object ResponseGenerator {
       .header("Content-Type", bodySchema.contentType.value)
       .body(serializedBody)
   }
+
+  private fun Response.withHeaders(headerSchemas: List<ParameterSchema>,
+                                   scenarioHeaders: Map<ParameterElement.Header, Any?>) =
+    headerSchemas.fold(this) { response, schema ->
+      val header = schema.element as ParameterElement.Header
+      val value = scenarioHeaders[header] ?: schema.dataType.randomValue()
+      response.header(header.name, schema.serde.serialize(value))
+    }
 }
