@@ -16,16 +16,16 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
 internal fun MediaType.safeExamples() =
-  examples ?: emptyMap()
+  examples ?: example?.let(::singleExampleMap) ?: emptyMap()
 
 internal fun Parameter.safeExamples() =
-  examples ?: emptyMap()
+  examples ?: example?.let(::singleExampleMap) ?: emptyMap()
 
 internal fun Parameter.safeIsRequired() =
   required ?: false
 
 internal fun Header.safeExamples() =
-  examples ?: emptyMap()
+  examples ?: example?.let(::singleExampleMap) ?: emptyMap()
 
 internal fun Header.safeIsRequired() =
   required ?: false
@@ -92,6 +92,9 @@ internal fun Example.shortRef() =
 
 internal fun ApiResponse.shortRef() =
   this.`$ref`?.replace("#/components/responses/", "")
+
+private fun singleExampleMap(exampleValue: Any) =
+  mapOf("_example" to Example().apply { value = exampleValue })
 
 internal fun allAreSuccess(vararg results: Result<*>) =
   results.all { it.isSuccess() }

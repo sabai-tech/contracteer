@@ -59,7 +59,7 @@ and contains everything extracted from the specification:
   parameters, bodies, data types, and constraints.
 - **`Scenario`** -- a named example-based pairing of request
   values and response values for a specific status code, derived
-  from OpenAPI `examples` keys.
+  from OpenAPI `examples` or `example` keywords.
 - **`DataType`** -- a sealed hierarchy representing OpenAPI
   types (string, integer, number, boolean, object, array, oneOf,
   anyOf, allOf). Each type validates values and generates random

@@ -127,6 +127,38 @@ class ScenarioExtractionTest {
     assert(!bodyValue.containsKey("age"))
   }
 
+  @Test
+  fun `extracts scenario from single example keyword with _example key`() {
+    // when
+    val operation = loadSingleOperation("single_example.yaml")
+
+    // then
+    assert(operation.scenarios.size == 1)
+
+    val scenario = operation.scenarios.single()
+    assert(scenario.key == "_example")
+    assert(scenario.path == "/products/{id}")
+    assert(scenario.method == "GET")
+    assert(scenario.statusCode == 200)
+    assert(scenario.request.parameterValues[ParameterElement.PathParam("id")] == 10.normalize())
+    assert(scenario.request.body == null)
+    assert(scenario.response.body!!.contentType.value == "application/json")
+    assert(scenario.response.body.value == mapOf(
+      "id" to 10,
+      "name" to "La Bouledogue",
+      "quantity" to 5
+    ).normalize())
+  }
+
+  @Test
+  fun `rejects spec when both example and examples are defined on the same element`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/scenario/single_example_ignored_when_examples_defined.yaml")
+
+    // then
+    assert(result.isFailure())
+  }
+
   // --- Helpers ---
   private fun loadSingleOperation(yamlFile: String) =
     OpenApiLoader.loadOperations("src/test/resources/scenario/$yamlFile")
