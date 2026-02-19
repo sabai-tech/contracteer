@@ -38,7 +38,7 @@ jobs:
       - name: Setup Java, GraalVM, and Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
-          java-version: '23'
+          java-version: '21'
           enable-graalvm: 'true'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -83,7 +83,7 @@ jobs:
       - name: Setup Java and Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
-          java-version: '23'
+          java-version: '21'
           enable-graalvm: 'false'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 

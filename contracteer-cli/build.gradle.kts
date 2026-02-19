@@ -30,6 +30,7 @@ graalvmNative {
       useFatJar.set(true)
       buildArgs.add("--enable-https")
       buildArgs.add("--enable-http")
+      buildArgs.add("--install-exit-handlers")
     }
   }
 }

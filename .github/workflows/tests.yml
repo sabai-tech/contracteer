@@ -10,6 +10,13 @@ on:
       - 'CODE_OF_CONDUCT.md'
       - 'LICENSE'
       - '.github/**'
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'LICENSE'
+      - '.github/**'
 jobs:
   test:
     name: Test Updated Modules
@@ -21,7 +28,7 @@ jobs:
       - name: Setup Java and Gradle
         uses: ./.github/actions/setup-java-gradle
         with:
-          java-version: '23'
+          java-version: '21'
           enable-graalvm: 'false'
 
       - name: Build with Gradle

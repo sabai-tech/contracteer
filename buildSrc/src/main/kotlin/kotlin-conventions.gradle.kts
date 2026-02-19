@@ -10,7 +10,6 @@ version = System.getenv("RELEASE_VERSION") ?: "LOCAL-SNAPSHOT"
 
 repositories {
   mavenCentral()
-  gradlePluginPortal()
 }
 
 java {

@@ -11,7 +11,7 @@ publishing {
       pom {
         name.set("contracteer")
         description.set("A tool for validating API contracts and running mock servers based on OpenAPI 3 Specifications")
-        url.set("https://github.com/Sabai-Technologies/contracteer")
+        url.set("https://github.com/sabai-tech/contracteer")
         licenses {
           license {
             name.set("GNU General Public License, Version 3")
@@ -26,9 +26,9 @@ publishing {
           }
         }
         scm {
-          connection.set("scm:git@github.com:Sabai-Technologies/contracteer.git")
-          developerConnection.set("scm:git@github.com:Sabai-Technologies/contracteer.git")
-          url.set("https://github.com/Sabai-Technologies/contracteer")
+          connection.set("scm:git@github.com:sabai-tech/contracteer.git")
+          developerConnection.set("scm:git@github.com:sabai-tech/contracteer.git")
+          url.set("https://github.com/sabai-tech/contracteer")
         }
       }
     }
