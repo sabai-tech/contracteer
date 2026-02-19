@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.swagger
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.parameters.Parameter
@@ -14,6 +15,8 @@ import tech.sabai.contracteer.core.operation.ParameterElement.*
 
 internal class ScenarioExtractor(private val sharedComponents: SharedComponents) {
 
+  private val logger = KotlinLogging.logger {}
+
   fun extractScenarios(
     path: String,
     method: String,
@@ -25,6 +28,17 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
     if (responseSchemas.isFailure()) return responseSchemas.retypeError()
     val requestExampleKeys = operation.requestExampleKeys()
     if (requestExampleKeys.isEmpty()) return success(emptyList())
+
+    val responseStatusCodes = operation.responses.keys.mapNotNull { it.toIntOrNull() }.toSet()
+    requestExampleKeys.forEach { key ->
+      val statusCode = key.statusCodePrefix()
+      if (statusCode != null && statusCode !in responseStatusCodes) {
+        logger.warn {
+          "Operation '$method $path': example key '$key' targets status code $statusCode, " +
+          "but no response with that status code is defined. Key ignored."
+        }
+      }
+    }
 
     return operation.responses
       .map { (code, response) ->
@@ -60,7 +74,9 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
 
     val resolved = resolvedResponse.value!!
     val responseExampleKeys = resolved.exampleKeys()
-    val scenarioKeys = requestExampleKeys intersect responseExampleKeys
+    val statusCodePrefixedKeys = requestExampleKeys.filter { it.statusCodePrefix() == parsedStatus.value }
+    val nonPrefixedKeys = requestExampleKeys.filter { it.statusCodePrefix() == null }
+    val scenarioKeys = (nonPrefixedKeys intersect responseExampleKeys) union statusCodePrefixedKeys
     if (scenarioKeys.isEmpty()) return success(emptyList())
 
     val responseSchema = responseSchemas[parsedStatus.value!!]
@@ -151,7 +167,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
         .combineResults()
         .map { bodies -> bodies ?: emptyList() }
 
-  private fun ApiResponse.extractExampleHeaderValues(exampleKey: String): Result<Map<ParameterElement.Header, Any?>> =
+  private fun ApiResponse.extractExampleHeaderValues(exampleKey: String): Result<Map<Header, Any?>> =
     safeHeaders()
       .filter { (_, header) -> header.safeExamples().containsKey(exampleKey) }
       .map { (name, header) ->
@@ -275,7 +291,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   private data class ExampleValues(
     val requestParams: Map<ParameterElement, Any?>,
     val requestBodies: List<ScenarioBody?>,
-    val responseHeaders: Map<ParameterElement.Header, Any?>,
+    val responseHeaders: Map<Header, Any?>,
     val responseBodies: List<ScenarioBody?>
   )
 
@@ -286,7 +302,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   )
 
   private data class ScenarioResponseExamples(
-    val values: Map<ParameterElement.Header, Any?>,
+    val values: Map<Header, Any?>,
     val bodies: List<ScenarioBody?>,
     val schema: ResponseSchema
   )
@@ -309,3 +325,7 @@ internal fun Operation.requestExampleKeys() =
 
 internal fun Map<String, io.swagger.v3.oas.models.headers.Header>.exampleKeys() =
   flatMap { it.value.safeExamples().keys }.toSet()
+
+private val STATUS_CODE_PREFIX = Regex("""^(\d{3})_\w+$""")
+private fun String.statusCodePrefix(): Int? =
+  STATUS_CODE_PREFIX.matchEntire(this)?.groupValues?.get(1)?.toIntOrNull()

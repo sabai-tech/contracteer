@@ -59,7 +59,7 @@ and contains everything extracted from the specification:
   parameters, bodies, data types, and constraints.
 - **`Scenario`** -- a named example-based pairing of request
   values and response values for a specific status code, derived
-  from OpenAPI `examples` or `example` keywords.
+  from OpenAPI examples.
 - **`DataType`** -- a sealed hierarchy representing OpenAPI
   types (string, integer, number, boolean, object, array, oneOf,
   anyOf, allOf). Each type validates values and generates random
@@ -69,6 +69,35 @@ and contains everything extracted from the specification:
 - **`Result`** -- error-handling wrapper used throughout the API.
   Carries either a success value or a list of property-scoped
   errors. Composable with `map`, `flatMap`, and `combineWith`.
+
+### Scenarios
+
+A scenario links request example values to a response for a
+specific status code. Contracteer derives scenarios from two
+OpenAPI keywords:
+
+- **`examples`** (named map) -- each key in the map becomes a
+  scenario key. A scenario is created when a key appears in both
+  request-side and response-side elements (intersection).
+- **`example`** (single value) -- treated as a one-entry
+  `examples` map with the synthetic key `_example`.
+
+If both `example` and `examples` are defined on the same
+element, the specification is rejected.
+
+#### Status-code-prefixed keys
+
+A request example key that matches a 3-digit status code
+followed by an underscore and a description (e.g.,
+`404_not_found`, `204_success`) targets that specific response
+status code directly. Unlike regular keys, it does not require
+matching response-side examples -- a scenario is created from
+the request values alone, and any response values are generated
+randomly from the response schema.
+
+This is useful when the response values are irrelevant to the
+scenario (only the request matters) or when the response has no
+body or headers to exemplify.
 
 ## Design notes
 

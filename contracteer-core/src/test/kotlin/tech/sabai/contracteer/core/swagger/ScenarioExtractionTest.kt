@@ -159,6 +159,42 @@ class ScenarioExtractionTest {
     assert(result.isFailure())
   }
 
+  @Test
+  fun `creates scenario from status-code-prefixed key without response examples`() {
+    // when
+    val operation = loadSingleOperation("status_code_prefixed_example_key.yaml")
+
+    // then
+    assert(operation.scenarios.size == 2)
+
+    val detailsScenario = operation.scenarios.first { it.key == "GET_DETAILS" }
+    assert(detailsScenario.statusCode == 200)
+    assert(detailsScenario.request.parameterValues[ParameterElement.PathParam("id")] == 10.normalize())
+    assert(detailsScenario.response.body!!.value == mapOf(
+      "id" to 10,
+      "name" to "La Bouledogue",
+      "quantity" to 5
+    ).normalize())
+
+    val notFoundScenario = operation.scenarios.first { it.key == "404_not_found" }
+    assert(notFoundScenario.statusCode == 404)
+    assert(notFoundScenario.request.parameterValues[ParameterElement.PathParam("id")] == 999.normalize())
+    assert(notFoundScenario.response.body == null)
+  }
+
+  @Test
+  fun `does not create scenario for status-code-prefixed key on non-matching status code`() {
+    // when
+    val operation = loadSingleOperation("status_code_prefixed_key_exclusivity.yaml")
+
+    // then
+    assert(operation.scenarios.size == 1)
+    val scenario = operation.scenarios.single()
+    assert(scenario.key == "200_get_details")
+    assert(scenario.statusCode == 200)
+    assert(scenario.request.parameterValues[ParameterElement.PathParam("id")] == 10.normalize())
+  }
+
   // --- Helpers ---
   private fun loadSingleOperation(yamlFile: String) =
     OpenApiLoader.loadOperations("src/test/resources/scenario/$yamlFile")
