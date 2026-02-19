@@ -46,6 +46,11 @@ spec-compliant responses. It acts as a reference implementation
 of your API, catching client-side bugs that looser mocks would
 miss.
 
+## Requirements
+
+- Java 21 or higher
+- Spring Boot 3.x (for the Spring Boot starter module only)
+
 ## Modules
 
 Contracteer is modular. Pick the entry point that fits your
