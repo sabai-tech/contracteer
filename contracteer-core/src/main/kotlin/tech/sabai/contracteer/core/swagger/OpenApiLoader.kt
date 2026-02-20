@@ -13,14 +13,14 @@ import java.net.*
 /**
  * Loads and parses an OpenAPI 3.0 specification into a list of [ApiOperation] instances.
  *
- * Accepts a file path or an HTTP(S) URL pointing to an OpenAPI document.
+ * Accepts a file path, an HTTP(S) URL, or a `classpath:` resource pointing to an OpenAPI document.
  */
 object OpenApiLoader {
 
   /**
    * Parses the OpenAPI document at the given [path] and extracts all API operations.
    *
-   * @param path a local file path or an HTTP(S) URL to an OpenAPI 3.0 document
+   * @param path a local file path, an HTTP(S) URL, or a `classpath:` resource path to an OpenAPI 3.0 document
    * @return a [Result] containing the list of extracted [ApiOperation] instances,
    *         or errors if the document is invalid or cannot be loaded
    */
@@ -43,7 +43,11 @@ object OpenApiLoader {
       }
 
   private fun String.loadOpenApiDocument() =
-    if (isUrl()) loadFromUrl(this) else loadFromFile(this)
+    when {
+      isClasspath() -> loadFromClasspath(this)
+      isUrl()       -> loadFromUrl(this)
+      else          -> loadFromFile(this)
+    }
 
   private fun loadFromFile(path: String): Result<String> {
     val file = File(path)
@@ -63,6 +67,18 @@ object OpenApiLoader {
       parseResult.messages.isNotEmpty() -> failure(*parseResult.messages.toTypedArray())
       else                              -> success(parseResult.openAPI)
     }
+  }
+
+  private fun String.isClasspath() = lowercase().startsWith("classpath:")
+
+  private fun loadFromClasspath(path: String): Result<String> {
+    val resourceName = path.removePrefix("classpath:").removePrefix("/")
+    val inputStream = Thread.currentThread().contextClassLoader?.getResourceAsStream(resourceName)
+                      ?: OpenApiLoader::class.java.classLoader.getResourceAsStream(resourceName)
+    return if (inputStream != null)
+      success(inputStream.bufferedReader().use { it.readText() })
+    else
+      failure("Classpath resource not found: $resourceName")
   }
 
   private fun String.isUrl() =

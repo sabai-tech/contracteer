@@ -49,6 +49,9 @@ The method body executes before each verification case. After
 it returns, Contracteer sends the request and validates the
 response.
 
+`openApiDoc` accepts a file path, an HTTP(S) URL, or a
+classpath resource (e.g. `classpath:openapi.yaml`).
+
 ## Dynamic server port
 
 When your server starts on a random port, use

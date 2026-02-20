@@ -39,7 +39,9 @@ Maven:
 ## Entry point
 
 `OpenApiLoader.loadOperations()` parses an OpenAPI specification
-and returns the list of operations it defines:
+and returns the list of operations it defines. It accepts a
+file path, an HTTP(S) URL, or a `classpath:` resource (e.g.
+`classpath:openapi.yaml`):
 
 ```kotlin
 val result = OpenApiLoader.loadOperations("openapi.yaml")

@@ -77,7 +77,7 @@ to point at the mock server.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `openApiDoc` | (required) | Path or URL to the OpenAPI 3 document. |
+| `openApiDoc` | (required) | Path, URL, or classpath resource (e.g. `classpath:openapi.yaml`) to the OpenAPI 3 document. |
 | `port` | `0` | Server port. `0` assigns a random available port. |
 | `portProperty` | `"contracteer.mockserver.port"` | Spring property name where the actual port is injected. |
 | `baseUrlProperty` | `"contracteer.mockserver.baseUrl"` | Spring property name where the base URL is injected (format: `http://localhost:{port}`). |
