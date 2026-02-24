@@ -4,7 +4,7 @@ include(
   "contracteer-cli",
   "contracteer-core",
   "contracteer-mockserver",
-  "contracteer-mockserver-spring-boot-starter",
+  "contracteer-mockserver-spring",
   "contracteer-verifier",
   "contracteer-verifier-junit",
 )

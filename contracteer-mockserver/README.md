@@ -10,7 +10,7 @@ or a non-Spring framework. It starts an HTTP server that
 validates requests and returns spec-compliant responses.
 
 If you use Spring Boot, consider
-[contracteer-mockserver-spring-boot-starter](../contracteer-mockserver-spring-boot-starter/)
+[contracteer-mockserver-spring](../contracteer-mockserver-spring/)
 for auto-configured setup.
 
 ## Dependency

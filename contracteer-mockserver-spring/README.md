@@ -1,4 +1,4 @@
-# contracteer-mockserver-spring-boot-starter
+# contracteer-mockserver-spring
 
 Spring Boot test integration for the Contracteer mock server.
 
@@ -8,7 +8,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    testImplementation("tech.sabai.contracteer:contracteer-mockserver-spring-boot-starter:<version>")
+    testImplementation("tech.sabai.contracteer:contracteer-mockserver-spring:<version>")
 }
 ```
 
@@ -17,7 +17,7 @@ Maven:
 ```xml
 <dependency>
     <groupId>tech.sabai.contracteer</groupId>
-    <artifactId>contracteer-mockserver-spring-boot-starter</artifactId>
+    <artifactId>contracteer-mockserver-spring</artifactId>
     <version>${contracteer.version}</version>
     <scope>test</scope>
 </dependency>

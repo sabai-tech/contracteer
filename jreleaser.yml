@@ -88,7 +88,7 @@ files:
   artifacts:
     - path: contracteer-core/build/libs/contracteer-core-{{projectVersion}}.jar
     - path: contracteer-mockserver/build/libs/contracteer-mockserver-{{projectVersion}}.jar
-    - path: contracteer-mockserver-spring-boot-starter/build/libs/contracteer-mockserver-spring-boot-starter-{{projectVersion}}.jar
+    - path: contracteer-mockserver-spring/build/libs/contracteer-mockserver-spring-{{projectVersion}}.jar
     - path: contracteer-verifier/build/libs/contracteer-verifier-{{projectVersion}}.jar
     - path: contracteer-verifier-junit/build/libs/contracteer-verifier-junit-{{projectVersion}}.jar
 

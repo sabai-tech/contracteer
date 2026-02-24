@@ -49,7 +49,7 @@ miss.
 ## Requirements
 
 - Java 21 or higher
-- Spring Boot 3.x (for the Spring Boot starter module only)
+- Spring Boot 3.x (for the Spring Boot integration module only)
 
 ## Modules
 
@@ -68,7 +68,7 @@ stack.
 | Module | Description |
 |--------|-------------|
 | [contracteer-verifier-junit](contracteer-verifier-junit/) | JUnit 5 integration for the verifier. One annotation, zero plumbing. |
-| [contracteer-mockserver-spring-boot-starter](contracteer-mockserver-spring-boot-starter/) | Spring Boot test integration for the mock server. Auto-configured and injected into your test context. |
+| [contracteer-mockserver-spring](contracteer-mockserver-spring/) | Spring Boot test integration for the mock server. Auto-configured and injected into your test context. |
 
 ### CLI
 

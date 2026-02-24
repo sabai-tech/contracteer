@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":contracteer-verifier"))
+  api(project(":contracteer-verifier"))
   implementation(libs.junit.engine)
 
   testImplementation(platform(libs.http4k.bom))

@@ -13,7 +13,7 @@ server.
 If you want to test your API or start a mock server, use one of
 the higher-level modules instead:
 [contracteer-verifier-junit](../contracteer-verifier-junit/),
-[contracteer-mockserver-spring-boot-starter](../contracteer-mockserver-spring-boot-starter/),
+[contracteer-mockserver-spring](../contracteer-mockserver-spring/),
 or [contracteer-cli](../contracteer-cli/).
 
 ## Dependency

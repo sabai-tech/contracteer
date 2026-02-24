@@ -7,7 +7,7 @@ plugins {
 apply(plugin = "io.spring.dependency-management")
 
 dependencies {
-  implementation(project(":contracteer-mockserver"))
+  api(project(":contracteer-mockserver"))
   implementation(libs.spring.boot.test)
   implementation(libs.spring.test)
 
