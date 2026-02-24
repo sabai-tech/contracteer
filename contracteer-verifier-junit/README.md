@@ -117,3 +117,12 @@ schema-based (random values when no scenario exists), and
 type-mismatch (intentionally malformed requests when a 400
 response is defined). See
 [contracteer-verifier](../contracteer-verifier/) for details.
+
+## Debugging
+
+When a verification case fails, Contracteer logs the HTTP
+request and response at WARN level automatically.
+
+To see all HTTP traffic (including successful cases), set the
+`tech.sabai.contracteer.http` logger to DEBUG in your logging
+framework.

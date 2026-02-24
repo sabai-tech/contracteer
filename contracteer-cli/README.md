@@ -38,6 +38,7 @@ contracteer verify openapi.yaml --server-url http://localhost --server-port 8080
 | `-u`, `--server-url` | `http://localhost` | Server base URL. |
 | `-p`, `--server-port` | `8080` | Server port. |
 | `-l`, `--log-level` | `INFO` | Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF. |
+| `-t`, `--http-traffic` | off | Enable HTTP request/response logging. |
 
 ### `contracteer mock`
 
@@ -52,3 +53,4 @@ contracteer mock openapi.yaml --port 9090
 |--------|---------|-------------|
 | `-p`, `--port` | `8080` | Port for the mock server. |
 | `-l`, `--log-level` | `INFO` | Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF. |
+| `-t`, `--http-traffic` | off | Enable HTTP request/response logging. |

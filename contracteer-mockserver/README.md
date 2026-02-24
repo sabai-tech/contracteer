@@ -83,3 +83,13 @@ The **418 response** is a diagnostic signal. It means the mock
 server received the request but cannot determine the correct
 response. The 418 body contains the nearest matching scenarios
 and the reason each did not match.
+
+## Debugging
+
+When the mock server returns a 418 diagnostic response,
+Contracteer logs the received request at WARN level
+automatically.
+
+To see all incoming requests and outgoing responses, set the
+`tech.sabai.contracteer.http` logger to DEBUG in your logging
+framework.

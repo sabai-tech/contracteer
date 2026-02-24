@@ -90,3 +90,12 @@ cases from each operation:
 - **Type-mismatch** -- generated when a 400 response is defined.
   Sends intentionally malformed requests (wrong type for a
   parameter or body) and validates that the server returns 400.
+
+## Debugging
+
+When a verification fails, Contracteer logs the HTTP request
+and response at WARN level automatically.
+
+To see all HTTP traffic (including successful verifications),
+set the `tech.sabai.contracteer.http` logger to DEBUG in your
+logging framework.

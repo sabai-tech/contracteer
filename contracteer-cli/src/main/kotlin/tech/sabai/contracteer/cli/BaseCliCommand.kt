@@ -6,6 +6,7 @@ import picocli.CommandLine.Help.Ansi.AUTO
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
 import tech.sabai.contracteer.cli.LevelConverter.Companion.configureLogging
+import tech.sabai.contracteer.cli.LevelConverter.Companion.enableHttpTrafficLogging
 import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.util.concurrent.Callable
@@ -26,8 +27,16 @@ abstract class BaseCliCommand: Callable<Unit> {
   )
   protected var logLevel: Level = INFO
 
+  @Option(
+    names = ["-t", "--http-traffic"],
+    description = ["Enable HTTP request/response logging."],
+    defaultValue = "false"
+  )
+  private var httpTraffic: Boolean = false
+
   override fun call() {
     configureLogging(logLevel)
+    if (httpTraffic) enableHttpTrafficLogging()
     runCommand()
   }
 

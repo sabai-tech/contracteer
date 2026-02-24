@@ -15,5 +15,10 @@ class LevelConverter: ITypeConverter<Level> {
       val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
       rootLogger.level = level
     }
+
+    fun enableHttpTrafficLogging() {
+      val httpLogger = LoggerFactory.getLogger("tech.sabai.contracteer.http") as Logger
+      httpLogger.level = Level.DEBUG
+    }
   }
 }

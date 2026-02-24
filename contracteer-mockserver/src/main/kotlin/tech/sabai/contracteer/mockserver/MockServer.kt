@@ -6,8 +6,6 @@ import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
-import org.http4k.core.then
-import org.http4k.filter.DebuggingFilters.PrintRequestAndResponse
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.routes
@@ -32,11 +30,12 @@ import tech.sabai.contracteer.core.operation.Scenario
  * @param operations the API operations to serve
  * @param port the port to listen on, or 0 for a random available port
  */
-class MockServer(private val operations: List<ApiOperation>,
-                 private val port: Int = 0) {
+class MockServer @JvmOverloads constructor(private val operations: List<ApiOperation>,
+                                            private val port: Int = 0) {
 
   private lateinit var http4kServer: Http4kServer
   private val logger = KotlinLogging.logger {}
+  private val httpLogger = KotlinLogging.logger("tech.sabai.contracteer.http")
 
   /** Starts the mock server. */
   fun start() {
@@ -65,15 +64,27 @@ class MockServer(private val operations: List<ApiOperation>,
   }
 
   private fun httpHandlerFrom(routeHandlers: List<RoutingHttpHandler>) =
-    if (logger.isDebugEnabled())
-      PrintRequestAndResponse().then(routes(*routeHandlers.toTypedArray()))
-    else
-      routes(*routeHandlers.toTypedArray())
+    routes(*routeHandlers.toTypedArray())
 
   private fun createRouteHandler(operation: ApiOperation) =
     operation.path bind Method.valueOf(operation.method.uppercase()) to { request -> handleRequest(request, operation) }
 
   private fun handleRequest(request: Request, operation: ApiOperation): Response {
+    httpLogger.debug { formatRequest(request) }
+
+    val response = processRequest(request, operation)
+
+    httpLogger.debug { formatResponse(response) }
+
+    if (response.status == I_M_A_TEAPOT) {
+      httpLogger.warn { "Request handling failed for [${operation.method.uppercase()}] ${operation.path}\n${formatRequest(request)}\n${formatResponse(response)}" }
+      httpLogger.warn { "Enable DEBUG logging for 'tech.sabai.contracteer.http' to see all HTTP traffic" }
+    }
+
+    return response
+  }
+
+  private fun processRequest(request: Request, operation: ApiOperation): Response {
     val validationResult = operation.requestSchema.validate(request)
     if (validationResult.isFailure()) {
       val badRequestResponseSchema = operation.responses[400]
@@ -166,4 +177,26 @@ class MockServer(private val operations: List<ApiOperation>,
     Response(I_M_A_TEAPOT)
       .header("Content-Type", TEXT_PLAIN.value)
       .body(message)
+
+  private fun formatRequest(request: Request): String {
+    val headers = request.headers.joinToString("\n") { (name, value) -> ">> $name: $value" }
+    val body = request.bodyString().ifEmpty { "(none)" }
+    return buildString {
+      append(">> ${request.method} ${request.uri}")
+      if (headers.isNotEmpty()) append("\n$headers")
+      append("\n>> Body: $body")
+    }
+  }
+
+  private fun formatResponse(response: Response): String {
+    val status = response.status
+    val statusLine = if (status.description.isNotBlank()) "${status.code} ${status.description}" else "${status.code}"
+    val headers = response.headers.joinToString("\n") { (name, value) -> "<< $name: $value" }
+    val body = response.bodyString().ifEmpty { "(none)" }
+    return buildString {
+      append("<< $statusLine")
+      if (headers.isNotEmpty()) append("\n$headers")
+      append("\n<< Body: $body")
+    }
+  }
 }

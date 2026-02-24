@@ -1,36 +1,25 @@
 package tech.sabai.contracteer.verifier
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.http4k.client.JavaHttpClient
 import org.http4k.core.*
 import org.http4k.core.cookie.cookie
-import org.http4k.filter.DebuggingFilters
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
 internal class VerificationHttpClient(private val serverUrl: String) {
-  private val logger = KotlinLogging.logger {}
   private val baseClient = JavaHttpClient()
 
-  fun sendRequest(case: VerificationCase): Response {
-    val client = createClient()
-
+  fun execute(case: VerificationCase): Pair<Request, Response> {
     return when (case) {
-      is ScenarioBased -> sendScenarioRequest(client, case)
-      is SchemaBased   -> sendSchemaRequest(client, case)
-      is TypeMismatch  -> sendTypeMismatchRequest(client, case)
+      is ScenarioBased -> executeScenario(case)
+      is SchemaBased   -> executeSchema(case)
+      is TypeMismatch  -> executeTypeMismatch(case)
     }
   }
 
-  private fun createClient() =
-    if (logger.isDebugEnabled())
-      DebuggingFilters.PrintRequestAndResponse().then(baseClient)
-    else
-      baseClient
-
-  private fun sendScenarioRequest(client: (Request) -> Response, case: ScenarioBased): Response {
+  private fun executeScenario(case: ScenarioBased): Pair<Request, Response> {
     val scenario = case.scenario
     validateScenarioParameterElements(scenario.request.parameterValues, case.requestSchema)
 
@@ -42,10 +31,10 @@ internal class VerificationHttpClient(private val serverUrl: String) {
       .withScenarioBody(scenario.request.body)
       .withAcceptHeader(scenario.response.body?.contentType)
 
-    return client(request)
+    return request to baseClient(request)
   }
 
-  private fun sendSchemaRequest(client: (Request) -> Response, case: SchemaBased): Response {
+  private fun executeSchema(case: SchemaBased): Pair<Request, Response> {
     val pathParams = case.requestSchema.pathParameters.associate {
       it.element.name to it.serde.serialize(it.dataType.randomValue())
     }
@@ -58,10 +47,10 @@ internal class VerificationHttpClient(private val serverUrl: String) {
         case.requestSchema.bodies.find { it.contentType == case.requestContentType })
       .withAcceptHeader(case.responseContentType)
 
-    return client(request)
+    return request to baseClient(request)
   }
 
-  private fun sendTypeMismatchRequest(client: (Request) -> Response, case: TypeMismatch): Response {
+  private fun executeTypeMismatch(case: TypeMismatch): Pair<Request, Response> {
     val mutatedElement = case.mutatedElement
 
     val pathParams = case.requestSchema.pathParameters.associate { param ->
@@ -79,7 +68,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
       .withTypeMismatchBody(case)
       .withAcceptHeader(case.responseContentType)
 
-    return client(request)
+    return request to baseClient(request)
   }
 
   private fun Request.withTypeMismatchParameters(case: TypeMismatch): Request {

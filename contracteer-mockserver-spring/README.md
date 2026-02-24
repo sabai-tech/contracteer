@@ -111,3 +111,13 @@ the mock server cannot determine the correct response, it
 returns 418 with diagnostic information explaining why. See
 [contracteer-mockserver](../contracteer-mockserver/) for
 details.
+
+## Debugging
+
+When the mock server returns a 418 diagnostic response,
+Contracteer logs the received request at WARN level
+automatically.
+
+To see all incoming requests and outgoing responses, set the
+`tech.sabai.contracteer.http` logger to DEBUG in your logging
+framework.
