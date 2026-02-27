@@ -8,6 +8,10 @@ inputs:
     description: Whether to setup GraalVM
     required: false
     default: 'false'
+  graalvm-version:
+    description: GraalVM version (defaults to java-version if not set)
+    required: false
+    default: ''
   github-token:
     description: GitHub token for API authentication
     required: false
@@ -22,12 +26,13 @@ runs:
         distribution: temurin
         java-version: ${{ inputs.java-version }}
 
-    - name: Setup GraalVM ${{ inputs.java-version }}
+    - name: Setup GraalVM ${{ inputs.graalvm-version || inputs.java-version }}
       if: ${{ inputs.enable-graalvm == 'true' }}
       uses: graalvm/setup-graalvm@v1
       with:
-        java-version: ${{ inputs.java-version }}
-        distribution: 'graalvm-community'
+        java-version: ${{ inputs.graalvm-version || inputs.java-version }}
+        distribution: 'graalvm'
+        set-java-home: 'false'
         github-token: ${{ inputs.github-token }}
         native-image-job-reports: 'true'
 

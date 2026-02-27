@@ -13,7 +13,7 @@ class AnyOfDataType private constructor(name: String,
                                         val discriminator: Discriminator? = null,
                                         isNullable: Boolean = false,
                                         allowedValues: AllowedValues? = null):
-    CompositeDataType<Any>(name, "anyOf", isNullable, subTypes, Object::class.java, allowedValues) {
+    CompositeDataType<Any>(name, "anyOf", isNullable, subTypes, Any::class.java, allowedValues) {
 
   override fun isFullyStructured() =
     subTypes.all { it.isFullyStructured() }

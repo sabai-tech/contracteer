@@ -19,18 +19,20 @@ kapt {
   }
 }
 
+val isQuickBuild = providers.gradleProperty("quickBuild").map { it.toBoolean() }.orElse(false)
+
 graalvmNative {
   binaries {
     named("main") {
       mainClass = "tech.sabai.contracteer.cli.CliKt"
       imageName.set("contracteer")
-      quickBuild.set(true)
+      quickBuild.set(isQuickBuild)
       sharedLibrary.set(false)
       fallback.set(false)
       useFatJar.set(true)
       buildArgs.add("--enable-https")
       buildArgs.add("--enable-http")
-      buildArgs.add("--install-exit-handlers")
+      if (!isQuickBuild.get()) buildArgs.add("-Os")
     }
   }
 }

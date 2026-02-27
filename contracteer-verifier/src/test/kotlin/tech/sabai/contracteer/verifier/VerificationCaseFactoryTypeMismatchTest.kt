@@ -135,10 +135,10 @@ class VerificationCaseFactoryTypeMismatchTest {
 
     // Then
     assert(typeMismatchCases.size == 5)
-    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && (it.mutatedElement as MutatedElement.Parameter).element is PathParam } == 1)
-    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && (it.mutatedElement as MutatedElement.Parameter).element is QueryParam } == 1)
-    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && (it.mutatedElement as MutatedElement.Parameter).element is Header } == 1)
-    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && (it.mutatedElement as MutatedElement.Parameter).element is Cookie } == 1)
+    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && it.mutatedElement.element is PathParam } == 1)
+    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && it.mutatedElement.element is QueryParam } == 1)
+    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && it.mutatedElement.element is Header } == 1)
+    assert(typeMismatchCases.count { it.mutatedElement is MutatedElement.Parameter && it.mutatedElement.element is Cookie } == 1)
     assert(typeMismatchCases.count { it.mutatedElement == MutatedElement.Body } == 1)
   }
 
