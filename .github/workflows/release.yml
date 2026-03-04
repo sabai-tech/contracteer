@@ -56,14 +56,14 @@ jobs:
           JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
 
       - name: Upload assembled archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: contracteer-${{ matrix.platform }}
           path: out/jreleaser/assemble/contracteer/archive/*.zip
 
       - name: Upload JReleaser assemble log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jreleaser-assemble-${{ matrix.platform }}
           path: |
@@ -112,7 +112,7 @@ jobs:
 
       - name: Upload JReleaser logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jreleaser-release-logs
           path: |
