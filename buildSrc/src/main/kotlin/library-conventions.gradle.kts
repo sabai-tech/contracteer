@@ -10,7 +10,7 @@ publishing {
       from(components["java"])
       pom {
         name.set("contracteer")
-        description.set("A tool for validating API contracts and running mock servers based on OpenAPI 3 Specifications")
+        description.set("The loyal guard of your API contracts. Verify your API and mock your dependencies from your OpenAPI specification.")
         url.set("https://github.com/sabai-tech/contracteer")
         licenses {
           license {

@@ -45,15 +45,10 @@ jobs:
       - name: Build native image
         run: ./gradlew :contracteer-cli:nativeCompile
 
-      - name: Release
+      - name: Assemble archive
         uses: jreleaser/release-action@v2
         with:
           arguments: assemble
-        env:
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.GH_PAT }}
-          JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
-          JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}
-          JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
 
       - name: Upload assembled archive
         uses: actions/upload-artifact@v4
@@ -146,4 +141,6 @@ jobs:
 
       - name: Deploy versioned docs
         working-directory: docs
-        run: mike deploy --push --update-aliases ${{ inputs.version }} latest
+        run: |
+          mike deploy --push --update-aliases ${{ inputs.version }} latest
+          mike set-default --push latest

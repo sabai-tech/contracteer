@@ -1,8 +1,11 @@
 project:
   name: contracteer
-  description: The musketeer of your API contracts.
+  description: The loyal guard of your API contracts.
   longDescription: |
-    A tool for validating API contracts and running mock servers based on OpenAPI 3 Specifications
+    Contracteer verifies that your API implementation matches your OpenAPI specification
+    and provides a mock server that behaves exactly as your spec defines. Your OpenAPI
+    specification is the single source of truth -- Contracteer turns it into executable
+    tests and a faithful mock.
   authors:
     - Christophe Amory
   license: GPL-3.0-only
@@ -13,6 +16,7 @@ project:
     - cli
   links:
     homepage: https://github.com/sabai-tech/contracteer
+    documentation: https://sabai-tech.github.io/contracteer
   languages:
     java:
       groupId: tech.sabai.contracteer
@@ -84,25 +88,19 @@ distributions:
     artifactPattern:
       path: 'out/jreleaser/assemble/contracteer/archive/{{distributionName}}-{{projectVersion}}-{{matrix.platform}}.zip'
 
-files:
-  artifacts:
-    - path: contracteer-core/build/libs/contracteer-core-{{projectVersion}}.jar
-    - path: contracteer-mockserver/build/libs/contracteer-mockserver-{{projectVersion}}.jar
-    - path: contracteer-mockserver-spring/build/libs/contracteer-mockserver-spring-{{projectVersion}}.jar
-    - path: contracteer-verifier/build/libs/contracteer-verifier-{{projectVersion}}.jar
-    - path: contracteer-verifier-junit/build/libs/contracteer-verifier-junit-{{projectVersion}}.jar
-
 checksum:
   individual: true
 
 packagers:
   brew:
     active: ALWAYS
+    commitAuthor:
+      name: github-actions[bot]
+      email: github-actions[bot]@users.noreply.github.com
     repository:
       owner: sabai-tech
       name: homebrew-contracteer
       username: github-actions
-    formulaName: contracteer
     multiPlatform: true
     livecheck:
       - 'url "https://github.com/sabai-tech/contracteer/releases/latest"'
