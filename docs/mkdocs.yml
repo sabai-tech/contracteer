@@ -1,0 +1,76 @@
+site_name: Contracteer
+site_url: https://sabai-tech.github.io/contracteer
+site_description: >-
+  Contract testing from your OpenAPI specification.
+  Verify your API, mock your dependencies.
+
+repo_url: https://github.com/sabai-tech/contracteer
+repo_name: sabai-tech/contracteer
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - navigation.footer
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - search.highlight
+    - search.suggest
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+extra:
+  version:
+    provider: mike
+
+extra_css:
+  - assets/css/custom.css
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Concepts:
+    - What Is Contract Testing?: concepts/contract-testing.md
+    - How Contracteer Works: concepts/how-contracteer-works.md
+    - Creating Scenarios: concepts/scenarios.md
+    - Testing Your Server: concepts/testing-your-server.md
+    - Testing Your Client: concepts/testing-your-client.md
+    - OpenAPI 3.0 Coverage: concepts/openapi-coverage.md
+  - Getting Started:
+    - getting-started/index.md
+    - Verifier: getting-started/verifier.md
+    - Verifier with JUnit 5: getting-started/verifier-junit.md
+    - Mock Server: getting-started/mockserver.md
+    - Mock Server with Spring Boot: getting-started/mockserver-spring.md
+    - CLI: getting-started/cli.md
+  - Guides:
+    - CI/CD Integration: guides/ci-integration.md
+    - Troubleshooting: guides/troubleshooting.md

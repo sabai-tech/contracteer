@@ -6,6 +6,11 @@ build/
 
 versions.properties
 
+### Documentation ###
+docs/site/
+docs/.venv/
+docs/.cache/
+
 ### IntelliJ IDEA ###
 .idea/*
 !.idea/codeStyles

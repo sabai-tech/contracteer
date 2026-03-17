@@ -1,0 +1,297 @@
+# Mock an API with Spring Boot
+
+Add `@ContracteerMockServer` to your Spring Boot test class to start a mock server from your OpenAPI specification.
+No handwritten stubs required.
+
+The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains a complete working project.
+The [musketeer-spring-boot-client](https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-client) demonstrates everything covered on this page.
+
+---
+
+## Prerequisites
+
+- JDK 21 or later
+- Gradle or Maven
+- Spring Boot test on the classpath
+- An OpenAPI 3.0 specification (`.yaml` or `.json`)
+
+---
+
+## Add the Dependency
+
+=== "Gradle (Kotlin DSL)"
+
+    ```kotlin
+    dependencies {
+        testImplementation("tech.sabai.contracteer:contracteer-mockserver-spring:<version>")
+    }
+    ```
+
+=== "Maven"
+
+    ```xml
+    <dependency>
+        <groupId>tech.sabai.contracteer</groupId>
+        <artifactId>contracteer-mockserver-spring</artifactId>
+        <version>${contracteer.version}</version>
+        <scope>test</scope>
+    </dependency>
+    ```
+
+---
+
+## Annotate Your Test
+
+Annotate your test class with `@ContracteerMockServer`.
+The mock server starts automatically with the Spring test context and stops when the context closes.
+
+Use `baseUrlProperty` to inject the mock server's base URL into a Spring property.
+Your client reads this property and automatically points to the mock server.
+
+=== "Kotlin"
+
+    ```kotlin
+    @SpringBootTest
+    @ContracteerMockServer(
+        openApiDoc = "classpath:musketeer-api.yaml",
+        baseUrlProperty = "musketeer.api.base-url"
+    )
+    class MusketeerApiClientTest {
+
+        @Autowired
+        private lateinit var client: MusketeerApiClient
+
+        @Test
+        fun `retrieve all musketeers`() {
+            val musketeers = client.listMusketeers()
+            assertThat(musketeers).isNotNull()
+        }
+
+        @Test
+        fun `enlist a new musketeer`() {
+            val createMusketeer = CreateMusketeer("d'Artagnan", "CADET", "Rapier")
+            val musketeer = client.enlistMusketeer(createMusketeer)
+            assertThat(musketeer).isNotNull()
+        }
+
+        @Test
+        fun `reject enlistment when rank is invalid`() {
+            val createMusketeer = CreateMusketeer("d'Artagnan", "KNIGHT", "Rapier")
+            assertThatThrownBy { client.enlistMusketeer(createMusketeer) }
+                .isInstanceOf(MusketeerApiException::class.java)
+                .extracting("statusCode")
+                .isEqualTo(400)
+        }
+
+        @Test
+        fun `return empty when musketeer does not exist`() {
+            val maybeMusketeer = client.getMusketeer(999)
+            assertThat(maybeMusketeer).isEmpty()
+        }
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @SpringBootTest
+    @ContracteerMockServer(
+        openApiDoc = "classpath:musketeer-api.yaml",
+        baseUrlProperty = "musketeer.api.base-url"
+    )
+    class MusketeerApiClientTest {
+
+        @Autowired
+        MusketeerApiClient client;
+
+        @Test
+        void retrieve_all_musketeers() {
+            var musketeers = client.listMusketeers();
+            assertThat(musketeers).isNotNull();
+        }
+
+        @Test
+        void enlist_a_new_musketeer() {
+            var createMusketeer = new CreateMusketeer("d'Artagnan", "CADET", "Rapier");
+            var musketeer = client.enlistMusketeer(createMusketeer);
+            assertThat(musketeer).isNotNull();
+        }
+
+        @Test
+        void reject_enlistment_when_rank_is_invalid() {
+            var createMusketeer = new CreateMusketeer("d'Artagnan", "KNIGHT", "Rapier");
+            assertThatThrownBy(() -> client.enlistMusketeer(createMusketeer))
+                .isInstanceOf(MusketeerApiException.class)
+                .extracting("statusCode")
+                .isEqualTo(400);
+        }
+
+        @Test
+        void return_empty_when_musketeer_does_not_exist() {
+            var maybeMusketeer = client.getMusketeer(999);
+            assertThat(maybeMusketeer).isEmpty();
+        }
+    }
+    ```
+
+The `MusketeerApiClient` is configured with `@Value("${musketeer.api.base-url}")`.
+When the test starts, `@ContracteerMockServer` injects the mock server's URL into that property.
+The client connects to the mock server without any manual wiring.
+
+!!! note "Multiple mock servers"
+    The annotation is repeatable.
+    If your client depends on multiple APIs, annotate the test class once per API with a distinct `portProperty` or `baseUrlProperty`:
+
+    ```java
+    @ContracteerMockServer(
+        openApiDoc = "classpath:billing-api.yaml",
+        baseUrlProperty = "billing.api.base-url"
+    )
+    @ContracteerMockServer(
+        openApiDoc = "classpath:inventory-api.yaml",
+        baseUrlProperty = "inventory.api.base-url"
+    )
+    ```
+
+---
+
+## `@ContracteerMockServer` fields
+
+**`openApiDoc`** *(required)* -- Path to the OpenAPI specification.
+Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:openapi.yaml`).
+
+**`port`** *(default: `0`)* -- Port for the mock server.
+`0` assigns a random available port.
+
+**`portProperty`** *(default: `contracteer.mockserver.port`)* -- Spring property name where the actual port is injected.
+
+**`baseUrlProperty`** *(default: `contracteer.mockserver.baseUrl`)* -- Spring property name where the base URL is injected.
+Format: `http://localhost:{port}`.
+
+!!! tip "Treat the specification as a shared artifact"
+    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-specification-as-source-of-truth): the OpenAPI specification exists independently of both server and client.
+    Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
+    This ensures that the server, client, and contract tests all use the same specification.
+    The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
+
+---
+
+## How the Mock Server Responds
+
+The mock server is not a hand-written stub.
+It validates every incoming request against the OpenAPI schema and determines the response from the specification.
+
+### Request validation
+
+The mock server validates request parameters and body against the schema.
+
+The client sends `{name: "d'Artagnan", rank: "KNIGHT", weapon: "Rapier"}` to `POST /musketeers`.
+The mock server checks the `rank` field against the schema:
+
+```yaml
+rank:
+  type: string
+  enum:
+    - CADET
+    - MUSKETEER
+    - CAPTAIN
+```
+
+`KNIGHT` is not in the enum.
+The operation defines a `400` response, so the mock server returns `400`.
+No one wrote a mock rule for this -- the schema drives the rejection.
+
+### Scenario matching
+
+If the request is valid, the mock server compares it against the scenarios defined in the specification.
+
+The client sends `{name: "d'Artagnan", rank: "CADET", weapon: "Rapier"}` to `POST /musketeers`.
+This matches the `D_ARTAGNAN_JOINS` scenario:
+
+```yaml
+post:
+  requestBody:
+    content:
+      application/json:
+        examples:
+          D_ARTAGNAN_JOINS:
+            value:
+              name: d'Artagnan
+              rank: CADET
+              weapon: Rapier
+  responses:
+    '201':
+      headers:
+        Location:
+          examples:
+            D_ARTAGNAN_JOINS:
+              value: /musketeers/4
+```
+
+The mock server returns `201` with `Location: /musketeers/4`.
+
+### Status-code-prefixed scenarios
+
+The client calls `GET /musketeers/999`.
+The request is valid (999 is an integer), and the value matches the `404_UNKNOWN_MUSKETEER` scenario:
+
+```yaml
+examples:
+  404_UNKNOWN_MUSKETEER:
+    value: 999
+```
+
+The key's prefix (`404_`) targets the 404 response directly.
+The mock server returns `404`.
+
+### Schema-only response
+
+If the request is valid but matches no scenario, the mock server generates a response from the schema.
+
+`GET /musketeers` has no examples in the specification.
+The mock server returns `200` with an array of randomly generated `Musketeer` objects.
+The values satisfy the schema but are different on each run.
+
+### The 418 diagnostic
+
+If the mock server cannot determine the correct response, it returns `418` with diagnostic information.
+The 418 is not a status code from your API -- it is Contracteer telling you that something is ambiguous or undefined.
+
+This happens when multiple scenarios match the same request.
+It also occurs when multiple 2xx response codes exist without a scenario to disambiguate.
+An invalid request with no `400` response defined also triggers a 418.
+
+The 418 body explains what went wrong.
+Read it before investigating further -- it usually points directly to the cause.
+
+---
+
+## Debugging
+
+When the mock server returns a `418` diagnostic response, Contracteer logs the request at WARN level automatically.
+No configuration is needed.
+
+To see all incoming requests and outgoing responses, set the `tech.sabai.contracteer.http` logger to DEBUG:
+
+=== "Logback (logback-test.xml)"
+
+    ```xml
+    <logger name="tech.sabai.contracteer.http" level="DEBUG"/>
+    ```
+
+=== "application.yaml (Spring Boot)"
+
+    ```yaml
+    logging:
+      level:
+        tech.sabai.contracteer.http: DEBUG
+    ```
+
+---
+
+## Next Steps
+
+- [Testing Your Client](../concepts/testing-your-client.md) -- how the mock server validates requests and generates responses in depth.
+- [Creating Scenarios](../concepts/scenarios.md) -- how to write OpenAPI examples that produce the scenarios you want.
+- [Mock Server](mockserver.md) -- programmatic mock server setup without Spring Boot.
+- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects with server and client examples.
