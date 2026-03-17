@@ -1,17 +1,9 @@
 # contracteer-mockserver
 
 Start a mock server from an OpenAPI specification.
+Use this module when you need programmatic control -- for a custom test harness or a non-Spring framework.
 
-## When to use this module
-
-Use contracteer-mockserver when you want programmatic control
-over the mock server -- for instance in a custom test harness
-or a non-Spring framework. It starts an HTTP server that
-validates requests and returns spec-compliant responses.
-
-If you use Spring Boot, consider
-[contracteer-mockserver-spring](../contracteer-mockserver-spring/)
-for auto-configured setup.
+If you use Spring Boot, consider [contracteer-mockserver-spring](../contracteer-mockserver-spring/) for an annotation-based setup.
 
 ## Dependency
 
@@ -36,12 +28,10 @@ Maven:
 
 ## Usage
 
-Load the spec, create the mock server, start it.
-
 ```kotlin
-val result = OpenApiLoader.loadOperations("openapi.yaml")
+val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
 if (result.isFailure()) {
-    // handle errors: result.errors()
+    fail("Failed to load spec: ${result.errors()}")
 }
 
 val mockServer = MockServer(
@@ -50,46 +40,13 @@ val mockServer = MockServer(
 )
 
 mockServer.start()
-val actualPort = mockServer.port()
+val baseUrl = "http://localhost:${mockServer.port()}"
 
-// Make HTTP requests to http://localhost:$actualPort/...
+// Make HTTP requests to baseUrl...
 
 mockServer.stop()
 ```
 
-## How the mock server handles requests
+## Documentation
 
-For each incoming request matched to an operation by path and
-HTTP method, the mock server evaluates three steps in order:
-
-**1. Request validation** -- validates the request against the
-operation's schema (parameters, body, types, required fields).
-If invalid and the operation defines a 400 response, the server
-returns 400 with a generated body. If invalid and no 400
-response is defined, the server returns 418.
-
-**2. Scenario matching** -- compares the request against all
-scenarios defined via OpenAPI `examples`. If exactly one
-scenario matches, the server returns the scenario's response.
-If multiple scenarios match, the server returns 418.
-
-**3. Schema-only response** -- if no scenario matched, the
-server generates a response with random values conforming to
-the schema. If the operation has a single 2xx response, it uses
-that. If multiple 2xx responses exist and the choice is
-ambiguous, the server returns 418.
-
-The **418 response** is a diagnostic signal. It means the mock
-server received the request but cannot determine the correct
-response. The 418 body contains the nearest matching scenarios
-and the reason each did not match.
-
-## Debugging
-
-When the mock server returns a 418 diagnostic response,
-Contracteer logs the received request at WARN level
-automatically.
-
-To see all incoming requests and outgoing responses, set the
-`tech.sabai.contracteer.http` logger to DEBUG in your logging
-framework.
+See [Mock an API Programmatically](https://sabai-tech.github.io/contracteer/getting-started/mockserver/) for the full guide -- mock server behavior, the 418 diagnostic, and debugging.

@@ -1,6 +1,7 @@
 # contracteer-mockserver-spring
 
 Spring Boot test integration for the Contracteer mock server.
+One annotation, auto-configured.
 
 ## Dependency
 
@@ -25,99 +26,27 @@ Maven:
 
 ## Usage
 
-Annotate your test class with `@ContracteerMockServer`.
-The mock server starts automatically with the Spring test
-context and stops when the context closes.
-
-Kotlin:
-
-```kotlin
-@SpringBootTest
-@ContracteerMockServer(
-    openApiDoc = "src/test/resources/openapi.yaml",
-    portProperty = "api.port"
-)
-class MyClientTest {
-
-    @Value("\${api.port}")
-    private lateinit var mockServerPort: String
-
-    @Test
-    fun `client calls the API`() {
-        // HTTP requests to http://localhost:$mockServerPort/...
-    }
-}
-```
-
-Java:
-
 ```java
 @SpringBootTest
 @ContracteerMockServer(
-    openApiDoc = "src/test/resources/openapi.yaml",
-    portProperty = "api.port"
+    openApiDoc = "classpath:openapi.yaml",
+    baseUrlProperty = "api.base-url"
 )
 class MyClientTest {
 
-    @Value("${api.port}")
-    String mockServerPort;
+    @Autowired
+    MyApiClient client;
 
     @Test
-    void clientCallsTheApi() {
-        // HTTP requests to http://localhost:{mockServerPort}/...
+    void callsTheApi() {
+        var result = client.listProducts();
+        assertThat(result).isNotNull();
     }
 }
 ```
 
-The `portProperty` value defines the Spring property where the
-mock server port is injected. Use it to configure your client
-to point at the mock server.
+The mock server starts automatically with the Spring test context, validates every request against the OpenAPI schema, and returns spec-compliant responses.
 
-## Configuration
+## Documentation
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `openApiDoc` | (required) | Path, URL, or classpath resource (e.g. `classpath:openapi.yaml`) to the OpenAPI 3 document. |
-| `port` | `0` | Server port. `0` assigns a random available port. |
-| `portProperty` | `"contracteer.mockserver.port"` | Spring property name where the actual port is injected. |
-| `baseUrlProperty` | `"contracteer.mockserver.baseUrl"` | Spring property name where the base URL is injected (format: `http://localhost:{port}`). |
-
-## Multiple mock servers
-
-The annotation is repeatable. Use it to start one mock server
-per API your client depends on:
-
-```kotlin
-@SpringBootTest
-@ContracteerMockServer(
-    openApiDoc = "src/test/resources/billing-api.yaml",
-    portProperty = "billing.api.port"
-)
-@ContracteerMockServer(
-    openApiDoc = "src/test/resources/inventory-api.yaml",
-    portProperty = "inventory.api.port"
-)
-class MyClientTest { }
-```
-
-## How the mock server handles requests
-
-For each incoming request, the mock server evaluates three
-steps in order: request validation against the schema, scenario
-matching against OpenAPI `examples`, and schema-only response
-generation as a fallback. If the request is invalid and the
-operation defines a 400 response, the server returns 400. If
-the mock server cannot determine the correct response, it
-returns 418 with diagnostic information explaining why. See
-[contracteer-mockserver](../contracteer-mockserver/) for
-details.
-
-## Debugging
-
-When the mock server returns a 418 diagnostic response,
-Contracteer logs the received request at WARN level
-automatically.
-
-To see all incoming requests and outgoing responses, set the
-`tech.sabai.contracteer.http` logger to DEBUG in your logging
-framework.
+See [Mock an API with Spring Boot](https://sabai-tech.github.io/contracteer/getting-started/mockserver-spring/) for the full guide -- annotation fields, multiple mock servers, mock server behavior, and debugging.
