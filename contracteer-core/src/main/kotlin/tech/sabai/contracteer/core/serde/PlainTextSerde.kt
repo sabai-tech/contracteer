@@ -6,11 +6,11 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.*
 
 /** [Serde] implementation for `text/plain` content. Supports scalar types only; objects and arrays are rejected. */
-object PlainTextSerde: Serde {
-  override fun serialize(value: Any?) =
+object PlainTextSerde: Serde() {
+  override fun doSerialize(value: Any?) =
     value.toString()
 
-  override fun deserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> =
+  override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> =
     if (source == null) success(null)
     else
       when (targetDataType) {

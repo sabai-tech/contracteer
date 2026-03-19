@@ -1,5 +1,7 @@
 package tech.sabai.contracteer.core.operation
 
+import tech.sabai.contracteer.core.normalize
+
 /**
  * A named example-based pairing of request values and response values for a specific status code.
  *
@@ -26,29 +28,26 @@ data class Scenario(
 /**
  * The request side of a [Scenario]: parameter values and an optional body.
  *
- * @param parameterValues example values keyed by [ParameterElement], only for parameters
- *        that have an example for this scenario's key
- * @param body the request body value and content type, or null if not provided
+ * Values are [normalized][normalize] on construction.
  */
-data class ScenarioRequest(
-  val parameterValues: Map<ParameterElement, Any?>,
-  val body: ScenarioBody?
-)
+class ScenarioRequest(parameterValues: Map<ParameterElement, Any?>, val body: ScenarioBody?) {
+  val parameterValues: Map<ParameterElement, Any?> = parameterValues.mapValues { it.value?.normalize() }
+}
 
 /**
  * The response side of a [Scenario]: header values and an optional body.
  *
- * @param headers example values keyed by [ParameterElement.Header],
- *        only for headers that have an example for this scenario's key
- * @param body the response body value and content type, or null if not provided
+ * Values are [normalized][normalize] on construction.
  */
-data class ScenarioResponse(
-  val headers: Map<ParameterElement.Header, Any?>,
-  val body: ScenarioBody?
-)
+class ScenarioResponse(headers: Map<ParameterElement.Header, Any?>, val body: ScenarioBody?) {
+  val headers: Map<ParameterElement.Header, Any?> = headers.mapValues { it.value?.normalize() }
+}
 
-/** A body value with its content type, used within a [Scenario]. */
-data class ScenarioBody(
-  val contentType: ContentType,
-  val value: Any?
-)
+/**
+ * A body value with its content type, used within a [Scenario].
+ *
+ * The [value] is [normalized][normalize] on construction.
+ */
+class ScenarioBody(val contentType: ContentType, value: Any?) {
+  val value: Any? = value?.normalize()
+}

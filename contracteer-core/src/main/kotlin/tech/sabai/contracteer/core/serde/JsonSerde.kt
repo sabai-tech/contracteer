@@ -7,17 +7,16 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.normalize
 
 /** [Serde] implementation for `application/json` content. Uses Jackson for serialization and deserialization. */
-object JsonSerde: Serde {
+object JsonSerde: Serde() {
   private val logger = KotlinLogging.logger {}
   private val objectMapper = ObjectMapper()
 
-  override fun serialize(value: Any?): String =
-    objectMapper.writeValueAsString(value.normalize())
+  override fun doSerialize(value: Any?): String =
+    objectMapper.writeValueAsString(value)
 
-  override fun deserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> =
+  override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> =
     when {
       source.isNullOrBlank() -> success()
       source == "null"       -> success()

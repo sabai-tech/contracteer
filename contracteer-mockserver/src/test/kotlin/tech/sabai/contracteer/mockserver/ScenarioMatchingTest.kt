@@ -6,7 +6,8 @@ import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterEach
 import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
+import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.operation.ScenarioBody
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
@@ -17,7 +18,6 @@ import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
 import tech.sabai.contracteer.mockserver.TestFixture.scenario
 import tech.sabai.contracteer.mockserver.TestFixture.stringDataType
-import java.math.BigDecimal
 import kotlin.test.Test
 
 class ScenarioMatchingTest {
@@ -49,7 +49,7 @@ class ScenarioMatchingTest {
           method = "GET",
           key = "specificUser",
           statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
+          requestParameterValues = mapOf(PathParam("id") to 42),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("id" to 42, "name" to "John")
@@ -92,7 +92,7 @@ class ScenarioMatchingTest {
           method = "GET",
           key = "specificUser",
           statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
+          requestParameterValues = mapOf(PathParam("id") to 42),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("id" to 42)
@@ -274,7 +274,7 @@ class ScenarioMatchingTest {
           method = "GET",
           key = "specificUser",
           statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
+          requestParameterValues = mapOf(PathParam("id") to 42),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("id" to 42, "name" to "John")
@@ -317,7 +317,7 @@ class ScenarioMatchingTest {
           method = "GET",
           key = "specificUser",
           statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
+          requestParameterValues = mapOf(PathParam("id") to 42),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("id" to 42, "name" to "John")
@@ -362,7 +362,7 @@ class ScenarioMatchingTest {
           method = "GET",
           key = "notFound",
           statusCode = 404,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(999)),
+          requestParameterValues = mapOf(PathParam("id") to 999),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),
             value = mapOf("error" to "Not Found")

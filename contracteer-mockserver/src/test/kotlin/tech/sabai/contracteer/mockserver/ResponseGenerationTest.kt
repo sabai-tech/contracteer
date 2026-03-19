@@ -19,7 +19,6 @@ import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
 import tech.sabai.contracteer.mockserver.TestFixture.scenario
 import tech.sabai.contracteer.mockserver.TestFixture.stringDataType
-import java.math.BigDecimal
 import kotlin.test.Test
 
 class ResponseGenerationTest {
@@ -52,7 +51,7 @@ class ResponseGenerationTest {
           method = "GET",
           key = "specificUser",
           statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
+          requestParameterValues = mapOf(PathParam("id") to 42),
           responseHeaders = mapOf(Header("X-Request-Id") to "abc-123"),
           responseBody = ScenarioBody(
             contentType = ContentType("application/json"),

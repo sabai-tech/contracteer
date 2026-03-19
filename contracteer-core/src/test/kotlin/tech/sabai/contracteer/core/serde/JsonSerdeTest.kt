@@ -5,6 +5,8 @@ import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.objectDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.normalize
+import java.math.BigDecimal
 
 class JsonSerdeTest {
 
@@ -47,9 +49,9 @@ class JsonSerdeTest {
     // then
     assert(result.isSuccess())
     assert(result.value == mapOf(
-      "id" to 123,
+      "id" to BigDecimal.valueOf(123),
       "nested" to mapOf("name" to "John"),
-      "array" to listOf(1, 2, 3)
+      "array" to listOf(BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(3))
     ))
   }
 
@@ -68,6 +70,26 @@ class JsonSerdeTest {
 
     // then
     assert(result.isFailure())
+  }
+
+  @Test
+  fun `deserialize normalizes values`() {
+    // given
+    val value = """{"id": 42, "items": [1, 2, 3]}"""
+    val dataType = objectDataType(properties = mapOf(
+      "id" to integerDataType(),
+      "items" to arrayDataType(integerDataType())
+    ))
+
+    // when
+    val result = JsonSerde.deserialize(value, dataType)
+
+    // then
+    assert(result.isSuccess())
+    assert(result.value == mapOf(
+      "id" to 42.normalize(),
+      "items" to listOf(1, 2, 3).normalize()
+    ))
   }
 
   @Test
