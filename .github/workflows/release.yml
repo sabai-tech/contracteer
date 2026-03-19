@@ -33,7 +33,7 @@ jobs:
     runs-on:
       - ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Java, GraalVM, and Gradle
         uses: ./.github/actions/setup-java-gradle
@@ -51,14 +51,14 @@ jobs:
           arguments: assemble
 
       - name: Upload assembled archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: contracteer-${{ matrix.platform }}
           path: out/jreleaser/assemble/contracteer/archive/*.zip
 
       - name: Upload JReleaser assemble log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jreleaser-assemble-${{ matrix.platform }}
           path: |
@@ -71,7 +71,7 @@ jobs:
     needs: build_native_image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -83,7 +83,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download archive
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: out/jreleaser/assemble/contracteer/archive
@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload JReleaser logs
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jreleaser-release-logs
           path: |
@@ -122,12 +122,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
