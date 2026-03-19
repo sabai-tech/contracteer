@@ -1,6 +1,12 @@
-# Contracteer
-
-*The loyal guard of your API contracts.*
+<p align="center">
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="contracteer_black_theme.png">
+<img src="contracteer_white_theme.png" alt="Contracteer" width="350">
+</picture>
+</p>
+<h2 align="center">CONTRACTEER</h2>
+<p align="center"><i>The loyal guard of your API contracts.</i></p>
+<br>
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/sabai-tech/contracteer/tests.yml?branch=main)
 ![Maven Central](https://img.shields.io/maven-central/v/tech.sabai.contracteer/contracteer-core)
