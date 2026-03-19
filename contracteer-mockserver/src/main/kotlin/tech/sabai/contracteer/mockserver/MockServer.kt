@@ -87,7 +87,7 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   private fun processRequest(request: Request, operation: ApiOperation): Response {
     val validationResult = operation.requestSchema.validate(request)
     if (validationResult.isFailure()) {
-      val badRequestResponseSchema = operation.responses[400]
+      val badRequestResponseSchema = operation.badRequestResponse()
       return if (badRequestResponseSchema != null)
         ResponseGenerator.fromSchema(400, badRequestResponseSchema.headers, badRequestResponseSchema.bodies.firstOrNull())
       else
@@ -105,7 +105,7 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   }
 
   private fun handleScenarioResponse(request: Request, scenario: Scenario, operation: ApiOperation): Response {
-    val responseSchema = operation.responses[scenario.statusCode]
+    val responseSchema = operation.responseFor(scenario.statusCode)
                          ?: return teapotResponse("No response schema for status ${scenario.statusCode}")
 
     val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
@@ -128,7 +128,7 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   }
 
   private fun findUnique2xxResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> {
-    val successResponses = operation.responses.filterKeys { it in 200..299 }
+    val successResponses = operation.successResponses()
     return when {
       successResponses.isEmpty() ->
         failure("No 2xx response schema defined for ${operation.method.uppercase()} ${operation.path}")

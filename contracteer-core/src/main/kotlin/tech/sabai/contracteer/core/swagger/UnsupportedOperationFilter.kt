@@ -57,7 +57,7 @@ private fun filterResponseBodies(operation: ApiOperation): Map<Int, ResponseSche
     }
     .toMap()
 
-  return if (operation.responses.isNotEmpty() && filtered.isEmpty()) null else filtered
+  return if (operation.hasResponses() && filtered.isEmpty()) null else filtered
 }
 
 private fun filterSingleResponse(

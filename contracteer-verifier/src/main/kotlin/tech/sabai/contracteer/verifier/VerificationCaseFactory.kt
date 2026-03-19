@@ -26,7 +26,7 @@ object VerificationCaseFactory {
 
   private fun createScenarioBasedCases(apiOperation: ApiOperation): List<ScenarioBased> {
     return apiOperation.scenarios.map { scenario ->
-      val responseSchema = apiOperation.responses[scenario.statusCode]
+      val responseSchema = apiOperation.responseFor(scenario.statusCode)
                            ?: error("No response schema found for status code ${scenario.statusCode} in operation ${apiOperation.method} ${apiOperation.path}")
 
       ScenarioBased(
@@ -40,7 +40,7 @@ object VerificationCaseFactory {
   private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation): List<SchemaBased> {
     if (hasSuccessScenario(apiOperation)) return emptyList()
 
-    val successResponses = apiOperation.responses.filterKeys { isSuccessStatusCode(it) }
+    val successResponses = apiOperation.successResponses()
 
     return when {
       successResponses.isEmpty() -> emptyList()
@@ -68,7 +68,7 @@ object VerificationCaseFactory {
   }
 
   private fun createTypeMismatchs(apiOperation: ApiOperation): List<TypeMismatch> {
-    val responseSchema = apiOperation.responses[400] ?: return emptyList()
+    val responseSchema = apiOperation.badRequestResponse() ?: return emptyList()
     val responseContentType = responseSchema.bodies.firstOrNull()?.contentType
     val requestSchema = apiOperation.requestSchema
 

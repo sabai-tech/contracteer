@@ -234,7 +234,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
     assert(typeMismatchCases[0].mutatedValue == "<<not a object>>")
     assert(typeMismatchCases[0].requestContentType == ContentType("application/json"))
-    assert(typeMismatchCases[0].responseSchema == apiOperation.responses[400])
+    assert(typeMismatchCases[0].responseSchema == apiOperation.badRequestResponse())
     assert(typeMismatchCases[0].path == "/users")
     assert(typeMismatchCases[0].method == "POST")
   }

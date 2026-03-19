@@ -72,7 +72,7 @@ class OperationSchemaExtractionTest {
     val operation = loadSingleOperation("schema_without_examples.yaml")
 
     // then
-    val responseSchema = operation.responses[200]!!
+    val responseSchema = operation.responseFor(200)!!
     val headers = responseSchema.headers.associateBy { it.element }
     assert(headers.size == 2)
     assert(!headers[ParameterElement.Header("x-optional")]!!.isRequired)
@@ -87,7 +87,7 @@ class OperationSchemaExtractionTest {
     val operation = loadSingleOperation("schema_without_examples.yaml")
 
     // then
-    val responseSchema = operation.responses[200]!!
+    val responseSchema = operation.responseFor(200)!!
     val responseBody = responseSchema.bodies.single()
     assert(responseBody.contentType == ContentType("application/json"))
     assert(responseBody.dataType is ObjectDataType)
@@ -102,13 +102,11 @@ class OperationSchemaExtractionTest {
     val operation = loadSingleOperation("with_400_response_schema.yaml")
 
     // then
-    assert(operation.responses.keys == setOf(201, 400))
-
-    val successSchema = operation.responses[201]!!
+    val successSchema = operation.responseFor(201)!!
     assert(successSchema.bodies.single().contentType == ContentType("application/json"))
     assert(successSchema.bodies.single().dataType is ObjectDataType)
 
-    val errorSchema = operation.responses[400]!!
+    val errorSchema = operation.badRequestResponse()!!
     assert(errorSchema.bodies.single().contentType == ContentType("application/json"))
     val errorProperties = (errorSchema.bodies.single().dataType as ObjectDataType).properties
     assert(errorProperties["error"] is StringDataType)
@@ -134,11 +132,11 @@ class OperationSchemaExtractionTest {
     assert(requestBody.dataType is ObjectDataType)
     assert((requestBody.dataType as ObjectDataType).properties["prop1"] is StringDataType)
 
-    val responseHeaders = operation.responses[200]!!.headers.associateBy { it.element }
+    val responseHeaders = operation.responseFor(200)!!.headers.associateBy { it.element }
     assert(!responseHeaders[ParameterElement.Header("x-optional")]!!.isRequired)
     assert(responseHeaders[ParameterElement.Header("x-optional")]!!.dataType is IntegerDataType)
 
-    val responseBody = operation.responses[200]!!.bodies.single()
+    val responseBody = operation.responseFor(200)!!.bodies.single()
     assert(responseBody.contentType == ContentType("application/json"))
     assert(responseBody.dataType is ObjectDataType)
     val responseProperties = (responseBody.dataType as ObjectDataType).properties
@@ -154,7 +152,7 @@ class OperationSchemaExtractionTest {
     val requestContentTypes = operation.requestSchema.bodies.map { it.contentType.value }.toSet()
     assert(requestContentTypes == setOf("application/json", "application/vnd.mycompany.myapp.v2+json"))
 
-    val responseContentTypes = operation.responses[201]!!.bodies.map { it.contentType.value }.toSet()
+    val responseContentTypes = operation.responseFor(201)!!.bodies.map { it.contentType.value }.toSet()
     assert(responseContentTypes == setOf("application/json", "application/vnd.mycompany.myapp.v2+json"))
   }
 
@@ -166,10 +164,10 @@ class OperationSchemaExtractionTest {
     // then
     assert(operations.size == 2)
     val objectOperation = operations.first { it.path == "/products/{id}" }
-    assert(objectOperation.responses[200]!!.bodies.single().dataType is ObjectDataType)
+    assert(objectOperation.responseFor(200)!!.bodies.single().dataType is ObjectDataType)
 
     val arrayOperation = operations.first { it.path == "/products" }
-    assert(arrayOperation.responses[200]!!.bodies.single().dataType is ArrayDataType)
+    assert(arrayOperation.responseFor(200)!!.bodies.single().dataType is ArrayDataType)
   }
 
   // --- Helpers ---

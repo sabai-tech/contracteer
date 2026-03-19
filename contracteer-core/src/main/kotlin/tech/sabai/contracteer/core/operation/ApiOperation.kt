@@ -19,9 +19,21 @@ data class ApiOperation(
   val path: String,
   val method: String,
   val requestSchema: RequestSchema,
-  val responses: Map<Int, ResponseSchema>,
+  internal val responses: Map<Int, ResponseSchema>,
   val scenarios: List<Scenario>
-)
+) {
+  /** Returns the response schema for the given [statusCode], or null if not defined. */
+  fun responseFor(statusCode: Int): ResponseSchema? = responses[statusCode]
+
+  /** Returns all 2xx response schemas, keyed by status code. */
+  fun successResponses(): Map<Int, ResponseSchema> = responses.filterKeys { it in 200..299 }
+
+  /** Returns the 400 Bad Request response schema, or null if not defined. */
+  fun badRequestResponse(): ResponseSchema? = responses[400]
+
+  /** Returns true if at least one response schema is defined. */
+  fun hasResponses(): Boolean = responses.isNotEmpty()
+}
 
 /**
  * Structural definition of what an API operation accepts: parameters and request bodies.
