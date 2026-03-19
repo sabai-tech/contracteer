@@ -717,6 +717,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#assert-structure-not-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assert Structure, Not Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#key-takeaways" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1248,6 +1259,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#assert-structure-not-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assert Structure, Not Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#key-takeaways" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1464,6 +1486,31 @@ The expensive top of the pyramid shrinks because the contract boundary is alread
 The remaining integration tests can focus on concerns that neither unit tests nor contract tests cover.
 These include real database behavior, third-party service quirks, or deployment-specific configuration.</p>
 <hr />
+<h2 id="assert-structure-not-values">Assert Structure, Not Values<a class="headerlink" href="#assert-structure-not-values" title="Permanent link">&para;</a></h2>
+<p>A contract test verifies that your client respects the contract -- it sends valid requests and handles the documented response structure.
+It does not verify that the server returns the right data.
+That is a functional test, and mixing the two defeats the purpose of contract testing.</p>
+<p>When your client receives a response, assert that it correctly parses the structure: fields are present, types are correct, enums are handled.
+Do not assert that specific values match the OpenAPI examples.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1">// Contract test -- asserts structure</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getName</span><span class="p">()).</span><span class="na">isNotNull</span><span class="p">();</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getRank</span><span class="p">()).</span><span class="na">isIn</span><span class="p">(</span><span class="s">&quot;CADET&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;MUSKETEER&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CAPTAIN&quot;</span><span class="p">);</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1">// Functional test -- depends on specific data</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">.</span><span class="na">getName</span><span class="p">()).</span><span class="na">isEqualTo</span><span class="p">(</span><span class="s">&quot;Athos&quot;</span><span class="p">);</span>
+</code></pre></div>
+<p>If your test asserts <code>"Athos"</code>, it is no longer testing the contract.
+It is testing that the mock server returns the example value -- which is not the client's concern.
+Your client must handle <strong>any</strong> musketeer, not just Athos.</p>
+<p>This mirrors the verifier's philosophy.
+The verifier checks that the server returns the right <strong>shape</strong>, not the right <strong>data</strong>.
+Client tests should do the same.</p>
+<p>The mock server reinforces this naturally.
+When no scenario matches, it returns random values generated from the schema.
+Value-based assertions would be flaky against these responses.
+Structure-based assertions pass regardless of whether the response comes from a scenario or from the schema.</p>
+<p>If you need to test how your client handles a specific value, that belongs in a unit test for the parsing logic -- not in a contract test against the mock server.</p>
+<hr />
 <h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
 <ul>
 <li>The mock server processes each request in three steps: validate against the schema, match against scenarios, fall back to a generated response.</li>
@@ -1471,6 +1518,7 @@ These include real database behavior, third-party service quirks, or deployment-
 <li>The mock server is strict by design.
   If it rejects your request, a correctly-implemented real server would too.</li>
 <li>It follows Postel's Law: it validates what the specification defines and ignores undeclared elements.</li>
+<li>Assert structure, not values -- your client should handle any valid response, not just the example data.</li>
 <li>Use the mock server as a test double for narrow integration tests -- fast, reliable, and contract-enforcing.</li>
 </ul>
 <hr />

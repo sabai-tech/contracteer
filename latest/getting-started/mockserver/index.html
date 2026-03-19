@@ -935,6 +935,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#assert-structure-not-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assert Structure, Not Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#debugging" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1281,6 +1292,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#assert-structure-not-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assert Structure, Not Values
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#debugging" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1476,6 +1498,14 @@ It also occurs when multiple 2xx response codes exist without a scenario to disa
 An invalid request with no <code>400</code> response defined also triggers a 418.</p>
 <p>The 418 body explains what went wrong.
 Read it before investigating further -- it usually points directly to the cause.</p>
+<hr />
+<h2 id="assert-structure-not-values">Assert Structure, Not Values<a class="headerlink" href="#assert-structure-not-values" title="Permanent link">&para;</a></h2>
+<p>Contract tests verify that your client handles the documented response structure -- not that the server returns specific data.
+Assert that fields are present and correctly typed.
+Do not assert on example values from the specification.</p>
+<p>A test that asserts a response field equals a specific example value is a functional test, not a contract test.
+Your client must handle any valid response, not just the example data.</p>
+<p>See <a href="../../concepts/testing-your-client/#assert-structure-not-values">Assert Structure, Not Values</a> for the full rationale.</p>
 <hr />
 <h2 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
 <p>When the mock server returns a <code>418</code> diagnostic response, Contracteer logs the request at WARN level automatically.
