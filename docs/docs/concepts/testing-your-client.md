@@ -187,6 +187,41 @@ These include real database behavior, third-party service quirks, or deployment-
 
 ---
 
+## Assert Structure, Not Values
+
+A contract test verifies that your client respects the contract -- it sends valid requests and handles the documented response structure.
+It does not verify that the server returns the right data.
+That is a functional test, and mixing the two defeats the purpose of contract testing.
+
+When your client receives a response, assert that it correctly parses the structure: fields are present, types are correct, enums are handled.
+Do not assert that specific values match the OpenAPI examples.
+
+```java
+// Contract test -- asserts structure
+assertThat(musketeer.getName()).isNotNull();
+assertThat(musketeer.getRank()).isIn("CADET", "MUSKETEER", "CAPTAIN");
+
+// Functional test -- depends on specific data
+assertThat(musketeer.getName()).isEqualTo("Athos");
+```
+
+If your test asserts `"Athos"`, it is no longer testing the contract.
+It is testing that the mock server returns the example value -- which is not the client's concern.
+Your client must handle **any** musketeer, not just Athos.
+
+This mirrors the verifier's philosophy.
+The verifier checks that the server returns the right **shape**, not the right **data**.
+Client tests should do the same.
+
+The mock server reinforces this naturally.
+When no scenario matches, it returns random values generated from the schema.
+Value-based assertions would be flaky against these responses.
+Structure-based assertions pass regardless of whether the response comes from a scenario or from the schema.
+
+If you need to test how your client handles a specific value, that belongs in a unit test for the parsing logic -- not in a contract test against the mock server.
+
+---
+
 ## Key Takeaways
 
 - The mock server processes each request in three steps: validate against the schema, match against scenarios, fall back to a generated response.
@@ -194,6 +229,7 @@ These include real database behavior, third-party service quirks, or deployment-
 - The mock server is strict by design.
   If it rejects your request, a correctly-implemented real server would too.
 - It follows Postel's Law: it validates what the specification defines and ignores undeclared elements.
+- Assert structure, not values -- your client should handle any valid response, not just the example data.
 - Use the mock server as a test double for narrow integration tests -- fast, reliable, and contract-enforcing.
 
 ---

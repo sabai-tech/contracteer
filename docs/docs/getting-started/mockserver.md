@@ -192,6 +192,19 @@ Read it before investigating further -- it usually points directly to the cause.
 
 ---
 
+## Assert Structure, Not Values
+
+Contract tests verify that your client handles the documented response structure -- not that the server returns specific data.
+Assert that fields are present and correctly typed.
+Do not assert on example values from the specification.
+
+A test that asserts a response field equals a specific example value is a functional test, not a contract test.
+Your client must handle any valid response, not just the example data.
+
+See [Assert Structure, Not Values](../concepts/testing-your-client.md#assert-structure-not-values) for the full rationale.
+
+---
+
 ## Debugging
 
 When the mock server returns a `418` diagnostic response, Contracteer logs the request at WARN level automatically.
