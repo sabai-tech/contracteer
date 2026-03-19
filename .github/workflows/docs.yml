@@ -34,4 +34,4 @@ jobs:
 
       - name: Deploy latest
         working-directory: docs
-        run: mike deploy --push --update-aliases latest
+        run: mike deploy --push --update-aliases dev latest
