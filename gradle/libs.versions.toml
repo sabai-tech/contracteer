@@ -11,19 +11,19 @@ test-logger = { id = "com.adarshr.test-logger", version.ref = "test-logger" }
 
 [versions]
 
-graalvm = "0.11.4"
-http4k = "5.38.0.0"
-jackson = "2.21.0"
-junit = "5.14.2"
-kotlin = "2.3.10"
+graalvm = "0.11.5"
+http4k = "6.36.0.0"
+jackson = "2.21.1"
+junit = "6.0.3"
+kotlin = "2.3.20"
 kotlin-logging = "8.0.01"
 logback = "1.5.32"
 mockk = "1.14.9"
 mockserver = "5.15.0"
 picocli = "4.7.7"
-rest-assured = "5.5.7"
-spring-boot = "3.5.7"
-swagger = "2.1.38"
+rest-assured = "6.0.0"
+spring-boot = "4.0.3"
+swagger = "2.1.39"
 test-logger = "4.0.0"
 
 [libraries]
