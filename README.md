@@ -51,14 +51,12 @@ Maven:
 Write the test:
 
 ```java
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ContractTest {
 
-    @ContracteerServerPort
-    @LocalServerPort
-    int port;
-
-    @ContracteerTest(openApiDoc = "src/test/resources/openapi.yaml")
+    @ContracteerTest(
+        openApiDoc = "src/test/resources/openapi.yaml",
+        serverPort = 8080
+    )
     void verifyContracts() {
         // Runs before each verification case.
         // Seed test data here.
@@ -67,6 +65,7 @@ class ContractTest {
 ```
 
 Contracteer reads the specification, generates one JUnit test per verification case, and validates that your server responds as documented.
+Works with any server -- Spring Boot, Quarkus, Micronaut, or plain Java.
 
 ### Mock an API (Spring Boot)
 
@@ -140,8 +139,19 @@ The CLI works with any language or stack -- no JVM required.
 
 Contracteer also provides framework-agnostic libraries for programmatic use:
 
-- `contracteer-verifier` -- verify a server from any JVM test framework.
-- `contracteer-mockserver` -- start a mock server from any JVM project.
+- [`contracteer-verifier`](contracteer-verifier/) -- verify a server from any JVM test framework.
+- [`contracteer-mockserver`](contracteer-mockserver/) -- start a mock server from any JVM project.
+
+All modules:
+
+| Module | Description |
+|--------|-------------|
+| [`contracteer-core`](contracteer-core/) | Domain model and OpenAPI extraction engine |
+| [`contracteer-verifier`](contracteer-verifier/) | Programmatic verifier |
+| [`contracteer-verifier-junit`](contracteer-verifier-junit/) | JUnit 5 integration |
+| [`contracteer-mockserver`](contracteer-mockserver/) | Programmatic mock server |
+| [`contracteer-mockserver-spring`](contracteer-mockserver-spring/) | Spring Boot integration |
+| [`contracteer-cli`](contracteer-cli/) | CLI (native binary) |
 
 See the [documentation site](https://sabai-tech.github.io/contracteer) for setup guides.
 
