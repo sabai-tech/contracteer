@@ -9,6 +9,8 @@ repo_name: sabai-tech/contracteer
 
 theme:
   name: material
+  logo: assets/images/contracteer_logo.png
+  favicon: assets/images/favicon.png
   features:
     - navigation.tabs
     - navigation.sections
