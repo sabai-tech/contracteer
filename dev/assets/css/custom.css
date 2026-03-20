@@ -1,3 +1,8 @@
+/* Reduce space between header logo and site name */
+.md-header__topic .md-ellipsis {
+  margin-left: 0.2em;
+}
+
 /* Visual separation between sections */
 h2 {
   margin-top: 2.5em;
