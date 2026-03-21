@@ -49,4 +49,4 @@ mockServer.stop()
 
 ## Documentation
 
-See [Mock an API Programmatically](https://sabai-tech.github.io/contracteer/getting-started/mockserver/) for the full guide -- mock server behavior, the 418 diagnostic, and debugging.
+See [Mock an API Programmatically](https://sabai-tech.github.io/contracteer/latest/getting-started/mockserver/) for the full guide -- mock server behavior, the 418 diagnostic, and debugging.

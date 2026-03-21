@@ -29,4 +29,4 @@ The specification can be a local file path or an HTTP(S) URL.
 
 ## Documentation
 
-See [Use the CLI](https://sabai-tech.github.io/contracteer/getting-started/cli/) for the full guide -- all options, example output, mock server behavior, and a try-it-now example.
+See [Use the CLI](https://sabai-tech.github.io/contracteer/latest/getting-started/cli/) for the full guide -- all options, example output, mock server behavior, and a try-it-now example.

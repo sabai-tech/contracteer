@@ -39,4 +39,4 @@ It accepts a file path, an HTTP(S) URL, or a `classpath:` resource.
 
 ## Documentation
 
-See the [Contracteer documentation](https://sabai-tech.github.io/contracteer) for concepts, getting started guides, and OpenAPI coverage.
+See the [Contracteer documentation](https://sabai-tech.github.io/contracteer/latest/) for concepts, getting started guides, and OpenAPI coverage.

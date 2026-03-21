@@ -56,4 +56,4 @@ assertThat(failures)
 
 ## Documentation
 
-See [Verify Your API Programmatically](https://sabai-tech.github.io/contracteer/getting-started/verifier/) for the full guide -- result interpretation, test data preparation, and debugging.
+See [Verify Your API Programmatically](https://sabai-tech.github.io/contracteer/latest/getting-started/verifier/) for the full guide -- result interpretation, test data preparation, and debugging.

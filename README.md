@@ -11,7 +11,7 @@
 ![Build Status](https://img.shields.io/github/actions/workflow/status/sabai-tech/contracteer/tests.yml?branch=main)
 ![Maven Central](https://img.shields.io/maven-central/v/tech.sabai.contracteer/contracteer-core)
 ![License](https://img.shields.io/github/license/sabai-tech/contracteer)
-[![Documentation](https://img.shields.io/badge/docs-sabai--tech.github.io%2Fcontracteer-blue)](https://sabai-tech.github.io/contracteer)
+[![Documentation](https://img.shields.io/badge/docs-sabai--tech.github.io%2Fcontracteer-blue)](https://sabai-tech.github.io/contracteer/latest/)
 
 Contracteer verifies that your API implementation matches your OpenAPI specification and provides a mock server that behaves exactly as your spec defines.
 Your OpenAPI specification is the single source of truth -- Contracteer turns it into executable tests and a faithful mock.
@@ -159,7 +159,7 @@ All modules:
 | [`contracteer-mockserver-spring`](contracteer-mockserver-spring/) | Spring Boot integration |
 | [`contracteer-cli`](contracteer-cli/) | CLI (native binary) |
 
-See the [documentation site](https://sabai-tech.github.io/contracteer) for setup guides.
+See the [documentation site](https://sabai-tech.github.io/contracteer/latest/) for setup guides.
 
 ## Requirements
 
@@ -168,7 +168,7 @@ See the [documentation site](https://sabai-tech.github.io/contracteer) for setup
 
 ## Documentation
 
-- [Documentation site](https://sabai-tech.github.io/contracteer) -- concepts, getting started guides, and troubleshooting.
+- [Documentation site](https://sabai-tech.github.io/contracteer/latest/) -- concepts, getting started guides, and troubleshooting.
 - [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects demonstrating the specification-as-artifact pattern.
 
 ## Contributing

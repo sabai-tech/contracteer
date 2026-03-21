@@ -46,4 +46,4 @@ Contracteer reads the specification, generates one JUnit test per verification c
 
 ## Documentation
 
-See [Verify Your API with JUnit 5](https://sabai-tech.github.io/contracteer/getting-started/verifier-junit/) for the full guide -- annotation fields, dynamic ports, test data preparation, and debugging.
+See [Verify Your API with JUnit 5](https://sabai-tech.github.io/contracteer/latest/getting-started/verifier-junit/) for the full guide -- annotation fields, dynamic ports, test data preparation, and debugging.

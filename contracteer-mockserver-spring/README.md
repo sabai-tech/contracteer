@@ -49,4 +49,4 @@ The mock server starts automatically with the Spring test context, validates eve
 
 ## Documentation
 
-See [Mock an API with Spring Boot](https://sabai-tech.github.io/contracteer/getting-started/mockserver-spring/) for the full guide -- annotation fields, multiple mock servers, mock server behavior, and debugging.
+See [Mock an API with Spring Boot](https://sabai-tech.github.io/contracteer/latest/getting-started/mockserver-spring/) for the full guide -- annotation fields, multiple mock servers, mock server behavior, and debugging.
