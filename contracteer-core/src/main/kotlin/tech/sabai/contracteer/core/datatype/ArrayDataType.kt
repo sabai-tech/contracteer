@@ -13,6 +13,12 @@ class ArrayDataType private constructor(name: String,
 
   override fun isFullyStructured() = false
 
+  override fun asRequestType(): DataType<List<Any?>> =
+    itemDataType.asRequestType().let { if (it === itemDataType) this else ArrayDataType(name, it, isNullable, allowedValues) }
+
+  override fun asResponseType(): DataType<List<Any?>> =
+    itemDataType.asResponseType().let { if (it === itemDataType) this else ArrayDataType(name, it, isNullable, allowedValues) }
+
   override fun doValidate(value: List<Any?>): Result<List<Any?>> =
     value.accumulateWithIndex { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }.map { value }
 

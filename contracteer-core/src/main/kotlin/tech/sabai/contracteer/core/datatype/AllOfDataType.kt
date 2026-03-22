@@ -23,6 +23,22 @@ class AllOfDataType private constructor(name: String,
 
   override fun isFullyStructured() = true
 
+  override fun asRequestType(): DataType<Map<String, Any?>> =
+    subTypes
+      .map { it.asRequestType() as DataType<Map<String, Any?>> }
+      .let { transformed ->
+        if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
+        else AllOfDataType(name, transformed, isNullable, discriminator, allowedValues)
+      }
+
+  override fun asResponseType(): DataType<Map<String, Any?>> =
+    subTypes
+      .map { it.asResponseType() as DataType<Map<String, Any?>> }
+      .let { transformed ->
+        if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
+        else AllOfDataType(name, transformed, isNullable, discriminator, allowedValues)
+      }
+
   override fun doValidate(value: Map<String, Any?>) =
     validateWithDiscriminator(value)
       .flatMap {

@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.booleanDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.objectDataType
@@ -225,6 +226,149 @@ class ObjectDataTypeTest {
     }
   }
 
+
+  @Test
+  fun `asRequestType removes readOnly properties and adjusts requiredProperties`() {
+    // given
+    val dataType = objectDataType(
+      properties = mapOf("id" to integerDataType(), "name" to stringDataType(), "password" to stringDataType()),
+      requiredProperties = setOf("id", "name", "password"),
+      readOnlyProperties = setOf("id")
+    )
+
+    // when
+    val requestType = dataType.asRequestType() as ObjectDataType
+
+    // then
+    assert(!requestType.properties.containsKey("id"))
+    assert(requestType.properties.containsKey("name"))
+    assert(requestType.properties.containsKey("password"))
+    assert(!requestType.requiredProperties.contains("id"))
+    assert(requestType.requiredProperties.contains("name"))
+  }
+
+  @Test
+  fun `asResponseType removes writeOnly properties and adjusts requiredProperties`() {
+    // given
+    val dataType = objectDataType(
+      properties = mapOf("id" to integerDataType(), "name" to stringDataType(), "password" to stringDataType()),
+      requiredProperties = setOf("id", "name", "password"),
+      writeOnlyProperties = setOf("password")
+    )
+
+    // when
+    val responseType = dataType.asResponseType() as ObjectDataType
+
+    // then
+    assert(responseType.properties.containsKey("id"))
+    assert(responseType.properties.containsKey("name"))
+    assert(!responseType.properties.containsKey("password"))
+    assert(!responseType.requiredProperties.contains("password"))
+    assert(responseType.requiredProperties.contains("id"))
+  }
+
+  @Test
+  fun `asRequestType and asResponseType return this when no readOnly or writeOnly properties`() {
+    // given
+    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+
+    // then
+    assert(dataType.asRequestType() === dataType)
+    assert(dataType.asResponseType() === dataType)
+  }
+
+  @Test
+  fun `request variant randomValue excludes readOnly and response variant excludes writeOnly`() {
+    // given
+    val dataType = objectDataType(
+      properties = mapOf("id" to integerDataType(), "name" to stringDataType(), "password" to stringDataType()),
+      readOnlyProperties = setOf("id"),
+      writeOnlyProperties = setOf("password")
+    )
+
+    // when
+    @Suppress("UNCHECKED_CAST")
+    val requestValue = dataType.asRequestType().randomValue() as Map<String, Any?>
+    @Suppress("UNCHECKED_CAST")
+    val responseValue = dataType.asResponseType().randomValue() as Map<String, Any?>
+
+    // then
+    assert(!requestValue.containsKey("id") && requestValue.containsKey("name") && requestValue.containsKey("password"))
+    assert(responseValue.containsKey("id") && responseValue.containsKey("name") && !responseValue.containsKey("password"))
+  }
+
+  @Test
+  fun `request variant validation succeeds without readOnly required field`() {
+    // given
+    val requestType = objectDataType(
+      properties = mapOf("id" to integerDataType(), "name" to stringDataType()),
+      requiredProperties = setOf("id", "name"),
+      readOnlyProperties = setOf("id")
+    ).asRequestType()
+
+    // when
+    val result = requestType.validate(mapOf("name" to "Athos"))
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `response variant validation succeeds without writeOnly required field`() {
+    // given
+    val responseType = objectDataType(
+      properties = mapOf("password" to stringDataType(), "name" to stringDataType()),
+      requiredProperties = setOf("password", "name"),
+      writeOnlyProperties = setOf("password")
+    ).asResponseType()
+
+    // when
+    val result = responseType.validate(mapOf("name" to "Athos"))
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `asRequestType transforms nested objects recursively`() {
+    // given
+    val address = objectDataType(
+      name = "address",
+      properties = mapOf("id" to integerDataType(), "street" to stringDataType()),
+      readOnlyProperties = setOf("id")
+    )
+    val user = objectDataType(properties = mapOf("address" to address, "name" to stringDataType()))
+
+    // when
+    val requestType = user.asRequestType() as ObjectDataType
+    val addressRequestType = requestType.properties["address"] as ObjectDataType
+
+    // then
+    assert(!addressRequestType.properties.containsKey("id"))
+    assert(addressRequestType.properties.containsKey("street"))
+  }
+
+  @Test
+  fun `asRequestType transforms objects nested inside arrays`() {
+    // given
+    val item = objectDataType(
+      name = "item",
+      properties = mapOf("id" to integerDataType(), "name" to stringDataType()),
+      readOnlyProperties = setOf("id")
+    )
+    val parent = objectDataType(
+      properties = mapOf("items" to arrayDataType(item), "label" to stringDataType())
+    )
+
+    // when
+    val requestType = parent.asRequestType() as ObjectDataType
+    val arrayType = requestType.properties["items"] as ArrayDataType
+    val itemRequestType = arrayType.itemDataType as ObjectDataType
+
+    // then
+    assert(!itemRequestType.properties.containsKey("id"))
+    assert(itemRequestType.properties.containsKey("name"))
+  }
 
   @Nested
   inner class WithEnum {

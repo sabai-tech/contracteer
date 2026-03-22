@@ -18,6 +18,22 @@ class OneOfDataType private constructor(name: String,
   override fun isFullyStructured() =
     subTypes.all { it.isFullyStructured() }
 
+  override fun asRequestType(): DataType<Any> =
+    subTypes
+      .map { it.asRequestType() }
+      .let { transformed ->
+        if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
+        else OneOfDataType(name, transformed, discriminator, isNullable, allowedValues)
+      }
+
+  override fun asResponseType(): DataType<Any> =
+    subTypes
+      .map { it.asResponseType() }
+      .let { transformed ->
+        if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
+        else OneOfDataType(name, transformed, discriminator, isNullable, allowedValues)
+      }
+
   override fun doValidate(value: Any): Result<Any> =
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
 

@@ -155,8 +155,13 @@ The **verifier** validates response elements declared in the specification.
 If your server returns additional fields beyond what the spec declares, the verifier does not fail.
 Those fields are outside the contract's scope.
 
+This tolerance applies when the specification is silent.
+When the specification explicitly declares a constraint, Contracteer enforces it.
+For example, `additionalProperties: false` on a response schema means the verifier rejects responses with extra fields.
+The spec author deliberately restricted the contract.
+
 This tolerance makes contract tests stable across API evolution.
-A server can add new response fields without breaking the verifier.
+A server can add new response fields without breaking the verifier (unless `additionalProperties: false` is declared).
 A client can send additional parameters without breaking the mock server.
 Only changes to what the specification **defines** are caught -- which is exactly what contract tests should detect.
 

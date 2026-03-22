@@ -48,6 +48,13 @@ sealed class DataType<T>(
 
   /** Returns `true` if this type has a fully defined structure (object, allOf, oneOf, anyOf). */
   abstract fun isFullyStructured(): Boolean
+
+  /** Returns a variant suitable for request validation and generation (readOnly properties excluded). */
+  open fun asRequestType(): DataType<T> = this
+
+  /** Returns a variant suitable for response validation and generation (writeOnly properties excluded). */
+  open fun asResponseType(): DataType<T> = this
+
   protected abstract fun doValidate(value: T): Result<T>
   protected abstract fun doRandomValue(): T
 }

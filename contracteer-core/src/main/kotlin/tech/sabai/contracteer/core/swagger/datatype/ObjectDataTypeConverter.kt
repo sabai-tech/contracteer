@@ -31,10 +31,18 @@ internal object ObjectDataTypeConverter {
       .combineResults()
       .flatMap {
         additionalPropertiesDataTypeResult.flatMap { additionalPropertiesDataType ->
+          val readOnlyProps = schema.safeProperties()
+            .filter { (_, propSchema) -> propSchema.readOnly == true }
+            .keys
+          val writeOnlyProps = schema.safeProperties()
+            .filter { (_, propSchema) -> propSchema.writeOnly == true }
+            .keys
           ObjectDataType.create(
             name = schema.name,
             properties = propertyDataTypeResults.mapValues { it.value.value!! },
             requiredProperties = schema.required?.toSet() ?: emptySet(),
+            readOnlyProperties = readOnlyProps,
+            writeOnlyProperties = writeOnlyProps,
             allowAdditionalProperties = allowAdditionalProperties,
             additionalPropertiesDataType = additionalPropertiesDataType,
             isNullable = schema.safeNullable(),

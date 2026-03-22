@@ -28,8 +28,13 @@ object TestFixture {
     isNullable: Boolean = false,
     enum: List<Any?> = emptyList()
   ) = ObjectDataType.create(
-    "object", properties, requiredProperties, allowAdditionalProperties,
-    additionalPropertiesDataType, isNullable, enum
+    name = "object",
+    properties = properties,
+    requiredProperties = requiredProperties,
+    allowAdditionalProperties = allowAdditionalProperties,
+    additionalPropertiesDataType = additionalPropertiesDataType,
+    isNullable = isNullable,
+    enum = enum
   ).value!!
 
   fun parameterSchema(

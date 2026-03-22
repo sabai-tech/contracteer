@@ -163,10 +163,11 @@ It validates what the specification defines and ignores what it does not.
 Response values are not compared to example values.
 The server is free to return any data that satisfies the schema.
 
-**No undeclared fields.**
+**No undeclared fields** (by default).
 If your server returns fields that the specification does not define, the verifier ignores them.
 This follows [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle): validate what is defined, tolerate what is not.
 A server can add new response fields without breaking the verifier.
+However, if the schema declares `additionalProperties: false`, the verifier enforces it -- extra fields are rejected because the constraint is explicitly declared.
 
 **No business logic.**
 A contract test does not verify that the server computed the right result.

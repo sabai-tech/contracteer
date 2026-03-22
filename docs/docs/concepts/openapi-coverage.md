@@ -67,12 +67,12 @@ Only the affected operations or constraints are skipped.
 | `required` (properties) | Object types |
 | `additionalProperties` | Both boolean and typed schema forms |
 | `discriminator` | With `propertyName` and `mapping` on allOf, oneOf, anyOf |
+| `readOnly` / `writeOnly` | readOnly properties excluded from request schemas, writeOnly from response schemas |
 
 ### Not yet supported
 
 | Keyword | Impact |
 |---------|--------|
-| `readOnly` / `writeOnly` | Properties are not filtered by request/response context |
 | `pattern` | No regex validation or generation for string values |
 | `multipleOf` | No divisibility constraint on numbers |
 | `minItems` / `maxItems` | No array length constraints. Generated arrays contain 1-5 items |

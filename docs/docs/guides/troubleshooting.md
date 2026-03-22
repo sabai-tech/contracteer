@@ -64,6 +64,15 @@ Common causes:
 - A required field is missing from the response.
 - The `Content-Type` header does not match the declared media type.
 
+### "Additional properties are not allowed"
+
+**Symptom:** The verifier rejects a response or the mock server rejects a request with "Additional properties are not allowed. Unexpected properties: ..."
+
+**Cause:** The schema declares `additionalProperties: false` and the body contains a field not listed in the schema's `properties`.
+
+**Fix:** Contracteer enforces `additionalProperties: false` as a declared constraint, even though the default behavior is tolerant of extra fields.
+Either add the field to the schema's `properties`, or remove `additionalProperties: false` if the constraint is not intentional.
+
 ### No scenarios created for an operation
 
 **Symptom:** An operation has examples in the specification, but Contracteer does not generate scenario-based verification cases for it.
@@ -113,6 +122,29 @@ Common causes:
 - The `Content-Type` header does not match the declared media type.
 
 Enable DEBUG logging to see the exact request the mock server received.
+
+### Request rejected for sending a readOnly field
+
+**Symptom:** The mock server rejects a request with "Additional properties are not allowed" for a field like `id`.
+
+**Cause:** The field is marked `readOnly: true` in the schema and the schema has `additionalProperties: false`.
+Contracteer excludes `readOnly` properties from the request schema.
+If the client sends a `readOnly` field, it is treated as an unexpected additional property.
+
+**Fix:** Remove the `readOnly` field from your request.
+`readOnly` properties like `id` are server-generated -- they belong in responses, not in requests.
+
+### Verifier fails because a writeOnly field is missing from the response
+
+**Symptom:** The verifier reports a missing required field for a property like `password`.
+
+**Cause:** The field is marked `writeOnly: true` in the schema.
+Contracteer excludes `writeOnly` properties from the response schema.
+If the field is also `required`, the server should not return it and the verifier should not expect it.
+
+**Fix:** This is usually correct behavior.
+If the verifier fails, check that the field is actually marked `writeOnly: true` in your specification.
+If it is, the server should not include it in responses.
 
 ### Response values are random and different on each run
 
@@ -172,8 +204,6 @@ The keyword is silently ignored, which changes validation behavior.
 
 Common examples:
 
-- **`readOnly: true`** on a field like `id` that is also `required`.
-  The mock server rejects requests that omit `id`, even though `readOnly` properties should not be required in requests.
 - **`pattern`** on a string field (e.g., `"^\d{5}$"` for a zip code).
   The verifier sends random strings that don't match the pattern, causing the real server to reject them.
 - **`minItems`** on an array.

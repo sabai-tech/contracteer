@@ -97,7 +97,7 @@ internal class SchemaExtractor(
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
               validateBodySchemaContentType(ContentType(contentType), dataType!!)
-                .map { BodySchema(ContentType(contentType), dataType, body.safeRequired()) }
+                .map { BodySchema(ContentType(contentType), dataType.asRequestType(), body.safeRequired()) }
             }
         }.combineResults()
         .forProperty("body")
@@ -119,7 +119,7 @@ internal class SchemaExtractor(
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
               validateBodySchemaContentType(ContentType(contentType), dataType!!)
-                .map { BodySchema(ContentType(contentType), dataType, mediaType.schema.safeNullable()) }
+                .map { BodySchema(ContentType(contentType), dataType.asResponseType(), mediaType.schema.safeNullable()) }
             }
         }.combineResults()
         .forProperty("body")

@@ -170,6 +170,30 @@ class OperationSchemaExtractionTest {
     assert(arrayOperation.responseFor(200)!!.bodies.single().dataType is ArrayDataType)
   }
 
+  @Test
+  fun `extracts readOnly and writeOnly properties into request and response variants`() {
+    // when
+    val operation = loadSingleOperation("readonly_writeonly.yaml")
+    val requestBody = operation.requestSchema.bodies.single().dataType as ObjectDataType
+    val responseBody = operation.responseFor(201)!!.bodies.single().dataType as ObjectDataType
+
+    // then — request body excludes readOnly, includes writeOnly
+    assert(!requestBody.properties.containsKey("id"))
+    assert(requestBody.properties.containsKey("name"))
+    assert(requestBody.properties.containsKey("password"))
+    assert(!requestBody.requiredProperties.contains("id"))
+    assert(requestBody.requiredProperties.contains("name"))
+    assert(requestBody.requiredProperties.contains("password"))
+
+    // then — response body includes readOnly, excludes writeOnly
+    assert(responseBody.properties.containsKey("id"))
+    assert(responseBody.properties.containsKey("name"))
+    assert(!responseBody.properties.containsKey("password"))
+    assert(responseBody.requiredProperties.contains("id"))
+    assert(responseBody.requiredProperties.contains("name"))
+    assert(!responseBody.requiredProperties.contains("password"))
+  }
+
   // --- Helpers ---
 
   private fun loadSingleOperation(yamlFile: String) =

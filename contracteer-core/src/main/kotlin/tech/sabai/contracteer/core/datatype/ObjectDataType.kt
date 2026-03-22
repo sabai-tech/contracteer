@@ -11,6 +11,8 @@ import tech.sabai.contracteer.core.joinWithQuotes
 class ObjectDataType private constructor(name: String,
                                          val properties: Map<String, DataType<out Any>>,
                                          val requiredProperties: Set<String> = emptySet(),
+                                         val readOnlyProperties: Set<String> = emptySet(),
+                                         val writeOnlyProperties: Set<String> = emptySet(),
                                          val allowAdditionalProperties: Boolean,
                                          val additionalPropertiesDataType: DataType<out Any>?,
                                          isNullable: Boolean,
@@ -28,6 +30,30 @@ class ObjectDataType private constructor(name: String,
 
   override fun doRandomValue() =
     properties.mapValues { it.value.randomValue() }
+
+  override fun asRequestType(): DataType<Map<String, Any?>> {
+    val transformedProperties = properties.minus(readOnlyProperties).mapValues { (_, v) -> v.asRequestType() }
+    return if (readOnlyProperties.isEmpty() && transformedProperties.all { (k, v) -> v === properties[k] }) this
+    else ObjectDataType(name = name,
+                        properties = transformedProperties,
+                        requiredProperties = requiredProperties - readOnlyProperties,
+                        allowAdditionalProperties = allowAdditionalProperties,
+                        additionalPropertiesDataType = additionalPropertiesDataType,
+                        isNullable = isNullable,
+                        allowedValues = allowedValues)
+  }
+
+  override fun asResponseType(): DataType<Map<String, Any?>> {
+    val transformedProperties = properties.minus(writeOnlyProperties).mapValues { (_, v) -> v.asResponseType() }
+    return if (writeOnlyProperties.isEmpty() && transformedProperties.all { (k, v) -> v === properties[k] }) this
+    else ObjectDataType(name = name,
+                        properties = transformedProperties,
+                        requiredProperties = requiredProperties - writeOnlyProperties,
+                        allowAdditionalProperties = allowAdditionalProperties,
+                        additionalPropertiesDataType = additionalPropertiesDataType,
+                        isNullable = isNullable,
+                        allowedValues = allowedValues)
+  }
 
   private fun validateProperties(value: Map<String, Any?>): Result<Map<String, Any>> =
     properties.accumulate { (property, dataType) ->
@@ -56,6 +82,8 @@ class ObjectDataType private constructor(name: String,
       name: String,
       properties: Map<String, DataType<out Any>>,
       requiredProperties: Set<String> = emptySet(),
+      readOnlyProperties: Set<String> = emptySet(),
+      writeOnlyProperties: Set<String> = emptySet(),
       allowAdditionalProperties: Boolean,
       additionalPropertiesDataType: DataType<out Any>? = null,
       isNullable: Boolean,
@@ -66,6 +94,8 @@ class ObjectDataType private constructor(name: String,
       val default = ObjectDataType(name,
                                    properties,
                                    requiredProperties,
+                                   readOnlyProperties,
+                                   writeOnlyProperties,
                                    allowAdditionalProperties,
                                    additionalPropertiesDataType,
                                    isNullable)
@@ -78,6 +108,8 @@ class ObjectDataType private constructor(name: String,
             ObjectDataType(name,
                            properties,
                            requiredProperties,
+                           readOnlyProperties,
+                           writeOnlyProperties,
                            allowAdditionalProperties,
                            additionalPropertiesDataType,
                            isNullable,
