@@ -1404,9 +1404,11 @@ A server that validates its inputs rejects this with a <code>400</code> response
 <h3 id="what-triggers-automatic-400-testing">What triggers automatic 400 testing<a class="headerlink" href="#what-triggers-automatic-400-testing" title="Permanent link">&para;</a></h3>
 <p>Two conditions must be met:</p>
 <ol>
-<li>The operation defines a <code>400</code> response.</li>
+<li>The operation defines a <code>400</code> response, or a <code>default</code> response that acts as a fallback.</li>
 <li>At least one request parameter or request body has a type that can be mutated.</li>
 </ol>
+<p>If no explicit <code>400</code> response is defined but the operation has a <code>default</code> response, Contracteer uses it for automatic 400 testing.
+Many real-world APIs define error responses via <code>default</code> instead of listing each error status code explicitly.</p>
 <h3 id="which-types-can-be-mutated">Which types can be mutated<a class="headerlink" href="#which-types-can-be-mutated" title="Permanent link">&para;</a></h3>
 <p>Not all types can produce a meaningful type mismatch.
 A <code>string</code> parameter accepts any value -- there is no string value that is "not a string."
