@@ -160,7 +160,7 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 |---------|--------|
 | Exact status codes (`200`, `404`, etc.) | Supported |
 | Status code ranges (`2XX`, `4XX`, `5XX`) | Not supported. Planned |
-| `default` response | Not supported. Planned |
+| `default` response | Supported. Used as fallback when a specific status code is not explicitly defined |
 | Response headers | Supported |
 | Response body | Supported |
 | Links | Not supported |

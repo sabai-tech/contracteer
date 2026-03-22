@@ -53,6 +53,16 @@ internal class SchemaExtractor(
       }
     }
 
+  fun extractDefaultResponseSchema(response: ApiResponse): Result<ResponseSchema> =
+    sharedComponents.resolve(response).flatMap { resolved ->
+      val headers = extractResponseHeaderSchemas(resolved!!)
+      val bodies = extractResponseBodySchemas(resolved)
+      if (allAreSuccess(headers, bodies))
+        success(ResponseSchema(headers = headers.value!!, bodies = bodies.value!!))
+      else
+        headers.retypeError<ResponseSchema>() combineWith bodies.retypeError()
+    }
+
   private fun extractPathParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "path" }

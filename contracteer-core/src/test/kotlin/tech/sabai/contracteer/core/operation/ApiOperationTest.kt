@@ -1,0 +1,112 @@
+package tech.sabai.contracteer.core.operation
+
+import org.junit.jupiter.api.Test
+
+class ApiOperationTest {
+
+  private val successResponse = ResponseSchema(headers = emptyList(), bodies = emptyList())
+  private val badRequestResponse = ResponseSchema(headers = emptyList(), bodies = emptyList())
+  private val defaultResponse = ResponseSchema(headers = emptyList(), bodies = emptyList())
+
+  @Test
+  fun `responseFor returns explicit response when defined`() {
+    // given
+    val operation = apiOperation(responses = mapOf(200 to successResponse, 400 to badRequestResponse))
+
+    // then
+    assert(operation.responseFor(200) === successResponse)
+    assert(operation.responseFor(400) === badRequestResponse)
+  }
+
+  @Test
+  fun `responseFor falls back to default when status code is not explicitly defined`() {
+    // given
+    val operation = apiOperation(
+      responses = mapOf(200 to successResponse),
+      defaultResponse = defaultResponse
+    )
+
+    // then
+    assert(operation.responseFor(404) === defaultResponse)
+    assert(operation.responseFor(500) === defaultResponse)
+  }
+
+  @Test
+  fun `responseFor returns explicit response over default`() {
+    // given
+    val operation = apiOperation(
+      responses = mapOf(200 to successResponse),
+      defaultResponse = defaultResponse
+    )
+
+    // then
+    assert(operation.responseFor(200) === successResponse)
+    assert(operation.responseFor(200) !== defaultResponse)
+  }
+
+  @Test
+  fun `responseFor returns null when no explicit response and no default`() {
+    // given
+    val operation = apiOperation(responses = mapOf(200 to successResponse))
+
+    // then
+    assert(operation.responseFor(404) == null)
+  }
+
+  @Test
+  fun `badRequestResponse returns explicit 400 over default`() {
+    // given
+    val operation = apiOperation(
+      responses = mapOf(200 to successResponse, 400 to badRequestResponse),
+      defaultResponse = defaultResponse
+    )
+
+    // then
+    assert(operation.badRequestResponse() === badRequestResponse)
+  }
+
+  @Test
+  fun `badRequestResponse falls back to default when no explicit 400`() {
+    // given
+    val operation = apiOperation(
+      responses = mapOf(200 to successResponse),
+      defaultResponse = defaultResponse
+    )
+
+    // then
+    assert(operation.badRequestResponse() === defaultResponse)
+  }
+
+  @Test
+  fun `badRequestResponse returns null when no explicit 400 and no default`() {
+    // given
+    val operation = apiOperation(responses = mapOf(200 to successResponse))
+
+    // then
+    assert(operation.badRequestResponse() == null)
+  }
+
+  @Test
+  fun `successResponses does not include default`() {
+    // given
+    val operation = apiOperation(
+      responses = mapOf(200 to successResponse),
+      defaultResponse = defaultResponse
+    )
+
+    // then
+    assert(operation.successResponses() == mapOf(200 to successResponse))
+  }
+
+  private fun apiOperation(
+    responses: Map<Int, ResponseSchema> = emptyMap(),
+    defaultResponse: ResponseSchema? = null
+  ) = ApiOperation(
+    path = "/test",
+    method = "get",
+    requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
+    responses = responses,
+    defaultResponse = defaultResponse,
+    scenarios = emptyList()
+  )
+}

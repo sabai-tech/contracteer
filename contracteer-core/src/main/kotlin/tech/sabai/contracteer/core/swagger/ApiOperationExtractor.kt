@@ -42,21 +42,29 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
   ): Result<ApiOperation> {
     val requestSchema = schemaExtractor.extractRequestSchema(operation)
     val responseSchemas = extractResponseSchemas(operation)
+    val defaultResponse = extractDefaultResponse(operation)
     val scenarios = scenarioExtractor.extractScenarios(path, method, operation, requestSchema, responseSchemas)
 
-    return if (requestSchema.isSuccess() && responseSchemas.isSuccess() && scenarios.isSuccess())
-      success(ApiOperation(path, method, requestSchema.value!!, responseSchemas.value!!, scenarios.value!!))
+    return if (requestSchema.isSuccess() && responseSchemas.isSuccess() && scenarios.isSuccess() && defaultResponse.isSuccess())
+      success(ApiOperation(path, method, requestSchema.value!!, responseSchemas.value!!, defaultResponse.value, scenarios.value!!))
     else
       requestSchema.retypeError<ApiOperation>() combineWith
           responseSchemas.retypeError() combineWith
+          defaultResponse.retypeError() combineWith
           scenarios.retypeError()
   }
 
   private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =
     operation.responses
+      .filter { (code, _) -> code != "default" }
       .map { (code, response) -> schemaExtractor.extractResponseSchema(code, response) }
       .combineResults()
       .map { list -> list?.associate { it.first to it.second } ?: emptyMap() }
+
+  private fun extractDefaultResponse(operation: Operation): Result<ResponseSchema?> =
+    operation.responses["default"]
+      ?.let { schemaExtractor.extractDefaultResponseSchema(it) }
+      ?: success(null)
 
   private fun logExtractedOperations(operations: List<ApiOperation>) {
     if (operations.isEmpty()) {

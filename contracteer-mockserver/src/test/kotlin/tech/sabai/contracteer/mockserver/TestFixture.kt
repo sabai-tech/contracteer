@@ -83,5 +83,5 @@ object TestFixture {
     requestSchema: RequestSchema = requestSchema(),
     responses: Map<Int, ResponseSchema> = emptyMap(),
     scenarios: List<Scenario> = emptyList()
-  ) = ApiOperation(path, method, requestSchema, responses, scenarios)
+  ) = ApiOperation(path = path, method = method, requestSchema = requestSchema, responses = responses, scenarios = scenarios)
 }

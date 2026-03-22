@@ -194,6 +194,21 @@ class OperationSchemaExtractionTest {
     assert(!responseBody.requiredProperties.contains("password"))
   }
 
+  @Test
+  fun `extracts default response`() {
+    // when
+    val operation = loadSingleOperation("default_response.yaml")
+
+    // then
+    assert(operation.responseFor(200) != null)
+    assert(operation.defaultResponse != null)
+    val defaultBody = operation.defaultResponse!!.bodies.single()
+    assert(defaultBody.dataType is ObjectDataType)
+    val properties = (defaultBody.dataType as ObjectDataType).properties
+    assert(properties.containsKey("error"))
+    assert(properties.containsKey("details"))
+  }
+
   // --- Helpers ---
 
   private fun loadSingleOperation(yamlFile: String) =

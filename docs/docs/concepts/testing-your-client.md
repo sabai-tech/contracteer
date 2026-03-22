@@ -59,8 +59,8 @@ It checks that required parameters are present and that values match the declare
 
 If the request is invalid:
 
-- If the operation defines a `400` response, the mock server returns `400` with a body generated from the 400 response schema.
-- If no `400` response is defined, the mock server returns `418` with a diagnostic message explaining what failed.
+- If the operation defines a `400` response (or a `default` response), the mock server returns `400` with a body generated from that response schema.
+- If neither a `400` nor a `default` response is defined, the mock server returns `418` with a diagnostic message explaining what failed.
 
 `GET /musketeers/abc` sends a string where `id` expects an integer.
 The operation defines a `400` response, so the mock server returns `400` with a ProblemDetail body.
@@ -114,7 +114,7 @@ The mock server returns 418 in four situations:
 
 | Situation | What the 418 body tells you |
 |-----------|----------------------------|
-| Request is invalid, no `400` response defined | Which validation rules the request violated |
+| Request is invalid, no `400` or `default` response defined | Which validation rules the request violated |
 | Multiple scenarios match the request | Which scenarios matched, so you can make your examples more specific |
 | Multiple 2xx response status codes, no scenario to disambiguate | Which status codes are defined, and that you need scenarios |
 | Multiple response content types, no `Accept` header to disambiguate | Which content types are available |
