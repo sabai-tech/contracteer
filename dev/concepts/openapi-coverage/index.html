@@ -1519,6 +1519,10 @@ Only the affected operations or constraints are skipped.</p>
 <td><code>discriminator</code></td>
 <td>With <code>propertyName</code> and <code>mapping</code> on allOf, oneOf, anyOf</td>
 </tr>
+<tr>
+<td><code>readOnly</code> / <code>writeOnly</code></td>
+<td>readOnly properties excluded from request schemas, writeOnly from response schemas</td>
+</tr>
 </tbody>
 </table>
 <h3 id="not-yet-supported">Not yet supported<a class="headerlink" href="#not-yet-supported" title="Permanent link">&para;</a></h3>
@@ -1530,10 +1534,6 @@ Only the affected operations or constraints are skipped.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><code>readOnly</code> / <code>writeOnly</code></td>
-<td>Properties are not filtered by request/response context</td>
-</tr>
 <tr>
 <td><code>pattern</code></td>
 <td>No regex validation or generation for string values</td>

@@ -1059,6 +1059,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#additional-properties-are-not-allowed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Additional properties are not allowed"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#no-scenarios-created-for-an-operation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1102,6 +1113,28 @@
     <span class="md-ellipsis">
       
         Getting 400 when expecting 200
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-rejected-for-sending-a-readonly-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request rejected for sending a readOnly field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifier-fails-because-a-writeonly-field-is-missing-from-the-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifier fails because a writeOnly field is missing from the response
       
     </span>
   </a>
@@ -1306,6 +1339,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#additional-properties-are-not-allowed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "Additional properties are not allowed"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#no-scenarios-created-for-an-operation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1349,6 +1393,28 @@
     <span class="md-ellipsis">
       
         Getting 400 when expecting 200
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#request-rejected-for-sending-a-readonly-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request rejected for sending a readOnly field
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifier-fails-because-a-writeonly-field-is-missing-from-the-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifier fails because a writeOnly field is missing from the response
       
     </span>
   </a>
@@ -1515,6 +1581,11 @@ Common causes:</p>
 <li>A required field is missing from the response.</li>
 <li>The <code>Content-Type</code> header does not match the declared media type.</li>
 </ul>
+<h3 id="additional-properties-are-not-allowed">"Additional properties are not allowed"<a class="headerlink" href="#additional-properties-are-not-allowed" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The verifier rejects a response or the mock server rejects a request with "Additional properties are not allowed. Unexpected properties: ..."</p>
+<p><strong>Cause:</strong> The schema declares <code>additionalProperties: false</code> and the body contains a field not listed in the schema's <code>properties</code>.</p>
+<p><strong>Fix:</strong> Contracteer enforces <code>additionalProperties: false</code> as a declared constraint, even though the default behavior is tolerant of extra fields.
+Either add the field to the schema's <code>properties</code>, or remove <code>additionalProperties: false</code> if the constraint is not intentional.</p>
 <h3 id="no-scenarios-created-for-an-operation">No scenarios created for an operation<a class="headerlink" href="#no-scenarios-created-for-an-operation" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> An operation has examples in the specification, but Contracteer does not generate scenario-based verification cases for it.</p>
 <p><strong>Cause:</strong> The example keys exist only on the request side or only on the response side.
@@ -1551,6 +1622,21 @@ Common causes:</p>
 <li>The <code>Content-Type</code> header does not match the declared media type.</li>
 </ul>
 <p>Enable DEBUG logging to see the exact request the mock server received.</p>
+<h3 id="request-rejected-for-sending-a-readonly-field">Request rejected for sending a readOnly field<a class="headerlink" href="#request-rejected-for-sending-a-readonly-field" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The mock server rejects a request with "Additional properties are not allowed" for a field like <code>id</code>.</p>
+<p><strong>Cause:</strong> The field is marked <code>readOnly: true</code> in the schema and the schema has <code>additionalProperties: false</code>.
+Contracteer excludes <code>readOnly</code> properties from the request schema.
+If the client sends a <code>readOnly</code> field, it is treated as an unexpected additional property.</p>
+<p><strong>Fix:</strong> Remove the <code>readOnly</code> field from your request.
+<code>readOnly</code> properties like <code>id</code> are server-generated -- they belong in responses, not in requests.</p>
+<h3 id="verifier-fails-because-a-writeonly-field-is-missing-from-the-response">Verifier fails because a writeOnly field is missing from the response<a class="headerlink" href="#verifier-fails-because-a-writeonly-field-is-missing-from-the-response" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The verifier reports a missing required field for a property like <code>password</code>.</p>
+<p><strong>Cause:</strong> The field is marked <code>writeOnly: true</code> in the schema.
+Contracteer excludes <code>writeOnly</code> properties from the response schema.
+If the field is also <code>required</code>, the server should not return it and the verifier should not expect it.</p>
+<p><strong>Fix:</strong> This is usually correct behavior.
+If the verifier fails, check that the field is actually marked <code>writeOnly: true</code> in your specification.
+If it is, the server should not include it in responses.</p>
 <h3 id="response-values-are-random-and-different-on-each-run">Response values are random and different on each run<a class="headerlink" href="#response-values-are-random-and-different-on-each-run" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The mock server returns valid responses, but the values change on every request.</p>
 <p><strong>Cause:</strong> The request does not match any scenario.
@@ -1592,8 +1678,6 @@ See <a href="../../concepts/scenarios/">Creating Scenarios</a> for the correct p
 The keyword is silently ignored, which changes validation behavior.</p>
 <p>Common examples:</p>
 <ul>
-<li><strong><code>readOnly: true</code></strong> on a field like <code>id</code> that is also <code>required</code>.
-  The mock server rejects requests that omit <code>id</code>, even though <code>readOnly</code> properties should not be required in requests.</li>
 <li><strong><code>pattern</code></strong> on a string field (e.g., <code>"^\d{5}$"</code> for a zip code).
   The verifier sends random strings that don't match the pattern, causing the real server to reject them.</li>
 <li><strong><code>minItems</code></strong> on an array.
