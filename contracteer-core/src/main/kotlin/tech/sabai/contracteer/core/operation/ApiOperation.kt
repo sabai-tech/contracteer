@@ -20,17 +20,20 @@ data class ApiOperation(
   val method: String,
   val requestSchema: RequestSchema,
   internal val responses: Map<Int, ResponseSchema>,
+  internal val classResponses: Map<Int, ResponseSchema> = emptyMap(),
   internal val defaultResponse: ResponseSchema? = null,
   val scenarios: List<Scenario>
 ) {
-  /** Returns the response schema for the given [statusCode], falling back to [defaultResponse] if not explicitly defined. */
-  fun responseFor(statusCode: Int): ResponseSchema? = responses[statusCode] ?: defaultResponse
+  /** Returns the response schema for the given [statusCode], falling back to class response then [defaultResponse]. */
+  fun responseFor(statusCode: Int): ResponseSchema? =
+    responses[statusCode] ?: classResponses[statusCode / 100] ?: defaultResponse
 
   /** Returns all 2xx response schemas, keyed by status code. */
   fun successResponses(): Map<Int, ResponseSchema> = responses.filterKeys { it in 200..299 }
 
-  /** Returns the 400 Bad Request response schema, falling back to [defaultResponse] if not explicitly defined. */
-  fun badRequestResponse(): ResponseSchema? = responses[400] ?: defaultResponse
+  /** Returns the 400 Bad Request response schema, falling back to class response then [defaultResponse]. */
+  fun badRequestResponse(): ResponseSchema? =
+    responses[400] ?: classResponses[4] ?: defaultResponse
 
   /** Returns true if at least one response schema is defined. */
   fun hasResponses(): Boolean = responses.isNotEmpty()

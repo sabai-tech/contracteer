@@ -53,7 +53,7 @@ internal class SchemaExtractor(
       }
     }
 
-  fun extractDefaultResponseSchema(response: ApiResponse): Result<ResponseSchema> =
+  fun extractResponseSchema(response: ApiResponse): Result<ResponseSchema> =
     sharedComponents.resolve(response).flatMap { resolved ->
       val headers = extractResponseHeaderSchemas(resolved!!)
       val bodies = extractResponseBodySchemas(resolved)

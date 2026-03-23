@@ -185,7 +185,7 @@ The 418 is not a status code from your API -- it is Contracteer telling you that
 
 This happens when multiple scenarios match the same request.
 It also occurs when multiple 2xx response codes exist without a scenario to disambiguate.
-An invalid request with no `400` or `default` response defined also triggers a 418.
+An invalid request with no `400`, `4XX`, or `default` response defined also triggers a 418.
 
 The 418 body explains what went wrong.
 Read it before investigating further -- it usually points directly to the cause.

@@ -159,8 +159,8 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 | Feature | Status |
 |---------|--------|
 | Exact status codes (`200`, `404`, etc.) | Supported |
-| Status code ranges (`2XX`, `4XX`, `5XX`) | Not supported. Planned |
-| `default` response | Supported. Used as fallback when a specific status code is not explicitly defined |
+| Status code ranges (`2XX`, `4XX`, `5XX`) | Supported. Used as fallback when exact status code is not defined |
+| `default` response | Supported. Used as fallback when neither an exact status code nor a status code range is defined |
 | Response headers | Supported |
 | Response body | Supported |
 | Links | Not supported |

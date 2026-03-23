@@ -105,11 +105,11 @@ A server that validates its inputs rejects this with a `400` response.
 
 Two conditions must be met:
 
-1. The operation defines a `400` response, or a `default` response that acts as a fallback.
+1. The operation defines a `400` response, a `4XX` class response, or a `default` response.
 2. At least one request parameter or request body has a type that can be mutated.
 
-If no explicit `400` response is defined but the operation has a `default` response, Contracteer uses it for automatic 400 testing.
-Many real-world APIs define error responses via `default` instead of listing each error status code explicitly.
+Contracteer resolves the 400 response schema using the following priority: exact `400` → `4XX` class → `default`.
+Many real-world APIs define error responses via `4XX` or `default` instead of listing each error status code explicitly.
 
 ### Which types can be mutated
 

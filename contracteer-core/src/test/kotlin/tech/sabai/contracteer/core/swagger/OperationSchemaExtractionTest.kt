@@ -209,6 +209,21 @@ class OperationSchemaExtractionTest {
     assert(properties.containsKey("details"))
   }
 
+  @Test
+  fun `extracts status code class response`() {
+    // when
+    val operation = loadSingleOperation("status_code_class_response.yaml")
+
+    // then
+    assert(operation.responseFor(200) != null)
+    assert(operation.badRequestResponse() != null)
+    assert(operation.responseFor(404) != null)
+    assert(operation.responseFor(404) === operation.responseFor(403))
+    val classBody = operation.responseFor(404)!!.bodies.single()
+    assert(classBody.dataType is ObjectDataType)
+    assert((classBody.dataType as ObjectDataType).properties.containsKey("error"))
+  }
+
   // --- Helpers ---
 
   private fun loadSingleOperation(yamlFile: String) =

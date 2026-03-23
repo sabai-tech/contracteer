@@ -4,12 +4,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
-import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.operation.ApiOperation
-import tech.sabai.contracteer.core.operation.RequestSchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
@@ -42,29 +40,49 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
   ): Result<ApiOperation> {
     val requestSchema = schemaExtractor.extractRequestSchema(operation)
     val responseSchemas = extractResponseSchemas(operation)
+    val classResponses = extractClassResponses(operation)
     val defaultResponse = extractDefaultResponse(operation)
     val scenarios = scenarioExtractor.extractScenarios(path, method, operation, requestSchema, responseSchemas)
 
-    return if (requestSchema.isSuccess() && responseSchemas.isSuccess() && scenarios.isSuccess() && defaultResponse.isSuccess())
-      success(ApiOperation(path, method, requestSchema.value!!, responseSchemas.value!!, defaultResponse.value, scenarios.value!!))
+    return if (requestSchema.isSuccess() && responseSchemas.isSuccess() && classResponses.isSuccess() && defaultResponse.isSuccess() && scenarios.isSuccess())
+      success(ApiOperation(path,
+                           method,
+                           requestSchema.value!!,
+                           responseSchemas.value!!,
+                           classResponses.value!!,
+                           defaultResponse.value,
+                           scenarios.value!!))
     else
       requestSchema.retypeError<ApiOperation>() combineWith
           responseSchemas.retypeError() combineWith
+          classResponses.retypeError() combineWith
           defaultResponse.retypeError() combineWith
           scenarios.retypeError()
   }
 
   private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =
     operation.responses
-      .filter { (code, _) -> code != "default" }
+      .filter { (code, _) -> code != "default" && !isClassCode(code) }
       .map { (code, response) -> schemaExtractor.extractResponseSchema(code, response) }
+      .combineResults()
+      .map { list -> list?.associate { it.first to it.second } ?: emptyMap() }
+
+  private fun extractClassResponses(operation: Operation): Result<Map<Int, ResponseSchema>> =
+    operation.responses
+      .filter { (code, _) -> isClassCode(code) }
+      .map { (code, response) ->
+        schemaExtractor.extractResponseSchema(response).map { code[0].digitToInt() to it!! }
+      }
       .combineResults()
       .map { list -> list?.associate { it.first to it.second } ?: emptyMap() }
 
   private fun extractDefaultResponse(operation: Operation): Result<ResponseSchema?> =
     operation.responses["default"]
-      ?.let { schemaExtractor.extractDefaultResponseSchema(it) }
-      ?: success(null)
+      ?.let { schemaExtractor.extractResponseSchema(it) }
+    ?: success(null)
+
+  private fun isClassCode(code: String): Boolean =
+    code.length == 3 && code[0].isDigit() && code.substring(1).uppercase() == "XX"
 
   private fun logExtractedOperations(operations: List<ApiOperation>) {
     if (operations.isEmpty()) {
