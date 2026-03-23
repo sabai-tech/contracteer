@@ -1371,8 +1371,8 @@ It validates every incoming request, returns spec-compliant responses, and rejec
 It checks that required parameters are present and that values match the declared types.</p>
 <p>If the request is invalid:</p>
 <ul>
-<li>If the operation defines a <code>400</code> response (or a <code>default</code> response), the mock server returns <code>400</code> with a body generated from that response schema.</li>
-<li>If neither a <code>400</code> nor a <code>default</code> response is defined, the mock server returns <code>418</code> with a diagnostic message explaining what failed.</li>
+<li>If the operation defines a <code>400</code> response, a <code>4XX</code> class response, or a <code>default</code> response, the mock server returns <code>400</code> with a body generated from that response schema.</li>
+<li>If none of these are defined, the mock server returns <code>418</code> with a diagnostic message explaining what failed.</li>
 </ul>
 <p><code>GET /musketeers/abc</code> sends a string where <code>id</code> expects an integer.
 The operation defines a <code>400</code> response, so the mock server returns <code>400</code> with a ProblemDetail body.</p>
@@ -1415,7 +1415,7 @@ The response body explains what went wrong.</p>
 </thead>
 <tbody>
 <tr>
-<td>Request is invalid, no <code>400</code> or <code>default</code> response defined</td>
+<td>Request is invalid, no <code>400</code>, <code>4XX</code>, or <code>default</code> response defined</td>
 <td>Which validation rules the request violated</td>
 </tr>
 <tr>

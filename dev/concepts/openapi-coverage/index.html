@@ -1777,11 +1777,11 @@ Only the affected operations or constraints are skipped.</p>
 </tr>
 <tr>
 <td>Status code ranges (<code>2XX</code>, <code>4XX</code>, <code>5XX</code>)</td>
-<td>Not supported. Planned</td>
+<td>Supported. Used as fallback when exact status code is not defined</td>
 </tr>
 <tr>
 <td><code>default</code> response</td>
-<td>Supported. Used as fallback when a specific status code is not explicitly defined</td>
+<td>Supported. Used as fallback when neither an exact status code nor a status code range is defined</td>
 </tr>
 <tr>
 <td>Response headers</td>
