@@ -726,6 +726,34 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#string-constraint-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String constraint precedence
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="String constraint precedence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-support-and-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern support and limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1262,6 +1290,34 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#string-constraint-precedence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        String constraint precedence
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="String constraint precedence">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pattern-support-and-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern support and limitations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1523,6 +1579,10 @@ Only the affected operations or constraints are skipped.</p>
 <td><code>readOnly</code> / <code>writeOnly</code></td>
 <td>readOnly properties excluded from request schemas, writeOnly from response schemas</td>
 </tr>
+<tr>
+<td><code>pattern</code></td>
+<td>Plain strings only. Ignored when <code>format</code> is set. Overrides <code>minLength</code>/<code>maxLength</code></td>
+</tr>
 </tbody>
 </table>
 <h3 id="not-yet-supported">Not yet supported<a class="headerlink" href="#not-yet-supported" title="Permanent link">&para;</a></h3>
@@ -1534,10 +1594,6 @@ Only the affected operations or constraints are skipped.</p>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><code>pattern</code></td>
-<td>No regex validation or generation for string values</td>
-</tr>
 <tr>
 <td><code>multipleOf</code></td>
 <td>No divisibility constraint on numbers</td>
@@ -1564,6 +1620,29 @@ Only the affected operations or constraints are skipped.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="string-constraint-precedence">String constraint precedence<a class="headerlink" href="#string-constraint-precedence" title="Permanent link">&para;</a></h3>
+<p>OpenAPI allows combining <code>format</code>, <code>pattern</code>, <code>minLength</code>, and <code>maxLength</code> on the same string schema.
+Contracteer applies them in a strict precedence order for both validation and random value generation:</p>
+<ol>
+<li><strong><code>format</code></strong> (email, uuid, date, date-time, byte, binary) -- the format defines the type entirely.
+   <code>pattern</code> is always ignored with a warning.
+   <code>minLength</code>/<code>maxLength</code> are supported by email, base64, and binary formats, but ignored by uuid, date, and date-time.</li>
+<li><strong><code>pattern</code></strong> -- the regex pattern defines the constraint.
+   <code>minLength</code> and <code>maxLength</code> are ignored with a warning.</li>
+<li><strong><code>minLength</code> / <code>maxLength</code></strong> -- used only when neither <code>format</code> nor <code>pattern</code> is set.</li>
+</ol>
+<p>This deviates from the OpenAPI specification, which treats all keywords as independent constraints applied simultaneously.
+Contracteer takes this approach because generating a random value that satisfies both a regex pattern and a length range is not reliably possible.
+Validation and generation use the same constraint to ensure consistency: what Contracteer validates is what it can generate.</p>
+<p><code>enum</code> is always validated against the active constraint at extraction time.
+If all enum values satisfy the active constraint, the specification is accepted.
+If any enum value violates it, the specification is rejected.</p>
+<h4 id="pattern-support-and-limitations">Pattern support and limitations<a class="headerlink" href="#pattern-support-and-limitations" title="Permanent link">&para;</a></h4>
+<p>Random value generation for patterns uses the <a href="https://github.com/curious-odd-man/rgxgen">RgxGen</a> library.
+RgxGen supports most common regex features, but some patterns do not generate correctly:
+- Lookaheads and lookbehinds are not supported
+- Very complex patterns may fail to generate or produce invalid values</p>
+<p>If Contracteer generates invalid values for your pattern, use <code>enum</code> values instead, or provide explicit <code>examples</code> in your specification.</p>
 <hr />
 <h2 id="schema-composition">Schema Composition<a class="headerlink" href="#schema-composition" title="Permanent link">&para;</a></h2>
 <table>

@@ -1192,6 +1192,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#warning-about-ignored-pattern-or-length-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning about ignored pattern or length constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unexpected-behavior-from-unsupported-schema-keywords" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1472,6 +1483,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#warning-about-ignored-pattern-or-length-constraints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warning about ignored pattern or length constraints
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unexpected-behavior-from-unsupported-schema-keywords" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1672,14 +1694,20 @@ Contracteer reads examples from parameters and media types, not from schema prop
 </code></pre></div>
 <p><strong>Fix:</strong> Move examples to the parameter or media type level using the <code>examples</code> or <code>example</code> keyword.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for the correct placement.</p>
+<h3 id="warning-about-ignored-pattern-or-length-constraints">Warning about ignored pattern or length constraints<a class="headerlink" href="#warning-about-ignored-pattern-or-length-constraints" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Contracteer logs a warning like "pattern ignored because format takes precedence" or "minLength/maxLength ignored because pattern takes precedence."</p>
+<p><strong>Cause:</strong> Your schema combines constraints that Contracteer applies in precedence order: <code>format</code> &gt; <code>pattern</code> &gt; <code>minLength</code>/<code>maxLength</code>.
+The lower-priority constraint is ignored for both validation and generation.</p>
+<p><strong>Fix:</strong> This is intentional.
+See <a href="../../concepts/openapi-coverage/#string-constraint-precedence">String constraint precedence</a> for the full explanation.
+If you need the pattern to apply, remove the <code>format</code>.
+If you need length constraints to apply, remove the <code>pattern</code>.</p>
 <h3 id="unexpected-behavior-from-unsupported-schema-keywords">Unexpected behavior from unsupported schema keywords<a class="headerlink" href="#unexpected-behavior-from-unsupported-schema-keywords" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.</p>
 <p><strong>Cause:</strong> Your specification uses an OpenAPI schema keyword that Contracteer does not yet support.
 The keyword is silently ignored, which changes validation behavior.</p>
 <p>Common examples:</p>
 <ul>
-<li><strong><code>pattern</code></strong> on a string field (e.g., <code>"^\d{5}$"</code> for a zip code).
-  The verifier sends random strings that don't match the pattern, causing the real server to reject them.</li>
 <li><strong><code>minItems</code></strong> on an array.
   The verifier may send an empty array when the server expects at least one item.</li>
 </ul>
