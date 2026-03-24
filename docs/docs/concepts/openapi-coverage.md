@@ -68,18 +68,47 @@ Only the affected operations or constraints are skipped.
 | `additionalProperties` | Both boolean and typed schema forms |
 | `discriminator` | With `propertyName` and `mapping` on allOf, oneOf, anyOf |
 | `readOnly` / `writeOnly` | readOnly properties excluded from request schemas, writeOnly from response schemas |
+| `pattern` | Plain strings only. Ignored when `format` is set. Overrides `minLength`/`maxLength` |
 
 ### Not yet supported
 
 | Keyword | Impact |
 |---------|--------|
-| `pattern` | No regex validation or generation for string values |
 | `multipleOf` | No divisibility constraint on numbers |
 | `minItems` / `maxItems` | No array length constraints. Generated arrays contain 1-5 items |
 | `uniqueItems` | No uniqueness enforcement on array items |
 | `minProperties` / `maxProperties` | No property count constraints on objects |
 | `default` (property values) | Default values are not used for generation |
 | `not` | Schema negation is not supported |
+
+### String constraint precedence
+
+OpenAPI allows combining `format`, `pattern`, `minLength`, and `maxLength` on the same string schema.
+Contracteer applies them in a strict precedence order for both validation and random value generation:
+
+1. **`format`** (email, uuid, date, date-time, byte, binary) -- the format defines the type entirely.
+   `pattern` is always ignored with a warning.
+   `minLength`/`maxLength` are supported by email, base64, and binary formats, but ignored by uuid, date, and date-time.
+2. **`pattern`** -- the regex pattern defines the constraint.
+   `minLength` and `maxLength` are ignored with a warning.
+3. **`minLength` / `maxLength`** -- used only when neither `format` nor `pattern` is set.
+
+This deviates from the OpenAPI specification, which treats all keywords as independent constraints applied simultaneously.
+Contracteer takes this approach because generating a random value that satisfies both a regex pattern and a length range is not reliably possible.
+Validation and generation use the same constraint to ensure consistency: what Contracteer validates is what it can generate.
+
+`enum` is always validated against the active constraint at extraction time.
+If all enum values satisfy the active constraint, the specification is accepted.
+If any enum value violates it, the specification is rejected.
+
+#### Pattern support and limitations
+
+Random value generation for patterns uses the [RgxGen](https://github.com/curious-odd-man/rgxgen) library.
+RgxGen supports most common regex features, but some patterns do not generate correctly:
+- Lookaheads and lookbehinds are not supported
+- Very complex patterns may fail to generate or produce invalid values
+
+If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in your specification.
 
 ---
 

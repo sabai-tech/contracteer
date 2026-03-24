@@ -22,6 +22,7 @@ mockk = "1.14.9"
 mockserver = "5.15.0"
 picocli = "4.7.7"
 rest-assured = "5.5.7"
+rgxgen = "3.1"
 spring-boot = "3.5.7"
 swagger = "2.1.38"
 test-logger = "4.0.0"
@@ -41,6 +42,7 @@ mockserver-netty = { module = "org.mock-server:mockserver-netty-no-dependencies"
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
+rgxgen = { module = "com.github.curious-odd-man:rgxgen", version.ref = "rgxgen" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 spring-boot-test = { module = "org.springframework.boot:spring-boot-test" }
 spring-test = { module = "org.springframework:spring-test" }

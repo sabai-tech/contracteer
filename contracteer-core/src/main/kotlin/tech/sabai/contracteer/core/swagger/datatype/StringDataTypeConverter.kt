@@ -13,5 +13,6 @@ internal object StringDataTypeConverter {
       isNullable = schema.safeNullable(),
       minLength = schema.minLength,
       maxLength = schema.maxLength,
+      pattern = schema.pattern,
       enum = schema.safeEnum())
 }

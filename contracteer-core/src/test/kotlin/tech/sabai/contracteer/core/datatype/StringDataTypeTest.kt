@@ -109,6 +109,108 @@ class StringDataTypeTest {
   }
 
   @Nested
+  inner class WithPattern {
+
+    @Test
+    fun `validates a string matching the pattern`() {
+      // given
+      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
+
+      // when
+      val result = dataType.validate("AB-1234")
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `does not validate a string not matching the pattern`() {
+      // given
+      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
+
+      // when
+      val result = dataType.validate("invalid")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates random value matching the pattern`() {
+      // given
+      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
+
+      // when
+      val value = dataType.randomValue()
+
+      // then
+      assert(Regex("^[A-Z]{2}-\\d{4}$").matches(value))
+    }
+
+    @Test
+    fun `pattern takes precedence over length constraints for validation`() {
+      // given
+      val dataType = stringDataType(pattern = "^[A-Z]{2}$", minLength = 5, maxLength = 10)
+
+      // when
+      val result = dataType.validate("AB")
+
+      // then — pattern matches, length ignored
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `pattern takes precedence over length constraints for generation`() {
+      // given
+      val dataType = stringDataType(pattern = "^\\d{3}$", minLength = 10)
+
+      // when
+      val value = dataType.randomValue()
+
+      // then — generated from pattern, not length
+      assert(Regex("^\\d{3}$").matches(value))
+    }
+
+    @Test
+    fun `creation fails when pattern is not a valid regex`() {
+      // when
+      val result = StringDataType.create(
+        name = "string",
+        openApiType = "string",
+        pattern = "[invalid(")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `enum values are validated against pattern at creation`() {
+      // when
+      val result = StringDataType.create(
+        name = "string",
+        openApiType = "string",
+        pattern = "^[A-Z]+$",
+        enum = listOf("ACTIVE", "inactive"))
+
+      // then — "inactive" fails pattern validation
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `enum takes precedence over pattern for generation`() {
+      // given
+      val enum = listOf("AB-1234", "CD-5678")
+      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$", enum = enum)
+
+      // when
+      val value = dataType.randomValue()
+
+      // then
+      assert(enum.contains(value))
+    }
+  }
+
+  @Nested
   inner class WithLengthRange {
 
     @Test

@@ -95,8 +95,9 @@ object TestFixture {
                      isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),
                      minLength: Int? = null,
-                     maxLength: Int? = null) =
-    StringDataType.create(name, "string", isNullable, enum, minLength, maxLength).value!!
+                     maxLength: Int? = null,
+                     pattern: String? = null) =
+    StringDataType.create(name, "string", isNullable, enum, minLength, maxLength, pattern).value!!
 
   fun uuidDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =

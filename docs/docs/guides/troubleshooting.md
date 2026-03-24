@@ -195,6 +195,18 @@ schema:
 **Fix:** Move examples to the parameter or media type level using the `examples` or `example` keyword.
 See [Creating Scenarios](../concepts/scenarios.md) for the correct placement.
 
+### Warning about ignored pattern or length constraints
+
+**Symptom:** Contracteer logs a warning like "pattern ignored because format takes precedence" or "minLength/maxLength ignored because pattern takes precedence."
+
+**Cause:** Your schema combines constraints that Contracteer applies in precedence order: `format` > `pattern` > `minLength`/`maxLength`.
+The lower-priority constraint is ignored for both validation and generation.
+
+**Fix:** This is intentional.
+See [String constraint precedence](../concepts/openapi-coverage.md#string-constraint-precedence) for the full explanation.
+If you need the pattern to apply, remove the `format`.
+If you need length constraints to apply, remove the `pattern`.
+
 ### Unexpected behavior from unsupported schema keywords
 
 **Symptom:** Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.
@@ -204,8 +216,6 @@ The keyword is silently ignored, which changes validation behavior.
 
 Common examples:
 
-- **`pattern`** on a string field (e.g., `"^\d{5}$"` for a zip code).
-  The verifier sends random strings that don't match the pattern, causing the real server to reject them.
 - **`minItems`** on an array.
   The verifier may send an empty array when the server expects at least one item.
 

@@ -224,6 +224,17 @@ class OperationSchemaExtractionTest {
     assert((classBody.dataType as ObjectDataType).properties.containsKey("error"))
   }
 
+  @Test
+  fun `extracts string pattern`() {
+    // when
+    val operation = loadSingleOperation("string_pattern.yaml")
+
+    // then
+    val requestBody = operation.requestSchema.bodies.single().dataType as ObjectDataType
+    val codeType = requestBody.properties["code"] as StringDataType
+    assert(codeType.pattern == "^[A-Z]{2}-\\d{4}$")
+  }
+
   // --- Helpers ---
 
   private fun loadSingleOperation(yamlFile: String) =
