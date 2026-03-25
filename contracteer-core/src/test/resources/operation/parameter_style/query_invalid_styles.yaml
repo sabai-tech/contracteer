@@ -1,0 +1,49 @@
+openapi: 3.0.0
+info:
+  title: Query Parameter Invalid Styles
+  version: '1.0'
+paths:
+  # Invalid: simple style not supported for query parameters
+  /invalid-simple:
+    get:
+      parameters:
+        - in: query
+          name: status
+          style: simple
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: label style not supported for query parameters
+  /invalid-label:
+    get:
+      parameters:
+        - in: query
+          name: status
+          style: label
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: matrix style not supported for query parameters
+  /invalid-matrix:
+    get:
+      parameters:
+        - in: query
+          name: status
+          style: matrix
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success

@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: Cookie Parameter Invalid Styles
+  version: '1.0'
+paths:
+  # Invalid: simple style not supported for cookie parameters
+  /invalid-simple:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: simple
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: label style not supported for cookie parameters
+  /invalid-label:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: label
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: matrix style not supported for cookie parameters
+  /invalid-matrix:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: matrix
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: spaceDelimited style not supported for cookie parameters
+  /invalid-space-delimited:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: spaceDelimited
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: pipeDelimited style not supported for cookie parameters
+  /invalid-pipe-delimited:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: pipeDelimited
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: deepObject style not supported for cookie parameters
+  /invalid-deep-object:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: deepObject
+          schema:
+            type: object
+            properties:
+              color:
+                type: string
+      responses:
+        '200':
+          description: Success

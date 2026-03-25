@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.SimpleStyleCodec
 import java.math.BigDecimal
 
 object TestFixture {
@@ -41,7 +41,7 @@ object TestFixture {
     element: ParameterElement,
     dataType: DataType<out Any>,
     isRequired: Boolean = true
-  ) = ParameterSchema(element, dataType, isRequired, PlainTextSerde)
+  ) = ParameterSchema(element, dataType, isRequired, SimpleStyleCodec(element.name, false))
 
   fun bodySchema(
     contentType: ContentType = ContentType("application/json"),

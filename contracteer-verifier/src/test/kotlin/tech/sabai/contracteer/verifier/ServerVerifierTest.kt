@@ -9,7 +9,7 @@ import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.SimpleStyleCodec
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -29,7 +29,7 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = PlainTextSerde
+            codec = SimpleStyleCodec("id", false)
           )
         ),
         bodies = emptyList()
@@ -118,13 +118,13 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("userId"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = PlainTextSerde
+            codec = SimpleStyleCodec("userId", false)
           ),
           ParameterSchema(
             element = ParameterElement.PathParam("orderId"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = PlainTextSerde
+            codec = SimpleStyleCodec("orderId", false)
           )
         ),
         bodies = emptyList()
@@ -196,7 +196,7 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = PlainTextSerde
+            codec = SimpleStyleCodec("id", false)
           )
         ),
         bodies = emptyList()

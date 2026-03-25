@@ -1,0 +1,67 @@
+openapi: 3.0.0
+info:
+  title: Cookie Parameter Style Tests
+  version: '1.0'
+paths:
+  # Default style (form, explode=true)
+  /items:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Form style, explode=false
+  /form-no-explode:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Form style, explode=true (explicit)
+  /form-explode:
+    get:
+      parameters:
+        - in: cookie
+          name: session
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Object with form style
+  /object-form:
+    get:
+      parameters:
+        - in: cookie
+          name: preferences
+          schema:
+            type: object
+            properties:
+              theme:
+                type: string
+              notifications:
+                type: boolean
+      responses:
+        '200':
+          description: Success

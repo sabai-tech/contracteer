@@ -56,8 +56,8 @@ internal object ResponseValidator {
         !paramSchema.isRequired && !responseHeaders.hasHeader(element.name) -> success()
         paramSchema.isRequired && !responseHeaders.hasHeader(element.name)  -> failure("Response header '${element.name}' is missing")
         else                                                                ->
-          paramSchema.serde
-            .deserialize(responseHeaders.headerValue(element.name), paramSchema.dataType)
+          paramSchema.codec
+            .decode({ key -> responseHeaders.filter { it.first.equals(key, ignoreCase = true) }.mapNotNull { it.second } }, paramSchema.dataType)
             .flatMap { paramSchema.dataType.validate(it) }
             .forProperty(element.name)
             .map { }

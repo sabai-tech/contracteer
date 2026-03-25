@@ -231,7 +231,6 @@ Contracteer produces no verification cases for them.
 Operations are skipped when they use:
 
 - `multipart/form-data`, `application/x-www-form-urlencoded`, or `application/xml` content types.
-- Array or object parameters (path, query, header, cookie).
 
 Contracteer logs a warning for each skipped operation.
 

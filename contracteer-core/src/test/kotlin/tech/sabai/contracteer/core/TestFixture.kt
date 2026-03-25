@@ -1,7 +1,6 @@
 package tech.sabai.contracteer.core
 
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.math.BigDecimal
 
 object TestFixture {
@@ -119,3 +118,18 @@ fun <T> List<T>.assertSingle(): T {
   assert(size == 1) { "Expected single element but got $size" }
   return single()
 }
+
+// StyleCodec test helpers
+fun valueExtractor(vararg entries: Pair<String, List<String>>): (String) -> List<String> {
+  val map = entries.toMap()
+  return { key -> map[key] ?: emptyList() }
+}
+
+fun rgbObjectDataType() = TestFixture.objectDataType(
+  properties = mapOf(
+    "R" to TestFixture.integerDataType(),
+    "G" to TestFixture.integerDataType(),
+    "B" to TestFixture.integerDataType()
+  )
+)
+

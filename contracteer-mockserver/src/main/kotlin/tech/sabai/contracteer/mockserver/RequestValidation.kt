@@ -1,38 +1,28 @@
 package tech.sabai.contracteer.mockserver
 
 import org.http4k.core.Request
-import org.http4k.core.cookie.cookie
-import org.http4k.routing.path
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.operation.BodySchema
-import tech.sabai.contracteer.core.operation.ParameterElement
-import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.core.operation.RequestSchema
 
 internal fun RequestSchema.validate(request: Request): Result<Unit> =
-  pathParameters.validate { request.path(it.name) } andThen
-    { queryParameters.validate { request.query(it.name) } } andThen
-    { headers.validate { request.header(it.name) } } andThen
-    { cookies.validate { request.cookie(it.name)?.value } } andThen
-    { bodies.validateBody(request) }
-
-private fun List<ParameterSchema>.validate(
-  valueExtractor: (ParameterElement) -> String?
-): Result<Unit> =
-  accumulate { paramSchema ->
-    when (val value = valueExtractor(paramSchema.element)) {
-      null if paramSchema.isRequired -> failure(paramSchema.element.name, "is missing")
-      null                           -> success()
-      else                           -> paramSchema.serde
-        .deserialize(value, paramSchema.dataType)
-        .flatMap { paramSchema.dataType.validate(it) }
-        .forProperty(paramSchema.element.name)
-        .map {}
+  parameters.accumulate { paramSchema ->
+    val extractor = request.valueExtractorFor(paramSchema.element)
+    val result = paramSchema.codec.decode(extractor, paramSchema.dataType)
+    when {
+      result.isFailure()                             -> result.retypeError<Unit>().forProperty(paramSchema.element.name)
+      result.value == null && paramSchema.isRequired -> failure(paramSchema.element.name, "is missing")
+      result.value == null                           -> success()
+      else                                           ->
+        paramSchema.dataType
+          .validate(result.value)
+          .forProperty(paramSchema.element.name)
+          .map {}
     }
-  }
+  } andThen { bodies.validateBody(request) }
 
 private fun List<BodySchema>.validateBody(request: Request): Result<Unit> {
   if (isEmpty()) return success()

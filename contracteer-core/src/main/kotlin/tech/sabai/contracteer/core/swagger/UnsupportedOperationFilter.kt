@@ -1,7 +1,6 @@
 package tech.sabai.contracteer.core.swagger
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
@@ -9,11 +8,6 @@ import tech.sabai.contracteer.core.operation.ResponseSchema
 private val logger = KotlinLogging.logger {}
 
 internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? {
-  if (operation.hasUnsupportedParameters()) {
-    logUnsupportedParameters(operation)
-    return null
-  }
-
   val filteredRequestBodies = filterRequestBodies(operation) ?: return null
   val filteredResponses = filterResponseBodies(operation) ?: return null
 
@@ -21,13 +15,6 @@ internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? 
     requestSchema = operation.requestSchema.copy(bodies = filteredRequestBodies),
     responses = filteredResponses
   )
-}
-
-private fun logUnsupportedParameters(operation: ApiOperation) {
-  logger.warn {
-    "Operation '${operation.method} ${operation.path}' has been excluded: " +
-    "parameter schemas of type 'array' or 'object' are not yet supported."
-  }
 }
 
 private fun filterRequestBodies(operation: ApiOperation): List<BodySchema>? {
@@ -81,15 +68,6 @@ private fun filterSingleResponse(
   }
 
   return statusCode to responseSchema.copy(bodies = filteredBodies)
-}
-
-private fun ApiOperation.hasUnsupportedParameters(): Boolean {
-  val requestHasUnsupported =
-    requestSchema.parameters.any { it.dataType.isFullyStructured() || it.dataType is ArrayDataType }
-  val responseHasUnsupported = responses.values
-    .flatMap { it.headers }
-    .any { it.dataType.isFullyStructured() || it.dataType is ArrayDataType }
-  return requestHasUnsupported || responseHasUnsupported
 }
 
 private fun BodySchema.isUnsupportedResponseContentType() =

@@ -37,6 +37,6 @@ internal object ResponseGenerator {
     headerSchemas.fold(this) { response, schema ->
       val header = schema.element as ParameterElement.Header
       val value = scenarioHeaders[header] ?: schema.dataType.randomValue()
-      response.header(header.name, schema.serde.serialize(value))
+      schema.codec.encode(value).fold(response) { resp, (_, headerValue) -> resp.header(header.name, headerValue) }
     }
 }

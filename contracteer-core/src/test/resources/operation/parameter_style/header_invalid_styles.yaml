@@ -1,0 +1,95 @@
+openapi: 3.0.0
+info:
+  title: Header Parameter Invalid Styles
+  version: '1.0'
+paths:
+  # Invalid: form style not supported for header parameters
+  /invalid-form:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: label style not supported for header parameters
+  /invalid-label:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: label
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: matrix style not supported for header parameters
+  /invalid-matrix:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: matrix
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: spaceDelimited style not supported for header parameters
+  /invalid-space-delimited:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: spaceDelimited
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: pipeDelimited style not supported for header parameters
+  /invalid-pipe-delimited:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: pipeDelimited
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Invalid: deepObject style not supported for header parameters
+  /invalid-deep-object:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: deepObject
+          schema:
+            type: object
+            properties:
+              color:
+                type: string
+      responses:
+        '200':
+          description: Success

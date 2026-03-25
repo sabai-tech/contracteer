@@ -56,17 +56,3 @@ paths:
       responses:
         200:
           description: OK
-  /products/{id}:
-    parameters:
-      - in: path
-        name: id
-        required: true
-        schema:
-          type: object
-          properties:
-            id:
-              type: string
-    get:
-      responses:
-        200:
-          description: OK

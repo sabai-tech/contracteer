@@ -1,7 +1,7 @@
 package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.SimpleStyleCodec
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -23,7 +23,7 @@ class VerificationCaseFactoryTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            serde = PlainTextSerde
+            codec = SimpleStyleCodec("id", false)
           )
         ),
         bodies = emptyList()

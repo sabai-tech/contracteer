@@ -1,0 +1,139 @@
+openapi: 3.0.0
+info:
+  title: Path Parameter Style Tests
+  version: '1.0'
+paths:
+  # Default style (simple, explode=false)
+  /items/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Simple style, explode=false (explicit)
+  /simple-no-explode/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Simple style, explode=true
+  /simple-explode/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          style: simple
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Label style, explode=false
+  /label-no-explode/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          style: label
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Label style, explode=true
+  /label-explode/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          style: label
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Matrix style, explode=false
+  /matrix-no-explode/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          style: matrix
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Matrix style, explode=true
+  /matrix-explode/{id}:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          style: matrix
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Object with simple style
+  /object-simple/{filter}:
+    get:
+      parameters:
+        - in: path
+          name: filter
+          required: true
+          schema:
+            type: object
+            properties:
+              color:
+                type: string
+              size:
+                type: integer
+      responses:
+        '200':
+          description: Success

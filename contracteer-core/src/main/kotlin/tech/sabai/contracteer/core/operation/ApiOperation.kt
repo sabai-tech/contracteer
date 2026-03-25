@@ -1,7 +1,7 @@
 package tech.sabai.contracteer.core.operation
 
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.serde.Serde
+import tech.sabai.contracteer.core.codec.StyleCodec
 
 /**
  * Represents a single API operation (path + HTTP method) extracted from an OpenAPI specification.
@@ -67,13 +67,13 @@ data class ResponseSchema(
  * @param element identifies the parameter location and name
  * @param dataType the expected data type and constraints
  * @param isRequired whether the parameter must be present
- * @param serde the serializer/deserializer for this parameter's wire format
+ * @param codec the style codec for encoding/decoding this parameter's wire format
  */
 data class ParameterSchema(
   val element: ParameterElement,
   val dataType: DataType<out Any>,
   val isRequired: Boolean,
-  val serde: Serde
+  val codec: StyleCodec
 )
 
 /**

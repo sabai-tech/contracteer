@@ -14,7 +14,6 @@ Contracteer does not reject a specification because it contains unsupported feat
 Instead, it handles them gracefully:
 
 - **Unsupported content types** (XML, multipart, form-urlencoded) -- the operation is skipped with a warning.
-- **Unsupported parameter types** (array or object parameters) -- the operation is skipped with a warning.
 - **Unsupported schema keywords** (pattern, minItems, etc.) -- the keyword is ignored.
   Values are generated and validated without that constraint.
 
@@ -31,8 +30,8 @@ Only the affected operations or constraints are skipped.
 | `integer` | Supported | With `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `enum`, `nullable` |
 | `number` | Supported | With `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `enum`, `nullable` |
 | `boolean` | Supported | With `enum`, `nullable` |
-| `array` | Supported (body only) | Array parameters are not yet supported -- operations using them are skipped |
-| `object` | Supported (body only) | Object parameters are not yet supported -- operations using them are skipped |
+| `array` | Supported | Including array parameters with style/explode encoding |
+| `object` | Supported | Including object parameters with style/explode encoding |
 
 ---
 
@@ -128,12 +127,11 @@ If Contracteer generates invalid values for your pattern, use `enum` values inst
 
 | Feature | Status |
 |---------|--------|
-| `in: path` | Supported (primitive types only) |
-| `in: query` | Supported (primitive types only) |
-| `in: header` | Supported (primitive types only) |
-| `in: cookie` | Supported (primitive types only) |
-| Array / object parameters | Not supported. Operations using them are skipped. Planned |
-| `style` / `explode` | Not supported. Planned |
+| `in: path` | Supported | Primitive, array, and object types. Styles: `simple`, `label`, `matrix` |
+| `in: query` | Supported | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject` |
+| `in: header` | Supported | Primitive, array, and object types. Style: `simple` |
+| `in: cookie` | Supported | Primitive, array, and object types. Style: `form` |
+| `style` / `explode` | Supported | All OAS 3.0 style/explode combinations with correct defaults per location |
 | `content` (instead of `schema`) | Not supported |
 | `allowEmptyValue` | Not supported |
 | `allowReserved` | Not supported |

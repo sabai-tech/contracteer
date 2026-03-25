@@ -1,10 +1,7 @@
 package tech.sabai.contracteer.mockserver
 
 import org.http4k.core.Request
-import org.http4k.core.cookie.cookie
-import org.http4k.routing.path
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.operation.ParameterElement.*
 
 internal object ScenarioMatcher {
 
@@ -34,10 +31,10 @@ internal object ScenarioMatcher {
     expectedValue: Any?,
     requestSchema: RequestSchema
   ): Boolean {
-    val rawValue = extractRawValue(request, element) ?: return false
     val paramSchema = requestSchema.parameters.find { it.element == element } ?: return false
-    val deserializeResult = paramSchema.serde.deserialize(rawValue, paramSchema.dataType)
-    return deserializeResult.isSuccess() && deserializeResult.value == expectedValue
+    val valueExtractor = request.valueExtractorFor(element)
+    val result = paramSchema.codec.decode(valueExtractor, paramSchema.dataType)
+    return result.isSuccess() && result.value == expectedValue
   }
 
   private fun matchesBody(request: Request, scenarioBody: ScenarioBody?, requestSchema: RequestSchema): Boolean {
@@ -51,12 +48,4 @@ internal object ScenarioMatcher {
 
     return deserializeResult.isSuccess() && deserializeResult.value == scenarioBody.value
   }
-
-  private fun extractRawValue(request: Request, element: ParameterElement): String? =
-    when (element) {
-      is PathParam  -> request.path(element.name)
-      is QueryParam -> request.query(element.name)
-      is Header     -> request.header(element.name)
-      is Cookie     -> request.cookie(element.name)?.value
-    }
 }

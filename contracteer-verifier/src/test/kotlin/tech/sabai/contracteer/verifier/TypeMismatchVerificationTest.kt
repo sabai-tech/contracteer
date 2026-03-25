@@ -13,7 +13,8 @@ import org.http4k.server.asServer
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.FormStyleCodec
+import tech.sabai.contracteer.core.codec.SimpleStyleCodec
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -102,7 +103,7 @@ class TypeMismatchVerificationTest {
           ParameterSchema(element = PathParam("id"),
                           dataType = integerDataType(),
                           isRequired = true,
-                          serde = PlainTextSerde)
+                          codec = SimpleStyleCodec("id", false))
         ),
         bodies = emptyList()
       ),
@@ -157,11 +158,11 @@ class TypeMismatchVerificationTest {
           ParameterSchema(element = PathParam("id"),
                           dataType = integerDataType(),
                           isRequired = true,
-                          serde = PlainTextSerde),
+                          codec = SimpleStyleCodec("id", false)),
           ParameterSchema(element = QueryParam("page"),
                           dataType = integerDataType(),
                           isRequired = false,
-                          serde = PlainTextSerde)
+                          codec = FormStyleCodec("page", true))
         ),
         bodies = emptyList()
       ),

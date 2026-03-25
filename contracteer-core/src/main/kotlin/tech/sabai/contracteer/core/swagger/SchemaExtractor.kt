@@ -11,9 +11,10 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.*
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
 internal class SchemaExtractor(
@@ -79,7 +80,7 @@ internal class SchemaExtractor(
   private fun extractRequestHeaderSchemas(operation: Operation): Result<List<ParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "header" }
-      .map { it.toParameterSchema(ParameterElement.Header(it.name)) }
+      .map { it.toParameterSchema(Header(it.name)) }
       .combineResults()
 
   private fun extractRequestCookieSchemas(operation: Operation): Result<List<ParameterSchema>> =
@@ -129,7 +130,11 @@ internal class SchemaExtractor(
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
               validateBodySchemaContentType(ContentType(contentType), dataType!!)
-                .map { BodySchema(ContentType(contentType), dataType.asResponseType(), mediaType.schema.safeNullable()) }
+                .map {
+                  BodySchema(ContentType(contentType),
+                             dataType.asResponseType(),
+                             mediaType.schema.safeNullable())
+                }
             }
         }.combineResults()
         .forProperty("body")
@@ -138,15 +143,95 @@ internal class SchemaExtractor(
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
         .convertToDataType(resolved!!.schema, "")
-        .map { ParameterSchema(element, it!!, resolved.safeIsRequired(), PlainTextSerde) }
+        .flatMap { dataType ->
+          createCodecForParameter(element, resolved.style?.toString(), resolved.explode, dataType!!, name)
+            .map { ParameterSchema(element, dataType, resolved.safeIsRequired(), it!!) }
+        }
     }
 
   private fun Header.toParameterSchema(name: String): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
         .convertToDataType(resolved!!.schema, "")
-        .map { ParameterSchema(ParameterElement.Header(name), it!!, resolved.safeIsRequired(), PlainTextSerde) }
+        .flatMap { dataType ->
+          createCodecForParameter(Header(name), resolved.style?.toString(), resolved.explode, dataType!!, name)
+            .map { ParameterSchema(Header(name), dataType, resolved.safeIsRequired(), it!!) }
+        }
     }
+
+  private fun createCodecForParameter(
+    element: ParameterElement,
+    style: String?,
+    explode: Boolean?,
+    dataType: DataType<out Any>,
+    paramName: String
+  ): Result<StyleCodec> {
+    val normalizedStyle = style?.lowercase()?.replace("_", "")
+
+    val (defaultStyle, defaultExplode) = when (element) {
+      is PathParam               -> "simple" to false
+      is QueryParam              -> "form" to true
+      is ParameterElement.Header -> "simple" to false
+      is Cookie                  -> "form" to true
+    }
+
+    val actualStyle = normalizedStyle ?: defaultStyle
+    val actualExplode = explode ?: defaultExplode
+
+    val supportedStyles = when (element) {
+      is PathParam               -> setOf("simple", "label", "matrix")
+      is QueryParam              -> setOf("form", "spacedelimited", "pipedelimited", "deepobject")
+      is ParameterElement.Header -> setOf("simple")
+      is Cookie                  -> setOf("form")
+    }
+
+    if (actualStyle !in supportedStyles) {
+      val locationName = when (element) {
+        is PathParam               -> "path"
+        is QueryParam              -> "query"
+        is ParameterElement.Header -> "header"
+        is Cookie                  -> "cookie"
+      }
+      return failure(paramName, "Style '${style ?: actualStyle}' is not supported for $locationName parameters")
+    }
+
+    validateStyleConstraints(actualStyle, actualExplode, dataType, paramName)?.let { return it }
+
+    return success(when (actualStyle) {
+                     "simple"         -> SimpleStyleCodec(paramName, actualExplode)
+                     "form"           -> FormStyleCodec(paramName, actualExplode)
+                     "label"          -> LabelStyleCodec(paramName, actualExplode)
+                     "matrix"         -> MatrixStyleCodec(paramName, actualExplode)
+                     "spacedelimited" -> SpaceDelimitedStyleCodec(paramName)
+                     "pipedelimited"  -> PipeDelimitedStyleCodec(paramName)
+                     "deepobject"     -> DeepObjectStyleCodec(paramName)
+                     else             -> return failure(paramName, "Unknown style '$actualStyle'")
+                   })
+  }
+
+  private fun validateStyleConstraints(
+    style: String,
+    explode: Boolean,
+    dataType: DataType<out Any>,
+    paramName: String
+  ): Result<StyleCodec>? = when (style) {
+    "deepobject"     -> when {
+      dataType !is ObjectDataType -> failure(paramName, "Style 'deepObject' requires object type")
+      !explode                    -> failure(paramName, "Style 'deepObject' requires explode=true")
+      else                        -> null
+    }
+    "spacedelimited" -> when {
+      dataType !is ArrayDataType -> failure(paramName, "Style 'spaceDelimited' requires array type")
+      explode                    -> failure(paramName, "Style 'spaceDelimited' requires explode=false")
+      else                       -> null
+    }
+    "pipedelimited"  -> when {
+      dataType !is ArrayDataType -> failure(paramName, "Style 'pipeDelimited' requires array type")
+      explode                    -> failure(paramName, "Style 'pipeDelimited' requires explode=false")
+      else                       -> null
+    }
+    else             -> null
+  }
 
   private fun validateBodySchemaContentType(contentType: ContentType,
                                             dataType: DataType<out Any>): Result<DataType<out Any>> =

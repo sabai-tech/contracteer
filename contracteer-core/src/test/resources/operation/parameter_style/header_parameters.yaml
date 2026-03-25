@@ -1,0 +1,96 @@
+openapi: 3.0.0
+info:
+  title: Header Parameter Style Tests
+  version: '1.0'
+paths:
+  # Default style (simple, explode=false) - request header
+  /items:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Simple style, explode=false (explicit) - request header
+  /simple-no-explode:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: simple
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Simple style, explode=true - request header
+  /simple-explode:
+    get:
+      parameters:
+        - in: header
+          name: X-Status
+          style: simple
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success
+
+  # Object with simple style - request header
+  /object-simple:
+    get:
+      parameters:
+        - in: header
+          name: X-Filter
+          schema:
+            type: object
+            properties:
+              color:
+                type: string
+              size:
+                type: integer
+      responses:
+        '200':
+          description: Success
+
+  # Response header with default style (simple, explode=false)
+  /response-header-default:
+    get:
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Rate-Limit:
+              schema:
+                type: array
+                items:
+                  type: integer
+
+  # Response header with object
+  /response-header-object:
+    get:
+      responses:
+        '200':
+          description: Success
+          headers:
+            X-Metadata:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  total:
+                    type: integer

@@ -2,7 +2,8 @@ package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.FormStyleCodec
+import tech.sabai.contracteer.core.codec.SimpleStyleCodec
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -20,7 +21,7 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = PathParam("id"),
                         dataType = integerDataType(),
                         isRequired = true,
-                        serde = PlainTextSerde)
+                        codec = SimpleStyleCodec("id", false))
       )
     )
 
@@ -42,7 +43,7 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = QueryParam("page"),
                         dataType = integerDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde)
+                        codec = FormStyleCodec("page", true))
       )
     )
 
@@ -64,7 +65,7 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = Header("X-Request-Id"),
                         dataType = integerDataType(),
                         isRequired = true,
-                        serde = PlainTextSerde)
+                        codec = SimpleStyleCodec("X-Request-Id", false))
       )
     )
 
@@ -86,7 +87,7 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = Cookie("session_ttl"),
                         dataType = integerDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde)
+                        codec = FormStyleCodec("session_ttl", true))
       )
     )
 
@@ -108,19 +109,19 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = PathParam("id"),
                         dataType = integerDataType(),
                         isRequired = true,
-                        serde = PlainTextSerde),
+                        codec = SimpleStyleCodec("id", false)),
         ParameterSchema(element = QueryParam("page"),
                         dataType = integerDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde),
+                        codec = FormStyleCodec("page", true)),
         ParameterSchema(element = Header("X-Correlation-Id"),
                         dataType = integerDataType(),
                         isRequired = true,
-                        serde = PlainTextSerde),
+                        codec = SimpleStyleCodec("X-Correlation-Id", false)),
         ParameterSchema(element = Cookie("token"),
                         dataType = integerDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde)
+                        codec = FormStyleCodec("token", true))
       ),
       bodies = listOf(
         BodySchema(contentType = ContentType("application/json"),
@@ -150,15 +151,15 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = QueryParam("name"),
                         dataType = stringDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde),
+                        codec = FormStyleCodec("name", true)),
         ParameterSchema(element = QueryParam("page"),
                         dataType = integerDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde),
+                        codec = FormStyleCodec("page", true)),
         ParameterSchema(element = QueryParam("limit"),
                         dataType = integerDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde)
+                        codec = FormStyleCodec("limit", true))
       )
     )
 
@@ -179,11 +180,11 @@ class VerificationCaseFactoryTypeMismatchTest {
         ParameterSchema(element = QueryParam("name"),
                         dataType = stringDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde),
+                        codec = FormStyleCodec("name", true)),
         ParameterSchema(element = QueryParam("filter"),
                         dataType = stringDataType(),
                         isRequired = false,
-                        serde = PlainTextSerde)
+                        codec = FormStyleCodec("filter", true))
       )
     )
 

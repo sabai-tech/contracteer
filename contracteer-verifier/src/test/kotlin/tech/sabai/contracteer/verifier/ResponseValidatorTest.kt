@@ -5,7 +5,7 @@ import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.codec.SimpleStyleCodec
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -75,13 +75,13 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Count"),
           dataType = integerDataType(),
           isRequired = true,
-          serde = PlainTextSerde
+          codec = SimpleStyleCodec("X-Count", false)
         ),
         ParameterSchema(
           element = ParameterElement.Header("X-Name"),
           dataType = stringDataType(),
           isRequired = true,
-          serde = PlainTextSerde
+          codec = SimpleStyleCodec("X-Name", false)
         )
       ),
       bodies = emptyList()
@@ -118,7 +118,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Optional"),
           dataType = stringDataType(),
           isRequired = false,
-          serde = PlainTextSerde
+          codec = SimpleStyleCodec("X-Optional", false)
         )
       ),
       bodies = emptyList()
@@ -155,7 +155,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Required"),
           dataType = stringDataType(),
           isRequired = true,
-          serde = PlainTextSerde
+          codec = SimpleStyleCodec("X-Required", false)
         )
       ),
       bodies = emptyList()
@@ -194,7 +194,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Count"),
           dataType = integerDataType(),
           isRequired = true,
-          serde = PlainTextSerde
+          codec = SimpleStyleCodec("X-Count", false)
         )
       ),
       bodies = emptyList()
@@ -459,7 +459,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Total-Count"),
           dataType = integerDataType(),
           isRequired = true,
-          serde = PlainTextSerde
+          codec = SimpleStyleCodec("X-Total-Count", false)
         )
       ),
       bodies = listOf(
