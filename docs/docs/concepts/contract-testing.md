@@ -9,27 +9,26 @@ It tests the agreement -- the **contract** -- that both sides depend on.
 ## The Problem: APIs Break at Integration Time
 
 Consider two teams working on the same product.
-The backend team builds a REST API that returns product data.
-The frontend team builds a client that consumes it.
+One team builds a REST API that returns product data.
+The other team builds a client that consumes it.
 
 Both teams test their code thoroughly.
-The backend has unit tests for its business logic.
-The frontend tests against a mock that returns hardcoded responses.
+The server has unit tests for its business logic.
+The client tests against a mock that returns hardcoded responses.
 Every test passes.
 Every build is green.
 
-Then the backend team renames a field from `productName` to `name`.
+Then the server team renames a field from `productName` to `name`.
 Their tests still pass -- they test internal behavior, not the HTTP response shape.
-The frontend's tests still pass -- they run against a mock that nobody updated.
-The rename ships undetected, and the frontend breaks in production.
+The client's tests still pass -- they run against a mock that nobody updated.
+The rename ships undetected, and the client breaks in production.
 
 This is **contract drift**: the actual API diverged from what consumers expect, and nothing caught it.
-The mock the frontend relied on became a lie.
+The mock the client relied on became a lie.
 
 This failure mode is not rare.
 It happens every time a team changes a response field, adds a required parameter, modifies a status code, or alters an error format.
 The cost scales with the number of consumers: each one carries its own stale assumptions about the API.
-The same problem arises between backend services, not just between frontend and backend.
 Even a single team owning both sides is not immune -- the contract can drift without anyone noticing.
 
 ---

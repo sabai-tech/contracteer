@@ -4,14 +4,14 @@ The Contracteer CLI runs verification and starts mock servers from the command l
 It is a standalone native binary -- no JVM installation required.
 
 **Develop against a spec before the server exists.**
-Frontend teams building a React, Angular, or Vue application can start a mock server from the OpenAPI specification.
+Start a mock server from the OpenAPI specification and build your client against it.
 Every request is validated against the schema.
-Client-side bugs are caught during development -- not after the backend is deployed.
+Client-side bugs are caught during development -- not after the real server is deployed.
 
 **Verify any server, regardless of language.**
 The CLI verifies that a running server conforms to its OpenAPI specification.
 It does not matter whether the server is built in Node.js, Python, Go, or any other language.
-If it speaks HTTP and has an OpenAPI spec, Contracteer can verify it.
+If it speaks HTTP and has an OpenAPI specification, Contracteer can verify it.
 
 **Integrate into CI/CD pipelines.**
 For non-JVM projects, add a verification step to your pipeline without any build tool integration.
