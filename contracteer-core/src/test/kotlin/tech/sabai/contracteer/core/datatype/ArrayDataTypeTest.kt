@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
@@ -117,5 +118,168 @@ class ArrayDataTypeTest {
 
     // then
     assert(enum.map { it.normalize() }.contains(result))
+  }
+
+  @Nested
+  inner class WithMinItems {
+
+    @Test
+    fun `creation fails when minItems is negative`() {
+      // when
+      val result = ArrayDataType.create("array", stringDataType(), minItems = -1)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation fails when array has fewer items than minItems`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 3)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b"))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when array has exactly minItems`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 2)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b"))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates array with at least minItems elements`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 3)
+
+      // when
+      val result = arrayDataType.randomValue()
+
+      // then
+      assert(result.size >= 3)
+    }
+  }
+
+  @Nested
+  inner class WithMaxItems {
+
+    @Test
+    fun `creation fails when maxItems is negative`() {
+      // when
+      val result = ArrayDataType.create("array", stringDataType(), maxItems = -1)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation fails when array has more items than maxItems`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 2)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b", "c"))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when array has exactly maxItems`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 3)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b", "c"))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates array with at most maxItems elements`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 3)
+
+      // when
+      val values = (1..20).map { arrayDataType.randomValue() }
+
+      // then
+      assert(values.all { it.size <= 3 })
+    }
+  }
+
+  @Nested
+  inner class WithMinAndMaxItems {
+
+    @Test
+    fun `creation fails when minItems is greater than maxItems`() {
+      // when
+      val result = ArrayDataType.create("array", stringDataType(), minItems = 5, maxItems = 2)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates array within minItems and maxItems bounds`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 2, maxItems = 4)
+
+      // when
+      val values = (1..20).map { arrayDataType.randomValue() }
+
+      // then
+      assert(values.all { it.size in 2..4 })
+    }
+  }
+
+  @Nested
+  inner class WithUniqueItems {
+
+    @Test
+    fun `validation fails when array has duplicate items`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), uniqueItems = true)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b", "a"))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when array has unique items`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), uniqueItems = true)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b", "c"))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation succeeds when uniqueItems is false and array has duplicates`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), uniqueItems = false)
+
+      // when
+      val result = arrayDataType.validate(listOf("a", "b", "a"))
+
+      // then
+      assert(result.isSuccess())
+    }
   }
 }

@@ -21,7 +21,10 @@ internal object ArrayDataTypeConverter {
           name = schema.name,
           itemDataType = itemDataType!!,
           isNullable = schema.safeNullable(),
-          enum = schema.safeEnum().map { it.normalize() }
+          enum = schema.safeEnum().map { it.normalize() },
+          minItems = schema.minItems,
+          maxItems = schema.maxItems,
+          uniqueItems = schema.uniqueItems ?: false
         )
       }.forProperty(schema.name)
 }

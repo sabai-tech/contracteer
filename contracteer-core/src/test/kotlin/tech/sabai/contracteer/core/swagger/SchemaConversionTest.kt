@@ -439,6 +439,43 @@ class SchemaConversionTest {
     assert(dataType.range.maximum == Double.MAX_VALUE.toBigDecimal())
   }
 
+  @Test
+  fun `extract ArrayDataType with minItems`() {
+    // when
+    val dataType = getDataType("array_constraints.yaml", "with_min") as ArrayDataType
+
+    // then
+    assert(dataType.minItems == 1)
+  }
+
+  @Test
+  fun `extract ArrayDataType with maxItems`() {
+    // when
+    val dataType = getDataType("array_constraints.yaml", "with_max") as ArrayDataType
+
+    // then
+    assert(dataType.maxItems == 10)
+  }
+
+  @Test
+  fun `extract ArrayDataType with minItems and maxItems`() {
+    // when
+    val dataType = getDataType("array_constraints.yaml", "with_min_and_max") as ArrayDataType
+
+    // then
+    assert(dataType.minItems == 2)
+    assert(dataType.maxItems == 5)
+  }
+
+  @Test
+  fun `extract ArrayDataType with uniqueItems`() {
+    // when
+    val dataType = getDataType("array_constraints.yaml", "with_unique") as ArrayDataType
+
+    // then
+    assert(dataType.uniqueItems)
+  }
+
   // --- Helpers ---
 
   private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =

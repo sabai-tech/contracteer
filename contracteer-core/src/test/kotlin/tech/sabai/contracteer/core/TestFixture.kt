@@ -22,8 +22,11 @@ object TestFixture {
 
   fun arrayDataType(itemDataType: DataType<out Any>,
                     isNullable: Boolean = false,
-                    enum: List<Any?> = emptyList()) =
-    ArrayDataType.create("array", itemDataType, isNullable, enum).value!!
+                    enum: List<Any?> = emptyList(),
+                    minItems: Int? = null,
+                    maxItems: Int? = null,
+                    uniqueItems: Boolean = false) =
+    ArrayDataType.create("array", itemDataType, isNullable, enum, minItems, maxItems, uniqueItems).value!!
 
   fun base64DataType(isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),
