@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.normalize
+import java.math.BigDecimal
 
 class IntegerDataTypeTest {
 
@@ -196,6 +197,64 @@ class IntegerDataTypeTest {
 
       // then
       assert(result.isSuccess())
+    }
+  }
+
+  @Nested
+  inner class WithMultipleOf {
+
+    @Test
+    fun `creation fails when range contains no multiples`() {
+      // when
+      val result = IntegerDataType.create(
+        name = "integer",
+        minimum = 5.toBigDecimal(),
+        maximum = 8.toBigDecimal(),
+        multipleOf = 10.toBigDecimal()
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when value is a multiple`() {
+      // given
+      val integerDataType = integerDataType(multipleOf = 5.toBigDecimal())
+
+      // when
+      val result = integerDataType.validate(15)
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation fails when value is not a multiple`() {
+      // given
+      val integerDataType = integerDataType(multipleOf = 5.toBigDecimal())
+
+      // when
+      val result = integerDataType.validate(13)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `generates random value that is a multiple`() {
+      // given
+      val integerDataType = integerDataType(
+        minimum = 0.toBigDecimal(),
+        maximum = 100.toBigDecimal(),
+        multipleOf = 7.toBigDecimal()
+      )
+
+      // when
+      val result = integerDataType.randomValue()
+
+      // then
+      assert(result.remainder(7.toBigDecimal()).compareTo(BigDecimal.ZERO) == 0)
     }
   }
 }

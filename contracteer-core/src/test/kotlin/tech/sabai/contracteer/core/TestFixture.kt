@@ -64,16 +64,18 @@ object TestFixture {
                       minimum: BigDecimal? = null,
                       maximum: BigDecimal? = null,
                       exclusiveMinimum: Boolean = false,
-                      exclusiveMaximum: Boolean = false) =
-    IntegerDataType.create(name, isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
+                      exclusiveMaximum: Boolean = false,
+                      multipleOf: BigDecimal? = null) =
+    IntegerDataType.create(name, isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf).value!!
 
   fun numberDataType(isNullable: Boolean = false,
                      enum: List<BigDecimal?> = emptyList(),
                      minimum: BigDecimal? = null,
                      maximum: BigDecimal? = null,
                      exclusiveMinimum: Boolean = false,
-                     exclusiveMaximum: Boolean = false) =
-    NumberDataType.create("number", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum).value!!
+                     exclusiveMaximum: Boolean = false,
+                     multipleOf: BigDecimal? = null) =
+    NumberDataType.create("number", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf).value!!
 
   fun objectDataType(name: String = "object",
                      properties: Map<String, DataType<out Any>>,

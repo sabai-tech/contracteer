@@ -33,7 +33,8 @@ internal object IntegerDataTypeConverter {
           maximum = schema.maximum ?: formatRange.maximum,
           exclusiveMinimum = schema.safeExclusiveMinimum(),
           exclusiveMaximum = schema.safeExclusiveMaximum(),
-          enum = schema.safeEnum().map { it.normalize() as BigDecimal? }
+          enum = schema.safeEnum().map { it.normalize() as BigDecimal? },
+          multipleOf = schema.multipleOf
         )
     }
   }

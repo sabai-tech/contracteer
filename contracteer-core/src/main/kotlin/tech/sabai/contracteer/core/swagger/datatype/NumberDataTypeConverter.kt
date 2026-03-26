@@ -32,7 +32,8 @@ internal object NumberDataTypeConverter {
           maximum = schema.maximum ?: formatRange.maximum,
           exclusiveMinimum = schema.safeExclusiveMinimum(),
           exclusiveMaximum = schema.safeExclusiveMaximum(),
-          enum = schema.safeEnum()
+          enum = schema.safeEnum(),
+          multipleOf = schema.multipleOf
         )
     }
   }

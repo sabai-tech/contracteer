@@ -76,6 +76,7 @@ Only the affected operations or constraints are skipped.
 | `discriminator` | With `propertyName` and `mapping` on allOf, oneOf, anyOf |
 | `readOnly` / `writeOnly` | readOnly properties excluded from request schemas, writeOnly from response schemas |
 | `pattern` | Plain strings only. Ignored when `format` is set. Overrides `minLength`/`maxLength` |
+| `multipleOf` | Integer and number types |
 | `minItems` / `maxItems` | Array types |
 | `uniqueItems` | Array types |
 
@@ -83,7 +84,6 @@ Only the affected operations or constraints are skipped.
 
 | Keyword | Impact |
 |---------|--------|
-| `multipleOf` | No divisibility constraint on numbers |
 | `minProperties` / `maxProperties` | No property count constraints on objects |
 | `default` (property values) | Default values are not used for generation |
 | `not` | Schema negation is not supported |

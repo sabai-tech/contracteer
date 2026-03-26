@@ -476,6 +476,24 @@ class SchemaConversionTest {
     assert(dataType.uniqueItems)
   }
 
+  @Test
+  fun `extract IntegerDataType with multipleOf`() {
+    // when
+    val dataType = getDataType("multiple_of.yaml", "integer_prop") as IntegerDataType
+
+    // then
+    assert(dataType.multipleOf == 5.toBigDecimal())
+  }
+
+  @Test
+  fun `extract NumberDataType with multipleOf`() {
+    // when
+    val dataType = getDataType("multiple_of.yaml", "number_prop") as NumberDataType
+
+    // then
+    assert(dataType.multipleOf == 0.01.toBigDecimal())
+  }
+
   // --- Helpers ---
 
   private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =

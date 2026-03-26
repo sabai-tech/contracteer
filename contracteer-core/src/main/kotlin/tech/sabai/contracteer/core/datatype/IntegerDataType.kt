@@ -9,17 +9,27 @@ import java.math.BigDecimal
 class IntegerDataType private constructor(name: String,
                                           isNullable: Boolean,
                                           val range: Range,
+                                          val multipleOf: BigDecimal?,
                                           allowedValues: AllowedValues? = null):
     DataType<BigDecimal>(name, "integer", isNullable, BigDecimal::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 
-  override fun doValidate(value: BigDecimal) =
-    if (!value.isInteger()) failure("The provided value is not an integer.")
-    else range.contains(value)
+  override fun doValidate(value: BigDecimal): Result<BigDecimal> {
+    return when {
+      !value.isInteger()                                                                ->
+        failure("The provided value is not an integer.")
 
+      multipleOf != null && value.remainder(multipleOf).compareTo(BigDecimal.ZERO) != 0 ->
+        failure("Value $value is not a multiple of $multipleOf")
 
-  override fun doRandomValue(): BigDecimal = range.randomIntegerValue()
+      else                                                                              ->
+        range.contains(value)
+    }
+  }
+
+  override fun doRandomValue(): BigDecimal =
+    if (multipleOf != null) range.randomMultipleOf(multipleOf) else range.randomIntegerValue()
 
   companion object {
     @JvmStatic
@@ -31,23 +41,24 @@ class IntegerDataType private constructor(name: String,
       minimum: BigDecimal? = null,
       maximum: BigDecimal? = null,
       exclusiveMinimum: Boolean = false,
-      exclusiveMaximum: Boolean = false
+      exclusiveMaximum: Boolean = false,
+      multipleOf: BigDecimal? = null
     ): Result<IntegerDataType> =
-      Range.create(minimum, maximum, exclusiveMinimum, exclusiveMaximum)
+      Range
+        .create(minimum, maximum, exclusiveMinimum, exclusiveMaximum)
         .flatMap { range ->
           when {
-            minimum != null && !minimum.isInteger() -> failure("minimum must be an integer.")
-            maximum != null && !maximum.isInteger() -> failure("maximum must be an integer.")
-            enum.isEmpty()                          -> success(IntegerDataType(name, isNullable, range!!))
-            else                                    ->
+            minimum != null && !minimum.isInteger()                       -> failure("minimum must be an integer.")
+            maximum != null && !maximum.isInteger()                       -> failure("maximum must be an integer.")
+            multipleOf != null && !range!!.containsMultipleOf(multipleOf) -> failure("Range $range contains no multiple of $multipleOf")
+            enum.isEmpty()                                                -> success(IntegerDataType(name,isNullable,range!!,multipleOf))
+            else                                                          ->
               AllowedValues
-                .create(enum, IntegerDataType(name, isNullable, range!!))
-                .map { allowedValues -> IntegerDataType(name, isNullable, range, allowedValues) }
+                .create(enum, IntegerDataType(name, isNullable, range!!, multipleOf))
+                .map { allowedValues -> IntegerDataType(name, isNullable, range, multipleOf, allowedValues) }
           }
         }
   }
-
 }
 
 private fun BigDecimal.isInteger() = stripTrailingZeros().scale() <= 0
-

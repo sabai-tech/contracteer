@@ -74,6 +74,18 @@ class Range private constructor(
     return result.setScale(4, HALF_UP)
   }
 
+  fun containsMultipleOf(multipleOf: BigDecimal): Boolean {
+    val min = effectiveMinimum().divide(multipleOf, 0, CEILING).toLong()
+    val max = effectiveMaximum().divide(multipleOf, 0, FLOOR).toLong()
+    return min <= max
+  }
+
+  fun randomMultipleOf(multipleOf: BigDecimal): BigDecimal {
+    val min = effectiveMinimum().divide(multipleOf, 0, CEILING).toLong()
+    val max = effectiveMaximum().divide(multipleOf, 0, FLOOR).toLong()
+    return BigDecimal.valueOf(Random.nextLong(min, max + 1)).multiply(multipleOf)
+  }
+
   private fun effectiveMinimum() =
     when {
       minimum != null -> minimum
