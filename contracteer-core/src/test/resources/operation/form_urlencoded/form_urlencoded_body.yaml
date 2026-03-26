@@ -1,0 +1,44 @@
+openapi: 3.0.0
+info:
+  title: Form URL-Encoded Tests
+  version: '1.0'
+paths:
+  # Default encoding (form, explode=true)
+  /login:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Success
+
+  # Custom encoding (pipeDelimited for colors)
+  /preferences:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                colors:
+                  type: array
+                  items:
+                    type: string
+            encoding:
+              colors:
+                style: pipeDelimited
+                explode: false
+      responses:
+        '200':
+          description: Success

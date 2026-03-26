@@ -1,0 +1,15 @@
+openapi: 3.0.0
+info:
+  title: Form URL-Encoded Invalid Schema
+  version: '1.0'
+paths:
+  /invalid:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Success

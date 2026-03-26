@@ -13,7 +13,7 @@ It also explains what happens when your specification uses an unsupported featur
 Contracteer does not reject a specification because it contains unsupported features.
 Instead, it handles them gracefully:
 
-- **Unsupported content types** (XML, multipart, form-urlencoded) -- the operation is skipped with a warning.
+- **Unsupported content types** (XML, multipart) -- the operation is skipped with a warning.
 - **Unsupported schema keywords** (pattern, minItems, etc.) -- the keyword is ignored.
   Values are generated and validated without that constraint.
 
@@ -125,16 +125,16 @@ If Contracteer generates invalid values for your pattern, use `enum` values inst
 
 ## Parameters
 
-| Feature | Status |
-|---------|--------|
+| Feature | Status | Notes |
+|---------|--------|-------|
 | `in: path` | Supported | Primitive, array, and object types. Styles: `simple`, `label`, `matrix` |
 | `in: query` | Supported | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject` |
 | `in: header` | Supported | Primitive, array, and object types. Style: `simple` |
 | `in: cookie` | Supported | Primitive, array, and object types. Style: `form` |
 | `style` / `explode` | Supported | All OAS 3.0 style/explode combinations with correct defaults per location |
-| `content` (instead of `schema`) | Not supported |
-| `allowEmptyValue` | Not supported |
-| `allowReserved` | Not supported |
+| `content` (instead of `schema`) | Not supported | |
+| `allowEmptyValue` | Not supported | |
+| `allowReserved` | Not supported | |
 
 ---
 
@@ -146,7 +146,7 @@ If Contracteer generates invalid values for your pattern, use `enum` values inst
 | Plain text content types | Supported |
 | `application/xml` | Not supported. Operations using it are skipped |
 | `multipart/form-data` | Not supported. Operations using it are skipped |
-| `application/x-www-form-urlencoded` | Not supported. Operations using it are skipped. Planned |
+| `application/x-www-form-urlencoded` | Supported. Per-property encoding via the `encoding` object |
 | Multiple content types | Supported. Produces a cartesian product of verification cases |
 | `required` (request body) | Supported |
 

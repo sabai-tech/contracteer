@@ -11,7 +11,8 @@ internal object ResponseGenerator {
       .withHeaders(responseSchema.headers, scenario.response.headers)
 
     val scenarioBody = scenario.response.body ?: return response
-    val serializedBody = scenarioBody.contentType.serde.serialize(scenarioBody.value)
+    val bodySchema = responseSchema.bodies.find { it.contentType == scenarioBody.contentType } ?: return response
+    val serializedBody = bodySchema.serde.serialize(scenarioBody.value)
 
     return response
       .header("Content-Type", scenarioBody.contentType.value)
@@ -25,7 +26,7 @@ internal object ResponseGenerator {
     if (bodySchema == null) return response
 
     val randomValue = bodySchema.dataType.randomValue()
-    val serializedBody = bodySchema.contentType.serde.serialize(randomValue)
+    val serializedBody = bodySchema.serde.serialize(randomValue)
 
     return response
       .header("Content-Type", bodySchema.contentType.value)

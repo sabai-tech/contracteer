@@ -38,7 +38,7 @@ private fun List<BodySchema>.validateBody(request: Request): Result<Unit> {
   val matchingSchema = find { it.contentType.validate(requestContentType).isSuccess() }
                        ?: return failure("Request Content-Type '$requestContentType' does not match any expected: ${map { it.contentType.value }}")
 
-  return matchingSchema.contentType.serde
+  return matchingSchema.serde
     .deserialize(request.bodyString(), matchingSchema.dataType)
     .flatMap { matchingSchema.dataType.validate(it) }
     .mapErrors { "Request body: $it" }

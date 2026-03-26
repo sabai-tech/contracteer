@@ -7,6 +7,7 @@ import org.http4k.core.Response
 import org.http4k.core.UriTemplate
 import org.http4k.core.cookie.cookie
 import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.serde.Serde
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
@@ -26,11 +27,12 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     validateScenarioParameterElements(scenario.request.parameterValues, case.requestSchema)
 
     val pathParams = buildPathParameters(scenario.request.parameterValues, case.requestSchema)
+    val bodySerde = scenario.request.body?.let { body -> case.requestSchema.bodies.serdeFor(body.contentType) }
     val request = Request(
       method = Method.valueOf(scenario.method.uppercase()),
       uri = UriTemplate.from("$serverUrl${scenario.path}").generate(pathParams))
       .withScenarioParameters(scenario.request.parameterValues, case.requestSchema)
-      .withScenarioBody(scenario.request.body)
+      .withScenarioBody(scenario.request.body, bodySerde)
       .withAcceptHeader(scenario.response.body?.contentType)
 
     return request to baseClient(request)
@@ -136,9 +138,9 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     }
   }
 
-  private fun Request.withScenarioBody(body: ScenarioBody?): Request {
-    return body?.let { header("Content-Type", it.contentType.value).body(it.contentType.serde.serialize(it.value)) }
-           ?: this
+  private fun Request.withScenarioBody(body: ScenarioBody?, serde: Serde?): Request {
+    if (body == null || serde == null) return this
+    return header("Content-Type", body.contentType.value).body(serde.serialize(body.value))
   }
 
   private fun Request.placeEncodedEntries(element: ParameterElement, entries: List<Pair<String, String>>): Request =
@@ -161,7 +163,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
 
   private fun Request.withGeneratedBody(bodySchema: BodySchema?): Request {
     return bodySchema?.let {
-      header("Content-Type", it.contentType.value).body(it.contentType.serde.serialize(it.dataType.randomValue()))
+      header("Content-Type", it.contentType.value).body(it.serde.serialize(it.dataType.randomValue()))
     } ?: this
   }
 
@@ -173,3 +175,6 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     return if (containsKey(key)) getValue(key) else generator()
   }
 }
+
+private fun List<BodySchema>.serdeFor(contentType: ContentType): Serde? =
+  find { it.contentType == contentType }?.serde

@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.operation
 
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.codec.StyleCodec
+import tech.sabai.contracteer.core.serde.Serde
 
 /**
  * Represents a single API operation (path + HTTP method) extracted from an OpenAPI specification.
@@ -82,9 +83,11 @@ data class ParameterSchema(
  * @param contentType the media type (e.g. `application/json`)
  * @param dataType the expected data type and constraints
  * @param isRequired whether the body must be present
+ * @param serde the serializer/deserializer for this body's wire format
  */
 data class BodySchema(
   val contentType: ContentType,
   val dataType: DataType<out Any>,
-  val isRequired: Boolean
+  val isRequired: Boolean,
+  val serde: Serde
 )

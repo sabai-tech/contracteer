@@ -230,7 +230,7 @@ Contracteer produces no verification cases for them.
 **Cause:** The operation uses a feature that Contracteer does not yet support.
 Operations are skipped when they use:
 
-- `multipart/form-data`, `application/x-www-form-urlencoded`, or `application/xml` content types.
+- `multipart/form-data` or `application/xml` content types.
 
 Contracteer logs a warning for each skipped operation.
 

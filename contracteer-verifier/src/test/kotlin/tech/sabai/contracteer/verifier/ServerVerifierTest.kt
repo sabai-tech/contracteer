@@ -10,6 +10,7 @@ import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -41,7 +42,8 @@ class ServerVerifierTest {
             BodySchema(
               contentType = ContentType("application/json"),
               dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-              isRequired = true
+              isRequired = true,
+              serde = JsonSerde
             )
           )
         ),
@@ -136,7 +138,8 @@ class ServerVerifierTest {
             BodySchema(
               contentType = ContentType("application/json"),
               dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-              isRequired = true
+              isRequired = true,
+              serde = JsonSerde
             )
           )
         )
@@ -208,7 +211,8 @@ class ServerVerifierTest {
             BodySchema(
               contentType = ContentType("application/json"),
               dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-              isRequired = true
+              isRequired = true,
+              serde = JsonSerde
             )
           )
         )

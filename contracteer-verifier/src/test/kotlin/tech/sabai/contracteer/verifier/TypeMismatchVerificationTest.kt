@@ -15,6 +15,7 @@ import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.codec.FormStyleCodec
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -49,7 +50,8 @@ class TypeMismatchVerificationTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -59,7 +61,8 @@ class TypeMismatchVerificationTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         ))
       ),
@@ -113,7 +116,8 @@ class TypeMismatchVerificationTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         ))
       ),
@@ -172,7 +176,8 @@ class TypeMismatchVerificationTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         ))
       ),
@@ -218,7 +223,8 @@ class TypeMismatchVerificationTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -228,7 +234,8 @@ class TypeMismatchVerificationTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         ))
       ),

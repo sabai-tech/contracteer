@@ -44,7 +44,7 @@ internal object ScenarioMatcher {
     if (scenarioBody.contentType.validate(requestContentType).isFailure()) return false
 
     val bodySchema = requestSchema.bodies.find { it.contentType == scenarioBody.contentType } ?: return false
-    val deserializeResult = bodySchema.contentType.serde.deserialize(request.bodyString(), bodySchema.dataType)
+    val deserializeResult = bodySchema.serde.deserialize(request.bodyString(), bodySchema.dataType)
 
     return deserializeResult.isSuccess() && deserializeResult.value == scenarioBody.value
   }

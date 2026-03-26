@@ -6,6 +6,8 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.serde.JsonSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import java.math.BigDecimal
 
 object TestFixture {
@@ -47,7 +49,7 @@ object TestFixture {
     contentType: ContentType = ContentType("application/json"),
     dataType: DataType<out Any>,
     isRequired: Boolean = false
-  ) = BodySchema(contentType, dataType, isRequired)
+  ) = BodySchema(contentType, dataType, isRequired, if (contentType.isJson()) JsonSerde else PlainTextSerde)
 
   fun requestSchema(
     parameters: List<ParameterSchema> = emptyList(),

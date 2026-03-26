@@ -75,5 +75,5 @@ private fun BodySchema.isUnsupportedResponseContentType() =
 
 private fun BodySchema.isUnsupportedRequestContentType(): Boolean {
   val requestContentType = contentType.value
-  return requestContentType in setOf("multipart/form-data", "application/x-www-form-urlencoded", "application/xml")
+  return requestContentType in setOf("multipart/form-data", "application/xml")
 }

@@ -81,7 +81,7 @@ internal object ResponseValidator {
         if (matchingSchema == null) {
           failure("Content-Type '$responseContentType' does not match any expected: ${bodySchemas.map { it.contentType.value }}")
         } else {
-          matchingSchema.contentType.serde
+          matchingSchema.serde
             .deserialize(response.bodyString(), matchingSchema.dataType)
             .flatMap { matchingSchema.dataType.validate(it) }
             .map { }

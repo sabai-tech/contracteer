@@ -6,6 +6,8 @@ import org.http4k.core.Response
 import org.http4k.core.Status
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.serde.JsonSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -238,7 +240,8 @@ class ResponseValidatorTest {
               "name" to stringDataType()
             )
           ),
-          isRequired = true
+          isRequired = true,
+          serde = JsonSerde
         )
       )
     )
@@ -305,7 +308,8 @@ class ResponseValidatorTest {
         BodySchema(
           contentType = ContentType("application/json"),
           dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-          isRequired = true
+          isRequired = true,
+          serde = JsonSerde
         )
       )
     )
@@ -345,7 +349,8 @@ class ResponseValidatorTest {
         BodySchema(
           contentType = ContentType("application/json"),
           dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-          isRequired = true
+          isRequired = true,
+          serde = JsonSerde
         )
       )
     )
@@ -417,12 +422,14 @@ class ResponseValidatorTest {
         BodySchema(
           contentType = ContentType("application/json"),
           dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-          isRequired = true
+          isRequired = true,
+          serde = JsonSerde
         ),
         BodySchema(
           contentType = ContentType("application/xml"),
           dataType = stringDataType(),
-          isRequired = true
+          isRequired = true,
+          serde = PlainTextSerde
         )
       )
     )
@@ -472,7 +479,8 @@ class ResponseValidatorTest {
             ),
             requiredProperties = setOf("id", "email")
           ),
-          isRequired = true
+          isRequired = true,
+          serde = JsonSerde
         )
       )
     )
@@ -489,7 +497,8 @@ class ResponseValidatorTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("email" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),

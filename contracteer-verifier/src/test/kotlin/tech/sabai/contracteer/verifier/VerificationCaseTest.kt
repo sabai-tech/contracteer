@@ -3,6 +3,7 @@ package tech.sabai.contracteer.verifier
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -46,7 +47,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ), ResponseSchema(
@@ -55,7 +57,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ))
@@ -140,7 +143,8 @@ class VerificationCaseTest {
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("product" to stringDataType(),
                                                          "quantity" to integerDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -150,7 +154,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("orderId" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ))
@@ -185,7 +190,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -195,7 +201,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       )
@@ -228,7 +235,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("items" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       )
@@ -257,7 +265,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/xml"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -267,7 +276,8 @@ class VerificationCaseTest {
           BodySchema(
             contentType = ContentType("application/xml"),
             dataType = objectDataType(properties = mapOf("result" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       )

@@ -2,19 +2,24 @@ package tech.sabai.contracteer.core.swagger
 
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.headers.Header
+import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.codec.*
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.codec.*
+import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde
+import tech.sabai.contracteer.core.serde.JsonSerde
+import tech.sabai.contracteer.core.serde.PlainTextSerde
+import tech.sabai.contracteer.core.serde.Serde
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
 internal class SchemaExtractor(
@@ -103,15 +108,17 @@ internal class SchemaExtractor(
       success(emptyList())
     else
       body.content
+        .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
           dataTypeConverter
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
-              validateBodySchemaContentType(ContentType(contentType), dataType!!)
-                .map { BodySchema(ContentType(contentType), dataType.asRequestType(), body.safeRequired()) }
+              buildSerde(contentType, mediaType, dataType!!)
+                .map {
+                  BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it!!)
+                }
             }
         }.combineResults()
-        .forProperty("body")
 
   private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ParameterSchema>> =
     response
@@ -125,19 +132,50 @@ internal class SchemaExtractor(
       success(emptyList())
     else
       response.content
+        .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
           dataTypeConverter
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
-              validateBodySchemaContentType(ContentType(contentType), dataType!!)
+              buildSerde(contentType, mediaType, dataType!!)
                 .map {
-                  BodySchema(ContentType(contentType),
-                             dataType.asResponseType(),
-                             mediaType.schema.safeNullable())
+                  BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), it!!)
                 }
             }
         }.combineResults()
         .forProperty("body")
+
+  private fun buildSerde(contentType: ContentType,
+                         mediaType: MediaType,
+                         dataType: DataType<out Any>): Result<Serde> =
+    when {
+      contentType.isJson() && !dataType.isFullyStructured() && dataType !is ArrayDataType ->
+        failure("Content type ${contentType.value} supports only 'object', 'anyOf', 'oneOf', 'allOf' or 'array' schema")
+
+      contentType.isFormUrlEncoded() && dataType !is ObjectDataType                       ->
+        failure("Content type application/x-www-form-urlencoded requires object schema")
+
+      contentType.isFormUrlEncoded()                                                      ->
+        buildFormUrlEncodedSerde(dataType as ObjectDataType, mediaType)
+
+      contentType.isJson()                                                                ->
+        success(JsonSerde)
+
+      else                                                                                ->
+        success(PlainTextSerde)
+    }
+
+  private fun buildFormUrlEncodedSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
+    val encodingMap = mediaType.encoding ?: emptyMap()
+    return dataType.properties
+      .map { (name, type) ->
+        val encoding = encodingMap[name]
+        createCodecForParameter(QueryParam(name), encoding?.style?.toString(), encoding?.explode, type, name)
+          .map { name to it!! }
+      }
+      .combineResults()
+      .map<Serde> { FormUrlEncodedSerde(it!!.toMap()) }
+  }
 
   private fun Parameter.toParameterSchema(element: ParameterElement): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
@@ -159,25 +197,20 @@ internal class SchemaExtractor(
         }
     }
 
-  private fun createCodecForParameter(
-    element: ParameterElement,
-    style: String?,
-    explode: Boolean?,
-    dataType: DataType<out Any>,
-    paramName: String
-  ): Result<StyleCodec> {
+  private fun createCodecForParameter(element: ParameterElement,
+                                      style: String?,
+                                      explode: Boolean?,
+                                      dataType: DataType<out Any>,
+                                      paramName: String): Result<StyleCodec> {
     val normalizedStyle = style?.lowercase()?.replace("_", "")
-
     val (defaultStyle, defaultExplode) = when (element) {
       is PathParam               -> "simple" to false
       is QueryParam              -> "form" to true
       is ParameterElement.Header -> "simple" to false
       is Cookie                  -> "form" to true
     }
-
     val actualStyle = normalizedStyle ?: defaultStyle
     val actualExplode = explode ?: defaultExplode
-
     val supportedStyles = when (element) {
       is PathParam               -> setOf("simple", "label", "matrix")
       is QueryParam              -> setOf("form", "spacedelimited", "pipedelimited", "deepobject")
@@ -232,11 +265,4 @@ internal class SchemaExtractor(
     }
     else             -> null
   }
-
-  private fun validateBodySchemaContentType(contentType: ContentType,
-                                            dataType: DataType<out Any>): Result<DataType<out Any>> =
-    if (contentType.isJson() && !dataType.isFullyStructured() && dataType !is ArrayDataType)
-      failure("Content type ${contentType.value} supports only 'object', 'anyOf', 'oneOf', 'allOf' or 'array' schema")
-    else
-      success(dataType)
 }

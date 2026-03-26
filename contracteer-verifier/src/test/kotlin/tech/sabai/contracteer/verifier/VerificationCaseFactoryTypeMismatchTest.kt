@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.core.codec.FormStyleCodec
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
 import tech.sabai.contracteer.verifier.TestFixture.stringDataType
@@ -126,7 +127,8 @@ class VerificationCaseFactoryTypeMismatchTest {
       bodies = listOf(
         BodySchema(contentType = ContentType("application/json"),
                    dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-                   isRequired = true)
+                   isRequired = true,
+                   serde = JsonSerde)
       )
     )
 
@@ -207,7 +209,8 @@ class VerificationCaseFactoryTypeMismatchTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -215,12 +218,14 @@ class VerificationCaseFactoryTypeMismatchTest {
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         )),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         ))
       ),
       scenarios = emptyList()
@@ -252,7 +257,8 @@ class VerificationCaseFactoryTypeMismatchTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -260,7 +266,8 @@ class VerificationCaseFactoryTypeMismatchTest {
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         ))
       ),
       scenarios = emptyList()
@@ -285,7 +292,8 @@ class VerificationCaseFactoryTypeMismatchTest {
           BodySchema(
             contentType = ContentType("text/plain"),
             dataType = stringDataType(),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -294,7 +302,8 @@ class VerificationCaseFactoryTypeMismatchTest {
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         ))
       ),
       scenarios = emptyList()
@@ -321,12 +330,14 @@ class VerificationCaseFactoryTypeMismatchTest {
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         )),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         ))
       ),
       scenarios = emptyList()
@@ -351,12 +362,14 @@ class VerificationCaseFactoryTypeMismatchTest {
           BodySchema(
             contentType = ContentType("text/plain"),
             dataType = stringDataType(),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           ),
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("value" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -365,7 +378,8 @@ class VerificationCaseFactoryTypeMismatchTest {
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         ))
       ),
       scenarios = emptyList()
@@ -393,7 +407,8 @@ class VerificationCaseFactoryTypeMismatchTest {
           BodySchema(
             contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true
+            isRequired = true,
+            serde = JsonSerde
           )
         )
       ),
@@ -401,12 +416,14 @@ class VerificationCaseFactoryTypeMismatchTest {
         201 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         )),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true)
+                     isRequired = true,
+                     serde = JsonSerde)
         ))
       ),
       scenarios = listOf(
@@ -455,7 +472,8 @@ class VerificationCaseFactoryTypeMismatchTest {
       400 to ResponseSchema(headers = emptyList(), bodies = listOf(
         BodySchema(contentType = ContentType("application/json"),
                    dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                   isRequired = true)
+                   isRequired = true,
+                   serde = JsonSerde)
       ))
     ),
     scenarios = emptyList()
