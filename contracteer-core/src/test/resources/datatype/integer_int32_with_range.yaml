@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Integer Format Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: integer
+                  format: int32
+                  minimum: -100
+                  maximum: 100
+      responses:
+        '200':
+          description: OK

@@ -46,9 +46,17 @@ Only the affected operations or constraints are skipped.
 | `byte` (base64) | Supported |
 | `binary` | Supported |
 | `password` | Supported (treated as plain string) |
-| `int32` / `int64` | Not enforced (parsed as integer, no range constraint) |
-| `float` / `double` | Not enforced (parsed as number, no precision constraint) |
 | Custom formats | Ignored |
+
+## Integer and Number Formats
+
+| Format | Status |
+|--------|--------|
+| `int32` | Supported. Applies 32-bit signed range; rejects explicit min/max outside range |
+| `int64` | Supported. Applies 64-bit signed range; rejects explicit min/max outside range |
+| `float` | Supported. Applies 32-bit float range; rejects explicit min/max outside range |
+| `double` | Supported. Applies 64-bit double range; rejects explicit min/max outside range |
+| Unknown formats | Rejected |
 
 ---
 

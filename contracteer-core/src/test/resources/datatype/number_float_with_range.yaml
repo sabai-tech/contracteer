@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Number Format Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: number
+                  format: float
+                  minimum: -100
+                  maximum: 100
+      responses:
+        '200':
+          description: OK

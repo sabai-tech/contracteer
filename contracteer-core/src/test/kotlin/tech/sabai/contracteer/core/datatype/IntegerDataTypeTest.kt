@@ -167,5 +167,35 @@ class IntegerDataTypeTest {
       // then
       assert(Range.create(10.toBigDecimal(), 20.toBigDecimal()).value!!.contains(result).isSuccess())
     }
+
+    @Test
+    fun `validation rejects value outside int32 range`() {
+      // given
+      val integerDataType = integerDataType(
+        minimum = Int.MIN_VALUE.toBigDecimal(),
+        maximum = Int.MAX_VALUE.toBigDecimal()
+      )
+
+      // when
+      val result = integerDataType.validate(3_000_000_000L)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation accepts value within int32 range`() {
+      // given
+      val integerDataType = integerDataType(
+        minimum = Int.MIN_VALUE.toBigDecimal(),
+        maximum = Int.MAX_VALUE.toBigDecimal()
+      )
+
+      // when
+      val result = integerDataType.validate(2_000_000_000)
+
+      // then
+      assert(result.isSuccess())
+    }
   }
 }

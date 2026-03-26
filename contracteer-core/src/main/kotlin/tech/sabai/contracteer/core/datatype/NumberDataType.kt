@@ -15,7 +15,7 @@ class NumberDataType private constructor(name: String,
 
   override fun doValidate(value: BigDecimal) = range.contains(value)
 
-  override fun doRandomValue(): BigDecimal = range.randomIntegerValue()
+  override fun doRandomValue(): BigDecimal = range.randomValue()
 
   companion object {
     @JvmStatic

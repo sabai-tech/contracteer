@@ -146,5 +146,35 @@ class NumberDataTypeTest {
       // then
       assert(Range.create(10.toBigDecimal(), 20.toBigDecimal()).value!!.contains(result).isSuccess())
     }
+
+    @Test
+    fun `validation rejects value outside float range`() {
+      // given
+      val numberDataType = numberDataType(
+        minimum = Float.MAX_VALUE.toBigDecimal().negate(),
+        maximum = Float.MAX_VALUE.toBigDecimal()
+      )
+
+      // when
+      val result = numberDataType.validate(Double.MAX_VALUE)
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation accepts value within float range`() {
+      // given
+      val numberDataType = numberDataType(
+        minimum = Float.MAX_VALUE.toBigDecimal().negate(),
+        maximum = Float.MAX_VALUE.toBigDecimal()
+      )
+
+      // when
+      val result = numberDataType.validate(1_000_000.5)
+
+      // then
+      assert(result.isSuccess())
+    }
   }
 }

@@ -349,15 +349,105 @@ class SchemaConversionTest {
     assert(anyOfDataType.subTypes.all { it is AllOfDataType })
   }
 
+  @Test
+  fun `extract IntegerDataType with int32 format applies 32-bit range`() {
+    // when
+    val dataType = getDataType("integer_format.yaml", "int32_prop") as IntegerDataType
+
+    // then
+    assert(dataType.range.minimum == Int.MIN_VALUE.toBigDecimal())
+    assert(dataType.range.maximum == Int.MAX_VALUE.toBigDecimal())
+  }
+
+  @Test
+  fun `extract IntegerDataType with int64 format applies 64-bit range`() {
+    // when
+    val dataType = getDataType("integer_format.yaml", "int64_prop") as IntegerDataType
+
+    // then
+    assert(dataType.range.minimum == Long.MIN_VALUE.toBigDecimal())
+    assert(dataType.range.maximum == Long.MAX_VALUE.toBigDecimal())
+  }
+
+  @Test
+  fun `extract IntegerDataType with int32 format narrows to explicit range when explicit is narrower`() {
+    // when
+    val dataType = getDataType("integer_int32_with_range.yaml") as IntegerDataType
+
+    // then — explicit range [-100, 100] is narrower than int32, so it wins
+    assert(dataType.range.minimum == (-100).toBigDecimal())
+    assert(dataType.range.maximum == 100.toBigDecimal())
+  }
+
+  @Test
+  fun `rejects IntegerDataType with int32 format when explicit range exceeds format`() {
+    // when
+    val result = loadOperations("integer_int32_with_wider_range.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("out of range for format") })
+  }
+
+  @Test
+  fun `extract IntegerDataType without format has no implicit range`() {
+    // when
+    val dataType = getDataType("integer.yaml") as IntegerDataType
+
+    // then — range comes from explicit min/max in the YAML, not from format
+    assert(dataType.range.minimum == 9.toBigDecimal())
+    assert(dataType.range.maximum == 20.toBigDecimal())
+  }
+
+  @Test
+  fun `extract NumberDataType with float format applies float range`() {
+    // when
+    val dataType = getDataType("number_format.yaml", "float_prop") as NumberDataType
+
+    // then
+    assert(dataType.range.minimum == Float.MAX_VALUE.toBigDecimal().negate())
+    assert(dataType.range.maximum == Float.MAX_VALUE.toBigDecimal())
+  }
+
+  @Test
+  fun `extract NumberDataType with float format narrows to explicit range when explicit is narrower`() {
+    // when
+    val dataType = getDataType("number_float_with_range.yaml") as NumberDataType
+
+    // then
+    assert(dataType.range.minimum == (-100).toBigDecimal())
+    assert(dataType.range.maximum == 100.toBigDecimal())
+  }
+
+  @Test
+  fun `rejects NumberDataType with float format when explicit range exceeds format`() {
+    // when
+    val result = loadOperations("number_float_with_wider_range.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("out of range for format") })
+  }
+
+  @Test
+  fun `extract NumberDataType with double format applies double range`() {
+    // when
+    val dataType = getDataType("number_format.yaml", "double_prop") as NumberDataType
+
+    // then
+    assert(dataType.range.minimum == Double.MAX_VALUE.toBigDecimal().negate())
+    assert(dataType.range.maximum == Double.MAX_VALUE.toBigDecimal())
+  }
+
   // --- Helpers ---
 
-  private fun getDataType(yamlFile: String): DataType<out Any> =
+  private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =
     loadOperations(yamlFile)
       .assertSuccess()
       .first()
       .requestSchema.bodies.first().dataType
       .asObjectDataType()
-      .properties["prop1"]!!
+      .properties[propName]!!
 
   private fun loadOperations(yamlFile: String) =
     OpenApiLoader.loadOperations("src/test/resources/datatype/$yamlFile")

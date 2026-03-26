@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: Number Format Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                float_prop:
+                  type: number
+                  format: float
+                double_prop:
+                  type: number
+                  format: double
+      responses:
+        '200':
+          description: OK
