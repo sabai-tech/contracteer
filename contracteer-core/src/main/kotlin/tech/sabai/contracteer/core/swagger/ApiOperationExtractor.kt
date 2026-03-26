@@ -42,22 +42,23 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
     val responseSchemas = extractResponseSchemas(operation)
     val classResponses = extractClassResponses(operation)
     val defaultResponse = extractDefaultResponse(operation)
-    val scenarios = scenarioExtractor.extractScenarios(path, method, operation, requestSchema, responseSchemas)
 
-    return if (requestSchema.isSuccess() && responseSchemas.isSuccess() && classResponses.isSuccess() && defaultResponse.isSuccess() && scenarios.isSuccess())
-      success(ApiOperation(path,
-                           method,
-                           requestSchema.value!!,
-                           responseSchemas.value!!,
-                           classResponses.value!!,
-                           defaultResponse.value,
-                           scenarios.value!!))
-    else
-      requestSchema.retypeError<ApiOperation>() combineWith
+    if (!allAreSuccess(requestSchema, responseSchemas, classResponses, defaultResponse))
+      return requestSchema.retypeError<ApiOperation>() combineWith
           responseSchemas.retypeError() combineWith
           classResponses.retypeError() combineWith
-          defaultResponse.retypeError() combineWith
-          scenarios.retypeError()
+          defaultResponse.retypeError()
+
+    val scenarios = scenarioExtractor.extractScenarios(path, method, operation, requestSchema, responseSchemas)
+    if (scenarios.isFailure()) return scenarios.retypeError()
+
+    return success(ApiOperation(path,
+                                method,
+                                requestSchema.value!!,
+                                responseSchemas.value!!,
+                                classResponses.value!!,
+                                defaultResponse.value,
+                                scenarios.value!!))
   }
 
   private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =
