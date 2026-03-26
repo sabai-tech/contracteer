@@ -46,7 +46,9 @@ internal object ObjectDataTypeConverter {
             allowAdditionalProperties = allowAdditionalProperties,
             additionalPropertiesDataType = additionalPropertiesDataType,
             isNullable = schema.safeNullable(),
-            enum = schema.safeEnum().map { it.normalize() }
+            enum = schema.safeEnum().map { it.normalize() },
+            minProperties = schema.minProperties,
+            maxProperties = schema.maxProperties
           )
         }
       }.forProperty(schema.name)

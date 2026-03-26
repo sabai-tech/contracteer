@@ -85,8 +85,10 @@ object TestFixture {
                      allowAdditionalProperties: Boolean = true,
                      additionalPropertiesDataType: DataType<out Any>? = null,
                      isNullable: Boolean = false,
-                     enum: List<Any?> = emptyList()) =
-    ObjectDataType.create(name, properties, requiredProperties, readOnlyProperties, writeOnlyProperties, allowAdditionalProperties, additionalPropertiesDataType, isNullable, enum).value!!
+                     enum: List<Any?> = emptyList(),
+                     minProperties: Int? = null,
+                     maxProperties: Int? = null) =
+    ObjectDataType.create(name, properties, requiredProperties, readOnlyProperties, writeOnlyProperties, allowAdditionalProperties, additionalPropertiesDataType, isNullable, enum, minProperties, maxProperties).value!!
 
   fun oneOfDataType(name: String = "oneOf",
                     subTypes: List<DataType<out Any>>,

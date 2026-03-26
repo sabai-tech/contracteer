@@ -494,6 +494,16 @@ class SchemaConversionTest {
     assert(dataType.multipleOf == 0.01.toBigDecimal())
   }
 
+  @Test
+  fun `extract ObjectDataType with minProperties and maxProperties`() {
+    // when
+    val dataType = getDataType("object_property_count.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.minProperties == 1)
+    assert(dataType.maxProperties == 5)
+  }
+
   // --- Helpers ---
 
   private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =

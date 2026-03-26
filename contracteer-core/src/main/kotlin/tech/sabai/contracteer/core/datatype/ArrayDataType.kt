@@ -29,16 +29,18 @@ class ArrayDataType private constructor(name: String,
       else ArrayDataType(name, it, isNullable, minItems, maxItems, uniqueItems, allowedValues)
     }
 
-  override fun doValidate(value: List<Any?>): Result<List<Any?>> {
-    return when {
-      minItems != null && value.size < minItems          -> failure("Array has ${value.size} items but minItems is $minItems")
-      maxItems != null && value.size > maxItems          -> failure("Array has ${value.size} items but maxItems is $maxItems")
-      uniqueItems && value.size != value.distinct().size -> failure("Array contains duplicate items but uniqueItems is true")
-      else                                               ->
-        value
-          .accumulateWithIndex { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
-          .map { value }
+  override fun doValidate(value: List<Any?>): Result<List<Any?>> =
+    validateConstraints(value) andThen {
+      value
+        .accumulateWithIndex { index, itemValue -> itemDataType.validate(itemValue).forIndex(index) }
+        .map { value }
     }
+
+  private fun validateConstraints(value: List<Any?>): Result<List<Any?>> = when {
+    minItems != null && value.size < minItems          -> failure("Array has ${value.size} items but minItems is $minItems")
+    maxItems != null && value.size > maxItems          -> failure("Array has ${value.size} items but maxItems is $maxItems")
+    uniqueItems && value.size != value.distinct().size -> failure("Array contains duplicate items but uniqueItems is true")
+    else                                               -> success(value)
   }
 
   override fun doRandomValue(): List<Any?> {

@@ -287,10 +287,8 @@ class ObjectDataTypeTest {
     )
 
     // when
-    @Suppress("UNCHECKED_CAST")
-    val requestValue = dataType.asRequestType().randomValue() as Map<String, Any?>
-    @Suppress("UNCHECKED_CAST")
-    val responseValue = dataType.asResponseType().randomValue() as Map<String, Any?>
+    val requestValue = dataType.asRequestType().randomValue()
+    val responseValue = dataType.asResponseType().randomValue()
 
     // then
     assert(!requestValue.containsKey("id") && requestValue.containsKey("name") && requestValue.containsKey("password"))
@@ -424,6 +422,205 @@ class ObjectDataTypeTest {
 
       // then
       assert(enum.contains(result))
+    }
+  }
+
+  @Nested
+  inner class WithMinProperties {
+
+    @Test
+    fun `creation fails when minProperties is negative`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType()),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        minProperties = -1
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when minProperties exceeds declared properties`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        minProperties = 3
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation fails when object has fewer properties than minProperties`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        minProperties = 2
+      )
+
+      // when
+      val result = objectDataType.validate(mapOf("a" to "hello"))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when object has exactly minProperties`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        minProperties = 2
+      )
+
+      // when
+      val result = objectDataType.validate(mapOf("a" to "hello", "b" to "world"))
+
+      // then
+      assert(result.isSuccess())
+    }
+  }
+
+  @Nested
+  inner class WithMaxProperties {
+
+    @Test
+    fun `creation fails when maxProperties is negative`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType()),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        maxProperties = -1
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when maxProperties is less than required properties count`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType(), "c" to stringDataType()),
+        requiredProperties = setOf("a", "b", "c"),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        maxProperties = 2
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation fails when object has more properties than maxProperties`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        allowAdditionalProperties = true,
+        maxProperties = 1
+      )
+
+      // when
+      val result = objectDataType.validate(mapOf("a" to "hello", "b" to "world"))
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `validation succeeds when object has exactly maxProperties`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        maxProperties = 2
+      )
+
+      // when
+      val result = objectDataType.validate(mapOf("a" to "hello", "b" to "world"))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `generates object with at most maxProperties including required`() {
+      // given
+      val objectDataType = objectDataType(
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType(), "c" to stringDataType()),
+        requiredProperties = setOf("a"),
+        maxProperties = 2
+      )
+
+      // when
+      val result = objectDataType.randomValue()
+
+      // then
+      assert(result.size <= 2)
+      assert(result.containsKey("a"))
+    }
+  }
+
+  @Nested
+  inner class WithMinAndMaxProperties {
+
+    @Test
+    fun `creation fails when minProperties is combined with readOnly properties`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        readOnlyProperties = setOf("a"),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        minProperties = 1
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when maxProperties is combined with writeOnly properties`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        writeOnlyProperties = setOf("a"),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        maxProperties = 2
+      )
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when minProperties is greater than maxProperties`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("a" to stringDataType(), "b" to stringDataType(), "c" to stringDataType()),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        minProperties = 3,
+        maxProperties = 1
+      )
+
+      // then
+      assert(result.isFailure())
     }
   }
 }

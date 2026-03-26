@@ -146,6 +146,16 @@ If the field is also `required`, the server should not return it and the verifie
 If the verifier fails, check that the field is actually marked `writeOnly: true` in your specification.
 If it is, the server should not include it in responses.
 
+### Extraction fails with minProperties/maxProperties and readOnly/writeOnly
+
+**Symptom:** Loading the specification fails with an error about `minProperties`/`maxProperties` combined with `readOnly` or `writeOnly` properties.
+
+**Cause:** The OAS specification does not define how `minProperties`/`maxProperties` interact with `readOnly`/`writeOnly`.
+When properties are excluded from request or response schemas, the property count constraints become ambiguous.
+Contracteer rejects this combination to avoid silent misinterpretation.
+
+**Fix:** Remove either the `minProperties`/`maxProperties` constraint or the `readOnly`/`writeOnly` annotations from the affected object schema.
+
 ### Response values are random and different on each run
 
 **Symptom:** The mock server returns valid responses, but the values change on every request.

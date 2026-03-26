@@ -14,7 +14,7 @@ Contracteer does not reject a specification because it contains unsupported feat
 Instead, it handles them gracefully:
 
 - **Unsupported content types** (XML, multipart) -- the operation is skipped with a warning.
-- **Unsupported schema keywords** (pattern, minItems, etc.) -- the keyword is ignored.
+- **Unsupported schema keywords** (`default`, `not`) -- the keyword is ignored.
   Values are generated and validated without that constraint.
 
 Your specification still loads.
@@ -48,6 +48,8 @@ Only the affected operations or constraints are skipped.
 | `password` | Supported (treated as plain string) |
 | Custom formats | Ignored |
 
+---
+
 ## Integer and Number Formats
 
 | Format | Status |
@@ -79,12 +81,12 @@ Only the affected operations or constraints are skipped.
 | `multipleOf` | Integer and number types |
 | `minItems` / `maxItems` | Array types |
 | `uniqueItems` | Array types |
+| `minProperties` / `maxProperties` | Object types. Cannot be combined with `readOnly` or `writeOnly` properties |
 
 ### Not yet supported
 
 | Keyword | Impact |
 |---------|--------|
-| `minProperties` / `maxProperties` | No property count constraints on objects |
 | `default` (property values) | Default values are not used for generation |
 | `not` | Schema negation is not supported |
 
