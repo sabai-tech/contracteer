@@ -3,7 +3,6 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import kotlin.math.absoluteValue
-import kotlin.random.Random
 
 /** OpenAPI `string` type with `format: binary`. Values are raw binary strings. */
 class BinaryDataType private constructor(name: String,
@@ -20,12 +19,14 @@ class BinaryDataType private constructor(name: String,
       .mapErrors { "Invalid length. Expected a value within $lengthRange, but got ${value.length}." }
       .map { value }
 
-  override fun doRandomValue(): String =
-    ByteArray(lengthRange.randomIntegerValue().toInt().absoluteValue.coerceAtMost(100))
-      .also { Random.nextBytes(it) }
-      .toString(Charsets.ISO_8859_1)
+  override fun doRandomValue(): String {
+    val length = lengthRange.randomIntegerValue().toInt().absoluteValue.coerceAtMost(100)
+    return String(CharArray(length) { PRINTABLE_ASCII.random() })
+  }
 
   companion object {
+    private val PRINTABLE_ASCII = (' '..'~')
+
     @JvmStatic
     @JvmOverloads
     fun create(

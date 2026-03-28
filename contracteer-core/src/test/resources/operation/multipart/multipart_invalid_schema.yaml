@@ -1,0 +1,15 @@
+openapi: 3.0.0
+info:
+  title: Multipart Invalid Schema
+  version: '1.0'
+paths:
+  /invalid:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Success

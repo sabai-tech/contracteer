@@ -6,22 +6,6 @@ servers:
   - url: 'http://localhost:3000'
 paths:
   /products:
-    post:
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: integer
-                name:
-                  type: string
-                quantity:
-                  type: integer
-      responses:
-        200:
-          description: OK
     get:
       responses:
         200:

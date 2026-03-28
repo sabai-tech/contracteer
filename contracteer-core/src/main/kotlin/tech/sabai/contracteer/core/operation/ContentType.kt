@@ -15,6 +15,8 @@ data class ContentType(val value: String) {
 
   fun isFormUrlEncoded() = value.lowercase() == "application/x-www-form-urlencoded"
 
+  fun isMultipart() = value.lowercase().startsWith("multipart/")
+
   fun validate(contentType: String) =
     when {
       value.trim() == "*/*"                                     -> success(value)

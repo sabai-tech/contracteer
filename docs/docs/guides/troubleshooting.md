@@ -226,8 +226,8 @@ The keyword is silently ignored, which changes validation behavior.
 
 Common examples:
 
-- **`minItems`** on an array.
-  The verifier may send an empty array when the server expects at least one item.
+- **`default`** on a property.
+  The verifier may omit an optional property when the server expects the default value.
 
 **Fix:** Check the [OpenAPI 3.0 Coverage](../concepts/openapi-coverage.md) page for the full list of supported and unsupported keywords.
 If your specification relies on an unsupported keyword, you may need to work around it until support is added.
@@ -240,7 +240,7 @@ Contracteer produces no verification cases for them.
 **Cause:** The operation uses a feature that Contracteer does not yet support.
 Operations are skipped when they use:
 
-- `multipart/form-data` or `application/xml` content types.
+- `application/xml` content types.
 
 Contracteer logs a warning for each skipped operation.
 

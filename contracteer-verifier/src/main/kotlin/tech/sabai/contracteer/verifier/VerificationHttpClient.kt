@@ -7,8 +7,9 @@ import org.http4k.core.Response
 import org.http4k.core.UriTemplate
 import org.http4k.core.cookie.cookie
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.serde.Serde
 import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.serde.MultipartSerde
+import tech.sabai.contracteer.core.serde.Serde
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
 internal class VerificationHttpClient(private val serverUrl: String) {
@@ -140,7 +141,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
 
   private fun Request.withScenarioBody(body: ScenarioBody?, serde: Serde?): Request {
     if (body == null || serde == null) return this
-    return header("Content-Type", body.contentType.value).body(serde.serialize(body.value))
+    return header("Content-Type", contentTypeHeaderValue(body.contentType, serde)).body(serde.serialize(body.value))
   }
 
   private fun Request.placeEncodedEntries(element: ParameterElement, entries: List<Pair<String, String>>): Request =
@@ -163,9 +164,13 @@ internal class VerificationHttpClient(private val serverUrl: String) {
 
   private fun Request.withGeneratedBody(bodySchema: BodySchema?): Request {
     return bodySchema?.let {
-      header("Content-Type", it.contentType.value).body(it.serde.serialize(it.dataType.randomValue()))
+      header("Content-Type",
+             contentTypeHeaderValue(it.contentType, it.serde)).body(it.serde.serialize(it.dataType.randomValue()))
     } ?: this
   }
+
+  private fun contentTypeHeaderValue(contentType: ContentType, serde: Serde): String =
+    if (serde is MultipartSerde) "${contentType.value}; boundary=${serde.boundary}" else contentType.value
 
   private fun Request.withAcceptHeader(contentType: ContentType?): Request {
     return contentType?.let { header("Accept", it.value) } ?: this

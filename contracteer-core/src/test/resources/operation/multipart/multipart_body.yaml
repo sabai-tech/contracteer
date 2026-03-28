@@ -1,0 +1,71 @@
+openapi: 3.0.0
+info:
+  title: Multipart Form Data Tests
+  version: '1.0'
+paths:
+  /custom-encoding:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                metadata:
+                  type: object
+                  properties:
+                    tag:
+                      type: string
+            encoding:
+              metadata:
+                contentType: application/vnd.api+json
+      responses:
+        '200':
+          description: Success
+
+  /file-array:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Success
+
+  /defaults:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                avatar:
+                  type: string
+                  format: binary
+                tags:
+                  type: array
+                  items:
+                    type: string
+                profile:
+                  type: object
+                  properties:
+                    bio:
+                      type: string
+      responses:
+        '200':
+          description: Success

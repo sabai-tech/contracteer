@@ -19,6 +19,18 @@ class BinaryDataTypeTest {
   }
 
   @Test
+  fun `generates HTTP-safe random values`() {
+    // given
+    val binaryDataType = binaryDataType(minLength = 10, maxLength = 50)
+
+    // when
+    val result = binaryDataType.randomValue()
+
+    // then — all characters should be printable ASCII (32-126)
+    assert(result.all { it.code in 32..126 })
+  }
+
+  @Test
   fun `does not validate value whose type is not string`() {
     // given
     val binaryDataType = binaryDataType()

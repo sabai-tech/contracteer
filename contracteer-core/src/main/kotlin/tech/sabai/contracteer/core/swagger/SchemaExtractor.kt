@@ -11,15 +11,10 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.codec.*
 import tech.sabai.contracteer.core.combineResults
-import tech.sabai.contracteer.core.datatype.ArrayDataType
-import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde
-import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.serde.PlainTextSerde
-import tech.sabai.contracteer.core.serde.Serde
+import tech.sabai.contracteer.core.serde.*
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
 internal class SchemaExtractor(
@@ -155,8 +150,14 @@ internal class SchemaExtractor(
       contentType.isFormUrlEncoded() && dataType !is ObjectDataType                       ->
         failure("Content type application/x-www-form-urlencoded requires object schema")
 
+      contentType.isMultipart() && dataType !is ObjectDataType                            ->
+        failure("Content type ${contentType.value} requires object schema")
+
       contentType.isFormUrlEncoded()                                                      ->
         buildFormUrlEncodedSerde(dataType as ObjectDataType, mediaType)
+
+      contentType.isMultipart()                                                           ->
+        buildMultipartSerde(dataType as ObjectDataType, mediaType)
 
       contentType.isJson()                                                                ->
         success(JsonSerde)
@@ -176,6 +177,27 @@ internal class SchemaExtractor(
       .combineResults()
       .map<Serde> { FormUrlEncodedSerde(it!!.toMap()) }
   }
+
+  private fun buildMultipartSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
+    val encodingMap = mediaType.encoding ?: emptyMap()
+    val partConfigs = dataType.properties.map { (name, propType) ->
+      val contentType = encodingMap[name]?.contentType ?: defaultPartContentType(propType)
+      val isFile = propType.isBinary()
+      val isFileArray = propType is ArrayDataType && propType.itemDataType.isBinary()
+      name to PartConfig(contentType, serdeForContentType(contentType), isFile || isFileArray, isFileArray)
+    }.toMap()
+    return success(MultipartSerde(partConfigs))
+  }
+
+  private fun defaultPartContentType(dataType: DataType<out Any>): String = when {
+    dataType.isBinary()                                           -> "application/octet-stream"
+    dataType is ArrayDataType && dataType.itemDataType.isBinary() -> "application/octet-stream"
+    dataType is ArrayDataType || dataType.isFullyStructured()     -> "application/json"
+    else                                                          -> "text/plain"
+  }
+
+  private fun serdeForContentType(contentType: String): Serde =
+    if ("json" in contentType.lowercase()) JsonSerde else PlainTextSerde
 
   private fun Parameter.toParameterSchema(element: ParameterElement): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
@@ -265,4 +287,6 @@ internal class SchemaExtractor(
     }
     else             -> null
   }
+
+  private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
 }
