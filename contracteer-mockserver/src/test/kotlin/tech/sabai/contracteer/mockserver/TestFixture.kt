@@ -46,7 +46,7 @@ object TestFixture {
   ) = ParameterSchema(element, dataType, isRequired, SimpleStyleCodec(element.name, false))
 
   fun bodySchema(
-    contentType: ContentType = ContentType("application/json"),
+    contentType: ContentType,
     dataType: DataType<out Any>,
     isRequired: Boolean = false
   ) = BodySchema(contentType, dataType, isRequired, if (contentType.isJson()) JsonSerde else PlainTextSerde)

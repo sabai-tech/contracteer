@@ -31,7 +31,7 @@ import tech.sabai.contracteer.core.operation.Scenario
  * @param port the port to listen on, or 0 for a random available port
  */
 class MockServer @JvmOverloads constructor(private val operations: List<ApiOperation>,
-                                            private val port: Int = 0) {
+                                           private val port: Int = 0) {
 
   private lateinit var http4kServer: Http4kServer
   private val logger = KotlinLogging.logger {}
@@ -77,7 +77,11 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
     httpLogger.debug { formatResponse(response) }
 
     if (response.status == I_M_A_TEAPOT) {
-      httpLogger.warn { "Request handling failed for [${operation.method.uppercase()}] ${operation.path}\n${formatRequest(request)}\n${formatResponse(response)}" }
+      httpLogger.warn {
+        "Request handling failed for [${operation.method.uppercase()}] ${operation.path}\n${
+          formatRequest(request)
+        }\n${formatResponse(response)}"
+      }
       httpLogger.warn { "Enable DEBUG logging for 'tech.sabai.contracteer.http' to see all HTTP traffic" }
     }
 
@@ -89,7 +93,9 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
     if (validationResult.isFailure()) {
       val badRequestResponseSchema = operation.badRequestResponse()
       return if (badRequestResponseSchema != null)
-        ResponseGenerator.fromSchema(400, badRequestResponseSchema.headers, badRequestResponseSchema.bodies.firstOrNull())
+        ResponseGenerator.fromSchema(400,
+                                     badRequestResponseSchema.headers,
+                                     badRequestResponseSchema.bodies.firstOrNull())
       else
         validationErrorResponse(operation, validationResult.errors())
     }
@@ -141,14 +147,15 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   }
 
   private fun verifyAcceptHeader(acceptHeader: String?, responseSchema: ResponseSchema): Result<Unit> {
-    if (acceptHeader.isNullOrEmpty() || acceptHeader == "*/*") return success()
+    val accept = AcceptHeader.parse(acceptHeader)
+    if (accept.acceptsAny()) return success()
     if (responseSchema.bodies.isEmpty()) return success()
 
-    if (responseSchema.bodies.none { it.contentType.validate(acceptHeader).isSuccess() }) {
+    if (accept.bestMatch(responseSchema.bodies.map { it.contentType }) == null)
       return failure(
         "Accept header '$acceptHeader' does not match any response content type: " +
         responseSchema.bodies.joinToString(", ") { it.contentType.value })
-    }
+
     return success()
   }
 
@@ -158,20 +165,24 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
     if (responseSchema.bodies.isEmpty()) return success(null)
     if (responseSchema.bodies.size == 1) return success(responseSchema.bodies.first())
 
-    if (acceptHeader.isNullOrEmpty() || acceptHeader == "*/*")
-      return failure(
-        "Multiple response content types for ${operation.method.uppercase()} ${operation.path}. " +
-        "Use Accept header to disambiguate: ${responseSchema.bodies.joinToString(", ") { it.contentType.value }}")
+    val accept = AcceptHeader.parse(acceptHeader)
+    if (accept.acceptsAny())
+      return failure("Multiple response content types for ${operation.method.uppercase()} ${operation.path}. " +
+                     "Use Accept header to disambiguate: ${responseSchema.bodies.joinToString(", ") { it.contentType.value }}")
 
-    return success(responseSchema.bodies.find { it.contentType.validate(acceptHeader).isSuccess() })
+    val bestMatch = accept.bestMatch(responseSchema.bodies.map { it.contentType })
+    return if (bestMatch == null)
+      failure("Accept header '$acceptHeader' does not match any response content type: " +
+              responseSchema.bodies.joinToString(", ") { it.contentType.value })
+    else
+      success(responseSchema.bodies.find { it.contentType == bestMatch })
   }
 
   private fun validationErrorResponse(operation: ApiOperation, errors: List<String>): Response =
     Response(I_M_A_TEAPOT)
       .header("Content-Type", TEXT_PLAIN.value)
-      .body(
-        "Request validation failed for ${operation.method.uppercase()} ${operation.path}:${System.lineSeparator()}" +
-        errors.joinToString(System.lineSeparator()) { "  * $it" })
+      .body("Request validation failed for ${operation.method.uppercase()} ${operation.path}:${System.lineSeparator()}" +
+            errors.joinToString(System.lineSeparator()) { "  * $it" })
 
   private fun teapotResponse(message: String): Response =
     Response(I_M_A_TEAPOT)

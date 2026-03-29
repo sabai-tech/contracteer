@@ -4,51 +4,38 @@ import org.junit.jupiter.api.Test
 
 class ContentTypeTest {
 
-
   @Test
   fun `validates when content-types are equal`() {
-    // given
-    val contentType = ContentType("application-json")
-
-    // when
-    val result = contentType.validate("application-json")
-
-    // then
-    assert(result.isSuccess())
+    assert(ContentType("application/json").validate("application/json").isSuccess())
   }
 
   @Test
   fun `does not validate when content-types are not equal`() {
-    // given
-    val contentType = ContentType("application-json")
-
-    // when
-    val result = contentType.validate("application-xml")
-
-    // then
-    assert(result.isFailure())
+    assert(ContentType("application/json").validate("application/xml").isFailure())
   }
 
   @Test
-  fun `Content type with only wildcard validates all`() {
-    // given
-    val contentType = ContentType("*/*")
-
-    // when
-    val result = contentType.validate("application-json")
-
-    // then
-    assert(result.isSuccess())
+  fun `wildcard matches any content type`() {
+    assert(ContentType("*/*").validate("application/json").isSuccess())
   }
+
   @Test
-  fun `Content type containing a wildcard validates when the root are the same`() {
-    // given
-    val contentType = ContentType("image/*")
+  fun `subtype wildcard matches same type`() {
+    assert(ContentType("image/*").validate("image/jpeg").isSuccess())
+  }
 
-    // when
-    val result = contentType.validate("image/jpeg")
+  @Test
+  fun `subtype wildcard does not match different type`() {
+    assert(ContentType("image/*").validate("text/plain").isFailure())
+  }
 
-    // then
-    assert(result.isSuccess())
+  @Test
+  fun `matches when actual has parameters`() {
+    assert(ContentType("multipart/form-data").validate("multipart/form-data; boundary=abc").isSuccess())
+  }
+
+  @Test
+  fun `matches ignoring case`() {
+    assert(ContentType("application/json").validate("Application/JSON").isSuccess())
   }
 }

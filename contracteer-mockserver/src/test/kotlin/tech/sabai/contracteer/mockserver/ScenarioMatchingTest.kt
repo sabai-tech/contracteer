@@ -40,7 +40,9 @@ class ScenarioMatchingTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
         )
       ),
       scenarios = listOf(
@@ -83,7 +85,9 @@ class ScenarioMatchingTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       ),
       scenarios = listOf(
@@ -121,11 +125,15 @@ class ScenarioMatchingTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
         )
       ),
       scenarios = listOf(
@@ -169,11 +177,15 @@ class ScenarioMatchingTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       ),
       scenarios = listOf(
@@ -220,7 +232,9 @@ class ScenarioMatchingTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("count" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("count" to integerDataType()))))
         )
       ),
       scenarios = listOf(
@@ -265,7 +279,9 @@ class ScenarioMatchingTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
         )
       ),
       scenarios = listOf(
@@ -308,7 +324,9 @@ class ScenarioMatchingTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
         )
       ),
       scenarios = listOf(
@@ -350,10 +368,14 @@ class ScenarioMatchingTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         ),
         404 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("error" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("error" to stringDataType()))))
         )
       ),
       scenarios = listOf(

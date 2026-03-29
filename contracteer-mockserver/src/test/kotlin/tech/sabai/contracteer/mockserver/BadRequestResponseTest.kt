@@ -4,6 +4,7 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterEach
+import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
@@ -35,10 +36,14 @@ class BadRequestResponseTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         ),
         400 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("error" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("error" to stringDataType()))))
         )
       )
     )
@@ -68,7 +73,9 @@ class BadRequestResponseTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )

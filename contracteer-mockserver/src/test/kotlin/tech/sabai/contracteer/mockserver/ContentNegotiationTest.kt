@@ -35,7 +35,9 @@ class ContentNegotiationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -64,7 +66,9 @@ class ContentNegotiationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -92,7 +96,9 @@ class ContentNegotiationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -146,6 +152,106 @@ class ContentNegotiationTest {
   }
 
   @Test
+  fun `responds successfully when Accept header contains multiple types including a match`() {
+    // Given
+    val operation = apiOperation(
+      path = "/v1/users/{id}",
+      method = "GET",
+      requestSchema = requestSchema(
+        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
+      ),
+      responses = mapOf(
+        200 to responseSchema(
+          bodies = listOf(bodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        )
+      )
+    )
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("text/plain, application/json")
+      .get("/v1/users/123")
+      .then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue())
+  }
+
+  @Test
+  fun `responds successfully when Accept header uses subtype wildcard`() {
+    // Given
+    val operation = apiOperation(
+      path = "/v1/users/{id}",
+      method = "GET",
+      requestSchema = requestSchema(
+        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
+      ),
+      responses = mapOf(
+        200 to responseSchema(
+          bodies = listOf(bodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        )
+      )
+    )
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/*")
+      .get("/v1/users/123")
+      .then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue())
+  }
+
+  @Test
+  fun `disambiguates multiple response types using Accept quality factors`() {
+    // Given
+    val operation = apiOperation(
+      path = "/v1/users/{id}",
+      method = "GET",
+      requestSchema = requestSchema(
+        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
+      ),
+      responses = mapOf(
+        200 to responseSchema(
+          bodies = listOf(
+            bodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType()))
+            ),
+            bodySchema(
+              contentType = ContentType("application/xml"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType()))
+            )
+          )
+        )
+      )
+    )
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/xml;q=0.5, application/json;q=0.9")
+      .get("/v1/users/123")
+      .then()
+      .assertThat()
+      .statusCode(200)
+      .contentType("application/json")
+  }
+
+  @Test
   fun `responds successfully when Accept is wildcard`() {
     // Given
     val operation = apiOperation(
@@ -156,7 +262,9 @@ class ContentNegotiationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )

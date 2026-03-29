@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.operation
 
+import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
@@ -17,10 +18,15 @@ data class ContentType(val value: String) {
 
   fun isMultipart() = value.lowercase().startsWith("multipart/")
 
-  fun validate(contentType: String) =
-    when {
-      value.trim() == "*/*"                                     -> success(value)
-      contentType.trim().startsWith(value.substringBefore("*")) -> success(value)
-      else                                                      -> failure("'Content-type' does not match: Expected: $value, actual: $contentType")
+  /** Checks if [actual] matches this content type. This content type may use wildcards. */
+  fun validate(actual: String): Result<String> {
+    val expected = value.lowercase().trim().substringBefore(";").trim()
+    val received = actual.lowercase().trim().substringBefore(";").trim()
+    return when {
+      expected == "*/*"                                                                    -> success(actual)
+      expected.endsWith("/*") && received.startsWith(expected.substringBefore("/*") + "/") -> success(actual)
+      expected == received                                                                 -> success(actual)
+      else                                                                                 -> failure("'Content-type' does not match: Expected: $value, actual: $actual")
     }
+  }
 }

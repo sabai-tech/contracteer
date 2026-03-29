@@ -8,7 +8,8 @@ import org.hamcrest.Matchers.emptyOrNullString
 import org.hamcrest.Matchers.`is`
 import org.junit.jupiter.api.AfterEach
 import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.operation.ParameterElement.Header
+import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.core.operation.ScenarioBody
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
@@ -42,7 +43,9 @@ class ResponseGenerationTest {
       responses = mapOf(
         200 to responseSchema(
           headers = listOf(parameterSchema(Header("X-Request-Id"), stringDataType())),
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))))
         )
       ),
       scenarios = listOf(
@@ -88,7 +91,9 @@ class ResponseGenerationTest {
       responses = mapOf(
         200 to responseSchema(
           headers = listOf(parameterSchema(Header("X-Correlation-Id"), stringDataType())),
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -114,7 +119,9 @@ class ResponseGenerationTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
@@ -146,11 +153,15 @@ class ResponseGenerationTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       ),
       scenarios = listOf(

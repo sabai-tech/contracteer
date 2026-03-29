@@ -37,7 +37,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -66,7 +68,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -96,7 +100,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -125,7 +131,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -153,7 +161,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -184,7 +194,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -214,7 +226,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -244,7 +258,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -274,7 +290,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -300,11 +318,15 @@ class RequestValidationTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -331,11 +353,15 @@ class RequestValidationTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -361,11 +387,15 @@ class RequestValidationTest {
       path = "/v1/users",
       method = "POST",
       requestSchema = requestSchema(
-        bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        bodies = listOf(bodySchema(
+          contentType = ContentType("application/json"),
+          dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -393,6 +423,7 @@ class RequestValidationTest {
       requestSchema = requestSchema(
         bodies = listOf(
           bodySchema(
+            contentType = ContentType("application/json"),
             dataType = objectDataType(properties = mapOf("id" to integerDataType())),
             isRequired = true
           )
@@ -400,7 +431,9 @@ class RequestValidationTest {
       ),
       responses = mapOf(
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )

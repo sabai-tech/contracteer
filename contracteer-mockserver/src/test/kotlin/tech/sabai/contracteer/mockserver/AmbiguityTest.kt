@@ -15,7 +15,6 @@ import tech.sabai.contracteer.mockserver.TestFixture.parameterSchema
 import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
 import tech.sabai.contracteer.mockserver.TestFixture.scenario
-import tech.sabai.contracteer.mockserver.TestFixture.stringDataType
 import java.math.BigDecimal
 import kotlin.test.Test
 
@@ -39,7 +38,9 @@ class AmbiguityTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       ),
       scenarios = listOf(
@@ -94,10 +95,14 @@ class AmbiguityTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         ),
         201 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
@@ -126,7 +131,9 @@ class AmbiguityTest {
       ),
       responses = mapOf(
         200 to responseSchema(
-          bodies = listOf(bodySchema(dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
         )
       )
     )
