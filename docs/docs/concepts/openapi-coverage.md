@@ -1,41 +1,113 @@
 # OpenAPI 3.0 Coverage
 
-Contracteer supports OpenAPI 3.0.x.
-OpenAPI 3.1 is not yet supported.
+This page describes which parts of the OpenAPI 3.0 specification Contracteer supports, where it deviates, and which features are not applicable to contract testing.
 
-This page lists which features of the specification are supported and which are not yet supported.
-It also explains what happens when your specification uses an unsupported feature.
+Contracteer supports OpenAPI 3.0.x.
 
 ---
 
-## What Happens with Unsupported Features
+## Limitations
 
 Contracteer does not reject a specification because it contains unsupported features.
-Instead, it handles them gracefully:
-
-- **Unsupported content types** (XML) -- the operation is skipped with a warning.
-- **Unsupported schema keywords** (`default`, `not`) -- the keyword is ignored.
-  Values are generated and validated without that constraint.
-
+Unsupported content types cause the operation to be skipped with a warning.
+Unsupported schema keywords are ignored.
 Your specification still loads.
-Only the affected operations or constraints are skipped.
+
+| Feature                              | Impact                                                                     |
+|--------------------------------------|----------------------------------------------------------------------------|
+| `application/xml`                    | Operations with XML-only content types are skipped with a warning.         |
+| `not` (schema negation)              | The keyword is ignored. Values are validated and generated without it.     |
+| `allowEmptyValue` (parameters)       | The keyword is ignored. Deprecated by the OAS 3.0 specification itself.   |
+| `externalValue` (Example Objects)    | Only inline `value` is read. External references are not fetched.         |
+| Pattern generation (regex)           | Some regex features (lookaheads, lookbehinds) do not generate correctly.  |
+| Unknown integer/number formats       | Rejected. Only `int32`, `int64`, `float`, `double` are supported.         |
+
+If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the specification.
 
 ---
 
-## Data Types
+## Deviations from the Specification
 
-| Type      | Status    | Notes                                                                                 |
-|-----------|-----------|---------------------------------------------------------------------------------------|
-| `string`  | Supported | With `minLength`, `maxLength`, `enum`, `nullable`                                     |
-| `integer` | Supported | With `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `enum`, `nullable` |
-| `number`  | Supported | With `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `enum`, `nullable` |
-| `boolean` | Supported | With `enum`, `nullable`                                                               |
-| `array`   | Supported | Including array parameters with style/explode encoding                                |
-| `object`  | Supported | Including object parameters with style/explode encoding                               |
+The OpenAPI 3.0 specification is sometimes ambiguous or impractical for contract testing.
+In these cases, Contracteer makes explicit choices.
+
+### String constraint precedence
+
+OpenAPI treats `format`, `pattern`, `minLength`, and `maxLength` as independent constraints applied simultaneously.
+Contracteer applies them in a strict precedence order:
+
+1. **`format`** (email, uuid, date, date-time, byte, binary) -- the format defines the type entirely.
+   `pattern` is always ignored with a warning.
+   `minLength`/`maxLength` are supported by email, base64, and binary formats, but ignored by uuid, date, and date-time.
+2. **`pattern`** -- the regex pattern defines the constraint.
+   `minLength` and `maxLength` are ignored with a warning.
+3. **`minLength` / `maxLength`** -- used only when neither `format` nor `pattern` is set.
+
+Generating a random value that satisfies both a regex pattern and a length range is not reliably possible.
+Contracteer uses the same constraint for both validation and generation to ensure consistency.
+What Contracteer validates is what it can generate.
+
+`enum` is always validated against the active constraint when loading the specification.
+If all enum values satisfy the active constraint, the specification is accepted.
+If any enum value violates it, the specification is rejected.
+
+Random value generation for patterns uses the [RgxGen](https://github.com/curious-odd-man/rgxgen) library.
+RgxGen supports most common regex features, but lookaheads and lookbehinds do not generate correctly.
+If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in your specification.
+
+### Multipart default content types
+
+The OAS 3.0 specification defaults arrays of primitives to `text/plain` in multipart parts.
+Contracteer uses `application/json` for all arrays.
+The specification does not define how to serialize an array as plain text in a multipart part.
+
+| Property type                                        | Contracteer default        |
+|------------------------------------------------------|----------------------------|
+| Primitive                                            | `text/plain`               |
+| Array of primitives                                  | `application/json`         |
+| Array of `format: binary` or `format: base64` items  | `application/octet-stream` |
+| Object or composite                                  | `application/json`         |
+| `format: binary` or `format: base64`                 | `application/octet-stream` |
+
+Use the `encoding` object to override the default content type for specific properties.
 
 ---
 
-## String Formats
+## Not Applicable to Contract Testing
+
+These features are defined in the OAS 3.0 specification but do not affect the structural contract between client and server.
+Contracteer does not process them.
+
+| Feature                                     | Reason                                                                                   |
+|---------------------------------------------|------------------------------------------------------------------------------------------|
+| `servers` / server variables                | Connection configuration. The verifier accepts the server URL as external configuration. |
+| `security` / `securitySchemes`              | Authentication is runtime configuration, not contract structure.                         |
+| `tags`, `summary`, `description`            | Documentation metadata.                                                                  |
+| `operationId`                               | Client code generation hint.                                                             |
+| `externalDocs`                              | Documentation link.                                                                      |
+| `deprecated`                                | Informational flag. A deprecated operation has the same structural contract.             |
+| `callbacks`                                 | Webhook definitions -- a separate concern from request/response contract testing.        |
+| `links`                                     | Hypermedia navigation hints between operations.                                          |
+| `default` (property values)                 | The verifier always sends values. The mock server validates against the schema, not against assumed defaults. |
+| `example` on Schema Object                  | Contracteer uses the `examples` keyword on Parameter and Media Type Objects for scenario creation. Schema-level `example` is not read. |
+| `xml` (Schema Object)                       | XML serialization hints. Only relevant if XML content type were supported.               |
+
+---
+
+## Detailed Coverage
+
+### Data types
+
+| Type      | Notes                                                                                 |
+|-----------|---------------------------------------------------------------------------------------|
+| `string`  | With `minLength`, `maxLength`, `pattern`, `enum`, `nullable`                          |
+| `integer` | With `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`, `enum`, `nullable` |
+| `number`  | With `minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`, `enum`, `nullable` |
+| `boolean` | With `enum`, `nullable`                                                               |
+| `array`   | With `minItems`, `maxItems`, `uniqueItems`. Including array parameters with style/explode encoding  |
+| `object`  | With `minProperties`, `maxProperties`, `additionalProperties`, `readOnly`, `writeOnly`. Including object parameters with style/explode encoding |
+
+### String formats
 
 | Format          | Status                              |
 |-----------------|-------------------------------------|
@@ -48,23 +120,16 @@ Only the affected operations or constraints are skipped.
 | `password`      | Supported (treated as plain string) |
 | Custom formats  | Ignored                             |
 
----
+### Integer and number formats
 
-## Integer and Number Formats
+| Format   | Status                                                                         |
+|----------|--------------------------------------------------------------------------------|
+| `int32`  | Supported. Applies 32-bit signed range; rejects explicit min/max outside range |
+| `int64`  | Supported. Applies 64-bit signed range; rejects explicit min/max outside range |
+| `float`  | Supported. Applies 32-bit float range; rejects explicit min/max outside range  |
+| `double` | Supported. Applies 64-bit double range; rejects explicit min/max outside range |
 
-| Format          | Status                                                                         |
-|-----------------|--------------------------------------------------------------------------------|
-| `int32`         | Supported. Applies 32-bit signed range; rejects explicit min/max outside range |
-| `int64`         | Supported. Applies 64-bit signed range; rejects explicit min/max outside range |
-| `float`         | Supported. Applies 32-bit float range; rejects explicit min/max outside range  |
-| `double`        | Supported. Applies 64-bit double range; rejects explicit min/max outside range |
-| Unknown formats | Rejected                                                                       |
-
----
-
-## Schema Keywords
-
-### Supported
+### Schema keywords
 
 | Keyword                                 | Notes                                                                               |
 |-----------------------------------------|-------------------------------------------------------------------------------------|
@@ -73,133 +138,62 @@ Only the affected operations or constraints are skipped.
 | `minimum` / `maximum`                   | Integer and number types                                                            |
 | `exclusiveMinimum` / `exclusiveMaximum` | Integer and number types (OAS 3.0 boolean semantics)                                |
 | `minLength` / `maxLength`               | String, email, base64, binary types                                                 |
-| `required` (properties)                 | Object types                                                                        |
-| `additionalProperties`                  | Both boolean and typed schema forms                                                 |
-| `discriminator`                         | With `propertyName` and `mapping` on allOf, oneOf, anyOf                            |
-| `readOnly` / `writeOnly`                | readOnly properties excluded from request schemas, writeOnly from response schemas  |
-| `pattern`                               | Plain strings only. Ignored when `format` is set. Overrides `minLength`/`maxLength` |
+| `pattern`                               | Plain strings only. See [string constraint precedence](#string-constraint-precedence) |
 | `multipleOf`                            | Integer and number types                                                            |
 | `minItems` / `maxItems`                 | Array types                                                                         |
 | `uniqueItems`                           | Array types                                                                         |
-| `minProperties` / `maxProperties`       | Object types. Cannot be combined with `readOnly` or `writeOnly` properties          |
+| `minProperties` / `maxProperties`       | Object types                                                                        |
+| `required` (properties)                 | Object types                                                                        |
+| `additionalProperties`                  | Both boolean and typed schema forms                                                 |
+| `readOnly` / `writeOnly`                | readOnly properties excluded from request schemas, writeOnly from response schemas  |
+| `discriminator`                         | With `propertyName` and `mapping` on allOf, oneOf, anyOf                            |
 
-### Not yet supported
+### Schema composition
 
-| Keyword                     | Impact                                     |
-|-----------------------------|--------------------------------------------|
-| `default` (property values) | Default values are not used for generation |
-| `not`                       | Schema negation is not supported           |
+| Feature         | Notes                                                                                |
+|-----------------|--------------------------------------------------------------------------------------|
+| `allOf`         | Requires all sub-schemas to be structured types (object or composite)                |
+| `oneOf`         | Validates that exactly one sub-schema matches                                        |
+| `anyOf`         | Validates that at least one sub-schema matches                                       |
+| `discriminator` | Supported on allOf, oneOf, anyOf with `propertyName` and `mapping`                   |
 
-### String constraint precedence
+### Parameters
 
-OpenAPI allows combining `format`, `pattern`, `minLength`, and `maxLength` on the same string schema.
-Contracteer applies them in a strict precedence order for both validation and random value generation:
+| Feature                         | Notes                                                                                               |
+|---------------------------------|-----------------------------------------------------------------------------------------------------|
+| `in: path`                      | Primitive, array, and object types. Styles: `simple`, `label`, `matrix`                             |
+| `in: query`                     | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject` |
+| `in: header`                    | Primitive, array, and object types. Style: `simple`                                                 |
+| `in: cookie`                    | Primitive, array, and object types. Style: `form`                                                   |
+| `style` / `explode`             | All OAS 3.0 style/explode combinations with correct defaults per location                           |
+| `content` (instead of `schema`) | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                    |
+| `allowReserved`                 | Query parameters and `application/x-www-form-urlencoded` encoding properties                        |
 
-1. **`format`** (email, uuid, date, date-time, byte, binary) -- the format defines the type entirely.
-   `pattern` is always ignored with a warning.
-   `minLength`/`maxLength` are supported by email, base64, and binary formats, but ignored by uuid, date, and date-time.
-2. **`pattern`** -- the regex pattern defines the constraint.
-   `minLength` and `maxLength` are ignored with a warning.
-3. **`minLength` / `maxLength`** -- used only when neither `format` nor `pattern` is set.
+### Request and response bodies
 
-This deviates from the OpenAPI specification, which treats all keywords as independent constraints applied
-simultaneously.
-Contracteer takes this approach because generating a random value that satisfies both a regex pattern and a length range
-is not reliably possible.
-Validation and generation use the same constraint to ensure consistency: what Contracteer validates is what it can
-generate.
-
-`enum` is always validated against the active constraint at extraction time.
-If all enum values satisfy the active constraint, the specification is accepted.
-If any enum value violates it, the specification is rejected.
-
-#### Pattern support and limitations
-
-Random value generation for patterns uses the [RgxGen](https://github.com/curious-odd-man/rgxgen) library.
-RgxGen supports most common regex features, but some patterns do not generate correctly:
-
-- Lookaheads and lookbehinds are not supported
-- Very complex patterns may fail to generate or produce invalid values
-
-If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in
-your specification.
-
----
-
-## Schema Composition
-
-| Feature         | Status                                                                                       |
-|-----------------|----------------------------------------------------------------------------------------------|
-| `allOf`         | Supported. Contracteer requires all sub-schemas to be structured types (object or composite) |
-| `oneOf`         | Supported. Validates that exactly one sub-schema matches                                     |
-| `anyOf`         | Supported. Validates that at least one sub-schema matches                                    |
-| `discriminator` | Supported on allOf, oneOf, anyOf with `propertyName` and `mapping`                           |
-| `not`           | Not supported                                                                                |
-
----
-
-## Parameters
-
-| Feature                         | Status        | Notes                                                                                               |
-|---------------------------------|---------------|-----------------------------------------------------------------------------------------------------|
-| `in: path`                      | Supported     | Primitive, array, and object types. Styles: `simple`, `label`, `matrix`                             |
-| `in: query`                     | Supported     | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject` |
-| `in: header`                    | Supported     | Primitive, array, and object types. Style: `simple`                                                 |
-| `in: cookie`                    | Supported     | Primitive, array, and object types. Style: `form`                                                   |
-| `style` / `explode`             | Supported     | All OAS 3.0 style/explode combinations with correct defaults per location                           |
-| `content` (instead of `schema`) | Supported     | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                    |
-| `allowEmptyValue`               | Not supported |                                                                                                     |
-| `allowReserved`                 | Supported     | Query parameters and `application/x-www-form-urlencoded` encoding properties                        |
-
----
-
-## Request and Response Bodies
-
-| Feature                                | Status                                                        |
+| Feature                                | Notes                                                         |
 |----------------------------------------|---------------------------------------------------------------|
 | `application/json`                     | Supported                                                     |
 | Plain text content types               | Supported                                                     |
-| `application/xml`                      | Not supported. Operations using it are skipped                |
-| `multipart/*` (form-data, mixed, etc.) | Supported. Per-part content type via the `encoding` object    |
-| `application/x-www-form-urlencoded`    | Supported. Per-property encoding via the `encoding` object    |
-| Multiple content types                 | Supported. Produces a cartesian product of verification cases |
+| `multipart/*` (form-data, mixed, etc.) | Per-part content type via the `encoding` object               |
+| `application/x-www-form-urlencoded`    | Per-property encoding via the `encoding` object               |
+| Multiple content types                 | Produces one verification per content type combination        |
 | `required` (request body)              | Supported                                                     |
+| Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes   |
 
-### Multipart default content types
+### Examples and scenarios
 
-For multipart request bodies, Contracteer assigns a default content type to each part based on the property type:
-
-| Property type                        | Default Content-Type       |
-|--------------------------------------|----------------------------|
-| Primitive                            | `text/plain`               |
-| Array (any item type)                | `application/json`         |
-| Object or composite                  | `application/json`         |
-| `format: binary` or `format: base64` | `application/octet-stream` |
-
-This deviates from the OAS specification, which defaults arrays of primitives to `text/plain`.
-Contracteer uses `application/json` for all arrays because the specification does not define how to serialize an array
-as plain text in multipart parts.
-Use the `encoding` object to override the default content type for specific properties.
-
----
-
-## Examples and Scenarios
-
-| Feature                                         | Status                                           |
+| Feature                                         | Notes                                            |
 |-------------------------------------------------|--------------------------------------------------|
-| `examples` map (parameter / media type level)   | Supported. Core mechanism for scenario creation  |
+| `examples` map (parameter / media type level)   | Core mechanism for scenario creation             |
 | Single `example` (parameter / media type level) | Supported                                        |
 | Status-code-prefixed example keys               | Supported (`404_NOT_FOUND`, `400_INVALID_INPUT`) |
-| `example` on schema properties                  | Not used for scenario creation                   |
-| `externalValue` in Example Objects              | Not supported. Only inline `value` is read       |
 
 See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 
----
+### References ($ref)
 
-## References ($ref)
-
-| Feature                                | Status                                                                            |
+| Feature                                | Notes                                                                             |
 |----------------------------------------|-----------------------------------------------------------------------------------|
 | `$ref` to `#/components/schemas`       | Supported                                                                         |
 | `$ref` to `#/components/parameters`    | Supported                                                                         |
@@ -208,20 +202,17 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 | `$ref` to `#/components/headers`       | Supported                                                                         |
 | `$ref` to `#/components/examples`      | Supported                                                                         |
 | Recursive / chained `$ref`             | Supported (with depth limits)                                                     |
-| External `$ref` (other files)          | Supported (resolved by the OpenAPI parser before Contracteer processes the model) |
+| External `$ref` (other files)          | Resolved by the OpenAPI parser before Contracteer processes the model             |
 
----
+### Responses
 
-## Responses
-
-| Feature                                  | Status                                                                                           |
+| Feature                                  | Notes                                                                                            |
 |------------------------------------------|--------------------------------------------------------------------------------------------------|
 | Exact status codes (`200`, `404`, etc.)  | Supported                                                                                        |
-| Status code ranges (`2XX`, `4XX`, `5XX`) | Supported. Used as fallback when exact status code is not defined                                |
-| `default` response                       | Supported. Used as fallback when neither an exact status code nor a status code range is defined |
+| Status code ranges (`2XX`, `4XX`, `5XX`) | Used as fallback when exact status code is not defined                                           |
+| `default` response                       | Used as fallback when neither an exact status code nor a status code range is defined            |
 | Response headers                         | Supported                                                                                        |
 | Response body                            | Supported                                                                                        |
-| Links                                    | Not supported                                                                                    |
 
 ---
 
