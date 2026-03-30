@@ -74,7 +74,13 @@ internal class SchemaExtractor(
   private fun extractQueryParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "query" }
-      .map { it.toParameterSchema(QueryParam(it.name)) }
+      .map { param ->
+        sharedComponents
+          .resolve(param)
+          .flatMap { resolved ->
+            resolved!!.toParameterSchema(QueryParam(resolved.name, resolved.safeAllowReserved()))
+          }
+      }
       .combineResults()
 
   private fun extractRequestHeaderSchemas(operation: Operation): Result<List<ParameterSchema>> =
@@ -171,8 +177,9 @@ internal class SchemaExtractor(
     return dataType.properties
       .map { (name, type) ->
         val encoding = encodingMap[name]
+        val allowReserved = encoding?.allowReserved == true
         createCodecForParameter(QueryParam(name), encoding?.style?.toString(), encoding?.explode, type, name)
-          .map { name to it!! }
+          .map { name to FormUrlEncodedSerde.PropertyEncoding(it!!, allowReserved) }
       }
       .combineResults()
       .map<Serde> { FormUrlEncodedSerde(it!!.toMap()) }

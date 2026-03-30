@@ -4,8 +4,10 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterEach
+import tech.sabai.contracteer.core.codec.FormStyleCodec
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
 import tech.sabai.contracteer.mockserver.TestFixture.integerDataType
@@ -13,6 +15,7 @@ import tech.sabai.contracteer.mockserver.TestFixture.objectDataType
 import tech.sabai.contracteer.mockserver.TestFixture.parameterSchema
 import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
+import tech.sabai.contracteer.mockserver.TestFixture.stringDataType
 import kotlin.test.Test
 
 class RequestValidationTest {
@@ -175,6 +178,44 @@ class RequestValidationTest {
     given()
       .accept("application/json")
       .get("/v1/users")
+      .then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", notNullValue())
+  }
+
+  @Test
+  fun `responds successfully when query parameter with allowReserved contains reserved characters`() {
+    // Given
+    val operation = apiOperation(
+      path = "/v1/search",
+      method = "GET",
+      requestSchema = requestSchema(
+        parameters = listOf(
+          ParameterSchema(
+            QueryParam("path", allowReserved = true),
+            stringDataType(),
+            isRequired = true,
+            FormStyleCodec("path", true)
+          )
+        )
+      ),
+      responses = mapOf(
+        200 to responseSchema(
+          bodies = listOf(bodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
+        )
+      )
+    )
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/json")
+      .get("/v1/search?path=/users/123")
       .then()
       .assertThat()
       .statusCode(200)

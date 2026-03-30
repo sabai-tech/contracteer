@@ -37,19 +37,17 @@ internal class SharedComponents(
   fun resolve(response: ApiResponse): Result<ApiResponse> =
     resolveRef(response, responses, ApiResponse::shortRef, "Response", "components/responses")
 
-  private fun <T> resolveRef(
-    component: T,
-    sharedComponents: Map<String, T>,
-    getRef: (T) -> String?,
-    componentName: String,
-    section: String,
-    maxDepth: Int = 10
-  ): Result<T> {
+  private fun <T> resolveRef(component: T,
+                             sharedComponents: Map<String, T>,
+                             getRef: (T) -> String?,
+                             componentName: String,
+                             section: String,
+                             maxDepth: Int = 10): Result<T> {
     val ref = getRef(component)
     return when {
       maxDepth < 0                               -> failure("Maximum recursive depth reached while resolving $componentName")
       ref == null                                -> success(component)
-      sharedComponents[ref]?.let(getRef) != null -> resolveRef(sharedComponents[ref]!!, sharedComponents, getRef, componentName, section, maxDepth - 1)
+      sharedComponents[ref]?.let(getRef) != null -> resolveRef(sharedComponents[ref]!!,sharedComponents,getRef,componentName,section,maxDepth - 1)
       sharedComponents[ref] != null              -> success(sharedComponents[ref]!!)
       else                                       -> failure("$componentName '$ref' not found in '$section' section")
     }

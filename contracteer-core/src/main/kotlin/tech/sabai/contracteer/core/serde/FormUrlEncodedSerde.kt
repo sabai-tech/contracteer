@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.serde
 
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.UrlEncoding
 import tech.sabai.contracteer.core.codec.StyleCodec
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.DataType
@@ -16,14 +17,22 @@ import java.net.URLEncoder
  * of the object.
  */
 class FormUrlEncodedSerde(
-  internal val propertyCodecs: Map<String, StyleCodec>
+  internal val propertyEncodings: Map<String, PropertyEncoding>
 ): Serde() {
 
   override fun doSerialize(value: Any?): String {
     require(value is Map<*, *>) { "FormUrlEncodedSerde expects a Map but received ${value?.let { it::class.simpleName }}" }
+
     return value.entries
-      .flatMap { (key, propValue) -> propertyCodecs.getValue(key.toString()).encode(propValue) }
-      .joinToString("&") { (key, propValue) -> "${urlEncode(key)}=${urlEncode(propValue)}" }
+      .filter { (key, _) -> key.toString() in propertyEncodings }
+      .flatMap { (key, propValue) ->
+        val encoding = propertyEncodings.getValue(key.toString())
+        encoding.codec.encode(propValue).map { it to encoding.allowReserved }
+      }
+      .joinToString("&") { (entry, allowReserved) ->
+        val (key, propValue) = entry
+        "${urlEncode(key)}=${UrlEncoding.encode(propValue, allowReserved)}"
+      }
   }
 
   override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> {
@@ -31,9 +40,9 @@ class FormUrlEncodedSerde(
     if (targetDataType !is ObjectDataType) return Result.failure("Form-urlencoded requires object type")
 
     val valueExtractor = buildValueExtractor(source)
-    return propertyCodecs.entries
-      .map { (propName, codec) ->
-        codec
+    return propertyEncodings.entries
+      .map { (propName, encoding) ->
+        encoding.codec
           .decode(valueExtractor, targetDataType.properties.getValue(propName))
           .map { propName to it }
       }
@@ -51,7 +60,9 @@ class FormUrlEncodedSerde(
     return { key -> entries.filter { it.first == key }.map { it.second } }
   }
 
-  private fun urlEncode(value: String): String = URLEncoder.encode(value, "UTF-8")
-
-  private fun urlDecode(value: String): String = URLDecoder.decode(value, "UTF-8")
+  data class PropertyEncoding(val codec: StyleCodec, val allowReserved: Boolean = false)
 }
+
+private fun urlEncode(value: String): String = URLEncoder.encode(value, "UTF-8")
+
+private fun urlDecode(value: String): String = URLDecoder.decode(value, "UTF-8")

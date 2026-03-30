@@ -1,0 +1,42 @@
+openapi: 3.0.0
+info:
+  title: allowReserved Tests
+  version: '1.0'
+paths:
+  # Query parameter with allowReserved: true
+  /search:
+    get:
+      parameters:
+        - in: query
+          name: path
+          allowReserved: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+
+  # Query parameter with allowReserved: false (explicit)
+  /filter:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          allowReserved: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+
+  # Query parameter without allowReserved (default false)
+  /default:
+    get:
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success

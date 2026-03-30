@@ -24,6 +24,9 @@ internal fun Parameter.safeExamples() =
 internal fun Parameter.safeIsRequired() =
   required ?: false
 
+internal fun Parameter.safeAllowReserved() =
+  allowReserved ?: false
+
 internal fun Header.safeExamples() =
   examples ?: example?.let(::singleExampleMap) ?: emptyMap()
 

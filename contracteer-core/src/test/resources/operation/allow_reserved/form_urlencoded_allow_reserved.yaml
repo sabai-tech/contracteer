@@ -1,0 +1,24 @@
+openapi: 3.0.0
+info:
+  title: allowReserved Form-Urlencoded Tests
+  version: '1.0'
+paths:
+  # Form-urlencoded with allowReserved on encoding property
+  /submit:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                callback:
+                  type: string
+                name:
+                  type: string
+            encoding:
+              callback:
+                allowReserved: true
+      responses:
+        '200':
+          description: Success

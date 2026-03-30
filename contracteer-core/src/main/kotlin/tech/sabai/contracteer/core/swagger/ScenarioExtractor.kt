@@ -17,13 +17,11 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
 
   private val logger = KotlinLogging.logger {}
 
-  fun extractScenarios(
-    path: String,
-    method: String,
-    operation: Operation,
-    requestSchema: Result<RequestSchema>,
-    responseSchemas: Result<Map<Int, ResponseSchema>>
-  ): Result<List<Scenario>> {
+  fun extractScenarios(path: String,
+                       method: String,
+                       operation: Operation,
+                       requestSchema: Result<RequestSchema>,
+                       responseSchemas: Result<Map<Int, ResponseSchema>>): Result<List<Scenario>> {
     if (requestSchema.isFailure()) return requestSchema.retypeError()
     if (responseSchemas.isFailure()) return responseSchemas.retypeError()
     val requestExampleKeys = operation.requestExampleKeys()
@@ -56,16 +54,14 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       .map { scenarios -> scenarios?.flatten() ?: emptyList() }
   }
 
-  private fun extractScenariosForResponse(
-    path: String,
-    method: String,
-    statusCode: String,
-    response: ApiResponse,
-    operation: Operation,
-    requestExampleKeys: Set<String>,
-    requestSchema: RequestSchema,
-    responseSchemas: Map<Int, ResponseSchema>
-  ): Result<List<Scenario>> {
+  private fun extractScenariosForResponse(path: String,
+                                          method: String,
+                                          statusCode: String,
+                                          response: ApiResponse,
+                                          operation: Operation,
+                                          requestExampleKeys: Set<String>,
+                                          requestSchema: RequestSchema,
+                                          responseSchemas: Map<Int, ResponseSchema>): Result<List<Scenario>> {
     val parsedStatus = parseStatusCode(statusCode)
     if (parsedStatus.isFailure()) return parsedStatus.retypeError()
 
@@ -90,20 +86,17 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       .map { scenarios -> scenarios?.flatten() ?: emptyList() }
   }
 
-  private fun ApiResponse.extractScenarioForKey(
-    path: String,
-    method: String,
-    statusCode: Int,
-    operation: Operation,
-    key: String,
-    requestSchema: RequestSchema,
-    responseSchema: ResponseSchema
-  ): Result<List<Scenario>> {
+  private fun ApiResponse.extractScenarioForKey(path: String,
+                                                method: String,
+                                                statusCode: Int,
+                                                operation: Operation,
+                                                key: String,
+                                                requestSchema: RequestSchema,
+                                                responseSchema: ResponseSchema): Result<List<Scenario>> {
     val exampleValues = extractExampleValues(operation, key)
     if (exampleValues.isFailure()) return exampleValues.retypeError()
 
     val scenarios = generateScenarioCombinations(path, method, statusCode, key, exampleValues.value!!)
-
     return if (statusCode == 400)
       success(scenarios)
     else
@@ -111,10 +104,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
         .map { scenarios }
   }
 
-  private fun ApiResponse.extractExampleValues(
-    operation: Operation,
-    key: String
-  ): Result<ExampleValues> {
+  private fun ApiResponse.extractExampleValues(operation: Operation, key: String): Result<ExampleValues> {
     val requestParams = operation.extractExampleParameterValues(key).forProperty("request")
     val requestBodies = operation.extractExampleRequestBodies(key).forProperty("requestBody")
     val responseHeaders = extractExampleHeaderValues(key).forProperty("response")
@@ -138,20 +128,27 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   private fun Operation.extractExampleParameterValues(exampleKey: String): Result<Map<ParameterElement, Any?>> =
     safeParameters()
       .filter { it.safeExamples().containsKey(exampleKey) }
-      .map { parameter ->
-        sharedComponents.resolve(parameter.safeExamples()[exampleKey]!!).map { it!!.value?.normalize() }
-          .map { example ->
-            when (parameter.`in`) {
-              "path"   -> PathParam(parameter.name)
-              "query"  -> QueryParam(parameter.name)
-              "header" -> Header(parameter.name)
-              "cookie" -> Cookie(parameter.name)
-              else     -> Header(parameter.name)
-            } to example
-          }
-      }
+      .map { it.resolveExampleEntry(exampleKey) }
       .combineResults()
       .map { values -> values?.toMap() ?: emptyMap() }
+
+  private fun Parameter.resolveExampleEntry(exampleKey: String): Result<Pair<ParameterElement, Any?>> =
+    sharedComponents
+      .resolve(this)
+      .flatMap { resolved ->
+        sharedComponents
+          .resolve(resolved!!.safeExamples()[exampleKey]!!)
+          .map { resolved.toElement() to it!!.value?.normalize() }
+      }
+
+  private fun Parameter.toElement(): ParameterElement =
+    when (`in`) {
+      "path"   -> PathParam(name)
+      "query"  -> QueryParam(name, safeAllowReserved())
+      "header" -> Header(name)
+      "cookie" -> Cookie(name)
+      else     -> Header(name)
+    }
 
   private fun Operation.extractExampleRequestBodies(exampleKey: String): Result<List<ScenarioBody>> =
     if (requestBody?.content == null)
@@ -192,13 +189,11 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
         .combineResults()
         .map { bodies -> bodies ?: emptyList() }
 
-  private fun generateScenarioCombinations(
-    path: String,
-    method: String,
-    statusCode: Int,
-    key: String,
-    examples: ExampleValues
-  ): List<Scenario> =
+  private fun generateScenarioCombinations(path: String,
+                                           method: String,
+                                           statusCode: Int,
+                                           key: String,
+                                           examples: ExampleValues): List<Scenario> =
     examples.requestBodies.flatMap { reqBody ->
       examples.responseBodies.map { resBody ->
         Scenario(
@@ -212,23 +207,19 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       }
     }
 
-  private fun validateScenarios(
-    key: String,
-    examples: ExampleValues,
-    requestSchema: RequestSchema,
-    responseSchema: ResponseSchema
-  ): Result<Any?> =
+  private fun validateScenarios(key: String,
+                                examples: ExampleValues,
+                                requestSchema: RequestSchema,
+                                responseSchema: ResponseSchema): Result<Any?> =
     validateScenarioExamples(
       key,
       ScenarioRequestExamples(examples.requestParams, examples.requestBodies, requestSchema),
       ScenarioResponseExamples(examples.responseHeaders, examples.responseBodies, responseSchema)
     )
 
-  private fun validateScenarioExamples(
-    exampleKey: String,
-    request: ScenarioRequestExamples,
-    response: ScenarioResponseExamples
-  ): Result<Any?> {
+  private fun validateScenarioExamples(exampleKey: String,
+                                       request: ScenarioRequestExamples,
+                                       response: ScenarioResponseExamples): Result<Any?> {
     val requestValidation = validateRequestExamples(exampleKey, request)
     val responseValidation = validateResponseExamples(exampleKey, response)
     return requestValidation.combineWith(responseValidation).retypeError()

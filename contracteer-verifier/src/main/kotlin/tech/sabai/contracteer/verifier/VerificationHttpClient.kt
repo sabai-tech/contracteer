@@ -6,6 +6,7 @@ import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.UriTemplate
 import org.http4k.core.cookie.cookie
+import tech.sabai.contracteer.core.UrlEncoding
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.core.serde.MultipartSerde
@@ -100,38 +101,31 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     }
   }
 
-  private fun buildPathParameters(
-    parameterValues: Map<ParameterElement, Any?>,
-    requestSchema: RequestSchema
-  ): Map<String, String> {
+  private fun buildPathParameters(parameterValues: Map<ParameterElement, Any?>,
+                                  requestSchema: RequestSchema): Map<String, String> {
     return requestSchema.pathParameters.flatMap { param ->
       val value = parameterValues.getOrGenerate(param.element) { param.dataType.randomValue() }
       param.codec.encode(value)
     }.toMap()
   }
 
-  private fun Request.withScenarioParameters(
-    parameterValues: Map<ParameterElement, Any?>,
-    requestSchema: RequestSchema
-  ): Request = withParameters(requestSchema) { parameterValues.getOrGenerate(it.element) { it.dataType.randomValue() } }
+  private fun Request.withScenarioParameters(parameterValues: Map<ParameterElement, Any?>,
+                                             requestSchema: RequestSchema): Request =
+    withParameters(requestSchema) { parameterValues.getOrGenerate(it.element) { it.dataType.randomValue() } }
 
   private fun Request.withGeneratedParameters(requestSchema: RequestSchema): Request =
     withParameters(requestSchema) { it.dataType.randomValue() }
 
-  private fun Request.withParameters(
-    requestSchema: RequestSchema,
-    valueProvider: (ParameterSchema) -> Any?
-  ): Request = requestSchema.parameters.fold(this) { req, param ->
-    when (param.element) {
-      is PathParam -> req
-      else         -> req.placeEncodedEntries(param.element, param.codec.encode(valueProvider(param)))
+  private fun Request.withParameters(requestSchema: RequestSchema, valueProvider: (ParameterSchema) -> Any?): Request =
+    requestSchema.parameters.fold(this) { req, param ->
+      when (param.element) {
+        is PathParam -> req
+        else         -> req.placeEncodedEntries(param.element, param.codec.encode(valueProvider(param)))
+      }
     }
-  }
 
-  private fun validateScenarioParameterElements(
-    parameterValues: Map<ParameterElement, Any?>,
-    requestSchema: RequestSchema
-  ) {
+  private fun validateScenarioParameterElements(parameterValues: Map<ParameterElement, Any?>,
+                                                requestSchema: RequestSchema) {
     val allowedElements = requestSchema.parameters.map { it.element }.toSet()
     val unknownElements = parameterValues.keys.filterNot { it in allowedElements }
     if (unknownElements.isNotEmpty()) {
@@ -147,20 +141,29 @@ internal class VerificationHttpClient(private val serverUrl: String) {
   private fun Request.placeEncodedEntries(element: ParameterElement, entries: List<Pair<String, String>>): Request =
     entries.fold(this) { request, (key, value) ->
       when (element) {
-        is QueryParam -> request.query(key, value)
-        is Header     -> request.header(key, value)
-        is Cookie     -> request.cookie(key, value)
-        else          -> request
+        is QueryParam if (element.allowReserved) -> request.appendRawQueryEntry(key, value)
+        is QueryParam                            -> request.query(key, value)
+        is Header                                -> request.header(key, value)
+        is Cookie                                -> request.cookie(key, value)
+        else                                     -> request
       }
     }
 
   private fun Request.placeRawValue(element: ParameterElement, value: String): Request =
     when (element) {
-      is QueryParam -> query(element.name, value)
-      is Header     -> header(element.name, value)
-      is Cookie     -> cookie(element.name, value)
-      else          -> this
+      is QueryParam if (element.allowReserved) -> appendRawQueryEntry(element.name, value)
+      is QueryParam                            -> query(element.name, value)
+      is Header                                -> header(element.name, value)
+      is Cookie                                -> cookie(element.name, value)
+      else                                     -> this
     }
+
+  private fun Request.appendRawQueryEntry(key: String, value: String): Request {
+    val encodedEntry = "${UrlEncoding.encode(key, false)}=${UrlEncoding.encode(value, true)}"
+    val currentQuery = uri.query
+    val newQuery = if (currentQuery.isEmpty()) encodedEntry else "$currentQuery&$encodedEntry"
+    return uri(uri.query(newQuery))
+  }
 
   private fun Request.withGeneratedBody(bodySchema: BodySchema?): Request {
     return bodySchema?.let {

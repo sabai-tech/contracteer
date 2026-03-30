@@ -149,7 +149,7 @@ your specification.
 | `style` / `explode`             | Supported     | All OAS 3.0 style/explode combinations with correct defaults per location                           |
 | `content` (instead of `schema`) | Not supported |                                                                                                     |
 | `allowEmptyValue`               | Not supported |                                                                                                     |
-| `allowReserved`                 | Not supported |                                                                                                     |
+| `allowReserved`                 | Supported     | Query parameters and `application/x-www-form-urlencoded` encoding properties                        |
 
 ---
 

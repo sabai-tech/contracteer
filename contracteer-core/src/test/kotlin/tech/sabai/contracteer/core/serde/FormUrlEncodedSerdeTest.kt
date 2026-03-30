@@ -6,6 +6,7 @@ import tech.sabai.contracteer.core.TestFixture.objectDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.core.codec.FormStyleCodec
 import tech.sabai.contracteer.core.codec.PipeDelimitedStyleCodec
+import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde.PropertyEncoding
 import kotlin.test.Test
 
 class FormUrlEncodedSerdeTest {
@@ -38,8 +39,8 @@ class FormUrlEncodedSerdeTest {
   fun `serialize object with custom encoding`() {
     // given
     val serde = FormUrlEncodedSerde(mapOf(
-      "name" to FormStyleCodec("name", explode = true),
-      "colors" to PipeDelimitedStyleCodec("colors")
+      "name" to PropertyEncoding(FormStyleCodec("name", explode = true)),
+      "colors" to PropertyEncoding(PipeDelimitedStyleCodec("colors"))
     ))
 
     // when
@@ -101,8 +102,8 @@ class FormUrlEncodedSerdeTest {
   fun `deserialize object with custom encoding`() {
     // given
     val serde = FormUrlEncodedSerde(mapOf(
-      "name" to FormStyleCodec("name", explode = true),
-      "colors" to PipeDelimitedStyleCodec("colors")
+      "name" to PropertyEncoding(FormStyleCodec("name", explode = true)),
+      "colors" to PropertyEncoding(PipeDelimitedStyleCodec("colors"))
     ))
     val dataType = objectDataType(properties = mapOf(
       "name" to stringDataType(),
@@ -136,6 +137,36 @@ class FormUrlEncodedSerdeTest {
   }
 
   @Test
+  fun `serialize preserves reserved characters when allowReserved is true`() {
+    // given
+    val serde = FormUrlEncodedSerde(mapOf(
+      "callback" to PropertyEncoding(FormStyleCodec("callback", explode = true), allowReserved = true),
+      "name" to PropertyEncoding(FormStyleCodec("name", explode = true))
+    ))
+
+    // when
+    val result = serde.serialize(mapOf("callback" to "https://example.com/callback?token=abc", "name" to "John Doe"))
+
+    // then
+    assert(result == "callback=https://example.com/callback?token=abc&name=John+Doe")
+  }
+
+  @Test
+  fun `serialize encodes reserved characters when allowReserved is false`() {
+    // given
+    val serde = FormUrlEncodedSerde(mapOf(
+      "callback" to PropertyEncoding(FormStyleCodec("callback", explode = true), allowReserved = false),
+      "name" to PropertyEncoding(FormStyleCodec("name", explode = true))
+    ))
+
+    // when
+    val result = serde.serialize(mapOf("callback" to "https://example.com/callback?token=abc", "name" to "John Doe"))
+
+    // then
+    assert(result == "callback=https%3A%2F%2Fexample.com%2Fcallback%3Ftoken%3Dabc&name=John+Doe")
+  }
+
+  @Test
   fun `deserialize returns null for null source`() {
     // given
     val serde = formUrlEncodedSerde("name")
@@ -152,4 +183,4 @@ class FormUrlEncodedSerdeTest {
 
 /** Creates a FormUrlEncodedSerde with default encoding (form, explode=true) for the given property names. */
 private fun formUrlEncodedSerde(vararg propertyNames: String) =
-  FormUrlEncodedSerde(propertyNames.associate { it to FormStyleCodec(it, explode = true) })
+  FormUrlEncodedSerde(propertyNames.associate { it to PropertyEncoding(FormStyleCodec(it, explode = true)) })

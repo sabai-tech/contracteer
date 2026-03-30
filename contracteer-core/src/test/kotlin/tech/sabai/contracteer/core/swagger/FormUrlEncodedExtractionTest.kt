@@ -26,8 +26,8 @@ class FormUrlEncodedExtractionTest {
 
     // then
     val serde = operation.requestSchema.bodies.single().serde as FormUrlEncodedSerde
-    assert(serde.propertyCodecs["name"] is FormStyleCodec)
-    assert(serde.propertyCodecs["colors"] is PipeDelimitedStyleCodec)
+    assert(serde.propertyEncodings["name"]?.codec is FormStyleCodec)
+    assert(serde.propertyEncodings["colors"]?.codec is PipeDelimitedStyleCodec)
   }
 
   @Test

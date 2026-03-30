@@ -8,8 +8,10 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
-import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.codec.FormStyleCodec
 import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
@@ -255,5 +257,81 @@ class ServerVerifierTest {
     assert(results.size == 1)
     assert(results[0].result.isFailure())
     assert(results[0].result.errors().isNotEmpty())
+  }
+
+  @Test
+  fun `sends query parameter with reserved characters unencoded when allowReserved is true`() {
+    // Given
+    var capturedRawQuery: String? = null
+
+    val app = routes(
+      "/search" bind GET to { request ->
+        capturedRawQuery = request.uri.query
+        Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    val apiOperation = ApiOperation(
+      path = "/search",
+      method = "GET",
+      requestSchema = RequestSchema(
+        parameters = listOf(
+          ParameterSchema(
+            element = QueryParam("callback", allowReserved = true),
+            dataType = stringDataType(),
+            isRequired = true,
+            codec = FormStyleCodec("callback", true)
+          )
+        ),
+        bodies = emptyList()
+      ),
+      responses = mapOf(
+        200 to ResponseSchema(
+          headers = emptyList(),
+          bodies = listOf(
+            BodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+              isRequired = true,
+              serde = JsonSerde
+            )
+          )
+        )
+      ),
+      scenarios = listOf(
+        Scenario(
+          path = "/search",
+          method = "GET",
+          key = "withCallback",
+          statusCode = 200,
+          request = ScenarioRequest(
+            parameterValues = mapOf(QueryParam("callback", allowReserved = true) to "https://example.com/cb?token=abc"),
+            body = null
+          ),
+          response = ScenarioResponse(
+            headers = emptyMap(),
+            body = ScenarioBody(
+              contentType = ContentType("application/json"),
+              value = mapOf("id" to 1)
+            )
+          )
+        )
+      )
+    )
+
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+
+    // When
+    cases.forEach { verifier.verify(it) }
+
+    // Then
+    server.stop()
+    assert(capturedRawQuery != null)
+    // Reserved characters (:, /, ?) should NOT be percent-encoded
+    assert(capturedRawQuery!!.contains("https://example.com/cb?token=abc")) {
+      "Expected reserved characters to be unencoded, but got: $capturedRawQuery"
+    }
   }
 }
