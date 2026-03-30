@@ -7,19 +7,22 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.serde.Serde
 
 /**
- * Encodes and decodes parameter values according to OpenAPI style/explode rules.
+ * Encodes and decodes parameter values for HTTP transport.
  *
- * Each implementation corresponds to an OAS 3.0 serialization style (`simple`, `form`,
- * `label`, `matrix`, `pipeDelimited`, `spaceDelimited`, `deepObject`) and handles
- * encoding typed values into HTTP transport entries and decoding them back.
+ * Implementations cover two OAS 3.0 serialization strategies:
+ * - **Style-based**: `simple`, `form`, `label`, `matrix`, `pipeDelimited`,
+ *   `spaceDelimited`, `deepObject` — encode via style/explode rules.
+ * - **Content-based**: the parameter value is serialized using a media type
+ *   (e.g., JSON-encoded query parameter via the `content` keyword).
  *
- * Unlike [Serde] (which serializes content bodies as single strings), `StyleCodec`
+ * Unlike [Serde] (which serializes content bodies as single strings), `ParameterCodec`
  * produces a list of key-value pairs because some style/explode combinations expand
  * a single parameter into multiple HTTP-level entries.
  */
-sealed interface StyleCodec {
+sealed interface ParameterCodec {
 
   /** The parameter name as declared in the OpenAPI specification. */
   val paramName: String

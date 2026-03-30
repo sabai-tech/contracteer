@@ -6,10 +6,10 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.ParameterElement
-import tech.sabai.contracteer.core.codec.DeepObjectStyleCodec
-import tech.sabai.contracteer.core.codec.FormStyleCodec
-import tech.sabai.contracteer.core.codec.PipeDelimitedStyleCodec
-import tech.sabai.contracteer.core.codec.SpaceDelimitedStyleCodec
+import tech.sabai.contracteer.core.codec.DeepObjectParameterCodec
+import tech.sabai.contracteer.core.codec.FormParameterCodec
+import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
+import tech.sabai.contracteer.core.codec.SpaceDelimitedParameterCodec
 import kotlin.test.Test
 
 class QueryParameterStyleExtractionTest {
@@ -23,8 +23,8 @@ class QueryParameterStyleExtractionTest {
     val queryParam = operation.requestSchema.queryParameters.single()
     assert(queryParam.element == ParameterElement.QueryParam("status"))
     assert(queryParam.dataType is ArrayDataType)
-    assert(queryParam.codec is FormStyleCodec)
-    assert((queryParam.codec as FormStyleCodec).explode)
+    assert(queryParam.codec is FormParameterCodec)
+    assert((queryParam.codec as FormParameterCodec).explode)
   }
 
   @Test
@@ -34,8 +34,8 @@ class QueryParameterStyleExtractionTest {
 
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
-    assert(queryParam.codec is FormStyleCodec)
-    assert(!(queryParam.codec as FormStyleCodec).explode)
+    assert(queryParam.codec is FormParameterCodec)
+    assert(!(queryParam.codec as FormParameterCodec).explode)
   }
 
   @Test
@@ -45,8 +45,8 @@ class QueryParameterStyleExtractionTest {
 
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
-    assert(queryParam.codec is FormStyleCodec)
-    assert((queryParam.codec as FormStyleCodec).explode)
+    assert(queryParam.codec is FormParameterCodec)
+    assert((queryParam.codec as FormParameterCodec).explode)
   }
 
   @Test
@@ -56,7 +56,7 @@ class QueryParameterStyleExtractionTest {
 
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
-    assert(queryParam.codec is SpaceDelimitedStyleCodec)
+    assert(queryParam.codec is SpaceDelimitedParameterCodec)
   }
 
   @Test
@@ -66,7 +66,7 @@ class QueryParameterStyleExtractionTest {
 
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
-    assert(queryParam.codec is PipeDelimitedStyleCodec)
+    assert(queryParam.codec is PipeDelimitedParameterCodec)
   }
 
   @Test
@@ -77,7 +77,7 @@ class QueryParameterStyleExtractionTest {
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
     assert(queryParam.dataType is ObjectDataType)
-    assert(queryParam.codec is DeepObjectStyleCodec)
+    assert(queryParam.codec is DeepObjectParameterCodec)
     assert(queryParam.codec.paramName == "filter")
   }
 

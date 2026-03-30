@@ -208,13 +208,30 @@ internal class SchemaExtractor(
 
   private fun Parameter.toParameterSchema(element: ParameterElement): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
-      dataTypeConverter
-        .convertToDataType(resolved!!.schema, "")
-        .flatMap { dataType ->
-          createCodecForParameter(element, resolved.style?.toString(), resolved.explode, dataType!!, name)
-            .map { ParameterSchema(element, dataType, resolved.safeIsRequired(), it!!) }
-        }
+      if (resolved!!.content != null && resolved.content.isNotEmpty())
+        createContentParameterSchema(resolved, element)
+      else
+        createStyleParameterSchema(resolved, element)
     }
+
+  private fun createContentParameterSchema(parameter: Parameter, element: ParameterElement): Result<ParameterSchema> {
+    val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
+    val contentType = ContentType(mediaTypeString)
+    return dataTypeConverter
+      .convertToDataType(mediaTypeObj.schema, "")
+      .flatMap { dataType ->
+        buildSerde(contentType, mediaTypeObj, dataType!!)
+          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it!!)) }
+      }
+  }
+
+  private fun createStyleParameterSchema(parameter: Parameter, element: ParameterElement): Result<ParameterSchema> =
+    dataTypeConverter
+      .convertToDataType(parameter.schema, "")
+      .flatMap { dataType ->
+        createCodecForParameter(element, parameter.style?.toString(), parameter.explode, dataType!!, parameter.name)
+          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), it!!) }
+      }
 
   private fun Header.toParameterSchema(name: String): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
@@ -230,7 +247,7 @@ internal class SchemaExtractor(
                                       style: String?,
                                       explode: Boolean?,
                                       dataType: DataType<out Any>,
-                                      paramName: String): Result<StyleCodec> {
+                                      paramName: String): Result<ParameterCodec> {
     val normalizedStyle = style?.lowercase()?.replace("_", "")
     val (defaultStyle, defaultExplode) = when (element) {
       is PathParam               -> "simple" to false
@@ -259,41 +276,40 @@ internal class SchemaExtractor(
 
     validateStyleConstraints(actualStyle, actualExplode, dataType, paramName)?.let { return it }
 
-    return success(when (actualStyle) {
-                     "simple"         -> SimpleStyleCodec(paramName, actualExplode)
-                     "form"           -> FormStyleCodec(paramName, actualExplode)
-                     "label"          -> LabelStyleCodec(paramName, actualExplode)
-                     "matrix"         -> MatrixStyleCodec(paramName, actualExplode)
-                     "spacedelimited" -> SpaceDelimitedStyleCodec(paramName)
-                     "pipedelimited"  -> PipeDelimitedStyleCodec(paramName)
-                     "deepobject"     -> DeepObjectStyleCodec(paramName)
-                     else             -> return failure(paramName, "Unknown style '$actualStyle'")
-                   })
+    return when (actualStyle) {
+      "simple"         -> success(SimpleParameterCodec(paramName, actualExplode))
+      "form"           -> success(FormParameterCodec(paramName, actualExplode))
+      "label"          -> success(LabelParameterCodec(paramName, actualExplode))
+      "matrix"         -> success(MatrixParameterCodec(paramName, actualExplode))
+      "spacedelimited" -> success(SpaceDelimitedParameterCodec(paramName))
+      "pipedelimited"  -> success(PipeDelimitedParameterCodec(paramName))
+      "deepobject"     -> success(DeepObjectParameterCodec(paramName))
+      else             -> failure(paramName, "Unknown style '$actualStyle'")
+    }
   }
 
-  private fun validateStyleConstraints(
-    style: String,
-    explode: Boolean,
-    dataType: DataType<out Any>,
-    paramName: String
-  ): Result<StyleCodec>? = when (style) {
-    "deepobject"     -> when {
-      dataType !is ObjectDataType -> failure(paramName, "Style 'deepObject' requires object type")
-      !explode                    -> failure(paramName, "Style 'deepObject' requires explode=true")
-      else                        -> null
+  private fun validateStyleConstraints(style: String,
+                                       explode: Boolean,
+                                       dataType: DataType<out Any>,
+                                       paramName: String): Result<ParameterCodec>? =
+    when (style) {
+      "deepobject"     -> when {
+        dataType !is ObjectDataType -> failure(paramName, "Style 'deepObject' requires object type")
+        !explode                    -> failure(paramName, "Style 'deepObject' requires explode=true")
+        else                        -> null
+      }
+      "spacedelimited" -> when {
+        dataType !is ArrayDataType -> failure(paramName, "Style 'spaceDelimited' requires array type")
+        explode                    -> failure(paramName, "Style 'spaceDelimited' requires explode=false")
+        else                       -> null
+      }
+      "pipedelimited"  -> when {
+        dataType !is ArrayDataType -> failure(paramName, "Style 'pipeDelimited' requires array type")
+        explode                    -> failure(paramName, "Style 'pipeDelimited' requires explode=false")
+        else                       -> null
+      }
+      else             -> null
     }
-    "spacedelimited" -> when {
-      dataType !is ArrayDataType -> failure(paramName, "Style 'spaceDelimited' requires array type")
-      explode                    -> failure(paramName, "Style 'spaceDelimited' requires explode=false")
-      else                       -> null
-    }
-    "pipedelimited"  -> when {
-      dataType !is ArrayDataType -> failure(paramName, "Style 'pipeDelimited' requires array type")
-      explode                    -> failure(paramName, "Style 'pipeDelimited' requires explode=false")
-      else                       -> null
-    }
-    else             -> null
-  }
 
   private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
 }

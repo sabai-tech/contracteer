@@ -9,7 +9,7 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 
 /**
- * [StyleCodec] for OpenAPI `label` style. Used for path parameters only.
+ * [ParameterCodec] for OpenAPI `label` style. Used for path parameters only.
  *
  * Encoding:
  * - Primitive: `.value`
@@ -18,7 +18,7 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  * - Object explode=false: `.key1,value1,key2,value2`
  * - Object explode=true: `.key1=value1.key2=value2`
  */
-data class LabelStyleCodec(override val paramName: String, val explode: Boolean) : StyleCodec {
+data class LabelParameterCodec(override val paramName: String, val explode: Boolean) : ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> {
     val encoded = when (value) {

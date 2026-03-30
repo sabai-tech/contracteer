@@ -126,7 +126,7 @@ fun <T> List<T>.assertSingle(): T {
   return single()
 }
 
-// StyleCodec test helpers
+// ParameterCodec test helpers
 fun valueExtractor(vararg entries: Pair<String, List<String>>): (String) -> List<String> {
   val map = entries.toMap()
   return { key -> map[key] ?: emptyList() }

@@ -8,8 +8,8 @@ import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
-import tech.sabai.contracteer.core.codec.FormStyleCodec
-import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.codec.FormParameterCodec
+import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.serde.JsonSerde
@@ -32,7 +32,7 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            codec = SimpleStyleCodec("id", false)
+            codec = SimpleParameterCodec("id", false)
           )
         ),
         bodies = emptyList()
@@ -122,13 +122,13 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("userId"),
             dataType = integerDataType(),
             isRequired = true,
-            codec = SimpleStyleCodec("userId", false)
+            codec = SimpleParameterCodec("userId", false)
           ),
           ParameterSchema(
             element = ParameterElement.PathParam("orderId"),
             dataType = integerDataType(),
             isRequired = true,
-            codec = SimpleStyleCodec("orderId", false)
+            codec = SimpleParameterCodec("orderId", false)
           )
         ),
         bodies = emptyList()
@@ -201,7 +201,7 @@ class ServerVerifierTest {
             element = ParameterElement.PathParam("id"),
             dataType = integerDataType(),
             isRequired = true,
-            codec = SimpleStyleCodec("id", false)
+            codec = SimpleParameterCodec("id", false)
           )
         ),
         bodies = emptyList()
@@ -281,7 +281,7 @@ class ServerVerifierTest {
             element = QueryParam("callback", allowReserved = true),
             dataType = stringDataType(),
             isRequired = true,
-            codec = FormStyleCodec("callback", true)
+            codec = FormParameterCodec("callback", true)
           )
         ),
         bodies = emptyList()

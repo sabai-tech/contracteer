@@ -1,0 +1,35 @@
+openapi: 3.0.0
+info:
+  title: Content Parameter with Examples
+  version: '1.0'
+paths:
+  /items:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+              examples:
+                active_filter:
+                  value:
+                    status: active
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+              examples:
+                active_filter:
+                  value:
+                    id: 1

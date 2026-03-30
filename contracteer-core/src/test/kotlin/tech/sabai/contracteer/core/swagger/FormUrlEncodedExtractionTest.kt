@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.swagger
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.codec.FormStyleCodec
-import tech.sabai.contracteer.core.codec.PipeDelimitedStyleCodec
+import tech.sabai.contracteer.core.codec.FormParameterCodec
+import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
 import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde
 import kotlin.test.Test
 
@@ -26,8 +26,8 @@ class FormUrlEncodedExtractionTest {
 
     // then
     val serde = operation.requestSchema.bodies.single().serde as FormUrlEncodedSerde
-    assert(serde.propertyEncodings["name"]?.codec is FormStyleCodec)
-    assert(serde.propertyEncodings["colors"]?.codec is PipeDelimitedStyleCodec)
+    assert(serde.propertyEncodings["name"]?.codec is FormParameterCodec)
+    assert(serde.propertyEncodings["colors"]?.codec is PipeDelimitedParameterCodec)
   }
 
   @Test

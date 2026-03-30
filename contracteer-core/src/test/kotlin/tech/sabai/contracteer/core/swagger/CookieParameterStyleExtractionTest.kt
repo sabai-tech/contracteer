@@ -6,7 +6,7 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.ParameterElement
-import tech.sabai.contracteer.core.codec.FormStyleCodec
+import tech.sabai.contracteer.core.codec.FormParameterCodec
 import kotlin.test.Test
 
 class CookieParameterStyleExtractionTest {
@@ -20,8 +20,8 @@ class CookieParameterStyleExtractionTest {
     val cookieParam = operation.requestSchema.cookies.single()
     assert(cookieParam.element == ParameterElement.Cookie("session"))
     assert(cookieParam.dataType is ArrayDataType)
-    assert(cookieParam.codec is FormStyleCodec)
-    assert((cookieParam.codec as FormStyleCodec).explode == true)
+    assert(cookieParam.codec is FormParameterCodec)
+    assert((cookieParam.codec as FormParameterCodec).explode)
   }
 
   @Test
@@ -31,8 +31,8 @@ class CookieParameterStyleExtractionTest {
 
     // then
     val cookieParam = operation.requestSchema.cookies.single()
-    assert(cookieParam.codec is FormStyleCodec)
-    assert((cookieParam.codec as FormStyleCodec).explode == false)
+    assert(cookieParam.codec is FormParameterCodec)
+    assert(!(cookieParam.codec as FormParameterCodec).explode)
   }
 
   @Test
@@ -42,8 +42,8 @@ class CookieParameterStyleExtractionTest {
 
     // then
     val cookieParam = operation.requestSchema.cookies.single()
-    assert(cookieParam.codec is FormStyleCodec)
-    assert((cookieParam.codec as FormStyleCodec).explode == true)
+    assert(cookieParam.codec is FormParameterCodec)
+    assert((cookieParam.codec as FormParameterCodec).explode)
   }
 
   @Test
@@ -54,7 +54,7 @@ class CookieParameterStyleExtractionTest {
     // then
     val cookieParam = operation.requestSchema.cookies.single()
     assert(cookieParam.dataType is ObjectDataType)
-    assert(cookieParam.codec is FormStyleCodec)
+    assert(cookieParam.codec is FormParameterCodec)
   }
 
   @ParameterizedTest(name = "rejects cookie parameter with unsupported style {0}")

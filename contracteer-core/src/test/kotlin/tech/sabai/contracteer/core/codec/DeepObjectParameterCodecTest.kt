@@ -4,11 +4,11 @@ import tech.sabai.contracteer.core.rgbObjectDataType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
-class DeepObjectStyleCodecTest {
+class DeepObjectParameterCodecTest {
 
   @Test
   fun `encode object`() {
-    val result = DeepObjectStyleCodec("color").encode(mapOf("R" to 100, "G" to 200, "B" to 150))
+    val result = DeepObjectParameterCodec("color").encode(mapOf("R" to 100, "G" to 200, "B" to 150))
     assert(result == listOf("color[R]" to "100", "color[G]" to "200", "color[B]" to "150"))
   }
 
@@ -18,7 +18,7 @@ class DeepObjectStyleCodecTest {
     val extractor = valueExtractor("color[R]" to listOf("100"), "color[G]" to listOf("200"), "color[B]" to listOf("150"))
 
     // when
-    val result = DeepObjectStyleCodec("color").decode(extractor, rgbObjectDataType())
+    val result = DeepObjectParameterCodec("color").decode(extractor, rgbObjectDataType())
 
     // then
     assert(result.isSuccess())
@@ -31,7 +31,7 @@ class DeepObjectStyleCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = DeepObjectStyleCodec("color").decode(valueExtractor(), rgbObjectDataType())
+    val result = DeepObjectParameterCodec("color").decode(valueExtractor(), rgbObjectDataType())
 
     // then
     assert(result.isSuccess())

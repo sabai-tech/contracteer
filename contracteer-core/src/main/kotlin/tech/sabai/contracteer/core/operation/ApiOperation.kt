@@ -1,7 +1,7 @@
 package tech.sabai.contracteer.core.operation
 
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.codec.StyleCodec
+import tech.sabai.contracteer.core.codec.ParameterCodec
 import tech.sabai.contracteer.core.serde.Serde
 
 /**
@@ -74,7 +74,7 @@ data class ParameterSchema(
   val element: ParameterElement,
   val dataType: DataType<out Any>,
   val isRequired: Boolean,
-  val codec: StyleCodec
+  val codec: ParameterCodec
 )
 
 /**

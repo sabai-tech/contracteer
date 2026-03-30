@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Header Parameter Content Tests
+  version: '1.0'
+paths:
+  /items:
+    get:
+      parameters:
+        - in: header
+          name: X-Filter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+      responses:
+        '200':
+          description: Success

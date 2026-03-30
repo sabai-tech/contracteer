@@ -147,7 +147,7 @@ your specification.
 | `in: header`                    | Supported     | Primitive, array, and object types. Style: `simple`                                                 |
 | `in: cookie`                    | Supported     | Primitive, array, and object types. Style: `form`                                                   |
 | `style` / `explode`             | Supported     | All OAS 3.0 style/explode combinations with correct defaults per location                           |
-| `content` (instead of `schema`) | Not supported |                                                                                                     |
+| `content` (instead of `schema`) | Supported     | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                    |
 | `allowEmptyValue`               | Not supported |                                                                                                     |
 | `allowReserved`                 | Supported     | Query parameters and `application/x-www-form-urlencoded` encoding properties                        |
 

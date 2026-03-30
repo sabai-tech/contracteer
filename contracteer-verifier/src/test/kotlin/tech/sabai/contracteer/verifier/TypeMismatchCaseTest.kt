@@ -2,7 +2,7 @@ package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
 import tech.sabai.contracteer.verifier.TestFixture.objectDataType
@@ -97,7 +97,7 @@ class TypeMismatchTest {
           element = PathParam("id"),
           dataType = integerDataType(),
           isRequired = true,
-          codec = SimpleStyleCodec("id", false)
+          codec = SimpleParameterCodec("id", false)
         )
       ),
       bodies = listOf(

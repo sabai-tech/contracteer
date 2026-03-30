@@ -7,14 +7,14 @@ import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 
 /**
- * [StyleCodec] for OpenAPI `spaceDelimited` style. Used for query parameters only.
+ * [ParameterCodec] for OpenAPI `spaceDelimited` style. Used for query parameters only.
  * Always has explode=false. Supports arrays only.
  *
  * Encoding: single entry `(name, "value1 value2 value3")`
  *
  * URL encoding of spaces (%20) is handled by the HTTP framework, not by this codec.
  */
-data class SpaceDelimitedStyleCodec(override val paramName: String) : StyleCodec {
+data class SpaceDelimitedParameterCodec(override val paramName: String) : ParameterCodec {
   val explode = false
 
   override fun encode(value: Any?): List<Pair<String, String>> = when (value) {

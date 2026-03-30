@@ -9,7 +9,7 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 
 /**
- * [StyleCodec] for OpenAPI `matrix` style. Used for path parameters only.
+ * [ParameterCodec] for OpenAPI `matrix` style. Used for path parameters only.
  *
  * Encoding:
  * - Primitive: `;name=value`
@@ -18,7 +18,7 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  * - Object explode=false: `;name=key1,value1,key2,value2`
  * - Object explode=true: `;key1=value1;key2=value2`
  */
-data class MatrixStyleCodec(override val paramName: String, val explode: Boolean) : StyleCodec {
+data class MatrixParameterCodec(override val paramName: String, val explode: Boolean) : ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> {
     val encoded = when (value) {

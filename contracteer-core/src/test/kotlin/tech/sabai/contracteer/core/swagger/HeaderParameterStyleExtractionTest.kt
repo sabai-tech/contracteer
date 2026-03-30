@@ -6,7 +6,7 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.ParameterElement
-import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import kotlin.test.Test
 
 class HeaderParameterStyleExtractionTest {
@@ -20,8 +20,8 @@ class HeaderParameterStyleExtractionTest {
     val headerParam = operation.requestSchema.headers.single()
     assert(headerParam.element == ParameterElement.Header("X-Status"))
     assert(headerParam.dataType is ArrayDataType)
-    assert(headerParam.codec is SimpleStyleCodec)
-    assert((headerParam.codec as SimpleStyleCodec).explode == false)
+    assert(headerParam.codec is SimpleParameterCodec)
+    assert((headerParam.codec as SimpleParameterCodec).explode == false)
   }
 
   @Test
@@ -31,8 +31,8 @@ class HeaderParameterStyleExtractionTest {
 
     // then
     val headerParam = operation.requestSchema.headers.single()
-    assert(headerParam.codec is SimpleStyleCodec)
-    assert((headerParam.codec as SimpleStyleCodec).explode == false)
+    assert(headerParam.codec is SimpleParameterCodec)
+    assert((headerParam.codec as SimpleParameterCodec).explode == false)
   }
 
   @Test
@@ -42,8 +42,8 @@ class HeaderParameterStyleExtractionTest {
 
     // then
     val headerParam = operation.requestSchema.headers.single()
-    assert(headerParam.codec is SimpleStyleCodec)
-    assert((headerParam.codec as SimpleStyleCodec).explode == true)
+    assert(headerParam.codec is SimpleParameterCodec)
+    assert((headerParam.codec as SimpleParameterCodec).explode == true)
   }
 
   @Test
@@ -54,7 +54,7 @@ class HeaderParameterStyleExtractionTest {
     // then
     val headerParam = operation.requestSchema.headers.single()
     assert(headerParam.dataType is ObjectDataType)
-    assert(headerParam.codec is SimpleStyleCodec)
+    assert(headerParam.codec is SimpleParameterCodec)
   }
 
   @Test
@@ -67,8 +67,8 @@ class HeaderParameterStyleExtractionTest {
     val header = responseSchema.headers.single()
     assert(header.element == ParameterElement.Header("X-Rate-Limit"))
     assert(header.dataType is ArrayDataType)
-    assert(header.codec is SimpleStyleCodec)
-    assert((header.codec as SimpleStyleCodec).explode == false)
+    assert(header.codec is SimpleParameterCodec)
+    assert((header.codec as SimpleParameterCodec).explode == false)
   }
 
   @Test
@@ -80,7 +80,7 @@ class HeaderParameterStyleExtractionTest {
     val responseSchema = operation.responseFor(200)!!
     val header = responseSchema.headers.single()
     assert(header.dataType is ObjectDataType)
-    assert(header.codec is SimpleStyleCodec)
+    assert(header.codec is SimpleParameterCodec)
   }
 
   @ParameterizedTest(name = "rejects header parameter with unsupported style {0}")

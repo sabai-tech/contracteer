@@ -5,21 +5,21 @@ import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
-class PipeDelimitedStyleCodecTest {
+class SpaceDelimitedParameterCodecTest {
 
   @Test
   fun `encode array`() {
-    val result = PipeDelimitedStyleCodec("color").encode(listOf("blue", "black", "brown"))
-    assert(result == listOf("color" to "blue|black|brown"))
+    val result = SpaceDelimitedParameterCodec("color").encode(listOf("blue", "black", "brown"))
+    assert(result == listOf("color" to "blue black brown"))
   }
 
   @Test
   fun `decode array`() {
-    // given
-    val extractor = valueExtractor("color" to listOf("blue|black|brown"))
+    // given — the HTTP framework URL-decodes %20 to spaces
+    val extractor = valueExtractor("color" to listOf("blue black brown"))
 
     // when
-    val result = PipeDelimitedStyleCodec("color").decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = SpaceDelimitedParameterCodec("color").decode(extractor, arrayDataType(itemDataType = stringDataType()))
 
     // then
     assert(result.isSuccess())
@@ -29,7 +29,7 @@ class PipeDelimitedStyleCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = PipeDelimitedStyleCodec("color").decode(valueExtractor(), arrayDataType(itemDataType = stringDataType()))
+    val result = SpaceDelimitedParameterCodec("color").decode(valueExtractor(), arrayDataType(itemDataType = stringDataType()))
 
     // then
     assert(result.isSuccess())

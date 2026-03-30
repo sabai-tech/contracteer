@@ -18,8 +18,11 @@ import tech.sabai.contracteer.core.Result.Companion.success
 internal fun MediaType.safeExamples() =
   examples ?: example?.let(::singleExampleMap) ?: emptyMap()
 
-internal fun Parameter.safeExamples() =
-  examples ?: example?.let(::singleExampleMap) ?: emptyMap()
+internal fun Parameter.safeExamples(): Map<String, Example> =
+  examples
+    ?: example?.let(::singleExampleMap)
+    ?: content?.values?.firstOrNull()?.safeExamples()
+    ?: emptyMap()
 
 internal fun Parameter.safeIsRequired() =
   required ?: false

@@ -3,7 +3,7 @@ package tech.sabai.contracteer.core.serde
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.UrlEncoding
-import tech.sabai.contracteer.core.codec.StyleCodec
+import tech.sabai.contracteer.core.codec.ParameterCodec
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
@@ -13,7 +13,7 @@ import java.net.URLEncoder
 /**
  * [Serde] for `application/x-www-form-urlencoded` request bodies.
  *
- * Delegates to per-property [StyleCodec]s for encoding/decoding individual properties
+ * Delegates to per-property [ParameterCodec]s for encoding/decoding individual properties
  * of the object.
  */
 class FormUrlEncodedSerde(
@@ -60,7 +60,7 @@ class FormUrlEncodedSerde(
     return { key -> entries.filter { it.first == key }.map { it.second } }
   }
 
-  data class PropertyEncoding(val codec: StyleCodec, val allowReserved: Boolean = false)
+  data class PropertyEncoding(val codec: ParameterCodec, val allowReserved: Boolean = false)
 }
 
 private fun urlEncode(value: String): String = URLEncoder.encode(value, "UTF-8")

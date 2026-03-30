@@ -5,7 +5,7 @@ import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.verifier.TestFixture.integerDataType
@@ -77,13 +77,13 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Count"),
           dataType = integerDataType(),
           isRequired = true,
-          codec = SimpleStyleCodec("X-Count", false)
+          codec = SimpleParameterCodec("X-Count", false)
         ),
         ParameterSchema(
           element = ParameterElement.Header("X-Name"),
           dataType = stringDataType(),
           isRequired = true,
-          codec = SimpleStyleCodec("X-Name", false)
+          codec = SimpleParameterCodec("X-Name", false)
         )
       ),
       bodies = emptyList()
@@ -120,7 +120,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Optional"),
           dataType = stringDataType(),
           isRequired = false,
-          codec = SimpleStyleCodec("X-Optional", false)
+          codec = SimpleParameterCodec("X-Optional", false)
         )
       ),
       bodies = emptyList()
@@ -157,7 +157,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Required"),
           dataType = stringDataType(),
           isRequired = true,
-          codec = SimpleStyleCodec("X-Required", false)
+          codec = SimpleParameterCodec("X-Required", false)
         )
       ),
       bodies = emptyList()
@@ -196,7 +196,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Count"),
           dataType = integerDataType(),
           isRequired = true,
-          codec = SimpleStyleCodec("X-Count", false)
+          codec = SimpleParameterCodec("X-Count", false)
         )
       ),
       bodies = emptyList()
@@ -466,7 +466,7 @@ class ResponseValidatorTest {
           element = ParameterElement.Header("X-Total-Count"),
           dataType = integerDataType(),
           isRequired = true,
-          codec = SimpleStyleCodec("X-Total-Count", false)
+          codec = SimpleParameterCodec("X-Total-Count", false)
         )
       ),
       bodies = listOf(

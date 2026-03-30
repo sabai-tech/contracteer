@@ -7,12 +7,12 @@ import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 
 /**
- * [StyleCodec] for OpenAPI `pipeDelimited` style. Used for query parameters only.
+ * [ParameterCodec] for OpenAPI `pipeDelimited` style. Used for query parameters only.
  * Always has explode=false. Supports arrays only.
  *
  * Encoding: single entry `(name, "value1|value2|value3")`
  */
-data class PipeDelimitedStyleCodec(override val paramName: String): StyleCodec {
+data class PipeDelimitedParameterCodec(override val paramName: String): ParameterCodec {
   val explode = false
 
   override fun encode(value: Any?): List<Pair<String, String>> =

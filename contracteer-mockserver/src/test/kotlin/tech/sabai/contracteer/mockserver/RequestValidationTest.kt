@@ -4,7 +4,7 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterEach
-import tech.sabai.contracteer.core.codec.FormStyleCodec
+import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.core.operation.ParameterSchema
@@ -196,7 +196,7 @@ class RequestValidationTest {
             QueryParam("path", allowReserved = true),
             stringDataType(),
             isRequired = true,
-            FormStyleCodec("path", true)
+            FormParameterCodec("path", true)
           )
         )
       ),

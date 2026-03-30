@@ -8,7 +8,7 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 
 /**
- * [StyleCodec] for OpenAPI `form` style. Used for query and cookie parameters.
+ * [ParameterCodec] for OpenAPI `form` style. Used for query and cookie parameters.
  *
  * Encoding:
  * - Primitive: single entry `(name, value)`
@@ -17,7 +17,7 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  * - Object explode=false: single entry `(name, "key1,value1,key2,value2")`
  * - Object explode=true: multiple entries `(key1, value1), (key2, value2), ...`
  */
-data class FormStyleCodec(override val paramName: String, val explode: Boolean) : StyleCodec {
+data class FormParameterCodec(override val paramName: String, val explode: Boolean) : ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> = when {
     value is List<*> && explode  -> value.map { paramName to PlainTextSerde.serialize(it) }

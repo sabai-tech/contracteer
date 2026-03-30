@@ -6,9 +6,9 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.ParameterElement
-import tech.sabai.contracteer.core.codec.LabelStyleCodec
-import tech.sabai.contracteer.core.codec.MatrixStyleCodec
-import tech.sabai.contracteer.core.codec.SimpleStyleCodec
+import tech.sabai.contracteer.core.codec.LabelParameterCodec
+import tech.sabai.contracteer.core.codec.MatrixParameterCodec
+import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import kotlin.test.Test
 
 class PathParameterStyleExtractionTest {
@@ -22,8 +22,8 @@ class PathParameterStyleExtractionTest {
     val pathParam = operation.requestSchema.pathParameters.single()
     assert(pathParam.element == ParameterElement.PathParam("id"))
     assert(pathParam.dataType is ArrayDataType)
-    assert(pathParam.codec is SimpleStyleCodec)
-    assert((pathParam.codec as SimpleStyleCodec).explode == false)
+    assert(pathParam.codec is SimpleParameterCodec)
+    assert((pathParam.codec as SimpleParameterCodec).explode == false)
   }
 
   @Test
@@ -33,8 +33,8 @@ class PathParameterStyleExtractionTest {
 
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
-    assert(pathParam.codec is SimpleStyleCodec)
-    assert((pathParam.codec as SimpleStyleCodec).explode == false)
+    assert(pathParam.codec is SimpleParameterCodec)
+    assert((pathParam.codec as SimpleParameterCodec).explode == false)
   }
 
   @Test
@@ -44,8 +44,8 @@ class PathParameterStyleExtractionTest {
 
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
-    assert(pathParam.codec is SimpleStyleCodec)
-    assert((pathParam.codec as SimpleStyleCodec).explode == true)
+    assert(pathParam.codec is SimpleParameterCodec)
+    assert((pathParam.codec as SimpleParameterCodec).explode == true)
   }
 
   @Test
@@ -55,8 +55,8 @@ class PathParameterStyleExtractionTest {
 
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
-    assert(pathParam.codec is LabelStyleCodec)
-    assert((pathParam.codec as LabelStyleCodec).explode == false)
+    assert(pathParam.codec is LabelParameterCodec)
+    assert((pathParam.codec as LabelParameterCodec).explode == false)
   }
 
   @Test
@@ -66,8 +66,8 @@ class PathParameterStyleExtractionTest {
 
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
-    assert(pathParam.codec is LabelStyleCodec)
-    assert((pathParam.codec as LabelStyleCodec).explode == true)
+    assert(pathParam.codec is LabelParameterCodec)
+    assert((pathParam.codec as LabelParameterCodec).explode == true)
   }
 
   @Test
@@ -77,8 +77,8 @@ class PathParameterStyleExtractionTest {
 
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
-    assert(pathParam.codec is MatrixStyleCodec)
-    assert((pathParam.codec as MatrixStyleCodec).explode == false)
+    assert(pathParam.codec is MatrixParameterCodec)
+    assert((pathParam.codec as MatrixParameterCodec).explode == false)
     assert(pathParam.codec.paramName == "id")
   }
 
@@ -89,8 +89,8 @@ class PathParameterStyleExtractionTest {
 
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
-    assert(pathParam.codec is MatrixStyleCodec)
-    assert((pathParam.codec as MatrixStyleCodec).explode == true)
+    assert(pathParam.codec is MatrixParameterCodec)
+    assert((pathParam.codec as MatrixParameterCodec).explode == true)
     assert(pathParam.codec.paramName == "id")
   }
 
@@ -102,7 +102,7 @@ class PathParameterStyleExtractionTest {
     // then
     val pathParam = operation.requestSchema.pathParameters.single()
     assert(pathParam.dataType is ObjectDataType)
-    assert(pathParam.codec is SimpleStyleCodec)
+    assert(pathParam.codec is SimpleParameterCodec)
   }
 
   @ParameterizedTest(name = "rejects path parameter with unsupported style {0}")
