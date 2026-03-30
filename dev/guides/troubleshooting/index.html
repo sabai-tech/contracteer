@@ -1142,6 +1142,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#extraction-fails-with-minpropertiesmaxproperties-and-readonlywriteonly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extraction fails with minProperties/maxProperties and readOnly/writeOnly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#response-values-are-random-and-different-on-each-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1433,6 +1444,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#extraction-fails-with-minpropertiesmaxproperties-and-readonlywriteonly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extraction fails with minProperties/maxProperties and readOnly/writeOnly
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#response-values-are-random-and-different-on-each-run" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1659,6 +1681,12 @@ If the field is also <code>required</code>, the server should not return it and 
 <p><strong>Fix:</strong> This is usually correct behavior.
 If the verifier fails, check that the field is actually marked <code>writeOnly: true</code> in your specification.
 If it is, the server should not include it in responses.</p>
+<h3 id="extraction-fails-with-minpropertiesmaxproperties-and-readonlywriteonly">Extraction fails with minProperties/maxProperties and readOnly/writeOnly<a class="headerlink" href="#extraction-fails-with-minpropertiesmaxproperties-and-readonlywriteonly" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with an error about <code>minProperties</code>/<code>maxProperties</code> combined with <code>readOnly</code> or <code>writeOnly</code> properties.</p>
+<p><strong>Cause:</strong> The OAS specification does not define how <code>minProperties</code>/<code>maxProperties</code> interact with <code>readOnly</code>/<code>writeOnly</code>.
+When properties are excluded from request or response schemas, the property count constraints become ambiguous.
+Contracteer rejects this combination to avoid silent misinterpretation.</p>
+<p><strong>Fix:</strong> Remove either the <code>minProperties</code>/<code>maxProperties</code> constraint or the <code>readOnly</code>/<code>writeOnly</code> annotations from the affected object schema.</p>
 <h3 id="response-values-are-random-and-different-on-each-run">Response values are random and different on each run<a class="headerlink" href="#response-values-are-random-and-different-on-each-run" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The mock server returns valid responses, but the values change on every request.</p>
 <p><strong>Cause:</strong> The request does not match any scenario.
@@ -1708,8 +1736,8 @@ If you need length constraints to apply, remove the <code>pattern</code>.</p>
 The keyword is silently ignored, which changes validation behavior.</p>
 <p>Common examples:</p>
 <ul>
-<li><strong><code>minItems</code></strong> on an array.
-  The verifier may send an empty array when the server expects at least one item.</li>
+<li><strong><code>default</code></strong> on a property.
+  The verifier may omit an optional property when the server expects the default value.</li>
 </ul>
 <p><strong>Fix:</strong> Check the <a href="../../concepts/openapi-coverage/">OpenAPI 3.0 Coverage</a> page for the full list of supported and unsupported keywords.
 If your specification relies on an unsupported keyword, you may need to work around it until support is added.</p>
@@ -1719,8 +1747,7 @@ Contracteer produces no verification cases for them.</p>
 <p><strong>Cause:</strong> The operation uses a feature that Contracteer does not yet support.
 Operations are skipped when they use:</p>
 <ul>
-<li><code>multipart/form-data</code>, <code>application/x-www-form-urlencoded</code>, or <code>application/xml</code> content types.</li>
-<li>Array or object parameters (path, query, header, cookie).</li>
+<li><code>application/xml</code> content types.</li>
 </ul>
 <p>Contracteer logs a warning for each skipped operation.</p>
 <p><strong>Fix:</strong> Check the <a href="../../concepts/openapi-coverage/">OpenAPI 3.0 Coverage</a> page for the full list of supported features.</p>
