@@ -32,7 +32,9 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       recursiveDepth < 0             -> failure("Maximum recursive depth reached while converting Schema")
       ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
-      else                           -> sharedComponents.resolve(schema).flatMap { convertSchema(it!!, ref, recursiveDepth).map { dt -> dt!!.also { dataTypeCache[ref] = it } } }
+      else                           -> sharedComponents
+        .resolve(schema)
+        .flatMap { convertSchema(it!!, ref, recursiveDepth).map { dt -> dt!!.also { dataTypeCache[ref] = it } } }
     }
   }
 
@@ -51,23 +53,42 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     val convert = { s: Schema<*>, name: String, depth: Int -> convertToDataType(s, name, depth) }
     val discriminator = { s: Schema<*> -> convertToDiscriminator(s) }
     return when (schema) {
-      is ArraySchema                             -> ArrayDataTypeConverter.convert(schema, recursiveDepth, convert)
-      is BinarySchema                            -> BinaryDataTypeConverter.convert(schema)
-      is ByteArraySchema                         -> Base64DataTypeConverter.convert(schema)
-      is BooleanSchema                           -> BooleanDataTypeConverter.convert(schema)
-      is ComposedSchema if(schema.allOf != null) -> AllOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
-      is ComposedSchema if(schema.anyOf != null) -> AnyOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
-      is ComposedSchema if(schema.oneOf != null) -> OneOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
-      is DateSchema                              -> DateDataTypeConverter.convert(schema)
-      is DateTimeSchema                          -> DateTimeDataTypeConverter.convert(schema)
-      is EmailSchema                             -> EmailDataTypeConverter.convert(schema)
-      is IntegerSchema                           -> IntegerDataTypeConverter.convert(schema)
-      is NumberSchema                            -> NumberDataTypeConverter.convert(schema)
-      is StringSchema                            -> StringDataTypeConverter.convert(schema, "string")
-      is ObjectSchema, is MapSchema              -> ObjectDataTypeConverter.convert(schema, recursiveDepth, convert)
-      is PasswordSchema                          -> StringDataTypeConverter.convert(schema, "string/password")
-      is UUIDSchema                              -> UuidDataTypeConverter.convert(schema)
-      else                                       -> tryToInferSchemaType(schema, recursiveDepth, convert)
+      is ArraySchema                -> ArrayDataTypeConverter.convert(schema, recursiveDepth, convert)
+      is BinarySchema               -> BinaryDataTypeConverter.convert(schema)
+      is ByteArraySchema            -> Base64DataTypeConverter.convert(schema)
+      is BooleanSchema              -> BooleanDataTypeConverter.convert(schema)
+      is ComposedSchema             -> convertComposedSchema(schema, recursiveDepth, convert, discriminator)
+      is DateSchema                 -> DateDataTypeConverter.convert(schema)
+      is DateTimeSchema             -> DateTimeDataTypeConverter.convert(schema)
+      is EmailSchema                -> EmailDataTypeConverter.convert(schema)
+      is IntegerSchema              -> IntegerDataTypeConverter.convert(schema)
+      is NumberSchema               -> NumberDataTypeConverter.convert(schema)
+      is StringSchema               -> StringDataTypeConverter.convert(schema, "string")
+      is ObjectSchema, is MapSchema -> ObjectDataTypeConverter.convert(schema, recursiveDepth, convert)
+      is PasswordSchema             -> StringDataTypeConverter.convert(schema, "string/password")
+      is UUIDSchema                 -> UuidDataTypeConverter.convert(schema)
+      else                          -> tryToInferSchemaType(schema, recursiveDepth, convert)
+    }
+  }
+
+  private fun convertComposedSchema(schema: ComposedSchema,
+                                    recursiveDepth: Int,
+                                    convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>,
+                                    discriminator: (Schema<*>) -> Discriminator?): Result<DataType<out Any>> {
+    val keywords = listOfNotNull(
+      if (schema.allOf != null) "allOf" else null,
+      if (schema.anyOf != null) "anyOf" else null,
+      if (schema.oneOf != null) "oneOf" else null,
+    )
+
+    return when {
+      keywords.size > 1    ->
+        failure("Schema '${schema.name}' combines multiple composition keywords (${keywords.joinToString(", ")}). Only one of 'allOf', 'anyOf', or 'oneOf' per schema is supported.")
+
+      schema.allOf != null -> AllOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
+      schema.anyOf != null -> AnyOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
+      schema.oneOf != null -> OneOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
+      else                 -> failure("Schema '${schema.name}' is a composed schema but has no 'allOf', 'anyOf', or 'oneOf' defined.")
     }
   }
 

@@ -327,6 +327,15 @@ class SchemaConversionTest {
   }
 
   @Test
+  fun `does not extract schema when multiple composition keywords are present`() {
+    // when
+    val result = loadOperations("multiple_composition_keywords_error.yaml")
+
+    // then
+    result.assertFailure()
+  }
+
+  @Test
   fun `extract AllOfDataType with single primitive sub-type`() {
     // when
     val allOfDataType = getDataType("allOf_single_primitive.yaml") as AllOfDataType

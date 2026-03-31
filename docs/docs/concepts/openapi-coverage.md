@@ -121,6 +121,37 @@ minLength: 5
 maxLength: 10
 ```
 
+### Multiple composition keywords on the same schema
+
+JSON Schema allows `allOf`, `anyOf`, and `oneOf` to appear on the same schema, with each keyword applying independently:
+
+```yaml
+# Valid per the spec, but rejected by Contracteer
+ProductOrService:
+  allOf:
+    - $ref: '#/components/schemas/Purchasable'
+  oneOf:
+    - $ref: '#/components/schemas/Product'
+    - $ref: '#/components/schemas/Service'
+```
+
+Contracteer rejects schemas that combine multiple composition keywords.
+Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one must match).
+Combining them would require a compound validation that Contracteer does not implement.
+
+This pattern is extremely rare in real-world specifications and is almost always a mistake.
+If your specification combines composition keywords, restructure it to use a single keyword:
+
+```yaml
+# Use allOf to combine the base schema with a oneOf
+ProductOrService:
+  allOf:
+    - $ref: '#/components/schemas/Purchasable'
+    - oneOf:
+        - $ref: '#/components/schemas/Product'
+        - $ref: '#/components/schemas/Service'
+```
+
 ---
 
 ## Not Applicable to Contract Testing
