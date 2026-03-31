@@ -71,6 +71,56 @@ The specification does not define how to serialize an array as plain text in a m
 
 Use the `encoding` object to override the default content type for specific properties.
 
+### `allOf` with non-structured sub-schemas
+
+A common real-world pattern wraps a `$ref` in a single-element `allOf` for documentation or tooling reasons:
+
+```yaml
+components:
+  schemas:
+    NonEmptyString:
+      type: string
+      minLength: 1
+    ProductName:
+      allOf:
+        - $ref: '#/components/schemas/NonEmptyString'
+```
+
+Contracteer handles single-element `allOf` with any sub-schema type -- string, integer, object, or composite.
+
+**Multi-element `allOf`** requires all sub-schemas to be structured types (object, `allOf`, `anyOf`, or `oneOf`):
+
+```yaml
+# Supported: multi-element allOf with objects
+allOf:
+  - $ref: '#/components/schemas/Pet'
+  - type: object
+    properties:
+      huntingSkill:
+        type: string
+
+# Not supported: multi-element allOf with primitives
+allOf:
+  - type: string
+    minLength: 5
+  - type: string
+    maxLength: 10
+```
+
+The OAS 3.0 specification allows `allOf` sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
+For objects, this works -- different sub-schemas contribute different properties that combine cleanly.
+For primitives, constraints overlap on the same value.
+A `minLength: 5` from one sub-schema and a `maxLength: 10` from another would require computing the constraint intersection, which Contracteer does not do.
+
+If your specification uses multi-element `allOf` with primitives, combine the constraints into a single schema:
+
+```yaml
+# Equivalent single schema
+type: string
+minLength: 5
+maxLength: 10
+```
+
 ---
 
 ## Not Applicable to Contract Testing
@@ -152,7 +202,7 @@ Contracteer does not process them.
 
 | Feature         | Notes                                                                                |
 |-----------------|--------------------------------------------------------------------------------------|
-| `allOf`         | Requires all sub-schemas to be structured types (object or composite)                |
+| `allOf`         | Single-element allOf accepts any sub-schema type; multi-element requires structured types (object or composite) |
 | `oneOf`         | Validates that exactly one sub-schema matches                                        |
 | `anyOf`         | Validates that at least one sub-schema matches                                       |
 | `discriminator` | Supported on allOf, oneOf, anyOf with `propertyName` and `mapping`                   |

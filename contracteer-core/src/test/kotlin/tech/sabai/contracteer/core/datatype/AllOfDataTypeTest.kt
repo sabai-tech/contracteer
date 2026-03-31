@@ -136,6 +136,77 @@ class AllOfDataTypeTest {
   }
 
   @Nested
+  inner class WithSinglePrimitiveSubType {
+
+    @Test
+    fun `creation succeeds with a single non-structured sub-type`() {
+      // when
+      val result = AllOfDataType.create("myAllOf", subTypes = listOf(stringDataType()))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation succeeds when value matches the sub-type`() {
+      // given
+      val allOfDataType = allOfDataType(subTypes = listOf(stringDataType()))
+
+      // when / then
+      assert(allOfDataType.validate("hello").isSuccess())
+    }
+
+    @Test
+    fun `validation fails when value does not match the sub-type`() {
+      // given
+      val allOfDataType = allOfDataType(subTypes = listOf(stringDataType()))
+
+      // when / then
+      assert(allOfDataType.validate(42).isFailure())
+    }
+
+    @Test
+    fun `generates a valid random value`() {
+      // given
+      val allOfDataType = allOfDataType(subTypes = listOf(stringDataType()))
+
+      // when
+      val randomValue = allOfDataType.randomValue()
+
+      // then
+      assert(allOfDataType.validate(randomValue).isSuccess())
+    }
+
+    @Test
+    fun `is not fully structured`() {
+      // given
+      val allOfDataType = allOfDataType(subTypes = listOf(stringDataType()))
+
+      // then
+      assert(!allOfDataType.isFullyStructured())
+    }
+
+  }
+
+  @Test
+  fun `creation fails for multi-element allOf with non-structured sub-types`() {
+    // when
+    val result = AllOfDataType.create("myAllOf", subTypes = listOf(stringDataType(), stringDataType()))
+
+    // then
+    assert(result.isFailure())
+  }
+
+  @Test
+  fun `creation fails for multi-element allOf with mixed structured and non-structured sub-types`() {
+    // when
+    val result = AllOfDataType.create("myAllOf", subTypes = listOf(pet, stringDataType()))
+
+    // then
+    assert(result.isFailure())
+  }
+
+  @Nested
   inner class WithDiscriminator {
 
     @Test
@@ -205,7 +276,7 @@ class AllOfDataTypeTest {
 
       // then
       assert(allOfDataType.validate(randomValue).isSuccess())
-      assert(randomValue["petType"] == "CAT")
+      assert((randomValue as Map<*, *>)["petType"] == "CAT")
     }
   }
 }

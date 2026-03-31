@@ -327,12 +327,16 @@ class SchemaConversionTest {
   }
 
   @Test
-  fun `does not extract AllOfDataType when sub datatypes are not structured`() {
+  fun `extract AllOfDataType with single primitive sub-type`() {
     // when
-    val result = loadOperations("allOf_subtypes_error.yaml")
+    val allOfDataType = getDataType("allOf_single_primitive.yaml") as AllOfDataType
 
     // then
-    result.assertFailure()
+    assert(allOfDataType.subTypes.size == 1)
+    assert(allOfDataType.subTypes.first() is StringDataType)
+    assert(allOfDataType.validate("hello").isSuccess())
+    assert(allOfDataType.validate(42).isFailure())
+    assert(allOfDataType.validate(allOfDataType.randomValue()).isSuccess())
   }
 
   @Test

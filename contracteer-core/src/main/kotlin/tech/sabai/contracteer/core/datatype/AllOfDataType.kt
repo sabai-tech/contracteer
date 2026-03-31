@@ -8,59 +8,60 @@ import tech.sabai.contracteer.core.joinWithQuotes
 import java.lang.System.lineSeparator
 
 /** OpenAPI `allOf` composition. The value must match all sub-schemas simultaneously. */
-@Suppress("UNCHECKED_CAST")
 class AllOfDataType private constructor(name: String,
-                                        subTypes: List<DataType<Map<String, Any?>>>,
+                                        subTypes: List<DataType<out Any>>,
                                         isNullable: Boolean,
                                         val discriminator: Discriminator?,
                                         allowedValues: AllowedValues? = null):
-    CompositeDataType<Map<String, Any?>>(name,
-                                         "allOf",
-                                         isNullable,
-                                         subTypes,
-                                         Map::class.java as Class<Map<String, Any?>>,
-                                         allowedValues) {
+    CompositeDataType<Any>(name,
+                           "allOf",
+                           isNullable,
+                           subTypes,
+                           Any::class.java,
+                           allowedValues) {
 
-  override fun isFullyStructured() = true
+  override fun isFullyStructured() = subTypes.all { it.isFullyStructured() }
 
-  override fun asRequestType(): DataType<Map<String, Any?>> =
+  override fun asRequestType(): DataType<Any> =
     subTypes
-      .map { it.asRequestType() as DataType<Map<String, Any?>> }
+      .map { it.asRequestType() }
       .let { transformed ->
         if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
         else AllOfDataType(name, transformed, isNullable, discriminator, allowedValues)
       }
 
-  override fun asResponseType(): DataType<Map<String, Any?>> =
+  override fun asResponseType(): DataType<Any> =
     subTypes
-      .map { it.asResponseType() as DataType<Map<String, Any?>> }
+      .map { it.asResponseType() }
       .let { transformed ->
         if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
         else AllOfDataType(name, transformed, isNullable, discriminator, allowedValues)
       }
 
-  override fun doValidate(value: Map<String, Any?>) =
-    validateWithDiscriminator(value)
-      .flatMap {
-        val dataTypeErrors = subTypes.associateWith { it.validate(value) }.filterValues { it.isFailure() }
-        if (dataTypeErrors.isNotEmpty())
-          buildNoMatchError(dataTypeErrors)
-        else
-          success(value)
-      }
+  override fun doValidate(value: Any): Result<Any> {
+    if (discriminator != null) {
+      val discriminatorResult = validateDiscriminator(value)
+      if (discriminatorResult.isFailure()) return discriminatorResult
+    }
+    val dataTypeErrors = subTypes.associateWith { it.validate(value) }.filterValues { it.isFailure() }
+    return if (dataTypeErrors.isNotEmpty())
+      buildNoMatchError(dataTypeErrors)
+    else
+      success(value)
+  }
 
-  override fun doRandomValue(): Map<String, Any?> {
-    val randomValue = subTypes
-      .map { it.randomValue() }
-      .reduce { acc, properties -> acc + properties }
-
+  @Suppress("UNCHECKED_CAST")
+  override fun doRandomValue(): Any {
+    val values = subTypes.map { it.randomValue() }
+    if (values.any { it !is Map<*, *> }) return values.first()
+    val randomValue = (values as List<Map<String, Any?>>).reduce { acc, properties -> acc + properties }
     return discriminator?.let { randomValue + (it.propertyName to it.getMappingName(name)) } ?: randomValue
   }
 
-  private fun validateWithDiscriminator(value: Map<String, Any?>) =
+  private fun validateDiscriminator(value: Any): Result<Any> =
     when {
-      discriminator == null                                                                 -> success()
-      value[discriminator.propertyName] == null                                             -> failure("Discriminator property '${discriminator.propertyName}' is required")
+      value !is Map<*, *>                                                                   -> failure("Discriminator requires an object value")
+      value[discriminator!!.propertyName] == null                                           -> failure("Discriminator property '${discriminator.propertyName}' is required")
       value[discriminator.propertyName] !is String                                          -> failure("Discriminator property '${discriminator.propertyName}' must be of type 'string'")
       discriminator.getDataTypeNameFor(value[discriminator.propertyName] as String) != name -> failure(
         "Invalid value for discriminator property '${discriminator.propertyName}'. " +
@@ -68,7 +69,7 @@ class AllOfDataType private constructor(name: String,
       else                                                                                  -> success(value)
     }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Map<String, Any?>>, Result<Map<String, Any?>>>): Result<Map<String, Any?>> {
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Any> {
     val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
     val detailedErrors = dataTypeErrors.map { (dataType, result) ->
       "Schema '${dataType.name}':" + result.errors().joinToString(
@@ -88,7 +89,7 @@ class AllOfDataType private constructor(name: String,
     @JvmStatic
     @JvmOverloads
     fun create(name: String,
-               subTypes: List<DataType<Map<String, Any?>>>,
+               subTypes: List<DataType<out Any>>,
                isNullable: Boolean = false,
                discriminator: Discriminator? = null,
                enum: List<Any?> = emptyList()) =
@@ -105,7 +106,9 @@ class AllOfDataType private constructor(name: String,
         }
 
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?): Result<Discriminator> {
+      if (size > 1 && any { !it.isFullyStructured() }) return failure("Only structured schemas (object, allOf, anyOf, oneOf) are supported for multi-element 'allOf'.")
       if (discriminator == null) return success()
+
       val results = map { discriminator.validate(it).forProperty(it.name) }
       val successes = results.count { it.isSuccess() }
       return when {

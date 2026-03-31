@@ -7,7 +7,7 @@ object TestFixture {
 
   fun allOfDataType(
     name: String = "allOf",
-    subTypes: List<DataType<Map<String, Any?>>>,
+    subTypes: List<DataType<out Any>>,
     isNullable: Boolean = false,
     discriminator: Discriminator? = null,
     enum: List<Any?> = emptyList()) =
