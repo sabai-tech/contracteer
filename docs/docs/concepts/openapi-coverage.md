@@ -152,6 +152,23 @@ ProductOrService:
         - $ref: '#/components/schemas/Service'
 ```
 
+### `nullable` on composition schemas
+
+The OAS 3.0.4 specification states that `nullable` only takes effect when `type` is explicitly defined on the same schema.
+Composition schemas (`oneOf`, `anyOf`, `allOf`) typically do not declare `type`, which means `nullable: true` should technically have no effect:
+
+```yaml
+MySchema:
+  nullable: true
+  oneOf:
+    - $ref: '#/components/schemas/Cat'
+    - $ref: '#/components/schemas/Dog'
+```
+
+Contracteer honours `nullable: true` on composition schemas regardless of whether `type` is present.
+This matches the behavior of most OpenAPI tools (swagger-codegen, OpenAPI Generator, Redoc) and what users expect.
+The OAS 3.0 `nullable` rule is widely considered a specification design flaw, which OAS 3.1 resolved by replacing `nullable` with `type` arrays (e.g., `type: ["object", "null"]`).
+
 ---
 
 ## Not Applicable to Contract Testing
