@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.swagger.datatype
 
+import io.swagger.v3.oas.models.media.ComposedSchema
 import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
@@ -12,6 +13,7 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 import tech.sabai.contracteer.core.swagger.safeProperties
 
 internal object ObjectDataTypeConverter {
+
   fun convert(
     schema: Schema<*>,
     maxRecursiveDepth: Int,
@@ -52,5 +54,14 @@ internal object ObjectDataTypeConverter {
           )
         }
       }.forProperty(schema.name)
+  }
+
+  fun convertSiblingObject(schema: ComposedSchema,
+                           maxRecursiveDepth: Int,
+                           convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>): Result<DataType<out Any>>? {
+    return if (schema.properties != null || schema.required != null || schema.additionalProperties != null)
+      convert(schema, maxRecursiveDepth, convert)
+    else
+      null
   }
 }

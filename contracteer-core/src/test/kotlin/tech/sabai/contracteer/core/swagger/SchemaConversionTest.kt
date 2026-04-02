@@ -336,6 +336,50 @@ class SchemaConversionTest {
   }
 
   @Test
+  fun `extract AllOfDataType with sibling properties folded into sub-types`() {
+    // when
+    val allOfDataType = getDataType("allOf_sibling_properties.yaml") as AllOfDataType
+
+    // then
+    assert(allOfDataType.subTypes.size == 2)
+    assert(allOfDataType.subTypes.any { it.name == "Pet" })
+    val value = allOfDataType.randomValue()
+    assert(allOfDataType.validate(value).isSuccess())
+    assert(allOfDataType.validate(mapOf("name" to "Kitty")).isFailure()) // missing huntingSkill
+    assert(allOfDataType.validate(mapOf("huntingSkill" to "lazy")).isFailure()) // missing name
+    assert(allOfDataType.validate(mapOf("name" to "Kitty", "huntingSkill" to "lazy")).isSuccess())
+  }
+
+  @Test
+  fun `extract AllOfDataType wrapping oneOf when oneOf has sibling properties`() {
+    // when
+    val dataType = getDataType("oneOf_sibling_properties.yaml")
+
+    // then
+    assert(dataType is AllOfDataType)
+    val allOfDataType = dataType as AllOfDataType
+    assert(allOfDataType.subTypes.size == 2)
+    assert(allOfDataType.subTypes.any { it is OneOfDataType })
+    assert(allOfDataType.validate(mapOf("name" to "Kitty", "huntingSkill" to "lazy")).isSuccess())
+    assert(allOfDataType.validate(mapOf("huntingSkill" to "lazy")).isFailure()) // missing sibling required 'name'
+    assert(allOfDataType.validate(mapOf("name" to "Kitty")).isFailure()) // matches neither Cat nor Dog
+  }
+
+  @Test
+  fun `extract AllOfDataType wrapping anyOf when anyOf has sibling properties`() {
+    // when
+    val dataType = getDataType("anyOf_sibling_properties.yaml")
+
+    // then
+    assert(dataType is AllOfDataType)
+    val allOfDataType = dataType as AllOfDataType
+    assert(allOfDataType.subTypes.size == 2)
+    assert(allOfDataType.subTypes.any { it is AnyOfDataType })
+    assert(allOfDataType.validate(mapOf("name" to "Kitty", "huntingSkill" to "lazy")).isSuccess())
+    assert(allOfDataType.validate(mapOf("huntingSkill" to "lazy")).isFailure()) // missing sibling required 'name'
+  }
+
+  @Test
   fun `extract AllOfDataType with single primitive sub-type`() {
     // when
     val allOfDataType = getDataType("allOf_single_primitive.yaml") as AllOfDataType

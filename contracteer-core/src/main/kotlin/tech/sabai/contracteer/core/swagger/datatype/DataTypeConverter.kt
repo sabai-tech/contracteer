@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.AllOfDataType
 import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
@@ -81,15 +82,27 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       if (schema.oneOf != null) "oneOf" else null,
     )
 
-    return when {
-      keywords.size > 1    ->
-        failure("Schema '${schema.name}' combines multiple composition keywords (${keywords.joinToString(", ")}). Only one of 'allOf', 'anyOf', or 'oneOf' per schema is supported.")
+    if (keywords.size > 1)
+      return failure("Schema '${schema.name}' combines multiple composition keywords (${keywords.joinToString(", ")}). Only one of 'allOf', 'anyOf', or 'oneOf' per schema is supported.")
 
+    val compositionResult = when {
       schema.allOf != null -> AllOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
       schema.anyOf != null -> AnyOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
       schema.oneOf != null -> OneOfDataTypeConverter.convert(schema, recursiveDepth, convert, discriminator)
-      else                 -> failure("Schema '${schema.name}' is a composed schema but has no 'allOf', 'anyOf', or 'oneOf' defined.")
+      else                 -> return failure("Schema '${schema.name}' is a composed schema but has no 'allOf', 'anyOf', or 'oneOf' defined.")
     }
+
+    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, recursiveDepth, convert)
+        ?: return compositionResult
+
+    if (schema.allOf != null) return compositionResult
+
+    if (compositionResult.isFailure() || siblingResult.isFailure())
+      return compositionResult combineWith siblingResult.retypeError()
+
+    return AllOfDataType.create(
+      name = schema.name,
+      subTypes = listOf(compositionResult.value!!, siblingResult.value!!))
   }
 
   @Suppress("UNCHECKED_CAST")

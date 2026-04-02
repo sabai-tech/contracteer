@@ -19,21 +19,24 @@ internal object AllOfDataTypeConverter {
               discriminator: (Schema<*>) -> Discriminator?): Result<AllOfDataType> {
     if (schema.allOf == null) return failure("'allOf' must be defined.")
 
-    return schema.allOf
+    val subTypeResults = schema.allOf
       .mapIndexed { index, subSchema -> convert(subSchema, "allOf #$index", maxRecursiveDepth - 1) }
+
+    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, maxRecursiveDepth, convert)
+
+    return (subTypeResults + listOfNotNull(siblingResult))
       .combineResults()
       .flatMap { subDataTypes ->
         val discriminators = schema.allOf.mapNotNull { discriminator(it) }
         when {
           discriminators.size > 1 -> failure("Only 1 discriminator is allowed in 'allOf'.")
-          else                    -> {
+          else                    ->
             AllOfDataType.create(
               name = schema.name,
               subTypes = subDataTypes!!,
               isNullable = schema.safeNullable(),
               discriminator = discriminators.firstOrNull(),
               enum = schema.safeEnum())
-          }
         }
       }.forProperty(schema.name)
   }

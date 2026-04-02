@@ -1,0 +1,38 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /test:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  $ref: '#/components/schemas/Cat'
+      responses:
+        200:
+          description: OK
+
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+    Cat:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+      properties:
+        huntingSkill:
+          type: string
+      required:
+        - huntingSkill
