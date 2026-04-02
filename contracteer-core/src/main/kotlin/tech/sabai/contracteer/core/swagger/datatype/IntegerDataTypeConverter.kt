@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.swagger.datatype
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.media.IntegerSchema
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
@@ -13,8 +14,10 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 import java.math.BigDecimal
 
 internal object IntegerDataTypeConverter {
+  private val logger = KotlinLogging.logger {}
+
   fun convert(schema: IntegerSchema): Result<IntegerDataType> {
-    val formatRangeResult = formatRange(schema.format)
+    val formatRangeResult = formatRange(schema.name, schema.format)
     if (formatRangeResult.isFailure()) return formatRangeResult.retypeError()
 
     val formatRange = formatRangeResult.value!!
@@ -39,10 +42,10 @@ internal object IntegerDataTypeConverter {
     }
   }
 
-  private fun formatRange(format: String?): Result<Range> = when (format) {
+  private fun formatRange(schemaName: String, format: String?): Result<Range> = when (format) {
     null    -> Range.create()
     "int32" -> Range.create(Int.MIN_VALUE.toBigDecimal(), Int.MAX_VALUE.toBigDecimal())
     "int64" -> Range.create(Long.MIN_VALUE.toBigDecimal(), Long.MAX_VALUE.toBigDecimal())
-    else    -> failure("Unsupported format '$format' for integer type")
+    else    -> Range.create().also { logger.warn { "Schema '$schemaName': unknown format '$format' for integer type is ignored." } }
   }
 }

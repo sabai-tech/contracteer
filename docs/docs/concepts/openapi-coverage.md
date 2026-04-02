@@ -14,14 +14,14 @@ Unsupported content types cause the operation to be skipped with a warning.
 Unsupported schema keywords are ignored.
 Your specification still loads.
 
-| Feature                           | Impact                                                                   |
-|-----------------------------------|--------------------------------------------------------------------------|
-| `application/xml`                 | Operations with XML-only content types are skipped with a warning.       |
-| `not` (schema negation)           | The keyword is ignored. Values are validated and generated without it.   |
-| `allowEmptyValue` (parameters)    | The keyword is ignored. Deprecated by the OAS 3.0 specification itself.  |
-| `externalValue` (Example Objects) | Only inline `value` is read. External references are not fetched.        |
-| Pattern generation (regex)        | Some regex features (lookaheads, lookbehinds) do not generate correctly. |
-| Unknown integer/number formats    | Rejected. Only `int32`, `int64`, `float`, `double` are supported.        |
+| Feature                           | Impact                                                                                    |
+|-----------------------------------|-------------------------------------------------------------------------------------------|
+| `application/xml`                 | Operations with XML-only content types are skipped with a warning.                        |
+| `not` (schema negation)           | The keyword is ignored. Values are validated and generated without it.                    |
+| `allowEmptyValue` (parameters)    | The keyword is ignored. Deprecated by the OAS 3.0 specification itself.                   |
+| `externalValue` (Example Objects) | Only inline `value` is read. External references are not fetched.                         |
+| Pattern generation (regex)        | Some regex features (lookaheads, lookbehinds) do not generate correctly.                  |
+| Unknown integer/number formats    | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints. |
 
 If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the specification.
 
@@ -235,6 +235,7 @@ Contracteer does not process them.
 | `int64`  | Supported. Applies 64-bit signed range; rejects explicit min/max outside range |
 | `float`  | Supported. Applies 32-bit float range; rejects explicit min/max outside range  |
 | `double` | Supported. Applies 64-bit double range; rejects explicit min/max outside range |
+| Other    | Ignored with a warning. No range constraint applied                            |
 
 ### Schema keywords
 
