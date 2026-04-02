@@ -33,4 +33,4 @@ internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? 
   )
 }
 
-private fun BodySchema.isXml() = "xml" in contentType.value.lowercase()
+private fun BodySchema.isXml() = contentType.isXml()

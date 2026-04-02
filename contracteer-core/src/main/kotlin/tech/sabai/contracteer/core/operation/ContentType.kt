@@ -18,6 +18,8 @@ data class ContentType(val value: String) {
 
   fun isMultipart() = value.lowercase().startsWith("multipart/")
 
+  fun isXml() = "xml" in value.lowercase()
+
   /** Checks if [actual] matches this content type. This content type may use wildcards. */
   fun validate(actual: String): Result<String> {
     val expected = value.lowercase().trim().substringBefore(";").trim()

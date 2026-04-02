@@ -188,6 +188,16 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
   See [Multiple composition keywords](../concepts/openapi-coverage.md#multiple-composition-keywords-on-the-same-schema) for the recommended pattern.
 - **Missing 2xx response.** Contracteer requires every operation to define at least one 2xx response.
 
+### Extraction fails with plain text content type and structured schema
+
+**Symptom:** Loading the specification fails with "Content type text/plain supports only primitive schemas."
+
+**Cause:** A request or response body uses a plain text content type (e.g., `text/plain`) with an object, array, or composition schema.
+Plain text has no standard serialization format for structured values -- there is no defined way to represent an object or an array as plain text.
+Contracteer cannot serialize or deserialize these types without a structured format like JSON.
+
+**Fix:** Change the content type to `application/json` if the schema describes a structured type, or simplify the schema to a primitive type if the content type must remain plain text.
+
 ### No scenarios created at all
 
 **Symptom:** The specification has example values, but Contracteer creates no scenarios.

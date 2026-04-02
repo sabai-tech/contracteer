@@ -168,6 +168,9 @@ internal class SchemaExtractor(
       contentType.isJson()                                                                ->
         success(JsonSerde)
 
+      !contentType.isXml() && (dataType.isFullyStructured() || dataType is ArrayDataType)   ->
+        failure("Content type ${contentType.value} supports only primitive schemas (string, integer, number, boolean and their formats)")
+
       else                                                                                ->
         success(PlainTextSerde)
     }

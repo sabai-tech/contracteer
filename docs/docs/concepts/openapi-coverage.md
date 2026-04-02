@@ -279,15 +279,15 @@ Contracteer does not process them.
 
 ### Request and response bodies
 
-| Feature                                | Notes                                                       |
-|----------------------------------------|-------------------------------------------------------------|
-| `application/json`                     | Supported                                                   |
-| Plain text content types               | Supported                                                   |
-| `multipart/*` (form-data, mixed, etc.) | Per-part content type via the `encoding` object             |
-| `application/x-www-form-urlencoded`    | Per-property encoding via the `encoding` object             |
-| Multiple content types                 | Produces one verification per content type combination      |
-| `required` (request body)              | Supported                                                   |
-| Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes |
+| Feature                                | Notes                                                                        |
+|----------------------------------------|------------------------------------------------------------------------------|
+| `application/json`                     | Supported                                                                    |
+| Plain text content types               | Primitive schemas only. Object, array, and composition schemas are rejected. |
+| `multipart/*` (form-data, mixed, etc.) | Per-part content type via the `encoding` object                              |
+| `application/x-www-form-urlencoded`    | Per-property encoding via the `encoding` object                              |
+| Multiple content types                 | Produces one verification per content type combination                       |
+| `required` (request body)              | Supported                                                                    |
+| Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes                  |
 
 ### Examples and scenarios
 

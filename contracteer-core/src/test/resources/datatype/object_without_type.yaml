@@ -9,7 +9,7 @@ paths:
     get:
       requestBody:
         content:
-          text/plain:
+          application/json:
             schema:
               type: object
               properties:
