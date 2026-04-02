@@ -64,6 +64,43 @@ class AllOfDataTypeTest {
   }
 
   @Nested
+  inner class WithAdditionalPropertiesFalse {
+    private val animal = allOfDataType(subTypes = listOf(
+      objectDataType(name = "Pet",
+                     properties = mapOf("name" to stringDataType()),
+                     requiredProperties = setOf("name"),
+                     allowAdditionalProperties = false),
+      objectDataType(name = "Hunts",
+                     properties = mapOf("hunts" to booleanDataType()),
+                     requiredProperties = setOf("hunts"),
+                     allowAdditionalProperties = false)))
+
+    private val cat = allOfDataType(subTypes = listOf(
+      animal,
+      objectDataType(name = "allOf #1",
+                     properties = mapOf("indoor" to booleanDataType()),
+                     allowAdditionalProperties = false)))
+
+    @Test
+    fun `validation succeeds when additionalProperties is false`() {
+      // when
+      val result = cat.validate(mapOf("name" to "kitty", "hunts" to true, "indoor" to true))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation fails when value contains properties not declared in any nested sub-type`() {
+      // when
+      val result = cat.validate(mapOf("name" to "kitty", "hunts" to true, "indoor" to true, "color" to "black"))
+
+      // then
+      assert(result.isFailure())
+    }
+  }
+
+  @Nested
   inner class WithEnum {
 
     @Test

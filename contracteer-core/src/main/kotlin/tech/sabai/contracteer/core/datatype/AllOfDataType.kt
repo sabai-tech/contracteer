@@ -43,11 +43,34 @@ class AllOfDataType private constructor(name: String,
       val discriminatorResult = validateDiscriminator(value)
       if (discriminatorResult.isFailure()) return discriminatorResult
     }
-    val dataTypeErrors = subTypes.associateWith { it.validate(value) }.filterValues { it.isFailure() }
+    val dataTypeErrors = subTypes
+      .associateWith { it.validate(withoutSiblingProperties(value, it)) }
+      .filterValues { it.isFailure() }
+
     return if (dataTypeErrors.isNotEmpty())
       buildNoMatchError(dataTypeErrors)
     else
       success(value)
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  private fun withoutSiblingProperties(value: Any, subType: DataType<out Any>): Any {
+    if (value !is Map<*, *>) return value
+    val siblingProperties = subTypes
+      .filter { it !== subType }
+      .flatMap { it.propertyNames() }
+      .toSet()
+
+    return if (siblingProperties.isEmpty())
+      value
+    else
+      (value as Map<String, Any?>).filterKeys { it !in siblingProperties }
+  }
+
+  private fun DataType<*>.propertyNames(): Set<String> = when (this) {
+    is ObjectDataType       -> properties.keys
+    is CompositeDataType<*> -> subTypes.flatMapTo(mutableSetOf()) { it.propertyNames() }
+    else                    -> emptySet()
   }
 
   @Suppress("UNCHECKED_CAST")
