@@ -105,5 +105,5 @@ private fun singleExampleMap(exampleValue: Any) =
 internal fun allAreSuccess(vararg results: Result<*>) =
   results.all { it.isSuccess() }
 
-internal fun parseStatusCode(code: String): Result<Int> =
-  code.toIntOrNull()?.let { success(it) } ?: failure("Response status code '$code' is not supported.")
+internal fun isClassCode(code: String): Boolean =
+  code.length == 3 && code[0].isDigit() && code.substring(1).uppercase() == "XX"

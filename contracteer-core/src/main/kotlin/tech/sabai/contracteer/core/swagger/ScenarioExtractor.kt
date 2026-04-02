@@ -20,71 +20,158 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   fun extractScenarios(path: String,
                        method: String,
                        operation: Operation,
-                       requestSchema: Result<RequestSchema>,
-                       responseSchemas: Result<Map<Int, ResponseSchema>>): Result<List<Scenario>> {
-    if (requestSchema.isFailure()) return requestSchema.retypeError()
-    if (responseSchemas.isFailure()) return responseSchemas.retypeError()
+                       requestSchema: RequestSchema,
+                       responseSchemas: Map<Int, ResponseSchema>,
+                       classResponses: Map<Int, ResponseSchema>,
+                       defaultResponse: ResponseSchema?): Result<List<Scenario>> {
     val requestExampleKeys = operation.requestExampleKeys()
     if (requestExampleKeys.isEmpty()) return success(emptyList())
 
-    val responseStatusCodes = operation.responses.keys.mapNotNull { it.toIntOrNull() }.toSet()
+    val explicitStatusCodes = operation.responses.keys.mapNotNull { it.toIntOrNull() }.toSet()
+    warnUnresolvablePrefixedKeys(method, path, requestExampleKeys, explicitStatusCodes, classResponses, defaultResponse)
+
+    val explicitScenarios = operation.responses
+      .filter { (code, _) -> code.toIntOrNull() != null }
+      .map { (code, response) ->
+        extractScenariosForResponse(path,
+                                    method,
+                                    code.toInt(),
+                                    response,
+                                    operation,
+                                    requestExampleKeys,
+                                    requestSchema,
+                                    responseSchemas)
+      }
+      .combineResults()
+      .map { scenarios -> scenarios?.flatten() ?: emptyList() }
+
+    val fallbackScenarios = extractScenariosFromFallbackResponses(path,
+                                                                  method,
+                                                                  operation,
+                                                                  requestExampleKeys,
+                                                                  explicitStatusCodes,
+                                                                  requestSchema,
+                                                                  classResponses,
+                                                                  defaultResponse)
+
+    return explicitScenarios.flatMap { explicit ->
+      fallbackScenarios.map { fallback -> (explicit ?: emptyList()) + (fallback ?: emptyList()) }
+    }
+  }
+
+  private fun warnUnresolvablePrefixedKeys(method: String,
+                                           path: String,
+                                           requestExampleKeys: Set<String>,
+                                           explicitStatusCodes: Set<Int>,
+                                           classResponses: Map<Int, ResponseSchema>,
+                                           defaultResponse: ResponseSchema?) {
     requestExampleKeys.forEach { key ->
       val statusCode = key.statusCodePrefix()
-      if (statusCode != null && statusCode !in responseStatusCodes) {
+      if (statusCode != null
+          && statusCode !in explicitStatusCodes
+          && classResponses[statusCode / 100] == null
+          && defaultResponse == null) {
         logger.warn {
           "Operation '$method $path': example key '$key' targets status code $statusCode, " +
           "but no response with that status code is defined. Key ignored."
         }
       }
     }
-
-    return operation.responses
-      .map { (code, response) ->
-        extractScenariosForResponse(
-          path,
-          method,
-          code,
-          response,
-          operation,
-          requestExampleKeys,
-          requestSchema.value!!,
-          responseSchemas.value!!)
-      }
-      .combineResults()
-      .map { scenarios -> scenarios?.flatten() ?: emptyList() }
   }
-
+  
   private fun extractScenariosForResponse(path: String,
                                           method: String,
-                                          statusCode: String,
+                                          statusCode: Int,
                                           response: ApiResponse,
                                           operation: Operation,
                                           requestExampleKeys: Set<String>,
                                           requestSchema: RequestSchema,
                                           responseSchemas: Map<Int, ResponseSchema>): Result<List<Scenario>> {
-    val parsedStatus = parseStatusCode(statusCode)
-    if (parsedStatus.isFailure()) return parsedStatus.retypeError()
-
     val resolvedResponse = sharedComponents.resolve(response)
     if (resolvedResponse.isFailure()) return resolvedResponse.retypeError()
 
     val resolved = resolvedResponse.value!!
     val responseExampleKeys = resolved.exampleKeys()
-    val statusCodePrefixedKeys = requestExampleKeys.filter { it.statusCodePrefix() == parsedStatus.value }
+    val statusCodePrefixedKeys = requestExampleKeys.filter { it.statusCodePrefix() == statusCode }
     val nonPrefixedKeys = requestExampleKeys.filter { it.statusCodePrefix() == null }
     val scenarioKeys = (nonPrefixedKeys intersect responseExampleKeys) union statusCodePrefixedKeys
     if (scenarioKeys.isEmpty()) return success(emptyList())
 
-    val responseSchema = responseSchemas[parsedStatus.value!!]
-                         ?: return failure("Response status code '${parsedStatus.value}' is not defined.")
+    val responseSchema = responseSchemas[statusCode]
+                         ?: return failure("Response status code '$statusCode' is not defined.")
 
     return scenarioKeys
       .map { key ->
-        resolved.extractScenarioForKey(path, method, parsedStatus.value, operation, key, requestSchema, responseSchema)
+        resolved.extractScenarioForKey(path, method, statusCode, operation, key, requestSchema, responseSchema)
       }
       .combineResults()
       .map { scenarios -> scenarios?.flatten() ?: emptyList() }
   }
+
+   private fun extractScenariosFromFallbackResponses(path: String,
+                                                    method: String,
+                                                    operation: Operation,
+                                                    requestExampleKeys: Set<String>,
+                                                    explicitStatusCodes: Set<Int>,
+                                                    requestSchema: RequestSchema,
+                                                    classResponses: Map<Int, ResponseSchema>,
+                                                    defaultResponse: ResponseSchema?): Result<List<Scenario>> {
+    val unmatchedPrefixedKeys = requestExampleKeys.filter { key ->
+      val prefix = key.statusCodePrefix()
+      prefix != null && prefix !in explicitStatusCodes
+    }
+    if (unmatchedPrefixedKeys.isEmpty()) return success(emptyList())
+
+    return unmatchedPrefixedKeys
+      .map { key ->
+        extractScenarioForFallbackKey(path, method, operation, key, requestSchema, classResponses, defaultResponse)
+      }
+      .combineResults()
+      .map { scenarios -> scenarios?.flatten() ?: emptyList() }
+  }
+
+  private fun extractScenarioForFallbackKey(path: String,
+                                            method: String,
+                                            operation: Operation,
+                                            key: String,
+                                            requestSchema: RequestSchema,
+                                            classResponses: Map<Int, ResponseSchema>,
+                                            defaultResponse: ResponseSchema?): Result<List<Scenario>> {
+    val statusCode = key.statusCodePrefix()!!
+    val (apiResponse, responseSchema) = findFallbackResponse(operation, statusCode, classResponses, defaultResponse)
+                                        ?: return success(emptyList())
+
+    return sharedComponents.resolve(apiResponse).flatMap { resolved ->
+      resolved!!.extractScenarioForKey(path, method, statusCode, operation, key, requestSchema, responseSchema)
+    }
+  }
+
+  private fun findFallbackResponse(operation: Operation,
+                                   statusCode: Int,
+                                   classResponses: Map<Int, ResponseSchema>,
+                                   defaultResponse: ResponseSchema?): Pair<ApiResponse, ResponseSchema>? =
+    findClassResponse(operation, statusCode, classResponses)
+    ?: findDefaultResponse(operation, defaultResponse)
+
+  private fun findClassResponse(operation: Operation,
+                                statusCode: Int,
+                                classResponses: Map<Int, ResponseSchema>): Pair<ApiResponse, ResponseSchema>? {
+    val classDigit = statusCode / 100
+    val schema = classResponses[classDigit] ?: return null
+    val apiResponse = operation.responses.entries
+      .firstOrNull { (code, _) -> isClassCode(code) && code[0].digitToInt() == classDigit }
+      ?.value ?: return null
+    return apiResponse to schema
+  }
+
+  private fun findDefaultResponse(operation: Operation,
+                                  defaultResponse: ResponseSchema?): Pair<ApiResponse, ResponseSchema>? {
+    val schema = defaultResponse ?: return null
+    val apiResponse = operation.responses["default"] ?: return null
+    return apiResponse to schema
+  }
+
+  // --- Shared: example extraction, scenario generation, validation ---
 
   private fun ApiResponse.extractScenarioForKey(path: String,
                                                 method: String,

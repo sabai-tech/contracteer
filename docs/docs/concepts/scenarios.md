@@ -230,6 +230,11 @@ The response is entirely handled by Contracteer.
     A status-code-prefixed key is exclusive to its status code.
     `404_UNKNOWN_MUSKETEER` is only eligible for the 404 response -- it never accidentally creates a scenario for a 200 response.
 
+A status-code-prefixed key does not require an exact status code in the responses.
+If the operation defines a `4XX` class response or a `default` response, Contracteer uses it as a fallback.
+`404_UNKNOWN_MUSKETEER` works whether the operation defines `404`, `4XX`, or `default`.
+Contracteer resolves the response using the same priority as for automatic 400 testing: exact status code, then class response, then default.
+
 ---
 
 ## Example Validation

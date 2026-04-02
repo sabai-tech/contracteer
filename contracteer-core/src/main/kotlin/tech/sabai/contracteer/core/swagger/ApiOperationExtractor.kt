@@ -11,7 +11,7 @@ import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
-internal class ApiOperationExtractor(private val sharedComponents: SharedComponents) {
+internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
 
   private val logger = KotlinLogging.logger {}
   private val dataTypeConverter = DataTypeConverter(sharedComponents)
@@ -49,16 +49,23 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
           classResponses.retypeError() combineWith
           defaultResponse.retypeError()
 
-    val scenarios = scenarioExtractor.extractScenarios(path, method, operation, requestSchema, responseSchemas)
-    if (scenarios.isFailure()) return scenarios.retypeError()
-
-    return success(ApiOperation(path,
-                                method,
-                                requestSchema.value!!,
-                                responseSchemas.value!!,
-                                classResponses.value!!,
-                                defaultResponse.value,
-                                scenarios.value!!))
+    val scenarios = scenarioExtractor.extractScenarios(path,
+                                                       method,
+                                                       operation,
+                                                       requestSchema.value!!,
+                                                       responseSchemas.value!!,
+                                                       classResponses.value!!,
+                                                       defaultResponse.value)
+    return if (scenarios.isFailure())
+      scenarios.retypeError()
+    else
+      success(ApiOperation(path,
+                           method,
+                           requestSchema.value,
+                           responseSchemas.value,
+                           classResponses.value,
+                           defaultResponse.value,
+                           scenarios.value!!))
   }
 
   private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =
@@ -81,9 +88,6 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
     operation.responses["default"]
       ?.let { schemaExtractor.extractResponseSchema(it) }
     ?: success(null)
-
-  private fun isClassCode(code: String): Boolean =
-    code.length == 3 && code[0].isDigit() && code.substring(1).uppercase() == "XX"
 
   private fun logExtractedOperations(operations: List<ApiOperation>) {
     if (operations.isEmpty()) {

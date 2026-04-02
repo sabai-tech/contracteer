@@ -289,13 +289,12 @@ Contracteer does not process them.
 | `required` (request body)              | Supported                                                                    |
 | Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes                  |
 
-### Examples and scenarios
+### Examples
 
-| Feature                                         | Notes                                            |
-|-------------------------------------------------|--------------------------------------------------|
-| `examples` map (parameter / media type level)   | Core mechanism for scenario creation             |
-| Single `example` (parameter / media type level) | Supported                                        |
-| Status-code-prefixed example keys               | Supported (`404_NOT_FOUND`, `400_INVALID_INPUT`) |
+| Feature                                         | Notes     |
+|-------------------------------------------------|-----------|
+| `examples` map (parameter / media type level)   | Supported |
+| Single `example` (parameter / media type level) | Supported |
 
 See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 

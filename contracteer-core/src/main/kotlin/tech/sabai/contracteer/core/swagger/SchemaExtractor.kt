@@ -168,7 +168,7 @@ internal class SchemaExtractor(
       contentType.isJson()                                                                ->
         success(JsonSerde)
 
-      !contentType.isXml() && (dataType.isFullyStructured() || dataType is ArrayDataType)   ->
+      !contentType.isXml() && (dataType.isFullyStructured() || dataType is ArrayDataType) ->
         failure("Content type ${contentType.value} supports only primitive schemas (string, integer, number, boolean and their formats)")
 
       else                                                                                ->
@@ -315,4 +315,8 @@ internal class SchemaExtractor(
     }
 
   private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
+
+  private fun parseStatusCode(code: String): Result<Int> =
+    code.toIntOrNull()?.let { success(it) } ?: failure("Response status code '$code' is not supported.")
+
 }

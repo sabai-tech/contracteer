@@ -196,6 +196,38 @@ class ScenarioExtractionTest {
     assert(scenario.request.parameterValues[ParameterElement.PathParam("id")] == 10.normalize())
   }
 
+  @Test
+  fun `creates scenario from status-code-prefixed key with class or default response`() {
+    // when
+    val operations = OpenApiLoader.loadOperations(
+      "src/test/resources/scenario/status_code_prefixed_key_with_class_and_default_response.yaml"
+    ).assertSuccess()
+
+    // then
+    assert(operations.size == 3)
+
+    val classResponseOp = operations.first { it.path == "/products-with-class-response/{id}" }
+    assert(classResponseOp.scenarios.size == 1)
+    assert(classResponseOp.scenarios.single().key == "404_not_found")
+    assert(classResponseOp.scenarios.single().statusCode == 404)
+    assert(classResponseOp.scenarios.single().request.parameterValues[ParameterElement.PathParam("id")] == 999.normalize())
+    assert(classResponseOp.scenarios.single().response.body == null)
+
+    val defaultResponseOp = operations.first { it.path == "/products-with-default-response/{id}" }
+    assert(defaultResponseOp.scenarios.size == 1)
+    assert(defaultResponseOp.scenarios.single().key == "404_not_found")
+    assert(defaultResponseOp.scenarios.single().statusCode == 404)
+    assert(defaultResponseOp.scenarios.single().request.parameterValues[ParameterElement.PathParam("id")] == 999.normalize())
+    assert(defaultResponseOp.scenarios.single().response.body == null)
+
+    val classAndDefaultOp = operations.first { it.path == "/products-with-class-and-default-response/{id}" }
+    assert(classAndDefaultOp.scenarios.size == 1)
+    assert(classAndDefaultOp.scenarios.single().key == "404_not_found")
+    assert(classAndDefaultOp.scenarios.single().statusCode == 404)
+    assert(classAndDefaultOp.scenarios.single().request.parameterValues[ParameterElement.PathParam("id")] == 999.normalize())
+    assert(classAndDefaultOp.scenarios.single().response.body == null)
+  }
+
   // --- Helpers ---
   private fun loadSingleOperation(yamlFile: String) =
     OpenApiLoader.loadOperations("src/test/resources/scenario/$yamlFile")

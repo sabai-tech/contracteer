@@ -3,19 +3,21 @@ package tech.sabai.contracteer.core.swagger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.BodySchema
+import tech.sabai.contracteer.core.operation.ResponseSchema
 
 private val logger = KotlinLogging.logger {}
 
 internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? {
   val requestBodies = operation.requestSchema.bodies.filterNot { it.isXml() }
   val responses = operation.responses
-    .mapValues { (statusCode, schema) ->
-      val original = operation.responses[statusCode]!!
-      val filtered = schema.copy(bodies = schema.bodies.filterNot { it.isXml() })
-      if (original.bodies.isNotEmpty() && filtered.bodies.isEmpty()) null else filtered
-    }
+    .mapValues { (_, schema) -> filterXmlBodies(schema) }
     .filterValues { it != null }
     .mapValues { it.value!! }
+  val classResponses = operation.classResponses
+    .mapValues { (_, schema) -> filterXmlBodies(schema) }
+    .filterValues { it != null }
+    .mapValues { it.value!! }
+  val defaultResponse = operation.defaultResponse?.let { filterXmlBodies(it) }
 
   if (operation.requestSchema.bodies.isNotEmpty() && requestBodies.isEmpty()) {
     logger.warn { "Operation '${operation.method} ${operation.path}' excluded: XML content type not supported." }
@@ -29,8 +31,15 @@ internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? 
 
   return operation.copy(
     requestSchema = operation.requestSchema.copy(bodies = requestBodies),
-    responses = responses
+    responses = responses,
+    classResponses = classResponses,
+    defaultResponse = defaultResponse
   )
+}
+
+private fun filterXmlBodies(schema: ResponseSchema): ResponseSchema? {
+  val filtered = schema.copy(bodies = schema.bodies.filterNot { it.isXml() })
+  return if (schema.bodies.isNotEmpty() && filtered.bodies.isEmpty()) null else filtered
 }
 
 private fun BodySchema.isXml() = contentType.isXml()
