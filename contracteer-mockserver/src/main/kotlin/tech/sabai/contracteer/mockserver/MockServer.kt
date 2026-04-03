@@ -40,6 +40,7 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   /** Starts the mock server. */
   fun start() {
     val routeHandlers = operations
+      .sortedByDescending { it.path.replace(Regex("\\{[^}]+}"), "").length }
       .onEach { logger.info { "Registering route: [${it.method.uppercase()}] ${it.path}" } }
       .map { createRouteHandler(it) }
 
