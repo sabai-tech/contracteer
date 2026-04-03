@@ -82,6 +82,28 @@ class OperationSchemaExtractionTest {
   }
 
   @Test
+  fun `ignores Content-Type Accept and Authorization in request headers`() {
+    // when
+    val operation = loadSingleOperation("ignored_headers.yaml")
+
+    // then
+    val headers = operation.requestSchema.headers
+    assert(headers.size == 1)
+    assert(headers.single().element == ParameterElement.Header("x-request-custom"))
+  }
+
+  @Test
+  fun `ignores Content-Type in response headers`() {
+    // when
+    val operation = loadSingleOperation("ignored_headers.yaml")
+
+    // then
+    val headers = operation.responseFor(200)!!.headers
+    assert(headers.size == 1)
+    assert(headers.single().element == ParameterElement.Header("x-response-custom"))
+  }
+
+  @Test
   fun `extracts response body schema`() {
     // when
     val operation = loadSingleOperation("schema_without_examples.yaml")

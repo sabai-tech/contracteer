@@ -85,7 +85,7 @@ internal class SchemaExtractor(
 
   private fun extractRequestHeaderSchemas(operation: Operation): Result<List<ParameterSchema>> =
     operation.safeParameters()
-      .filter { it.`in` == "header" }
+      .filter { it.`in` == "header" && IGNORED_REQUEST_HEADERS.none { h -> h.equals(it.name, ignoreCase = true) } }
       .map { it.toParameterSchema(Header(it.name)) }
       .combineResults()
 
@@ -124,6 +124,7 @@ internal class SchemaExtractor(
   private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ParameterSchema>> =
     response
       .safeHeaders()
+      .filterKeys { !it.equals("Content-Type", ignoreCase = true) }
       .map { (name, header) -> header.toParameterSchema(name) }
       .combineResults()
       .forProperty("header")
@@ -319,4 +320,7 @@ internal class SchemaExtractor(
   private fun parseStatusCode(code: String): Result<Int> =
     code.toIntOrNull()?.let { success(it) } ?: failure("Response status code '$code' is not supported.")
 
+  companion object {
+    private val IGNORED_REQUEST_HEADERS = setOf("Accept", "Content-Type", "Authorization")
+  }
 }

@@ -1,0 +1,47 @@
+openapi: 3.0.0
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    post:
+      parameters:
+        - in: header
+          name: Content-Type
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: Accept
+          schema:
+            type: string
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+        - in: header
+          name: x-request-custom
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        200:
+          description: OK
+          headers:
+            Content-Type:
+              description: File type
+              schema:
+                type: string
+            x-response-custom:
+              schema:
+                type: string
