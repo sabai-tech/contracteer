@@ -1,0 +1,6 @@
+[
+  {
+    "name": "ch.qos.logback.core.status.NopStatusListener",
+    "methods": [{ "name": "<init>", "parameterTypes": [] }]
+  }
+]

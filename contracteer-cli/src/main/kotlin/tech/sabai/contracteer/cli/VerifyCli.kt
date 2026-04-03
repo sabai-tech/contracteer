@@ -63,7 +63,7 @@ class VerifyCli: BaseCliCommand() {
       println(AUTO.string("   ✅ @|yellow ${cases.size - failures.size}|@ verification cases passed."))
       return 1
     } else {
-      println(AUTO.string("   \uD83C\uDF89 All verification cases passed!"))
+      println(AUTO.string("   \uD83C\uDF89 All ${outcomes.size} verification cases passed!"))
       return 0
     }
   }

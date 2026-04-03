@@ -32,6 +32,7 @@ graalvmNative {
       useFatJar.set(true)
       buildArgs.add("--enable-https")
       buildArgs.add("--enable-http")
+      buildArgs.add("-H:IncludeResources=logback.xml")
       if (!isQuickBuild.get()) buildArgs.add("-Os")
     }
   }
