@@ -57,9 +57,11 @@ class Range private constructor(
     }
 
     val minLong = intMinimum.toLong()
-    val maxLong = intMaximum.toLong() + 1
+    val maxLong = intMaximum.toLong()
 
-    return BigDecimal.valueOf(Random.nextLong(minLong, maxLong))
+    if (minLong == maxLong) return BigDecimal.valueOf(minLong)
+    if (maxLong == Long.MAX_VALUE) return BigDecimal.valueOf(Random.nextLong(minLong, maxLong))
+    return BigDecimal.valueOf(Random.nextLong(minLong, maxLong + 1))
   }
 
   fun randomValue(): BigDecimal {
