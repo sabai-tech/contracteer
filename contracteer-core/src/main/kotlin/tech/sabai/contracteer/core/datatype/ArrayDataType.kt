@@ -45,7 +45,7 @@ class ArrayDataType private constructor(name: String,
 
   override fun doRandomValue(): List<Any?> {
     val min = minItems ?: 1
-    val max = maxItems ?: maxOf(min, 5)
+    val max = maxItems ?: maxOf(min, 2)
     return List((min..max).random()) { itemDataType.randomValue() }
   }
 
