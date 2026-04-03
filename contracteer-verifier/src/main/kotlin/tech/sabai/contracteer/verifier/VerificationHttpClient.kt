@@ -61,8 +61,9 @@ internal class VerificationHttpClient(private val serverUrl: String) {
 
     val pathParams = case.requestSchema.pathParameters.associate { param ->
       val value = when (mutatedElement) {
-        is MutatedElement.Parameter if mutatedElement.element == param.element -> case.mutatedValue
-        else                                                                   ->
+        is MutatedElement.Parameter if mutatedElement.element == param.element ->
+          UrlEncoding.encode(case.mutatedValue, false)
+        else ->
           param.codec
             .encode(param.dataType.randomValue())
             .single().second
