@@ -6,6 +6,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.AllOfDataType
+import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.swagger.safeEnum
@@ -26,6 +27,7 @@ internal object AllOfDataTypeConverter {
 
     return (subTypeResults + listOfNotNull(siblingResult))
       .combineResults()
+      .map { subDataTypes -> subDataTypes!!.filter { it !is AnyDataType } }
       .flatMap { subDataTypes ->
         val discriminators = schema.allOf.mapNotNull { discriminator(it) }
         when {

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.datatype.OneOfDataType
@@ -24,6 +25,7 @@ internal object OneOfDataTypeConverter {
         convert(sub, "oneOf #$index", maxRecursiveDepth - 1)
       }
       .combineResults()
+      .map { subTypes -> subTypes!!.filter { it !is AnyDataType } }
       .flatMap { subTypes ->
         OneOfDataType.create(
           name = schema.name,

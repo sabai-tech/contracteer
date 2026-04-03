@@ -143,8 +143,6 @@ internal fun Schema<*>.isAnyType() =
   properties.isNullOrEmpty() &&
   additionalProperties == null &&
   format == null &&
-  title == null &&
-  description == null &&
   maximum == null &&
   minimum == null &&
   exclusiveMaximum == null &&
