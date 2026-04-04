@@ -65,11 +65,13 @@ class Range private constructor(
   }
 
   fun randomValue(): BigDecimal {
-    val diff = effectiveMaximum().subtract(effectiveMinimum())
+    val min = effectiveMinimum().max(DEFAULT_WIDTH.negate())
+    val max = effectiveMaximum().min(DEFAULT_WIDTH)
+    val diff = max.subtract(min)
     val randomFactor = BigDecimal.valueOf(Random.nextDouble())
-    var result = effectiveMinimum().add(diff.multiply(randomFactor))
+    var result = min.add(diff.multiply(randomFactor))
 
-    if (exclusiveMaximum && result.compareTo(effectiveMaximum()) == 0) {
+    if (exclusiveMaximum && result.compareTo(max) == 0) {
       val epsilon = BigDecimal.ONE.scaleByPowerOfTen(-diff.scale())
       result = result.subtract(epsilon)
     }
