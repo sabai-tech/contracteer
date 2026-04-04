@@ -118,7 +118,19 @@ class TypeMismatchMutationTest {
   }
 
   @Test
-  fun `produces invalid value for ArrayDataType`() {
+  fun `produces invalid value for ArrayDataType with non-string items`() {
+    // Given
+    val dataType = arrayDataType(itemDataType = integerDataType())
+
+    // When
+    val result = TypeMismatchMutation.mutate(dataType)
+
+    // Then
+    assert(result == "<<not a array>>")
+  }
+
+  @Test
+  fun `returns null for ArrayDataType with string items`() {
     // Given
     val dataType = arrayDataType(itemDataType = stringDataType())
 
@@ -126,7 +138,7 @@ class TypeMismatchMutationTest {
     val result = TypeMismatchMutation.mutate(dataType)
 
     // Then
-    assert(result == "<<not a array>>")
+    assert(result == null)
   }
 
   @Test
