@@ -259,5 +259,29 @@ class StringDataTypeTest {
         Range.create(1.toBigDecimal(), 5.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
       )
     }
+
+    @Test
+    fun `generates random value respecting maxLength when minLength is not set`() {
+      // given
+      val stringDataType = stringDataType(maxLength = 1)
+
+      // when
+      val result = stringDataType.randomValue()
+
+      // then
+      assert(result.length <= 1)
+    }
+
+    @Test
+    fun `generates random value respecting minLength greater than 10`() {
+      // given
+      val stringDataType = stringDataType(minLength = 15, maxLength = 20)
+
+      // when
+      val result = stringDataType.randomValue()
+
+      // then
+      assert(result.length in 15..20)
+    }
   }
 }

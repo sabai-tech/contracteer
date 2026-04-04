@@ -11,7 +11,7 @@ internal object StringDataTypeConverter {
       name = schema.name,
       openApiType,
       isNullable = schema.safeNullable(),
-      minLength = schema.minLength,
+      minLength = schema.minLength ?: 0,
       maxLength = schema.maxLength,
       pattern = schema.pattern,
       enum = schema.safeEnum())

@@ -5,7 +5,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import kotlin.math.absoluteValue
 
 /** OpenAPI `string` type, with optional length constraints and format variants (date, email, uuid, etc.). */
 class StringDataType private constructor(name: String,
@@ -34,10 +33,12 @@ class StringDataType private constructor(name: String,
     }
 
   override fun doRandomValue(): String =
-    if (patternGenerator != null) patternGenerator.generate()
-    else (1..lengthRange.randomIntegerValue().toLong().absoluteValue.coerceAtMost(10))
-      .map { candidateChars.random() }
-      .joinToString("")
+    if (patternGenerator != null)
+      patternGenerator.generate()
+    else
+      (1..lengthRange.randomIntegerValue().toLong().coerceIn(0, maxOf(10, lengthRange.minimum?.toLong() ?: 0)))
+        .map { candidateChars.random() }
+        .joinToString("")
 
   companion object {
     private val logger = KotlinLogging.logger {}
