@@ -458,6 +458,79 @@ class VerificationCaseFactoryTypeMismatchTest {
   }
 
 
+  @Test
+  fun `does not generate body type mismatch for form-urlencoded with all optional properties`() {
+    // Given
+    val apiOperation = apiOperationWith400(
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/x-www-form-urlencoded"),
+          dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+          isRequired = true,
+          serde = JsonSerde
+        )
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.none { it is TypeMismatch })
+  }
+
+  @Test
+  fun `generates body type mismatch for form-urlencoded with required properties`() {
+    // Given
+    val apiOperation = apiOperationWith400(
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/x-www-form-urlencoded"),
+          dataType = objectDataType(
+            properties = mapOf("name" to stringDataType()),
+            requiredProperties = setOf("name")
+          ),
+          isRequired = true,
+          serde = JsonSerde
+        )
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 1)
+    assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
+  }
+
+  @Test
+  fun `generates body type mismatch for form-urlencoded with additionalProperties false`() {
+    // Given
+    val apiOperation = apiOperationWith400(
+      bodies = listOf(
+        BodySchema(
+          contentType = ContentType("application/x-www-form-urlencoded"),
+          dataType = objectDataType(
+            properties = mapOf("name" to stringDataType()),
+            allowAdditionalProperties = false
+          ),
+          isRequired = true,
+          serde = JsonSerde
+        )
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 1)
+    assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
+  }
+
   private fun apiOperationWith400(
     path: String = "/users",
     method: String = "POST",
