@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.codec.*
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.*
@@ -29,39 +30,38 @@ internal class SchemaExtractor(
     val cookies = extractRequestCookieSchemas(operation).forProperty("cookie")
     val bodies = extractRequestBodySchemas(operation).forProperty("body")
 
-    return if (allAreSuccess(pathParameters, queryParameters, headers, cookies, bodies))
+    return if (pathParameters is Success && queryParameters is Success && headers is Success && cookies is Success && bodies is Success)
       success(RequestSchema(
-        parameters = pathParameters.value!! + queryParameters.value!! + headers.value!! + cookies.value!!,
-        bodies = bodies.value!!
+        parameters = pathParameters.value + queryParameters.value + headers.value + cookies.value,
+        bodies = bodies.value
       ))
     else
-      pathParameters.retypeError<RequestSchema>() combineWith
-          queryParameters.retypeError() combineWith
-          headers.retypeError() combineWith
-          cookies.retypeError() combineWith
-          bodies.retypeError()
+      (pathParameters combineWith
+          queryParameters combineWith
+          headers combineWith
+          cookies combineWith bodies).retypeError()
   }
 
   fun extractResponseSchema(code: String, response: ApiResponse): Result<Pair<Int, ResponseSchema>> =
     parseStatusCode(code).flatMap { statusCode ->
       sharedComponents.resolve(response).flatMap { resolved ->
-        val headers = extractResponseHeaderSchemas(resolved!!)
+        val headers = extractResponseHeaderSchemas(resolved)
         val bodies = extractResponseBodySchemas(resolved)
-        if (allAreSuccess(headers, bodies))
-          success(statusCode!! to ResponseSchema(headers = headers.value!!, bodies = bodies.value!!))
+        if (headers is Success && bodies is Success)
+          success(statusCode to ResponseSchema(headers = headers.value, bodies = bodies.value))
         else
-          headers.retypeError<Pair<Int, ResponseSchema>>() combineWith bodies.retypeError()
+          (headers combineWith bodies).retypeError()
       }
     }
 
   fun extractResponseSchema(response: ApiResponse): Result<ResponseSchema> =
     sharedComponents.resolve(response).flatMap { resolved ->
-      val headers = extractResponseHeaderSchemas(resolved!!)
+      val headers = extractResponseHeaderSchemas(resolved)
       val bodies = extractResponseBodySchemas(resolved)
-      if (allAreSuccess(headers, bodies))
-        success(ResponseSchema(headers = headers.value!!, bodies = bodies.value!!))
+      if (headers is Success && bodies is Success)
+        success(ResponseSchema(headers = headers.value, bodies = bodies.value))
       else
-        headers.retypeError<ResponseSchema>() combineWith bodies.retypeError()
+        (headers combineWith bodies).retypeError()
     }
 
   private fun extractPathParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
@@ -69,7 +69,7 @@ internal class SchemaExtractor(
       .filter { it.`in` == "path" }
       .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
       .combineResults()
-      .flatMap { parameters -> parameters!!.map { it.toParameterSchema(PathParam(it.name)) }.combineResults() }
+      .flatMap { parameters -> parameters.map { it.toParameterSchema(PathParam(it.name)) }.combineResults() }
 
   private fun extractQueryParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
     operation.safeParameters()
@@ -78,7 +78,7 @@ internal class SchemaExtractor(
         sharedComponents
           .resolve(param)
           .flatMap { resolved ->
-            resolved!!.toParameterSchema(QueryParam(resolved.name, resolved.safeAllowReserved()))
+            resolved.toParameterSchema(QueryParam(resolved.name, resolved.safeAllowReserved()))
           }
       }
       .combineResults()
@@ -102,7 +102,7 @@ internal class SchemaExtractor(
       extractRequestBodySchemas(operation.requestBody!!)
 
   private fun extractRequestBodySchemas(requestBody: RequestBody): Result<List<BodySchema>> =
-    sharedComponents.resolve(requestBody).flatMap { convertRequestBodySchema(it!!) }
+    sharedComponents.resolve(requestBody).flatMap { convertRequestBodySchema(it) }
 
   private fun convertRequestBodySchema(body: RequestBody): Result<List<BodySchema>> =
     if (body.content == null)
@@ -114,10 +114,8 @@ internal class SchemaExtractor(
           dataTypeConverter
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
-              buildSerde(contentType, mediaType, dataType!!)
-                .map {
-                  BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it!!)
-                }
+              buildSerde(contentType, mediaType, dataType)
+                .map { BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it) }
             }
         }.combineResults()
 
@@ -139,9 +137,9 @@ internal class SchemaExtractor(
           dataTypeConverter
             .convertToDataType(mediaType.schema, "")
             .flatMap { dataType ->
-              buildSerde(contentType, mediaType, dataType!!)
+              buildSerde(contentType, mediaType, dataType)
                 .map {
-                  BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), it!!)
+                  BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), it)
                 }
             }
         }.combineResults()
@@ -183,10 +181,10 @@ internal class SchemaExtractor(
         val encoding = encodingMap[name]
         val allowReserved = encoding?.allowReserved == true
         createCodecForParameter(QueryParam(name), encoding?.style?.toString(), encoding?.explode, type, name)
-          .map { name to FormUrlEncodedSerde.PropertyEncoding(it!!, allowReserved) }
+          .map { name to FormUrlEncodedSerde.PropertyEncoding(it, allowReserved) }
       }
       .combineResults()
-      .map<Serde> { FormUrlEncodedSerde(it!!.toMap()) }
+      .map<Serde> { FormUrlEncodedSerde(it.toMap()) }
   }
 
   private fun buildMultipartSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
@@ -212,7 +210,7 @@ internal class SchemaExtractor(
 
   private fun Parameter.toParameterSchema(element: ParameterElement): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
-      if (resolved!!.content != null && resolved.content.isNotEmpty())
+      if (resolved.content != null && resolved.content.isNotEmpty())
         createContentParameterSchema(resolved, element)
       else
         createStyleParameterSchema(resolved, element)
@@ -224,8 +222,8 @@ internal class SchemaExtractor(
     return dataTypeConverter
       .convertToDataType(mediaTypeObj.schema, "")
       .flatMap { dataType ->
-        buildSerde(contentType, mediaTypeObj, dataType!!)
-          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it!!)) }
+        buildSerde(contentType, mediaTypeObj, dataType)
+          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it)) }
       }
   }
 
@@ -233,17 +231,17 @@ internal class SchemaExtractor(
     dataTypeConverter
       .convertToDataType(parameter.schema, "")
       .flatMap { dataType ->
-        createCodecForParameter(element, parameter.style?.toString(), parameter.explode, dataType!!, parameter.name)
-          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), it!!) }
+        createCodecForParameter(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name)
+          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), it) }
       }
 
   private fun Header.toParameterSchema(name: String): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
-        .convertToDataType(resolved!!.schema, "")
+        .convertToDataType(resolved.schema, "")
         .flatMap { dataType ->
-          createCodecForParameter(Header(name), resolved.style?.toString(), resolved.explode, dataType!!, name)
-            .map { ParameterSchema(Header(name), dataType, resolved.safeIsRequired(), it!!) }
+          createCodecForParameter(Header(name), resolved.style?.toString(), resolved.explode, dataType, name)
+            .map { ParameterSchema(Header(name), dataType, resolved.safeIsRequired(), it) }
         }
     }
 

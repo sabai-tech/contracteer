@@ -16,36 +16,36 @@ import java.math.BigDecimal
 internal object IntegerDataTypeConverter {
   private val logger = KotlinLogging.logger {}
 
-  fun convert(schema: IntegerSchema): Result<IntegerDataType> {
-    val formatRangeResult = formatRange(schema.name, schema.format)
-    if (formatRangeResult.isFailure()) return formatRangeResult.retypeError()
+  fun convert(schema: IntegerSchema): Result<IntegerDataType> =
+    formatRange(schema.name, schema.format)
+      .flatMap { formatRange ->
+        when {
+          schema.minimum != null && formatRange.contains(schema.minimum).isFailure() ->
+            failure("minimum (${schema.minimum}) is out of range for format '${schema.format}'")
 
-    val formatRange = formatRangeResult.value!!
-    return when {
-      schema.minimum != null && formatRange.contains(schema.minimum).isFailure() ->
-        failure("minimum (${schema.minimum}) is out of range for format '${schema.format}'")
+          schema.maximum != null && formatRange.contains(schema.maximum).isFailure() ->
+            failure("maximum (${schema.maximum}) is out of range for format '${schema.format}'")
 
-      schema.maximum != null && formatRange.contains(schema.maximum).isFailure() ->
-        failure("maximum (${schema.maximum}) is out of range for format '${schema.format}'")
-
-      else                                                                       ->
-        IntegerDataType.create(
-          name = schema.name,
-          isNullable = schema.safeNullable(),
-          minimum = schema.minimum ?: formatRange.minimum,
-          maximum = schema.maximum ?: formatRange.maximum,
-          exclusiveMinimum = schema.safeExclusiveMinimum(),
-          exclusiveMaximum = schema.safeExclusiveMaximum(),
-          enum = schema.safeEnum().map { it.normalize() as BigDecimal? },
-          multipleOf = schema.multipleOf
-        )
-    }
-  }
+          else                                                                       ->
+            IntegerDataType.create(
+              name = schema.name,
+              isNullable = schema.safeNullable(),
+              minimum = schema.minimum ?: formatRange.minimum,
+              maximum = schema.maximum ?: formatRange.maximum,
+              exclusiveMinimum = schema.safeExclusiveMinimum(),
+              exclusiveMaximum = schema.safeExclusiveMaximum(),
+              enum = schema.safeEnum().map { it.normalize() as BigDecimal? },
+              multipleOf = schema.multipleOf
+            )
+        }
+      }
 
   private fun formatRange(schemaName: String, format: String?): Result<Range> = when (format) {
     null    -> Range.create()
     "int32" -> Range.create(Int.MIN_VALUE.toBigDecimal(), Int.MAX_VALUE.toBigDecimal())
     "int64" -> Range.create(Long.MIN_VALUE.toBigDecimal(), Long.MAX_VALUE.toBigDecimal())
-    else    -> Range.create().also { logger.warn { "Schema '$schemaName': unknown format '$format' for integer type is ignored." } }
+    else    ->
+      Range.create()
+        .also { logger.warn { "Schema '$schemaName': unknown format '$format' for integer type is ignored." } }
   }
 }

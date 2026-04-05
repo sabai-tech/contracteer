@@ -15,37 +15,36 @@ import java.math.BigDecimal
 internal object NumberDataTypeConverter {
   private val logger = KotlinLogging.logger {}
 
-  fun convert(schema: Schema<BigDecimal>): Result<NumberDataType> {
-    val formatRangeResult = formatRange(schema.name, schema.format)
-    if (formatRangeResult.isFailure()) return formatRangeResult.retypeError()
+  fun convert(schema: Schema<BigDecimal>): Result<NumberDataType> =
+    formatRange(schema.name, schema.format).flatMap { formatRange ->
+      when {
+        schema.minimum != null && formatRange.contains(schema.minimum).isFailure() ->
+          failure("minimum (${schema.minimum}) is out of range for format '${schema.format}'")
 
-    val formatRange = formatRangeResult.value!!
-    return when {
-      schema.minimum != null && formatRange.contains(schema.minimum).isFailure() ->
-        failure("minimum (${schema.minimum}) is out of range for format '${schema.format}'")
+        schema.maximum != null && formatRange.contains(schema.maximum).isFailure() ->
+          failure("maximum (${schema.maximum}) is out of range for format '${schema.format}'")
 
-      schema.maximum != null && formatRange.contains(schema.maximum).isFailure() ->
-        failure("maximum (${schema.maximum}) is out of range for format '${schema.format}'")
-
-      else                                                                       ->
-        NumberDataType.create(
-          name = schema.name,
-          isNullable = schema.safeNullable(),
-          minimum = schema.minimum ?: formatRange.minimum,
-          maximum = schema.maximum ?: formatRange.maximum,
-          exclusiveMinimum = schema.safeExclusiveMinimum(),
-          exclusiveMaximum = schema.safeExclusiveMaximum(),
-          enum = schema.safeEnum(),
-          multipleOf = schema.multipleOf
-        )
+        else                                                                       ->
+          NumberDataType.create(
+            name = schema.name,
+            isNullable = schema.safeNullable(),
+            minimum = schema.minimum ?: formatRange.minimum,
+            maximum = schema.maximum ?: formatRange.maximum,
+            exclusiveMinimum = schema.safeExclusiveMinimum(),
+            exclusiveMaximum = schema.safeExclusiveMaximum(),
+            enum = schema.safeEnum(),
+            multipleOf = schema.multipleOf
+          )
+      }
     }
-  }
 
   private fun formatRange(schemaName: String, format: String?): Result<Range> =
     when (format) {
       null     -> Range.create()
       "float"  -> Range.create(Float.MAX_VALUE.toBigDecimal().negate(), Float.MAX_VALUE.toBigDecimal())
       "double" -> Range.create(Double.MAX_VALUE.toBigDecimal().negate(), Double.MAX_VALUE.toBigDecimal())
-      else     -> Range.create().also { logger.warn { "Schema '$schemaName': unknown format '$format' for number type is ignored." } }
+      else     ->
+        Range.create()
+          .also { logger.warn { "Schema '$schemaName': unknown format '$format' for number type is ignored." } }
     }
 }

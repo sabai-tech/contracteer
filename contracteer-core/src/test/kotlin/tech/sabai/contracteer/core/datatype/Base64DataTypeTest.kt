@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.base64DataType
@@ -198,7 +199,7 @@ class Base64DataTypeTest {
 
       // then
       assert(
-        Range.create(12.toBigDecimal(), 16.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+        Range.create(12.toBigDecimal(), 16.toBigDecimal()).assertSuccess().contains(result.length.toBigDecimal()).isSuccess()
       )
     }
   }

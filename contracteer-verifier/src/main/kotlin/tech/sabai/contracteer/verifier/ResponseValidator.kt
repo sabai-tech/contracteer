@@ -60,7 +60,6 @@ internal object ResponseValidator {
             .decode({ key -> responseHeaders.filter { it.first.equals(key, ignoreCase = true) }.mapNotNull { it.second } }, paramSchema.dataType)
             .flatMap { paramSchema.dataType.validate(it) }
             .forProperty(element.name)
-            .map { }
       }
     }
   }

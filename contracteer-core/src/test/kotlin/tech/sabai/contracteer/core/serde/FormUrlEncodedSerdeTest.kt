@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.serde
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.objectDataType
@@ -73,8 +74,7 @@ class FormUrlEncodedSerdeTest {
     val result = serde.deserialize("name=John&age=30", dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["age"] == 30.toBigDecimal())
   }
@@ -92,8 +92,7 @@ class FormUrlEncodedSerdeTest {
     val result = serde.deserialize("name=John&colors=blue&colors=black", dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["colors"] == listOf("blue", "black"))
   }
@@ -114,8 +113,7 @@ class FormUrlEncodedSerdeTest {
     val result = serde.deserialize("name=John&colors=blue|black", dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["colors"] == listOf("blue", "black"))
   }
@@ -130,8 +128,7 @@ class FormUrlEncodedSerdeTest {
     val result = serde.deserialize("name=John+Doe&city=New+York", dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John Doe")
     assert(obj["city"] == "New York")
   }
@@ -176,8 +173,7 @@ class FormUrlEncodedSerdeTest {
     val result = serde.deserialize(null, dataType)
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() == null)
   }
 }
 

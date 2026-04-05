@@ -128,9 +128,9 @@ class AllOfDataType private constructor(name: String,
           }
         }
 
-    private fun List<DataType<out Any>>.validate(discriminator: Discriminator?): Result<Discriminator> {
+    private fun List<DataType<out Any>>.validate(discriminator: Discriminator?): Result<Discriminator?> {
       if (size > 1 && any { !it.isFullyStructured() }) return failure("Only structured schemas (object, allOf, anyOf, oneOf) are supported for multi-element 'allOf'.")
-      if (discriminator == null) return success()
+      if (discriminator == null) return success(null)
 
       val results = map { discriminator.validate(it).forProperty(it.name) }
       val successes = results.count { it.isSuccess() }

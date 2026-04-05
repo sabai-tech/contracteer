@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.numberDataType
@@ -145,7 +146,7 @@ class NumberDataTypeTest {
       val result = numberDataType.randomValue()
 
       // then
-      assert(Range.create(10.toBigDecimal(), 20.toBigDecimal()).value!!.contains(result).isSuccess())
+      assert(Range.create(10.toBigDecimal(), 20.toBigDecimal()).assertSuccess().contains(result).isSuccess())
     }
 
     @Test

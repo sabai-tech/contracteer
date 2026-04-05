@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.stringDataType
@@ -256,7 +257,7 @@ class StringDataTypeTest {
 
       // then
       assert(
-        Range.create(1.toBigDecimal(), 5.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+        Range.create(1.toBigDecimal(), 5.toBigDecimal()).assertSuccess().contains(result.length.toBigDecimal()).isSuccess()
       )
     }
 

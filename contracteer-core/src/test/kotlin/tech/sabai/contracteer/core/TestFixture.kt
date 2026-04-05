@@ -1,5 +1,7 @@
 package tech.sabai.contracteer.core
 
+import tech.sabai.contracteer.core.Result.Failure
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.*
 import java.math.BigDecimal
 
@@ -11,14 +13,14 @@ object TestFixture {
     isNullable: Boolean = false,
     discriminator: Discriminator? = null,
     enum: List<Any?> = emptyList()) =
-    AllOfDataType.create(name, subTypes, isNullable, discriminator, enum).value!!
+    AllOfDataType.create(name, subTypes, isNullable, discriminator, enum).assertSuccess()
 
   fun anyOfDataType(name: String = "anyOf",
                     subTypes: List<DataType<out Any>>,
                     discriminator: Discriminator? = null,
                     isNullable: Boolean = false,
                     enum: List<Any?> = emptyList()) =
-    AnyOfDataType.create(name, subTypes, discriminator, isNullable, enum).value!!
+    AnyOfDataType.create(name, subTypes, discriminator, isNullable, enum).assertSuccess()
 
   fun arrayDataType(itemDataType: DataType<out Any>,
                     isNullable: Boolean = false,
@@ -26,37 +28,37 @@ object TestFixture {
                     minItems: Int? = null,
                     maxItems: Int? = null,
                     uniqueItems: Boolean = false) =
-    ArrayDataType.create("array", itemDataType, isNullable, enum, minItems, maxItems, uniqueItems).value!!
+    ArrayDataType.create("array", itemDataType, isNullable, enum, minItems, maxItems, uniqueItems).assertSuccess()
 
   fun base64DataType(isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),
                      minLength: Int? = null,
                      maxLength: Int? = null) =
-    Base64DataType.create("base64", isNullable, enum, minLength, maxLength).value!!
+    Base64DataType.create("base64", isNullable, enum, minLength, maxLength).assertSuccess()
 
   fun binaryDataType(isNullable: Boolean = false,
                      enum: List<String?> = emptyList(),
                      minLength: Int? = null,
                      maxLength: Int? = null) =
-    BinaryDataType.create("binary", isNullable, enum, minLength, maxLength).value!!
+    BinaryDataType.create("binary", isNullable, enum, minLength, maxLength).assertSuccess()
 
   fun booleanDataType(isNullable: Boolean = false,
                       enum: List<Boolean?> = emptyList()) =
-    BooleanDataType.create("boolean", isNullable, enum).value!!
+    BooleanDataType.create("boolean", isNullable, enum).assertSuccess()
 
   fun dateDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =
-    DateDataType.create("date", isNullable, enum).value!!
+    DateDataType.create("date", isNullable, enum).assertSuccess()
 
   fun dateTimeDataType(isNullable: Boolean = false,
                        enum: List<String?> = emptyList()) =
-    DateTimeDataType.create("dateTime", isNullable, enum).value!!
+    DateTimeDataType.create("dateTime", isNullable, enum).assertSuccess()
 
   fun emailDataType(isNullable: Boolean = false,
                     enum: List<String?> = emptyList(),
                     minLength: Int? = null,
                     maxLength: Int? = null) =
-    EmailDataType.create("email", isNullable, minLength, maxLength, enum).value!!
+    EmailDataType.create("email", isNullable, minLength, maxLength, enum).assertSuccess()
 
   fun integerDataType(name: String = "integer",
                       isNullable: Boolean = false,
@@ -66,7 +68,7 @@ object TestFixture {
                       exclusiveMinimum: Boolean = false,
                       exclusiveMaximum: Boolean = false,
                       multipleOf: BigDecimal? = null) =
-    IntegerDataType.create(name, isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf).value!!
+    IntegerDataType.create(name, isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf).assertSuccess()
 
   fun numberDataType(isNullable: Boolean = false,
                      enum: List<BigDecimal?> = emptyList(),
@@ -75,7 +77,7 @@ object TestFixture {
                      exclusiveMinimum: Boolean = false,
                      exclusiveMaximum: Boolean = false,
                      multipleOf: BigDecimal? = null) =
-    NumberDataType.create("number", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf).value!!
+    NumberDataType.create("number", isNullable, enum, minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf).assertSuccess()
 
   fun objectDataType(name: String = "object",
                      properties: Map<String, DataType<out Any>>,
@@ -88,14 +90,14 @@ object TestFixture {
                      enum: List<Any?> = emptyList(),
                      minProperties: Int? = null,
                      maxProperties: Int? = null) =
-    ObjectDataType.create(name, properties, requiredProperties, readOnlyProperties, writeOnlyProperties, allowAdditionalProperties, additionalPropertiesDataType, isNullable, enum, minProperties, maxProperties).value!!
+    ObjectDataType.create(name, properties, requiredProperties, readOnlyProperties, writeOnlyProperties, allowAdditionalProperties, additionalPropertiesDataType, isNullable, enum, minProperties, maxProperties).assertSuccess()
 
   fun oneOfDataType(name: String = "oneOf",
                     subTypes: List<DataType<out Any>>,
                     discriminator: Discriminator? = null,
                     isNullable: Boolean = false,
                     enum: List<Any?> = emptyList()) =
-    OneOfDataType.create(name, subTypes, discriminator, isNullable, enum).value!!
+    OneOfDataType.create(name, subTypes, discriminator, isNullable, enum).assertSuccess()
 
   fun stringDataType(name: String = "string",
                      isNullable: Boolean = false,
@@ -103,22 +105,22 @@ object TestFixture {
                      minLength: Int? = null,
                      maxLength: Int? = null,
                      pattern: String? = null) =
-    StringDataType.create(name, "string", isNullable, enum, minLength, maxLength, pattern).value!!
+    StringDataType.create(name, "string", isNullable, enum, minLength, maxLength, pattern).assertSuccess()
 
   fun uuidDataType(isNullable: Boolean = false,
                    enum: List<String?> = emptyList()) =
-    UuidDataType.create("uuid", isNullable, enum).value!!
+    UuidDataType.create("uuid", isNullable, enum).assertSuccess()
 }
 
 // Test assertion helpers
-fun <T> Result<T>.assertSuccess(): T {
-  assert(isSuccess()) { "Expected success but got errors: ${errors()}" }
-  return value!!
+fun <T> Result<T>.assertSuccess(): T = when (this) {
+  is Success -> value
+  is Failure -> throw AssertionError("Expected success but got errors: ${errors()}")
 }
 
-fun <T> Result<T>.assertFailure(): List<String> {
-  assert(isFailure()) { "Expected failure but got success with value: $value" }
-  return errors()
+fun <T> Result<T>.assertFailure(): List<String> = when (this) {
+  is Failure -> errors()
+  is Success -> throw AssertionError("Expected failure but got success with value: $value")
 }
 
 fun <T> List<T>.assertSingle(): T {

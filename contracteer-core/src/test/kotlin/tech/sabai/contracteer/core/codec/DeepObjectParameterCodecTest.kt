@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.codec
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.rgbObjectDataType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
@@ -21,8 +22,7 @@ class DeepObjectParameterCodecTest {
     val result = DeepObjectParameterCodec("color").decode(extractor, rgbObjectDataType())
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["R"] == 100.toBigDecimal())
     assert(obj["G"] == 200.toBigDecimal())
     assert(obj["B"] == 150.toBigDecimal())
@@ -34,7 +34,6 @@ class DeepObjectParameterCodecTest {
     val result = DeepObjectParameterCodec("color").decode(valueExtractor(), rgbObjectDataType())
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() == null)
   }
 }

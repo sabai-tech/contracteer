@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core.serde
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.objectDataType
@@ -47,8 +48,7 @@ class JsonSerdeTest {
     val result = JsonSerde.deserialize(value, dataType)
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == mapOf(
+    assert(result.assertSuccess() ==mapOf(
       "id" to BigDecimal.valueOf(123),
       "nested" to mapOf("name" to "John"),
       "array" to listOf(BigDecimal.valueOf(1), BigDecimal.valueOf(2), BigDecimal.valueOf(3))
@@ -85,8 +85,7 @@ class JsonSerdeTest {
     val result = JsonSerde.deserialize(value, dataType)
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == mapOf(
+    assert(result.assertSuccess() ==mapOf(
       "id" to 42.normalize(),
       "items" to listOf(1, 2, 3).normalize()
     ))
@@ -105,8 +104,7 @@ class JsonSerdeTest {
     val result = JsonSerde.deserialize(null, dataType)
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() ==null)
   }
 }
 

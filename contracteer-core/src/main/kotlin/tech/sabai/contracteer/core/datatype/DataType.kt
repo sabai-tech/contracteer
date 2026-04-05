@@ -34,7 +34,7 @@ sealed class DataType<T>(
   fun validate(value: Any?): Result<T> {
     val normalizedValue = value.normalize()
     return when {
-      normalizedValue == null && isNullable      -> success()
+      normalizedValue == null && isNullable      -> success(null as T)
       normalizedValue == null                    -> failure("Value cannot be null as the schema is non-nullable")
       !dataTypeClass.isInstance(normalizedValue) -> failure("Type mismatch, expected type '$openApiType'")
       allowedValues != null                      -> allowedValues.contains(normalizedValue).map { normalizedValue as T }

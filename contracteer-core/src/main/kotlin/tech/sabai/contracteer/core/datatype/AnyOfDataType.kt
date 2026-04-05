@@ -57,7 +57,7 @@ class AnyOfDataType private constructor(name: String,
       value[discriminator!!.propertyName] == null  -> failure("discriminator property '${discriminator.propertyName}' is required")
       value[discriminator.propertyName] !is String -> failure("discriminator property '${discriminator.propertyName}' must be of type 'string'")
       else                                         ->
-        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it!!.validate(value) }
+        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it.validate(value) }
     }
 
   private fun dataTypeFrom(discriminatorValue: String): Result<DataType<out Any>> =
@@ -106,7 +106,7 @@ class AnyOfDataType private constructor(name: String,
 
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
       when {
-        discriminator == null                           -> success()
+        discriminator == null                           -> success(null)
         namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping error. The discriminator references schemas not present in 'anyOf'")
         else                                            ->
           accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }

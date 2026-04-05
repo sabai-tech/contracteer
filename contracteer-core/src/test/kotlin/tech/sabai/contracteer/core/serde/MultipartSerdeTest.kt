@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.serde
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.binaryDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
@@ -70,8 +71,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(body, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["age"] == 30.toBigDecimal())
   }
@@ -93,8 +93,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(body, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     val metadata = obj["metadata"] as Map<*, *>
     assert(metadata["key"] == "value")
@@ -114,8 +113,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(body, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["file"] == "binary-content")
   }
@@ -131,8 +129,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(body, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
   }
 
@@ -146,8 +143,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(null, dataType)
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() == null)
   }
 
   @Test
@@ -196,8 +192,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(body, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["files"] == listOf("content1", "content2"))
   }
@@ -217,8 +212,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(serialized, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     assert(obj["files"] == listOf("content1", "content2"))
   }
@@ -238,8 +232,7 @@ class MultipartSerdeTest {
     val result = serde.deserialize(serialized, dataType)
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["name"] == "John")
     val metadata = obj["metadata"] as Map<*, *>
     assert(metadata["key"] == "value")

@@ -3,9 +3,10 @@ package tech.sabai.contracteer.verifier.junit
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.swagger.OpenApiLoader
-import tech.sabai.contracteer.verifier.ServerVerifier
 import tech.sabai.contracteer.verifier.ServerConfiguration
+import tech.sabai.contracteer.verifier.ServerVerifier
 import tech.sabai.contracteer.verifier.VerificationCaseFactory
 import java.lang.System.lineSeparator
 import java.lang.reflect.Modifier
@@ -22,7 +23,7 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
 
     val operationsResult = OpenApiLoader.loadOperations(annotation.openApiDoc)
 
-    if (operationsResult.isFailure()) {
+    if (operationsResult !is Success) {
       throw IllegalArgumentException(
         "Failed to load OpenAPI spec file:${lineSeparator()}" +
         operationsResult.errors().joinToString(prefix = "- ", separator = "${lineSeparator()}- "))
@@ -30,7 +31,7 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
 
     val verifierProvider = createVerifierProvider(annotation)
 
-    val cases: List<TestTemplateInvocationContext> = operationsResult.value!!
+    val cases: List<TestTemplateInvocationContext> = operationsResult.value
       .flatMap { VerificationCaseFactory.create(it) }
       .map { ContractTestInvocationContext(it, verifierProvider) }
 

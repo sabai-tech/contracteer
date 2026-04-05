@@ -18,8 +18,8 @@ object JsonSerde: Serde() {
 
   override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> =
     when {
-      source.isNullOrBlank() -> success()
-      source == "null"       -> success()
+      source.isNullOrBlank() -> success(null)
+      source == "null"       -> success(null)
       else                   ->
         try {
           val success = success(jsonMapper.readValue(source, targetDataType.dataTypeClass))

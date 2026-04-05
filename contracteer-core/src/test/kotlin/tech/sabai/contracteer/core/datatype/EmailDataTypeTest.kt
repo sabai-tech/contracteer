@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.emailDataType
@@ -133,8 +134,7 @@ class EmailDataTypeTest {
       val result = EmailDataType.create(name = "email", minLength = null)
 
       // then
-      assert(result.isSuccess())
-      assert(result.value!!.lengthRange.minimum == 6.toBigDecimal())
+      assert(result.assertSuccess().lengthRange.minimum == 6.toBigDecimal())
     }
 
     @Test
@@ -171,7 +171,7 @@ class EmailDataTypeTest {
 
       // then
       assert(
-        Range.create(6.toBigDecimal(), 10.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+        Range.create(6.toBigDecimal(), 10.toBigDecimal()).assertSuccess().contains(result.length.toBigDecimal()).isSuccess()
       )
     }
   }

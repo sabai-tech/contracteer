@@ -4,6 +4,8 @@ import org.http4k.core.Request
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Failure
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.RequestSchema
@@ -11,16 +13,18 @@ import tech.sabai.contracteer.core.operation.RequestSchema
 internal fun RequestSchema.validate(request: Request): Result<Unit> =
   parameters.accumulate { paramSchema ->
     val extractor = request.valueExtractorFor(paramSchema.element)
-    val result = paramSchema.codec.decode(extractor, paramSchema.dataType)
-    when {
-      result.isFailure()                             -> result.retypeError<Unit>().forProperty(paramSchema.element.name)
-      result.value == null && paramSchema.isRequired -> failure(paramSchema.element.name, "is missing")
-      result.value == null                           -> success()
-      else                                           ->
-        paramSchema.dataType
-          .validate(result.value)
-          .forProperty(paramSchema.element.name)
-          .map {}
+    when (val result = paramSchema.codec.decode(extractor, paramSchema.dataType)) {
+      is Failure                                                   ->
+        result.retypeError<Unit>().forProperty(paramSchema.element.name)
+
+      is Success if result.value == null && paramSchema.isRequired ->
+        failure(paramSchema.element.name, "is missing")
+
+      is Success if result.value == null                           ->
+        success()
+
+      is Success                                                   ->
+        paramSchema.dataType.validate(result.value).forProperty(paramSchema.element.name)
     }
   } andThen { bodies.validateBody(request) }
 

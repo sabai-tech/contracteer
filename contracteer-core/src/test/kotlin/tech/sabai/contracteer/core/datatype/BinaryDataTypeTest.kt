@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.TestFixture.binaryDataType
@@ -46,7 +47,7 @@ class BinaryDataTypeTest {
   fun `validates null value if it is nullable`() {
     // given
     val binaryDataType = BinaryDataType.create(
-      name = "binary", isNullable = true).value!!
+      name = "binary", isNullable = true).assertSuccess()
 
     // when
     val result = binaryDataType.validate(null)
@@ -58,7 +59,7 @@ class BinaryDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val binaryDataType = BinaryDataType.create(name = "binary", isNullable = false).value!!
+    val binaryDataType = BinaryDataType.create(name = "binary", isNullable = false).assertSuccess()
 
     // when
     val result = binaryDataType.validate(null)
@@ -162,7 +163,7 @@ class BinaryDataTypeTest {
 
       // then
       assert(
-        Range.create(1.toBigDecimal(), 5.toBigDecimal()).value!!.contains(result.length.toBigDecimal()).isSuccess()
+        Range.create(1.toBigDecimal(), 5.toBigDecimal()).assertSuccess().contains(result.length.toBigDecimal()).isSuccess()
       )
     }
   }

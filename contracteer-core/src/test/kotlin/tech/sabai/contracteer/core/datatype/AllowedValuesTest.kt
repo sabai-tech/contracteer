@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import kotlin.test.Test
 
 class AllowedValuesTest {
@@ -10,7 +11,7 @@ class AllowedValuesTest {
     // when
     val result = AllowedValues.create(
       listOf(1, null, 2),
-      IntegerDataType.create(name = "integer", isNullable = false).value!!)
+      IntegerDataType.create(name = "integer", isNullable = false).assertSuccess())
 
     // then
     assert(result.isFailure())
@@ -19,7 +20,7 @@ class AllowedValuesTest {
   @Test
   fun `should not create when values is empty`() {
     // when
-    val result = AllowedValues.create(listOf(), IntegerDataType.create("integer").value!!)
+    val result = AllowedValues.create(listOf(), IntegerDataType.create("integer").assertSuccess())
 
     // then
     assert(result.isFailure())
@@ -29,7 +30,7 @@ class AllowedValuesTest {
   @Test
   fun `should not create when values are not validated by datatype`() {
     // when
-    val result = AllowedValues.create(listOf("1", "2"), IntegerDataType.create("integer").value!!)
+    val result = AllowedValues.create(listOf("1", "2"), IntegerDataType.create("integer").assertSuccess())
 
     // then
     assert(result.isFailure())
@@ -38,7 +39,7 @@ class AllowedValuesTest {
   @Test
   fun `should create when values are validated by datatype`() {
     // when
-    val result = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").value!!)
+    val result = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").assertSuccess())
 
     // then
     assert(result.isSuccess())
@@ -48,7 +49,7 @@ class AllowedValuesTest {
   @Test
   fun `should not contain when value if of wrong type`() {
     // given
-    val allowedValues = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").value!!).value!!
+    val allowedValues = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").assertSuccess()).assertSuccess()
 
     // when
     val result = allowedValues.contains("john")
@@ -60,7 +61,7 @@ class AllowedValuesTest {
   @Test
   fun `should not contain value which is not in the allowed list`() {
     // given
-    val allowedValues = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").value!!).value!!
+    val allowedValues = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").assertSuccess()).assertSuccess()
 
     // when
     val result = allowedValues.contains(4)
@@ -72,7 +73,7 @@ class AllowedValuesTest {
   @Test
   fun `should contain value which is the allowed list`() {
     // given
-    val allowedValues = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").value!!).value!!
+    val allowedValues = AllowedValues.create(listOf(1, 2, 3), IntegerDataType.create("integer").assertSuccess()).assertSuccess()
 
     // when
     val result = allowedValues.contains(3)

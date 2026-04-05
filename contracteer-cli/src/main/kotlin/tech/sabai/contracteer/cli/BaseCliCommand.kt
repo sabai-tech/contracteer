@@ -8,6 +8,7 @@ import picocli.CommandLine.Parameters
 import tech.sabai.contracteer.cli.LevelConverter.Companion.configureLogging
 import tech.sabai.contracteer.cli.LevelConverter.Companion.enableHttpTrafficLogging
 import tech.sabai.contracteer.core.operation.ApiOperation
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.swagger.OpenApiLoader
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
@@ -21,7 +22,7 @@ abstract class BaseCliCommand: Callable<Unit> {
 
   @Option(
     names = ["-l", "--log-level"],
-    description = ["Specify the log verbosity. Options: TRACE, DEBUG, INFO, WARN, ERROR, OFF, ALL. Default: @|bold \${DEFAULT-VALUE}|@."],
+    description = [$$"Specify the log verbosity. Options: TRACE, DEBUG, INFO, WARN, ERROR, OFF, ALL. Default: @|bold ${DEFAULT-VALUE}|@."],
     converter = [LevelConverter::class],
     defaultValue = "INFO"
   )
@@ -44,12 +45,12 @@ abstract class BaseCliCommand: Callable<Unit> {
 
   protected fun loadOperations(path: String): List<ApiOperation> {
     val result = OpenApiLoader.loadOperations(path)
-    if (result.isFailure()) {
+    if (result !is Success) {
       println(AUTO.string("@|bold,red   ❌ Error while loading Operations:|@"))
       result.errors().forEach { println(AUTO.string("     ↳ @|yellow $it|@")) }
       exitProcess(1)
     }
 
-    return result.value!!
+    return result.value
   }
 }

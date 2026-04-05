@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 
@@ -33,38 +34,74 @@ class ResultTest {
   }
 
   @Test
-  fun `combining 2 success of different type is a success with te value of the second one`() {
+  fun `failure with multiple error messages returns all errors`() {
     // when
-    val result = success(1) andThen { success("John") }
+    val errors = failure<Any>("error 1", "error 2", "error 3").assertFailure()
 
-    // expect
+    // then
+    assert(errors.size == 3)
+    assert(errors == listOf("error 1", "error 2", "error 3"))
+  }
+
+  @Test
+  fun `failure with property index formats path with brackets`() {
+    // when
+    val errors = failure<Any>(2, "Wrong Type").assertFailure()
+
+    // then
+    assert(errors.first() == "'[2]': Wrong Type")
+  }
+
+  @Test
+  fun `errors returns empty list on success`() {
+    // when
+    val errors = success(1).errors()
+
+    // then
+    assert(errors.isEmpty())
+  }
+
+  @Test
+  fun `map transforms value on success`() {
+    // when
+    val result = success(1).map { it * 2 }
+
+    // then
     val value = result.assertSuccess()
-    assert(value == "John")
+    assert(value == 2)
   }
 
   @Test
-  fun `combining a success with an error is an error`() {
+  fun `map does not transform on failure`() {
     // when
-    val result = success(1) andThen { failure<Any>("Wrong Type") }
+    val result = failure<Int>("Error").map { it * 2 }
+
+    // then
+    result.assertFailure()
+  }
+
+  @Test
+  fun `flatMap transforms value on success`() {
+    // when
+    val result = success(1).flatMap { success(it * 2) }
+
+    // then
+    val value = result.assertSuccess()
+    assert(value == 2)
+  }
+
+  @Test
+  fun `flatMap does not transform on failure`() {
+    // when
+    val result = failure<Int>("Error").flatMap { success(it * 2) }
 
     // then
     val errors = result.assertFailure()
-    assert(errors.size == 1)
-    assert(errors.first() == "Wrong Type")
+    assert(errors.first() == "Error")
   }
 
   @Test
-  fun `error message is prepended with property index when adding it`() {
-    // when
-    val result = failure<Any>("prop1", "Wrong Type").forIndex(1)
-
-    // then
-    val errors = result.assertFailure()
-    assert(errors.first() == "'[1].prop1': Wrong Type")
-  }
-
-  @Test
-  fun `map error message`() {
+  fun `mapErrors transforms error messages on failure`() {
     // when
     val result = failure<Int>("error").forProperty("toto").mapErrors { "$it !!!" }
 
@@ -75,7 +112,7 @@ class ResultTest {
   }
 
   @Test
-  fun `map error message has no effect for success`() {
+  fun `mapErrors has no effect on success`() {
     // when
     val result = success(1).mapErrors { "$it !!!" }
 
@@ -85,31 +122,27 @@ class ResultTest {
   }
 
   @Test
-  fun `map a success`() {
+  fun `andThen returns next result when first succeeds`() {
     // when
-    val result = success(1).map { it!! * 2 }
+    val result = success(1) andThen { success("John") }
 
     // then
     val value = result.assertSuccess()
-    assert(value == 2)
+    assert(value == "John")
   }
 
   @Test
-  fun `does not map a failure`() {
+  fun `retypeError preserves errors on failure`() {
     // when
-    val result = failure<Int>("Error").map { it!! * 2 }
+    val result = failure<Int>("error 1", "error 2", "error 3").retypeError<String>()
 
     // then
-    result.assertFailure()
+    val errors = result.assertFailure()
+    assert(errors == listOf("error 1", "error 2", "error 3"))
   }
 
   @Test
-  fun `flatMap a success`() {
-    // when
-    val result = success(1).flatMap { success(it!! * 2) }
-
-    // then
-    val value = result.assertSuccess()
-    assert(value == 2)
+  fun `retypeError throws on success`() {
+    assertThrows<IllegalStateException> { success(1).retypeError<String>() }
   }
 }

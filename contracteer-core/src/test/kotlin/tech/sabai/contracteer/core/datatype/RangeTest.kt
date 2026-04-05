@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.assertSuccess
 import java.math.BigDecimal
 import kotlin.test.Test
 
@@ -26,7 +27,7 @@ class RangeTest {
 
   @Test
   fun `closed range`() {
-    val range = Range.create(bigDecimal(10), bigDecimal(20)).value!!
+    val range = Range.create(bigDecimal(10), bigDecimal(20)).assertSuccess()
 
     assert(range.contains(bigDecimal(10)).isSuccess())
     assert(range.contains(bigDecimal(20)).isSuccess())
@@ -38,7 +39,7 @@ class RangeTest {
 
   @Test
   fun `opened range`() {
-    val range = Range.create(bigDecimal(10), bigDecimal(20), exclusiveMinimum = true, exclusiveMaximum = true).value!!
+    val range = Range.create(bigDecimal(10), bigDecimal(20), exclusiveMinimum = true, exclusiveMaximum = true).assertSuccess()
 
     assert(range.contains(bigDecimal(10)).isFailure())
     assert(range.contains(bigDecimal(20)).isFailure())
@@ -50,7 +51,7 @@ class RangeTest {
 
   @Test
   fun `range with infinite lower bound`() {
-    val range = Range.create(minimum = bigDecimal(10)).value!!
+    val range = Range.create(minimum = bigDecimal(10)).assertSuccess()
 
     assert(range.contains(bigDecimal(10)).isSuccess())
     assert(range.contains(bigDecimal(20)).isSuccess())
@@ -62,7 +63,7 @@ class RangeTest {
 
   @Test
   fun `range with infinite upper bound`() {
-    val range = Range.create(maximum = bigDecimal(10)).value!!
+    val range = Range.create(maximum = bigDecimal(10)).assertSuccess()
 
     assert(range.contains(bigDecimal(10)).isSuccess())
     assert(range.contains(bigDecimal(20)).isFailure())
@@ -73,7 +74,7 @@ class RangeTest {
 
   @Test
   fun `infinite range`() {
-    val range = Range.create().value!!
+    val range = Range.create().assertSuccess()
 
     assert(range.contains(bigDecimal(10)).isSuccess())
     assert(range.contains(bigDecimal(20)).isSuccess())
@@ -85,7 +86,7 @@ class RangeTest {
   @Test
   fun `does not contain integer value `() {
     // given
-    val range = Range.create(bigDecimal(11.3), bigDecimal(11.4)).value!!
+    val range = Range.create(bigDecimal(11.3), bigDecimal(11.4)).assertSuccess()
 
     // when
     val containsAtLeastOneInteger = range.containsIntegers()
@@ -97,7 +98,7 @@ class RangeTest {
   @Test
   fun `generates random integer value in the range`() {
     // given
-    val range = Range.create(10.toBigDecimal(), 20.toBigDecimal()).value!!
+    val range = Range.create(10.toBigDecimal(), 20.toBigDecimal()).assertSuccess()
 
     // when
     val value = range.randomIntegerValue()
@@ -109,7 +110,7 @@ class RangeTest {
   @Test
   fun `generates random value in the range`() {
     // given
-    val range = Range.create(10.toBigDecimal(), 20.toBigDecimal()).value!!
+    val range = Range.create(10.toBigDecimal(), 20.toBigDecimal()).assertSuccess()
 
     // when
     val value = range.randomValue()

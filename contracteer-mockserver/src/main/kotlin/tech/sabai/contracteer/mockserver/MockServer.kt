@@ -15,10 +15,14 @@ import org.http4k.server.asServer
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.core.operation.Scenario
+import tech.sabai.contracteer.mockserver.ScenarioMatchResult.Ambiguous
+import tech.sabai.contracteer.mockserver.ScenarioMatchResult.NoMatch
+import tech.sabai.contracteer.mockserver.ScenarioMatchResult.SingleMatch
 
 /**
  * An HTTP mock server that serves responses derived from OpenAPI [ApiOperation] definitions.
@@ -102,9 +106,9 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
     }
 
     return when (val matchResult = ScenarioMatcher.match(request, operation.scenarios, operation.requestSchema)) {
-      is ScenarioMatchResult.SingleMatch -> handleScenarioResponse(request, matchResult.scenario, operation)
-      is ScenarioMatchResult.NoMatch     -> handleSchemaOnlyResponse(request, operation)
-      is ScenarioMatchResult.Ambiguous   ->
+      is SingleMatch -> handleScenarioResponse(request, matchResult.scenario, operation)
+      is NoMatch     -> handleSchemaOnlyResponse(request, operation)
+      is Ambiguous   ->
         teapotResponse(
           "Ambiguous: multiple scenarios (${matchResult.scenarios.joinToString(", ") { it.key }}) " +
           "matched the request for ${operation.method.uppercase()} ${operation.path}")
@@ -122,14 +126,14 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
 
   private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
     val unique2xxResult = findUnique2xxResponse(operation)
-    if (unique2xxResult.isFailure()) return teapotResponse(unique2xxResult.errors().first())
+    if (unique2xxResult !is Success) return teapotResponse(unique2xxResult.errors().first())
 
-    val (statusCode, responseSchema) = unique2xxResult.value!!
+    val (statusCode, responseSchema) = unique2xxResult.value
     val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
-    if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
+    if (acceptResult !is Success) return teapotResponse(acceptResult.errors().first())
 
     val bodyResult = selectResponseBody(request.header("Accept"), responseSchema, operation)
-    if (bodyResult.isFailure()) return teapotResponse(bodyResult.errors().first())
+    if (bodyResult !is Success) return teapotResponse(bodyResult.errors().first())
 
     return ResponseGenerator.fromSchema(statusCode, responseSchema.headers, bodyResult.value)
   }

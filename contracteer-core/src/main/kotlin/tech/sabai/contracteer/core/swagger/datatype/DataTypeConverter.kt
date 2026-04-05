@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.media.*
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.AllOfDataType
 import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
@@ -33,9 +34,11 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       recursiveDepth < 0             -> failure("Maximum recursive depth reached while converting Schema")
       ref == null                    -> convertSchema(schema, defaultName, recursiveDepth)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
-      else                           -> sharedComponents
-        .resolve(schema)
-        .flatMap { convertSchema(it!!, ref, recursiveDepth).map { dt -> dt!!.also { dataTypeCache[ref] = it } } }
+      else                           ->
+        sharedComponents
+          .resolve(schema)
+          .flatMap { resolved -> convertSchema(resolved, ref, recursiveDepth) }
+          .map { it.also { dataType -> dataTypeCache[ref] = dataType } }
     }
   }
 
@@ -93,16 +96,16 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     }
 
     val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, recursiveDepth, convert)
-        ?: return compositionResult
+                        ?: return compositionResult
 
     if (schema.allOf != null) return compositionResult
 
-    if (compositionResult.isFailure() || siblingResult.isFailure())
-      return compositionResult combineWith siblingResult.retypeError()
+    if (compositionResult !is Success || siblingResult !is Success)
+      return (compositionResult combineWith siblingResult).retypeError()
 
     return AllOfDataType.create(
       name = schema.name,
-      subTypes = listOf(compositionResult.value!!, siblingResult.value!!))
+      subTypes = listOf(compositionResult.value, siblingResult.value))
   }
 
   @Suppress("UNCHECKED_CAST")

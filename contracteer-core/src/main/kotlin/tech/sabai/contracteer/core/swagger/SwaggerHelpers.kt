@@ -11,9 +11,6 @@ import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
-import tech.sabai.contracteer.core.Result
-import tech.sabai.contracteer.core.Result.Companion.failure
-import tech.sabai.contracteer.core.Result.Companion.success
 
 internal fun MediaType.safeExamples() =
   examples ?: example?.let(::singleExampleMap) ?: emptyMap()
@@ -102,8 +99,6 @@ internal fun ApiResponse.shortRef() =
 private fun singleExampleMap(exampleValue: Any) =
   mapOf("_example" to Example().apply { value = exampleValue })
 
-internal fun allAreSuccess(vararg results: Result<*>) =
-  results.all { it.isSuccess() }
 
 internal fun isClassCode(code: String): Boolean =
   code.length == 3 && code[0].isDigit() && code.substring(1).uppercase() == "XX"

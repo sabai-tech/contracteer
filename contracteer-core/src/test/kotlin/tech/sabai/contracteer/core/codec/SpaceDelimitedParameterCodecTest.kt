@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.codec
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.core.valueExtractor
@@ -22,8 +23,7 @@ class SpaceDelimitedParameterCodecTest {
     val result = SpaceDelimitedParameterCodec("color").decode(extractor, arrayDataType(itemDataType = stringDataType()))
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == listOf("blue", "black", "brown"))
+    assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
   }
 
   @Test
@@ -32,7 +32,6 @@ class SpaceDelimitedParameterCodecTest {
     val result = SpaceDelimitedParameterCodec("color").decode(valueExtractor(), arrayDataType(itemDataType = stringDataType()))
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() ==null)
   }
 }

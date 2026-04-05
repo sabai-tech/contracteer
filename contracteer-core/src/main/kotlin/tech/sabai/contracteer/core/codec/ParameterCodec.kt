@@ -1,12 +1,12 @@
 package tech.sabai.contracteer.core.codec
 
-import tech.sabai.contracteer.core.serde.PlainTextSerde
-
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.core.serde.Serde
 
 /**
@@ -66,59 +66,50 @@ internal fun decodePrimitive(valueExtractor: (String) -> List<String>,
                              dataType: DataType<out Any>): Result<Any?> {
 
   val values = valueExtractor(paramName)
-  if (values.isEmpty()) return success(null)
-  return PlainTextSerde.deserialize(values.first(), dataType)
+  return if (values.isEmpty())
+    success(null)
+  else
+    PlainTextSerde.deserialize(values.first(), dataType)
 }
 
-internal fun deserializeItems(items: List<String>,
-                              itemDataType: DataType<out Any>): Result<Any?> {
-  val results = items.map { PlainTextSerde.deserialize(it, itemDataType) }
-  val errors = results.filter { it.isFailure() }.flatMap { it.errors() }
+internal fun deserializeItems(items: List<String>, itemDataType: DataType<out Any>): Result<Any?> =
+  items.map { PlainTextSerde.deserialize(it, itemDataType) }.combineResults()
 
-  return if (errors.isNotEmpty()) failure(*errors.toTypedArray())
-  else success(results.map { it.value })
-}
-
-internal fun deserializeFlatEntries(parts: List<String>,
-                                    objectDataType: ObjectDataType): Result<Any?> {
+internal fun deserializeFlatEntries(parts: List<String>, objectDataType: ObjectDataType): Result<Any?> {
   if (parts.size % 2 != 0) return failure("Invalid format: odd number of elements for object")
-  val map = mutableMapOf<String, Any?>()
-  for (i in parts.indices step 2) {
-    val key = parts[i]
-    val propDataType = objectDataType.properties[key]
-                       ?: return failure("Unknown property: $key")
-    val result = PlainTextSerde.deserialize(parts[i + 1], propDataType)
-    if (result.isFailure()) return result.retypeError()
-    map[key] = result.value
-  }
-  return success(map)
+  return parts
+    .chunked(2)
+    .fold(success(emptyMap<String, Any?>())) { acc, (key, raw) ->
+      acc.flatMap { map -> deserializeProperty(objectDataType, key, raw).map { map + (key to it) } }
+    }
 }
 
-internal fun deserializeKeyValuePairs(pairs: List<String>,
-                                      objectDataType: ObjectDataType): Result<Any?> {
-  val map = mutableMapOf<String, Any?>()
-  for (pair in pairs) {
-    val kv = pair.split("=", limit = 2)
-    if (kv.size != 2) return failure("Invalid key=value pair: $pair")
-    val propDataType = objectDataType.properties[kv[0]]
-                       ?: return failure("Unknown property: ${kv[0]}")
-    val result = PlainTextSerde.deserialize(kv[1], propDataType)
-    if (result.isFailure()) return result.retypeError()
-    map[kv[0]] = result.value
-  }
-  return success(map)
-}
-
-internal fun deserializeProperties(valueExtractor: (String) -> List<String>,
-                                   objectDataType: ObjectDataType): Result<Any?> {
-  val map = mutableMapOf<String, Any?>()
-  for ((propName, propDataType) in objectDataType.properties) {
-    val values = valueExtractor(propName)
-    if (values.isNotEmpty()) {
-      val result = PlainTextSerde.deserialize(values.first(), propDataType)
-      if (result.isFailure()) return result.retypeError()
-      map[propName] = result.value
+internal fun deserializeKeyValuePairs(pairs: List<String>, objectDataType: ObjectDataType): Result<Any?> =
+  pairs.fold(success(emptyMap<String, Any?>())) { acc, pair ->
+    acc.flatMap { map ->
+      parseKeyValue(pair).flatMap { (key, raw) ->
+        deserializeProperty(objectDataType, key, raw).map { map + (key to it) }
+      }
     }
   }
-  return if (map.isEmpty()) success(null) else success(map)
+
+internal fun deserializeProperties(valueExtractor: (String) -> List<String>,
+                                   objectDataType: ObjectDataType): Result<Any?> =
+  objectDataType.properties
+    .mapNotNull { (name, dataType) ->
+      valueExtractor(name).firstOrNull()?.let { name to PlainTextSerde.deserialize(it, dataType) }
+    }
+    .fold(success(emptyMap<String, Any?>())) { acc, (name, result) ->
+      acc.flatMap { map -> result.map { map + (name to it) } }
+    }
+    .map { it.ifEmpty { null } }
+
+private fun deserializeProperty(objectDataType: ObjectDataType, key: String, raw: String): Result<Any?> {
+  val propDataType = objectDataType.properties[key] ?: return failure("Unknown property: $key")
+  return PlainTextSerde.deserialize(raw, propDataType)
+}
+
+private fun parseKeyValue(pair: String): Result<Pair<String, String>> {
+  val kv = pair.split("=", limit = 2)
+  return if (kv.size == 2) success(kv[0] to kv[1]) else failure("Invalid key=value pair: $pair")
 }

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.ResponseSchema
@@ -23,8 +24,7 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
       .flatMap { it.toApiOperations() }
       .combineResults()
       .map {
-        (it ?: emptyList())
-          .mapNotNull { operation -> filterUnsupportedOperation(operation) }
+        it.mapNotNull { operation -> filterUnsupportedOperation(operation) }
           .also { operations -> logExtractedOperations(operations) }
       }
 
@@ -43,29 +43,17 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
     val classResponses = extractClassResponses(operation)
     val defaultResponse = extractDefaultResponse(operation)
 
-    if (!allAreSuccess(requestSchema, responseSchemas, classResponses, defaultResponse))
-      return requestSchema.retypeError<ApiOperation>() combineWith
-          responseSchemas.retypeError() combineWith
-          classResponses.retypeError() combineWith
-          defaultResponse.retypeError()
+    if (!(requestSchema is Success && responseSchemas is Success && classResponses is Success && defaultResponse is Success))
+      return (requestSchema combineWith
+          responseSchemas combineWith
+          classResponses combineWith
+          defaultResponse).retypeError()
 
-    val scenarios = scenarioExtractor.extractScenarios(path,
-                                                       method,
-                                                       operation,
-                                                       requestSchema.value!!,
-                                                       responseSchemas.value!!,
-                                                       classResponses.value!!,
-                                                       defaultResponse.value)
-    return if (scenarios.isFailure())
-      scenarios.retypeError()
-    else
-      success(ApiOperation(path,
-                           method,
-                           requestSchema.value,
-                           responseSchemas.value,
-                           classResponses.value,
-                           defaultResponse.value,
-                           scenarios.value!!))
+    return scenarioExtractor
+      .extractScenarios(path,method,operation,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value)
+      .map {
+        ApiOperation(path,method,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value,it)
+      }
   }
 
   private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =
@@ -73,16 +61,16 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
       .filter { (code, _) -> code != "default" && !isClassCode(code) }
       .map { (code, response) -> schemaExtractor.extractResponseSchema(code, response) }
       .combineResults()
-      .map { list -> list?.associate { it.first to it.second } ?: emptyMap() }
+      .map { list -> list.associate { it.first to it.second } }
 
   private fun extractClassResponses(operation: Operation): Result<Map<Int, ResponseSchema>> =
     operation.responses
       .filter { (code, _) -> isClassCode(code) }
       .map { (code, response) ->
-        schemaExtractor.extractResponseSchema(response).map { code[0].digitToInt() to it!! }
+        schemaExtractor.extractResponseSchema(response).map { code[0].digitToInt() to it }
       }
       .combineResults()
-      .map { list -> list?.associate { it.first to it.second } ?: emptyMap() }
+      .map { list -> list.associate { it.first to it.second } }
 
   private fun extractDefaultResponse(operation: Operation): Result<ResponseSchema?> =
     operation.responses["default"]

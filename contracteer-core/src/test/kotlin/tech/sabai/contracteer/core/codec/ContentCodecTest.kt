@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.codec
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.objectDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
@@ -49,8 +50,7 @@ class ContentCodecTest {
     val result = ContentCodec("filter", JsonSerde).decode(extractor, dataType)
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == mapOf("status" to "active", "limit" to 10.normalize()))
+    assert(result.assertSuccess() == mapOf("status" to "active", "limit" to 10.normalize()))
   }
 
   @Test
@@ -62,8 +62,7 @@ class ContentCodecTest {
     val result = ContentCodec("filter", JsonSerde).decode(extractor, stringDataType())
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() == null)
   }
 
   @Test

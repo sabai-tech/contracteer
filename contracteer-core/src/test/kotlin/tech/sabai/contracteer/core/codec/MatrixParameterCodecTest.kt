@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.codec
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.core.rgbObjectDataType
@@ -46,8 +47,7 @@ class MatrixParameterCodecTest {
     val result = MatrixParameterCodec("color", explode = false).decode(extractor, stringDataType())
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == "blue")
+    assert(result.assertSuccess() =="blue")
   }
 
   @Test
@@ -59,8 +59,7 @@ class MatrixParameterCodecTest {
     val result = MatrixParameterCodec("color", explode = false).decode(extractor, arrayDataType(itemDataType = stringDataType()))
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == listOf("blue", "black", "brown"))
+    assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
   }
 
   @Test
@@ -72,8 +71,7 @@ class MatrixParameterCodecTest {
     val result = MatrixParameterCodec("color", explode = true).decode(extractor, arrayDataType(itemDataType = stringDataType()))
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == listOf("blue", "black", "brown"))
+    assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
   }
 
   @Test
@@ -85,8 +83,7 @@ class MatrixParameterCodecTest {
     val result = MatrixParameterCodec("color", explode = false).decode(extractor, rgbObjectDataType())
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["R"] == 100.toBigDecimal())
     assert(obj["G"] == 200.toBigDecimal())
     assert(obj["B"] == 150.toBigDecimal())
@@ -101,8 +98,7 @@ class MatrixParameterCodecTest {
     val result = MatrixParameterCodec("color", explode = true).decode(extractor, rgbObjectDataType())
 
     // then
-    assert(result.isSuccess())
-    val obj = result.value as Map<*, *>
+    val obj = result.assertSuccess() as Map<*, *>
     assert(obj["R"] == 100.toBigDecimal())
     assert(obj["G"] == 200.toBigDecimal())
     assert(obj["B"] == 150.toBigDecimal())
@@ -114,8 +110,7 @@ class MatrixParameterCodecTest {
     val result = MatrixParameterCodec("color", explode = false).decode(valueExtractor(), stringDataType())
 
     // then
-    assert(result.isSuccess())
-    assert(result.value == null)
+    assert(result.assertSuccess() ==null)
   }
 
   @Test

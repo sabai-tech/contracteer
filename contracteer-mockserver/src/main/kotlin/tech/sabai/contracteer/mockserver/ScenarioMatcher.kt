@@ -1,7 +1,11 @@
 package tech.sabai.contracteer.mockserver
 
 import org.http4k.core.Request
-import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.Result.Success
+import tech.sabai.contracteer.core.operation.ParameterElement
+import tech.sabai.contracteer.core.operation.RequestSchema
+import tech.sabai.contracteer.core.operation.Scenario
+import tech.sabai.contracteer.core.operation.ScenarioBody
 
 internal object ScenarioMatcher {
 
@@ -34,7 +38,7 @@ internal object ScenarioMatcher {
     val paramSchema = requestSchema.parameters.find { it.element == element } ?: return false
     val valueExtractor = request.valueExtractorFor(element)
     val result = paramSchema.codec.decode(valueExtractor, paramSchema.dataType)
-    return result.isSuccess() && result.value == expectedValue
+    return result is Success && result.value == expectedValue
   }
 
   private fun matchesBody(request: Request, scenarioBody: ScenarioBody?, requestSchema: RequestSchema): Boolean {
@@ -46,6 +50,6 @@ internal object ScenarioMatcher {
     val bodySchema = requestSchema.bodies.find { it.contentType == scenarioBody.contentType } ?: return false
     val deserializeResult = bodySchema.serde.deserialize(request.bodyString(), bodySchema.dataType)
 
-    return deserializeResult.isSuccess() && deserializeResult.value == scenarioBody.value
+    return deserializeResult is Success && deserializeResult.value == scenarioBody.value
   }
 }
