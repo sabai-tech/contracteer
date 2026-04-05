@@ -51,7 +51,7 @@ sealed class Result<out T> {
     is Failure -> this
   }
 
-  /** Transforms every error message with [transform]; returns this result unchanged on success. */
+  /** Transforms every rendered error message (including its property path) with [transform]; returns this result unchanged on success. Property paths are flattened into the message text — subsequent [forProperty] calls will not compose with the original path. */
   fun mapErrors(transform: (String) -> String): Result<T> = when (this) {
     is Success -> this
     is Failure -> Failure(propertyErrors.map { PropertyError("", transform(it.errorMessage())) })
