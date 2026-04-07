@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.verifier
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tech.sabai.contracteer.core.codec.DeepObjectParameterCodec
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.verifier.VerificationCase.*
@@ -112,9 +113,17 @@ object VerificationCaseFactory {
   }
 
   private fun findFirstMutableParameter(parameters: List<ParameterSchema>): Pair<ParameterSchema, String>? =
-    parameters.firstNotNullOfOrNull { param ->
-      TypeMismatchMutation.mutate(param.dataType)?.let { mutated -> param to mutated }
-    }
+    parameters
+      .filter { !it.isDeepObjectWithAllOptionalProperties() }
+      .firstNotNullOfOrNull { param ->
+        TypeMismatchMutation.mutate(param.dataType)?.let { mutated -> param to mutated }
+      }
+
+  private fun ParameterSchema.isDeepObjectWithAllOptionalProperties(): Boolean {
+    if (codec !is DeepObjectParameterCodec) return false
+    val objectType = dataType as? ObjectDataType ?: return false
+    return objectType.requiredProperties.isEmpty() && objectType.allowAdditionalProperties
+  }
 
   private fun createBodyTypeMismatch(
     apiOperation: ApiOperation,

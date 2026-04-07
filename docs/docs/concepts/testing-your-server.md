@@ -127,9 +127,21 @@ Contracteer generates mutations for types where a wrong-type value is unambiguou
 | String formats (`date`, `date-time`, `uuid`, `email`, `byte`) | A string that violates the format |
 
 `string` parameters without a format constraint are not mutated.
+`array` parameters whose items are non-mutable (e.g., array of strings) are also
+skipped, because the mutated value is indistinguishable from a valid single-element
+array.
 
 Contracteer generates one type-mismatch case per parameter category (path, query, header, cookie) and one for the request body.
 It mutates the first eligible parameter in each category.
+
+Type mismatch is also skipped in the following cases:
+
+- **`application/x-www-form-urlencoded` request bodies** with all optional
+  properties and `additionalProperties` not set to `false` -- the form parser
+  accepts any string as valid form data.
+- **`deepObject` query parameters** with all optional properties and
+  `additionalProperties` not set to `false` -- the deep object decoder ignores
+  non-matching keys.
 
 !!! note
     Automatic 400 testing validates that your server rejects structurally invalid input.

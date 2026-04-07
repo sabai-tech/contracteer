@@ -2,6 +2,7 @@ package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.codec.DeepObjectParameterCodec
 import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.serde.JsonSerde
@@ -529,6 +530,25 @@ class VerificationCaseFactoryTypeMismatchTest {
     // Then
     assert(typeMismatchCases.size == 1)
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
+  }
+
+  @Test
+  fun `does not generate parameter type mismatch for deepObject with all optional properties`() {
+    // Given
+    val apiOperation = apiOperationWith400(
+      parameters = listOf(
+        ParameterSchema(element = QueryParam("filter"),
+                        dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+                        isRequired = false,
+                        codec = DeepObjectParameterCodec("filter"))
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.none { it is TypeMismatch })
   }
 
   private fun apiOperationWith400(
