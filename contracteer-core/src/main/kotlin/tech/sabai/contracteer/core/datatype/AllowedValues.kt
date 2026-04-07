@@ -14,6 +14,8 @@ import tech.sabai.contracteer.core.normalize
 class AllowedValues private constructor(values: List<Any?>) {
   private val allowedValues = values.distinct().map { it.normalize() }
 
+  val size: Int get() = allowedValues.size
+
   fun contains(value: Any?) =
     if (allowedValues.contains(value.normalize())) success(value)
     else failure("Invalid value '${value.formatValue()}'. Allowed values are ${allowedValues.formatValue()}.")

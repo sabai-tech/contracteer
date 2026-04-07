@@ -20,6 +20,8 @@ class Range private constructor(
   val exclusiveMaximum: Boolean = false
 ) {
 
+  val isBounded: Boolean = minimum != null && maximum != null
+
   fun contains(value: BigDecimal): Result<BigDecimal> {
     val lowerOk = when (minimum) {
       null -> true
