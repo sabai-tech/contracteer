@@ -62,7 +62,7 @@ class EmailDataTypeTest {
       val emailDataType = emailDataType()
 
       // when
-      val randomEmail = emailDataType.randomValue()
+      val randomEmail = emailDataType.randomValue()!!
 
       // then
       assert(emailDataType.validate(randomEmail).isSuccess())
@@ -101,7 +101,7 @@ class EmailDataTypeTest {
       val emailDataType = emailDataType(enum = enum)
 
       // when
-      val result = emailDataType.randomValue()
+      val result = emailDataType.randomValue()!!
 
       // then
       assert(enum.contains(result))
@@ -167,7 +167,7 @@ class EmailDataTypeTest {
       val stringDataType = stringDataType(minLength = 6, maxLength = 10)
 
       // when
-      val result = stringDataType.randomValue()
+      val result = stringDataType.randomValue()!!
 
       // then
       assert(

@@ -18,7 +18,7 @@ class AllowedValues private constructor(values: List<Any?>) {
     if (allowedValues.contains(value.normalize())) success(value)
     else failure("Invalid value '${value.formatValue()}'. Allowed values are ${allowedValues.formatValue()}.")
 
-  fun randomValue(): Any = allowedValues.filterNotNull().random()
+  fun randomValue(): Any? = allowedValues.filterNotNull().randomOrNull()
 
   companion object {
     @JvmStatic

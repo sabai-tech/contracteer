@@ -103,7 +103,7 @@ class NumberDataTypeTest {
       val numberDataType = numberDataType(enum = enum)
 
       // when
-      val result = numberDataType.randomValue()
+      val result = numberDataType.randomValue()!!
 
       // then
       assert(enum.map { it.normalize() }.contains(result))
@@ -143,7 +143,7 @@ class NumberDataTypeTest {
       val numberDataType = numberDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
-      val result = numberDataType.randomValue()
+      val result = numberDataType.randomValue()!!
 
       // then
       assert(Range.create(10.toBigDecimal(), 20.toBigDecimal()).assertSuccess().contains(result).isSuccess())
@@ -231,7 +231,7 @@ class NumberDataTypeTest {
       )
 
       // when
-      val result = numberDataType.randomValue()
+      val result = numberDataType.randomValue()!!
 
       // then
       assert(result.remainder(0.5.toBigDecimal()).compareTo(BigDecimal.ZERO) == 0)

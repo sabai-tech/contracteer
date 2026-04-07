@@ -31,10 +31,10 @@ sealed class DataType<T>(
    * @return a [Result] containing the validated value on success, or validation errors on failure
    */
   @Suppress("UNCHECKED_CAST")
-  fun validate(value: Any?): Result<T> {
+  fun validate(value: Any?): Result<T?> {
     val normalizedValue = value.normalize()
     return when {
-      normalizedValue == null && isNullable      -> success(null as T)
+      normalizedValue == null && isNullable      -> success(null)
       normalizedValue == null                    -> failure("Value cannot be null as the schema is non-nullable")
       !dataTypeClass.isInstance(normalizedValue) -> failure("Type mismatch, expected type '$openApiType'")
       allowedValues != null                      -> allowedValues.contains(normalizedValue).map { normalizedValue as T }
@@ -44,7 +44,9 @@ sealed class DataType<T>(
 
   /** Generates a random value conforming to this data type's constraints. */
   @Suppress("UNCHECKED_CAST")
-  fun randomValue(): T = allowedValues?.randomValue() as T ?: doRandomValue()
+  fun randomValue(): T? =
+    if (allowedValues != null) allowedValues.randomValue() as T?
+    else doRandomValue()
 
   /** Returns `true` if this type has a fully defined structure (object, allOf, oneOf, anyOf). */
   abstract fun isFullyStructured(): Boolean
@@ -56,5 +58,5 @@ sealed class DataType<T>(
   open fun asResponseType(): DataType<T> = this
 
   protected abstract fun doValidate(value: T): Result<T>
-  protected abstract fun doRandomValue(): T
+  protected abstract fun doRandomValue(): T?
 }

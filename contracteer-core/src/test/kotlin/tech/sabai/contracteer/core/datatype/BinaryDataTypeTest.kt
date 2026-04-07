@@ -25,7 +25,7 @@ class BinaryDataTypeTest {
     val binaryDataType = binaryDataType(minLength = 10, maxLength = 50)
 
     // when
-    val result = binaryDataType.randomValue()
+    val result = binaryDataType.randomValue()!!
 
     // then — all characters should be printable ASCII (32-126)
     assert(result.all { it.code in 32..126 })
@@ -110,7 +110,7 @@ class BinaryDataTypeTest {
       val binaryDataType = binaryDataType(enum = enum)
 
       // when
-      val result = binaryDataType.randomValue()
+      val result = binaryDataType.randomValue()!!
 
       // then
       assert(enum.contains(result))
@@ -159,7 +159,7 @@ class BinaryDataTypeTest {
       val binaryDataType = binaryDataType(minLength = 1, maxLength = 5)
 
       // when
-      val result = binaryDataType.randomValue()
+      val result = binaryDataType.randomValue()!!
 
       // then
       assert(

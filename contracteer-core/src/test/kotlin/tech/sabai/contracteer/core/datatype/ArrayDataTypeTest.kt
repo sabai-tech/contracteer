@@ -114,7 +114,7 @@ class ArrayDataTypeTest {
     val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = enum)
 
     // when
-    val result = arrayDataType.randomValue()
+    val result = arrayDataType.randomValue()!!
 
     // then
     assert(enum.map { it.normalize() }.contains(result))
@@ -162,7 +162,7 @@ class ArrayDataTypeTest {
       val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 3)
 
       // when
-      val result = arrayDataType.randomValue()
+      val result = arrayDataType.randomValue()!!
 
       // then
       assert(result.size >= 3)
@@ -211,7 +211,7 @@ class ArrayDataTypeTest {
       val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 3)
 
       // when
-      val values = (1..20).map { arrayDataType.randomValue() }
+      val values = (1..20).map { arrayDataType.randomValue()!! }
 
       // then
       assert(values.all { it.size <= 3 })
@@ -236,7 +236,7 @@ class ArrayDataTypeTest {
       val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 2, maxItems = 4)
 
       // when
-      val values = (1..20).map { arrayDataType.randomValue() }
+      val values = (1..20).map { arrayDataType.randomValue()!! }
 
       // then
       assert(values.all { it.size in 2..4 })

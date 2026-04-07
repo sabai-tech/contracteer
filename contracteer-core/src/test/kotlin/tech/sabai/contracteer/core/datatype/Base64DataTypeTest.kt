@@ -61,7 +61,7 @@ class Base64DataTypeTest {
     val base64DataType = base64DataType()
 
     // when
-    val randomBase64 = base64DataType.randomValue()
+    val randomBase64 = base64DataType.randomValue()!!
     println(randomBase64)
 
     // then
@@ -115,7 +115,7 @@ class Base64DataTypeTest {
       val base64DataType = base64DataType(enum = enum)
 
       // when
-      val result = base64DataType.randomValue()
+      val result = base64DataType.randomValue()!!
 
       // then
       assert(enum.contains(result))
@@ -195,7 +195,7 @@ class Base64DataTypeTest {
       val base64DataType = base64DataType(minLength = 12, maxLength = 16)
 
       // when
-      val result = base64DataType.randomValue()
+      val result = base64DataType.randomValue()!!
 
       // then
       assert(

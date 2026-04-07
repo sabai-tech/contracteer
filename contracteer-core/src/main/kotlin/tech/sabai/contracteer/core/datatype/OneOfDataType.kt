@@ -38,13 +38,13 @@ class OneOfDataType private constructor(name: String,
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
 
   @Suppress("UNCHECKED_CAST")
-  override fun doRandomValue(): Any {
+  override fun doRandomValue(): Any? {
     val chosenType = subTypes.random()
     return if (discriminator == null) {
       chosenType.randomValue()
     } else {
-      (chosenType as DataType<Map<String, Any?>>).randomValue() +
-      (discriminator.propertyName to (discriminator.getMappingName(chosenType.name)))
+      (chosenType as DataType<Map<String, Any?>>).randomValue()?.plus(
+        discriminator.propertyName to discriminator.getMappingName(chosenType.name))
     }
   }
 
@@ -54,7 +54,7 @@ class OneOfDataType private constructor(name: String,
       value[discriminator!!.propertyName] == null  -> failure("discriminator property '${discriminator.propertyName}' is required")
       value[discriminator.propertyName] !is String -> failure("discriminator property '${discriminator.propertyName}' must be of type 'string'")
       else                                         ->
-        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it.validate(value) }
+        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it.validate(value) }.map { value }
     }
 
   private fun dataTypeFrom(discriminatorValue: String): Result<DataType<out Any>> =
@@ -74,7 +74,7 @@ class OneOfDataType private constructor(name: String,
     }
   }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> {
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Map<String, Any?>> {
     val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
     val detailedErrors = dataTypeErrors.map { (dataType, result) ->
       "${lineSeparator()}  - Schema '${dataType.name}':" + result.errors().joinToString(
@@ -85,7 +85,7 @@ class OneOfDataType private constructor(name: String,
     return failure("No matching schema. Value did not match candidate schemas ($schemaNames):${lineSeparator()}$detailedErrors")
   }
 
-  private fun buildMultipleMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Map<String, Any?>> =
+  private fun buildMultipleMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Map<String, Any?>> =
     failure(
       "Ambiguous match for 'oneOf'. The provided value matches multiple schemas (${
         dataTypeErrors

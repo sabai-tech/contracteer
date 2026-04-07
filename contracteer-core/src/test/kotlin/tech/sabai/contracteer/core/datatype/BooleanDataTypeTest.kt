@@ -83,7 +83,7 @@ class BooleanDataTypeTest {
     val booleanDataType = booleanDataType(enum = enum)
 
     // when
-    val result = booleanDataType.randomValue()
+    val result = booleanDataType.randomValue()!!
 
     // then
     assert(result)

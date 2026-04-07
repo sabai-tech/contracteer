@@ -74,7 +74,7 @@ class AllOfDataType private constructor(name: String,
   }
 
   @Suppress("UNCHECKED_CAST")
-  override fun doRandomValue(): Any {
+  override fun doRandomValue(): Any? {
     val values = subTypes.map { it.randomValue() }
     if (values.any { it !is Map<*, *> }) return values.first()
     val randomValue = (values as List<Map<String, Any?>>).reduce { acc, properties -> acc + properties }
@@ -92,7 +92,7 @@ class AllOfDataType private constructor(name: String,
       else                                                                                  -> success(value)
     }
 
-  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any>>): Result<Any> {
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Any> {
     val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
     val detailedErrors = dataTypeErrors.map { (dataType, result) ->
       "Schema '${dataType.name}':" + result.errors().joinToString(

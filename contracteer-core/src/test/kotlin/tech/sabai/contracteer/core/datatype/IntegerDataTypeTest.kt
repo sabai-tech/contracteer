@@ -115,7 +115,7 @@ class IntegerDataTypeTest {
       val integerDataType = integerDataType(enum = enum)
 
       // when
-      val result = integerDataType.randomValue()
+      val result = integerDataType.randomValue()!!
 
       // then
       assert(enum.map { it.normalize() }.contains(result))
@@ -164,7 +164,7 @@ class IntegerDataTypeTest {
       val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
-      val result = integerDataType.randomValue()
+      val result = integerDataType.randomValue()!!
 
       // then
       assert(Range.create(10.toBigDecimal(), 20.toBigDecimal()).assertSuccess().contains(result).isSuccess())
@@ -252,7 +252,7 @@ class IntegerDataTypeTest {
       )
 
       // when
-      val result = integerDataType.randomValue()
+      val result = integerDataType.randomValue()!!
 
       // then
       assert(result.remainder(7.toBigDecimal()).compareTo(BigDecimal.ZERO) == 0)

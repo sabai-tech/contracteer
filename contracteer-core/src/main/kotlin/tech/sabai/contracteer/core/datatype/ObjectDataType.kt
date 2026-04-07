@@ -80,7 +80,7 @@ class ObjectDataType private constructor(name: String,
                         allowedValues = allowedValues)
   }
 
-  private fun validateProperties(value: Map<String, Any?>): Result<Map<String, Any>> =
+  private fun validateProperties(value: Map<String, Any?>): Result<Map<String, Any?>> =
     properties.accumulate { (property, dataType) ->
       when {
         !value.containsKey(property) && !requiredProperties.contains(property) -> success(value)

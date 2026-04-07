@@ -287,8 +287,8 @@ class ObjectDataTypeTest {
     )
 
     // when
-    val requestValue = dataType.asRequestType().randomValue()
-    val responseValue = dataType.asResponseType().randomValue()
+    val requestValue = dataType.asRequestType().randomValue()!!
+    val responseValue = dataType.asResponseType().randomValue()!!
 
     // then
     assert(!requestValue.containsKey("id") && requestValue.containsKey("name") && requestValue.containsKey("password"))
@@ -418,7 +418,7 @@ class ObjectDataTypeTest {
       val objectDataType = objectDataType(properties = mapOf("prop" to stringDataType()), enum = enum)
 
       // when
-      val result = objectDataType.randomValue()
+      val result = objectDataType.randomValue()!!
 
       // then
       assert(enum.contains(result))
@@ -564,7 +564,7 @@ class ObjectDataTypeTest {
       )
 
       // when
-      val result = objectDataType.randomValue()
+      val result = objectDataType.randomValue()!!
 
       // then
       assert(result.size <= 2)

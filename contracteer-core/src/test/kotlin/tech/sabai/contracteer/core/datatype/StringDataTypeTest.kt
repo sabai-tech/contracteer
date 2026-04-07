@@ -102,7 +102,7 @@ class StringDataTypeTest {
       val stringDataType = stringDataType(enum = enum)
 
       // when
-      val result = stringDataType.randomValue()
+      val result = stringDataType.randomValue()!!
 
       // then
       assert(enum.contains(result))
@@ -142,7 +142,7 @@ class StringDataTypeTest {
       val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
 
       // when
-      val value = dataType.randomValue()
+      val value = dataType.randomValue()!!
 
       // then
       assert(Regex("^[A-Z]{2}-\\d{4}$").matches(value))
@@ -166,7 +166,7 @@ class StringDataTypeTest {
       val dataType = stringDataType(pattern = "^\\d{3}$", minLength = 10)
 
       // when
-      val value = dataType.randomValue()
+      val value = dataType.randomValue()!!
 
       // then — generated from pattern, not length
       assert(Regex("^\\d{3}$").matches(value))
@@ -204,7 +204,7 @@ class StringDataTypeTest {
       val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$", enum = enum)
 
       // when
-      val value = dataType.randomValue()
+      val value = dataType.randomValue()!!
 
       // then
       assert(enum.contains(value))
@@ -253,7 +253,7 @@ class StringDataTypeTest {
       val stringDataType = stringDataType(minLength = 1, maxLength = 5)
 
       // when
-      val result = stringDataType.randomValue()
+      val result = stringDataType.randomValue()!!
 
       // then
       assert(
@@ -267,7 +267,7 @@ class StringDataTypeTest {
       val stringDataType = stringDataType(maxLength = 1)
 
       // when
-      val result = stringDataType.randomValue()
+      val result = stringDataType.randomValue()!!
 
       // then
       assert(result.length <= 1)
@@ -279,7 +279,7 @@ class StringDataTypeTest {
       val stringDataType = stringDataType(minLength = 15, maxLength = 20)
 
       // when
-      val result = stringDataType.randomValue()
+      val result = stringDataType.randomValue()!!
 
       // then
       assert(result.length in 15..20)

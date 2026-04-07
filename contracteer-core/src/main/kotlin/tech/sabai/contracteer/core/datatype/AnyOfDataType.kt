@@ -41,13 +41,13 @@ class AnyOfDataType private constructor(name: String,
       validateWithoutDiscriminator(value)
 
   @Suppress("UNCHECKED_CAST")
-  override fun doRandomValue(): Any {
+  override fun doRandomValue(): Any? {
     val chosenType = subTypes.random()
     return if (discriminator == null) {
       chosenType.randomValue()
     } else {
-      (chosenType as DataType<Map<String, Any?>>).randomValue() +
-      (discriminator.propertyName to (discriminator.getMappingName(chosenType.name)))
+      (chosenType as DataType<Map<String, Any?>>).randomValue()?.plus(
+        discriminator.propertyName to discriminator.getMappingName(chosenType.name))
     }
   }
 
@@ -57,7 +57,7 @@ class AnyOfDataType private constructor(name: String,
       value[discriminator!!.propertyName] == null  -> failure("discriminator property '${discriminator.propertyName}' is required")
       value[discriminator.propertyName] !is String -> failure("discriminator property '${discriminator.propertyName}' must be of type 'string'")
       else                                         ->
-        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it.validate(value) }
+        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it.validate(value) }.map { value }
     }
 
   private fun dataTypeFrom(discriminatorValue: String): Result<DataType<out Any>> =
