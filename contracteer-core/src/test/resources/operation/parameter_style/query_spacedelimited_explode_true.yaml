@@ -1,0 +1,19 @@
+openapi: 3.0.0
+info:
+  title: SpaceDelimited Explode True Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: query
+          name: status
+          style: spaceDelimited
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Success

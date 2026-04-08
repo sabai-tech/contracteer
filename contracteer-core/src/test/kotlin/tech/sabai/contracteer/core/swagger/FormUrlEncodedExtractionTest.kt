@@ -42,6 +42,18 @@ class FormUrlEncodedExtractionTest {
     assert(result.errors().first().contains("requires object schema"))
   }
 
+  @Test
+  fun `rejects form-urlencoded with nested object and array-of-objects properties`() {
+    // when
+    val result =
+      OpenApiLoader.loadOperations("src/test/resources/operation/form_urlencoded/form_urlencoded_nested_types.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("address") })
+    assert(result.errors().any { it.contains("tags") })
+  }
+
   // --- Helpers ---
 
   private fun loadOperations() =

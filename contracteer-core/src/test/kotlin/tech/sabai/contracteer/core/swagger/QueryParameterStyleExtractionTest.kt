@@ -84,7 +84,7 @@ class QueryParameterStyleExtractionTest {
   @Test
   fun `rejects query parameter with deepObject and explode false`() {
     // when
-    val result = loadInvalidConstraintsResult()
+    val result = loadResult("query_deepobject_explode_false.yaml")
 
     // then
     assert(result.isFailure())
@@ -94,7 +94,7 @@ class QueryParameterStyleExtractionTest {
   @Test
   fun `rejects query parameter array with deepObject`() {
     // when
-    val result = loadInvalidConstraintsResult()
+    val result = loadResult("query_deepobject_array_type.yaml")
 
     // then
     assert(result.isFailure())
@@ -102,9 +102,29 @@ class QueryParameterStyleExtractionTest {
   }
 
   @Test
+  fun `rejects deepObject with nested object property`() {
+    // when
+    val result = loadResult("query_deepobject_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects deepObject with array property`() {
+    // when
+    val result = loadResult("query_deepobject_array_property.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
   fun `rejects query parameter object with spaceDelimited`() {
     // when
-    val result = loadInvalidConstraintsResult()
+    val result = loadResult("query_spacedelimited_object.yaml")
 
     // then
     assert(result.isFailure())
@@ -114,7 +134,7 @@ class QueryParameterStyleExtractionTest {
   @Test
   fun `rejects query parameter object with pipeDelimited`() {
     // when
-    val result = loadInvalidConstraintsResult()
+    val result = loadResult("query_pipedelimited_object.yaml")
 
     // then
     assert(result.isFailure())
@@ -124,7 +144,7 @@ class QueryParameterStyleExtractionTest {
   @Test
   fun `rejects query parameter with spaceDelimited and explode true`() {
     // when
-    val result = loadInvalidConstraintsResult()
+    val result = loadResult("query_spacedelimited_explode_true.yaml")
 
     // then
     assert(result.isFailure())
@@ -134,7 +154,7 @@ class QueryParameterStyleExtractionTest {
   @Test
   fun `rejects query parameter with pipeDelimited and explode true`() {
     // when
-    val result = loadInvalidConstraintsResult()
+    val result = loadResult("query_pipedelimited_explode_true.yaml")
 
     // then
     assert(result.isFailure())
@@ -145,7 +165,7 @@ class QueryParameterStyleExtractionTest {
   @ValueSource(strings = ["simple", "label", "matrix"])
   fun `parameterized test for all unsupported query parameter styles`(style: String) {
     // when
-    val result = loadInvalidStyleOperationsResult()
+    val result = OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/query_invalid_styles.yaml")
 
     // then
     assert(result.isFailure())
@@ -161,9 +181,7 @@ class QueryParameterStyleExtractionTest {
   private fun loadOperations() =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/query_parameters.yaml").assertSuccess()
 
-  private fun loadInvalidConstraintsResult() =
-    OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/query_invalid_constraints.yaml")
+  private fun loadResult(yamlFile: String) =
+    OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/$yamlFile")
 
-  private fun loadInvalidStyleOperationsResult() =
-    OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/query_invalid_styles.yaml")
 }

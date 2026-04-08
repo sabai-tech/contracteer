@@ -10,6 +10,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
+import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.codec.*
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.*
@@ -175,6 +176,9 @@ internal class SchemaExtractor(
     }
 
   private fun buildFormUrlEncodedSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
+    val nestedTypeErrors = validateFormUrlEncodedProperties(dataType)
+    if (nestedTypeErrors.isFailure()) return nestedTypeErrors.retypeError()
+
     val encodingMap = mediaType.encoding ?: emptyMap()
     return dataType.properties
       .map { (name, type) ->
@@ -186,6 +190,20 @@ internal class SchemaExtractor(
       .combineResults()
       .map<Serde> { FormUrlEncodedSerde(it.toMap()) }
   }
+
+  private fun validateFormUrlEncodedProperties(dataType: ObjectDataType): Result<Unit> =
+    dataType.properties.entries.accumulate { (name, type) ->
+      when (type) {
+        is ObjectDataType                                      ->
+          failure(name, "Form-urlencoded does not support nested object properties (undefined behavior in the OpenAPI specification)")
+
+        is ArrayDataType if type.itemDataType.isNonPrimitive() ->
+          failure(name, "Form-urlencoded does not support arrays of complex types (undefined behavior in the OpenAPI specification)")
+
+        else                                                   ->
+          success()
+      }
+    }
 
   private fun buildMultipartSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
     val encodingMap = mediaType.encoding ?: emptyMap()
@@ -296,9 +314,10 @@ internal class SchemaExtractor(
                                        paramName: String): Result<ParameterCodec>? =
     when (style) {
       "deepobject"     -> when {
-        dataType !is ObjectDataType -> failure(paramName, "Style 'deepObject' requires object type")
-        !explode                    -> failure(paramName, "Style 'deepObject' requires explode=true")
-        else                        -> null
+        dataType !is ObjectDataType          -> failure(paramName, "Style 'deepObject' requires object type")
+        !explode                             -> failure(paramName, "Style 'deepObject' requires explode=true")
+        dataType.hasNonPrimitiveProperties() -> failure(paramName, "Style 'deepObject' does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)")
+        else                                 -> null
       }
       "spacedelimited" -> when {
         dataType !is ArrayDataType -> failure(paramName, "Style 'spaceDelimited' requires array type")
@@ -312,6 +331,12 @@ internal class SchemaExtractor(
       }
       else             -> null
     }
+
+  private fun ObjectDataType.hasNonPrimitiveProperties(): Boolean =
+    properties.values.any { it.isNonPrimitive() }
+
+  private fun DataType<out Any>.isNonPrimitive(): Boolean =
+    isFullyStructured() || this is ArrayDataType
 
   private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
 

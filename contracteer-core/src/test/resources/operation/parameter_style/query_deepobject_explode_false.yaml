@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: DeepObject Explode False Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          style: deepObject
+          explode: false
+          schema:
+            type: object
+            properties:
+              color:
+                type: string
+      responses:
+        '200':
+          description: Success
