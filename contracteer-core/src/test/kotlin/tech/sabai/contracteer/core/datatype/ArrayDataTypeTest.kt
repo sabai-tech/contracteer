@@ -185,6 +185,18 @@ class ArrayDataTypeTest {
     }
 
     @Test
+    fun `generates empty array when maxItems is 0`() {
+      // given
+      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 0)
+
+      // when
+      val result = arrayDataType.randomValue()!!
+
+      // then
+      assert(result.isEmpty())
+    }
+
+    @Test
     fun `validation fails when array has more items than maxItems`() {
       // given
       val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 2)
