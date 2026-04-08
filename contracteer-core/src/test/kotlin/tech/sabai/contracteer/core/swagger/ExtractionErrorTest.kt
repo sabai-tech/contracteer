@@ -62,4 +62,17 @@ class ExtractionErrorTest {
     val operations = result.assertSuccess()
     assert(operations.isEmpty())
   }
+
+  @Test
+  fun `filters scenarios with XML content types`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/xml_scenarios.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    val scenarios = operations.first().scenarios
+    assert(operations.size == 1)
+    assert(scenarios.all { it.response.body?.contentType?.isXml() != true })
+    assert(scenarios.isNotEmpty())
+  }
 }

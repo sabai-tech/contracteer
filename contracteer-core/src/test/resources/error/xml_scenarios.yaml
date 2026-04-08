@@ -1,0 +1,47 @@
+openapi: 3.0.0
+info:
+  title: XML Scenario Filter Test
+  version: '1.0'
+paths:
+  /products:
+    get:
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          examples:
+            json_scenario:
+              value: 1
+            xml_scenario:
+              value: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+              examples:
+                json_scenario:
+                  value:
+                    id: 1
+                    name: "Widget"
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+              examples:
+                xml_scenario:
+                  value:
+                    id: 2
+                    name: "Gadget"
