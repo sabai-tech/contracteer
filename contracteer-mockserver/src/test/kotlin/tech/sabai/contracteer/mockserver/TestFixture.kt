@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.OneOfDataType
 import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.serde.JsonSerde
@@ -35,6 +36,9 @@ object TestFixture {
                            additionalPropertiesDataType = additionalPropertiesDataType,
                            isNullable = isNullable,
                            enum = enum) as Success).value
+
+  fun oneOfDataType(subTypes: List<DataType<out Any>>) =
+    (OneOfDataType.create("oneOf", subTypes) as Success).value
 
   fun parameterSchema(element: ParameterElement, dataType: DataType<out Any>, isRequired: Boolean = true) =
     ParameterSchema(element, dataType, isRequired, SimpleParameterCodec(element.name, false))
