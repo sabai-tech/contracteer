@@ -112,12 +112,13 @@ internal class SchemaExtractor(
       body.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
-          dataTypeConverter
-            .convertToDataType(mediaType.schema, "")
-            .flatMap { dataType ->
+          convertDataType(mediaType).flatMap { dataType ->
+            if (dataType is AnyDataType)
+              success(BodySchema(contentType, dataType, body.safeRequired(), PlainTextSerde))
+            else
               buildSerde(contentType, mediaType, dataType)
                 .map { BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it) }
-            }
+          }
         }.combineResults()
 
   private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ParameterSchema>> =
@@ -135,16 +136,21 @@ internal class SchemaExtractor(
       response.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
-          dataTypeConverter
-            .convertToDataType(mediaType.schema, "")
-            .flatMap { dataType ->
+          convertDataType(mediaType).flatMap { dataType ->
+            if (dataType is AnyDataType)
+              success(BodySchema(contentType, dataType, false, PlainTextSerde))
+            else
               buildSerde(contentType, mediaType, dataType)
                 .map {
                   BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), it)
                 }
-            }
+          }
         }.combineResults()
         .forProperty("body")
+
+  private fun convertDataType(mediaType: MediaType): Result<DataType<out Any>> =
+    if (mediaType.schema == null) success(AnyDataType)
+    else dataTypeConverter.convertToDataType(mediaType.schema, "")
 
   private fun buildSerde(contentType: ContentType,
                          mediaType: MediaType,
@@ -195,10 +201,12 @@ internal class SchemaExtractor(
     dataType.properties.entries.accumulate { (name, type) ->
       when (type) {
         is ObjectDataType                                      ->
-          failure(name, "Form-urlencoded does not support nested object properties (undefined behavior in the OpenAPI specification)")
+          failure(name,
+                  "Form-urlencoded does not support nested object properties (undefined behavior in the OpenAPI specification)")
 
         is ArrayDataType if type.itemDataType.isNonPrimitive() ->
-          failure(name, "Form-urlencoded does not support arrays of complex types (undefined behavior in the OpenAPI specification)")
+          failure(name,
+                  "Form-urlencoded does not support arrays of complex types (undefined behavior in the OpenAPI specification)")
 
         else                                                   ->
           success()
@@ -237,12 +245,17 @@ internal class SchemaExtractor(
   private fun createContentParameterSchema(parameter: Parameter, element: ParameterElement): Result<ParameterSchema> {
     val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
     val contentType = ContentType(mediaTypeString)
-    return dataTypeConverter
-      .convertToDataType(mediaTypeObj.schema, "")
-      .flatMap { dataType ->
+    return convertDataType(mediaTypeObj).flatMap { dataType ->
+      if (dataType is AnyDataType)
+        success(ParameterSchema(element,
+                                dataType,
+                                parameter.safeIsRequired(),
+                                ContentCodec(parameter.name, PlainTextSerde))
+        )
+      else
         buildSerde(contentType, mediaTypeObj, dataType)
           .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it)) }
-      }
+    }
   }
 
   private fun createStyleParameterSchema(parameter: Parameter, element: ParameterElement): Result<ParameterSchema> =

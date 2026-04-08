@@ -14,14 +14,16 @@ Unsupported content types cause the operation to be skipped with a warning.
 Unsupported schema keywords are ignored.
 Your specification still loads.
 
-| Feature                           | Impact                                                                                    |
-|-----------------------------------|-------------------------------------------------------------------------------------------|
-| `application/xml`                 | Operations with XML-only content types are skipped with a warning.                        |
-| `not` (schema negation)           | The keyword is ignored. Values are validated and generated without it.                    |
-| `allowEmptyValue` (parameters)    | The keyword is ignored. Deprecated by the OAS 3.0 specification itself.                   |
-| `externalValue` (Example Objects) | Only inline `value` is read. External references are not fetched.                         |
-| Pattern generation (regex)        | Some regex features (lookaheads, lookbehinds) do not generate correctly.                  |
-| Unknown integer/number formats    | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints. |
+| Feature                                     | Impact                                                                                                                                                               |
+|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application/xml`                           | Operations with XML-only content types are skipped with a warning.                                                                                                   |
+| Missing schema on body or parameter content | Operations with request/response bodies or parameter `content` entries that have no schema are skipped with a warning.                                               |
+| Empty schema (`schema: {}`)                 | Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing. |
+| `not` (schema negation)                     | The keyword is ignored. Values are validated and generated without it.                                                                                               |
+| `allowEmptyValue` (parameters)              | The keyword is ignored. Deprecated by the OAS 3.0 specification itself.                                                                                              |
+| `externalValue` (Example Objects)           | Only inline `value` is read. External references are not fetched.                                                                                                    |
+| Pattern generation (regex)                  | Some regex features (lookaheads, lookbehinds) do not generate correctly.                                                                                             |
+| Unknown integer/number formats              | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                            |
 
 If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the specification.
 
@@ -267,27 +269,27 @@ Contracteer does not process them.
 
 ### Parameters
 
-| Feature                         | Notes                                                                                               |
-|---------------------------------|-----------------------------------------------------------------------------------------------------|
-| `in: path`                      | Primitive, array, and object types. Styles: `simple`, `label`, `matrix`                             |
-| `in: query`                     | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject` |
-| `in: header`                    | Primitive, array, and object types. Style: `simple`                                                 |
-| `in: cookie`                    | Primitive, array, and object types. Style: `form`                                                   |
-| `style` / `explode`             | All OAS 3.0 style/explode combinations with correct defaults per location                           |
-| `content` (instead of `schema`) | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                    |
-| `allowReserved`                 | Query parameters and `application/x-www-form-urlencoded` encoding properties                        |
+| Feature                         | Notes                                                                                                                                                                   |
+|---------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `in: path`                      | Primitive, array, and object types. Styles: `simple`, `label`, `matrix`                                                                                                 |
+| `in: query`                     | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject`. `deepObject` only supports flat objects with primitive properties. |
+| `in: header`                    | Primitive, array, and object types. Style: `simple`                                                                                                                     |
+| `in: cookie`                    | Primitive, array, and object types. Style: `form`                                                                                                                       |
+| `style` / `explode`             | All OAS 3.0 style/explode combinations with correct defaults per location                                                                                               |
+| `content` (instead of `schema`) | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                                                                                        |
+| `allowReserved`                 | Query parameters and `application/x-www-form-urlencoded` encoding properties                                                                                            |
 
 ### Request and response bodies
 
-| Feature                                | Notes                                                                        |
-|----------------------------------------|------------------------------------------------------------------------------|
-| `application/json`                     | Supported                                                                    |
-| Plain text content types               | Primitive schemas only. Object, array, and composition schemas are rejected. |
-| `multipart/*` (form-data, mixed, etc.) | Per-part content type via the `encoding` object                              |
-| `application/x-www-form-urlencoded`    | Per-property encoding via the `encoding` object                              |
-| Multiple content types                 | Produces one verification per content type combination                       |
-| `required` (request body)              | Supported                                                                    |
-| Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes                  |
+| Feature                                | Notes                                                                                                                                                 |
+|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application/json`                     | Supported                                                                                                                                             |
+| Plain text content types               | Primitive schemas only. Object, array, and composition schemas are rejected.                                                                          |
+| `multipart/*` (form-data, mixed, etc.) | Per-part content type via the `encoding` object                                                                                                       |
+| `application/x-www-form-urlencoded`    | Per-property encoding via the `encoding` object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected. |
+| Multiple content types                 | Produces one verification per content type combination                                                                                                |
+| `required` (request body)              | Supported                                                                                                                                             |
+| Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes                                                                                           |
 
 ### Examples
 

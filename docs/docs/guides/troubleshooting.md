@@ -198,6 +198,16 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
   Restructure the schema to use a single composition keyword.
   See [Multiple composition keywords](../concepts/openapi-coverage.md#multiple-composition-keywords-on-the-same-schema) for the recommended pattern.
 
+### Extraction fails with nested types in deepObject or form-urlencoded
+
+**Symptom:** Loading the specification fails with "does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)."
+
+**Cause:** A `deepObject` query parameter or a `form-urlencoded` request body has properties with object or array types.
+The OpenAPI specification explicitly states that the behavior of `deepObject` for nested objects and arrays is undefined.
+Similarly, `form` style serialization is only defined for primitive property values.
+
+**Fix:** Restructure the schema to use only primitive properties, or switch to a JSON-encoded parameter using the `content` keyword instead of `style`/`explode`.
+
 ### Extraction fails with plain text content type and structured schema
 
 **Symptom:** Loading the specification fails with "Content type text/plain supports only primitive schemas."
@@ -264,10 +274,13 @@ Contracteer produces no verification cases for them.
 Operations are skipped when they use:
 
 - `application/xml` content types.
+- Request or response bodies declared without a schema (e.g., `application/json: {}`).
+- Parameters using the `content` keyword without a schema.
 
 Contracteer logs a warning for each skipped operation.
 
-**Fix:** Check the [OpenAPI 3.0 Coverage](../concepts/openapi-coverage.md) page for the full list of supported features.
+**Fix:** Add a schema to the content type declaration, or remove the content type if no schema is needed.
+Check the [OpenAPI 3.0 Coverage](../concepts/openapi-coverage.md) page for the full list of supported features.
 
 ### Confusing `example` and `examples`
 

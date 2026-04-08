@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: Schemaless Parameter Content Test
+  version: '1.0'
+paths:
+  /null-schema:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          content:
+            application/json: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+
+  /empty-schema:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          content:
+            application/json:
+              schema: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer

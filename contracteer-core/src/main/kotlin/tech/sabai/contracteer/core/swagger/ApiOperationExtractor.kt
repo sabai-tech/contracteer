@@ -50,9 +50,21 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
           defaultResponse).retypeError()
 
     return scenarioExtractor
-      .extractScenarios(path,method,operation,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value)
+      .extractScenarios(path,
+                        method,
+                        operation,
+                        requestSchema.value,
+                        responseSchemas.value,
+                        classResponses.value,
+                        defaultResponse.value)
       .map {
-        ApiOperation(path,method,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value,it)
+        ApiOperation(path,
+                     method,
+                     requestSchema.value,
+                     responseSchemas.value,
+                     classResponses.value,
+                     defaultResponse.value,
+                     it)
       }
   }
 
