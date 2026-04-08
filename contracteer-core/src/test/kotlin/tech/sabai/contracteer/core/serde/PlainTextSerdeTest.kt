@@ -1,10 +1,12 @@
 package tech.sabai.contracteer.core.serde
 
+import tech.sabai.contracteer.core.TestFixture.anyOfDataType
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.booleanDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
 import tech.sabai.contracteer.core.TestFixture.numberDataType
 import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.oneOfDataType
 import tech.sabai.contracteer.core.TestFixture.stringDataType
 import kotlin.test.Test
 
@@ -138,5 +140,53 @@ class PlainTextSerdeTest {
 
     // then
     assert(result == "true")
+  }
+
+  @Test
+  fun `successfully deserializes oneOf with primitive subtypes`() {
+    // when
+    val result = PlainTextSerde.deserialize("123", oneOfDataType(subTypes = listOf(stringDataType(), integerDataType())))
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `successfully deserializes anyOf with primitive subtypes`() {
+    // when
+    val result = PlainTextSerde.deserialize("true", anyOfDataType(subTypes = listOf(stringDataType(), booleanDataType())))
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `successfully deserializes composite with mixed object and primitive subtypes`() {
+    // when
+    val result = PlainTextSerde.deserialize(
+      "hello",
+      oneOfDataType(subTypes = listOf(
+        objectDataType(properties = mapOf("a" to stringDataType())),
+        stringDataType()
+      ))
+    )
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `fails to deserialize composite with only object subtypes`() {
+    // when
+    val result = PlainTextSerde.deserialize(
+      "test",
+      oneOfDataType(subTypes = listOf(
+        objectDataType(properties = mapOf("a" to stringDataType())),
+        objectDataType(properties = mapOf("b" to integerDataType()))
+      ))
+    )
+
+    // then
+    assert(result.isFailure())
   }
 }
