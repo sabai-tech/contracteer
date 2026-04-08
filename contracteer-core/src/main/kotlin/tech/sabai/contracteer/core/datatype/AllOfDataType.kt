@@ -57,14 +57,14 @@ class AllOfDataType private constructor(name: String,
   private fun withoutSiblingProperties(value: Any, subType: DataType<out Any>): Any {
     if (value !is Map<*, *>) return value
     val siblingProperties = subTypes
-      .filter { it !== subType }
-      .flatMap { it.propertyNames() }
-      .toSet()
+                              .filter { it !== subType }
+                              .flatMap { it.propertyNames() }
+                              .toSet() - subType.propertyNames()
 
-    return if (siblingProperties.isEmpty())
-      value
-    else
-      (value as Map<String, Any?>).filterKeys { it !in siblingProperties }
+    return when {
+      siblingProperties.isEmpty() -> value
+      else                        -> (value as Map<String, Any?>).filterKeys { it !in siblingProperties }
+    }
   }
 
   private fun DataType<*>.propertyNames(): Set<String> = when (this) {

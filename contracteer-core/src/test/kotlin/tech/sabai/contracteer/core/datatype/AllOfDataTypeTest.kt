@@ -91,6 +91,26 @@ class AllOfDataTypeTest {
     }
 
     @Test
+    fun `validation succeeds when sub-types share overlapping properties`() {
+      // given 
+      val allOf = allOfDataType(subTypes = listOf(
+        objectDataType(name = "Base",
+                       properties = mapOf("name" to stringDataType(), "age" to integerDataType()),
+                       requiredProperties = setOf("name", "age"),
+                       allowAdditionalProperties = false),
+        objectDataType(name = "Extension",
+                       properties = mapOf("name" to stringDataType(), "hunts" to booleanDataType()),
+                       requiredProperties = setOf("name", "hunts"),
+                       allowAdditionalProperties = false)))
+
+      // when
+      val result = allOf.validate(mapOf("name" to "kitty", "age" to 3, "hunts" to true))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
     fun `validation fails when value contains properties not declared in any nested sub-type`() {
       // when
       val result = cat.validate(mapOf("name" to "kitty", "hunts" to true, "indoor" to true, "color" to "black"))
