@@ -28,7 +28,6 @@ object OpenApiLoader {
   fun loadOperations(path: String): Result<List<ApiOperation>> =
     path.loadOpenApiDocument()
       .flatMap { parse(it!!) }
-      .flatMap { checkFor2xxResponses(it!!) }
       .flatMap {
         val openAPI = it!!
         val sharedComponents = SharedComponents(
@@ -117,14 +116,4 @@ object OpenApiLoader {
     }
   }
 
-  private fun checkFor2xxResponses(openAPI: OpenAPI): Result<OpenAPI> =
-    openAPI.paths
-      .flatMap { (path, item) ->
-        item.readOperationsMap()
-          .filter { (_, operation) -> operation.responses.none { it.key.startsWith("2") } }
-          .map { "'${it.key} ${path}: ' does not contain any response for 2xx" }
-      }.let {
-        if (it.isEmpty()) success(openAPI)
-        else failure(*it.toTypedArray())
-      }
 }

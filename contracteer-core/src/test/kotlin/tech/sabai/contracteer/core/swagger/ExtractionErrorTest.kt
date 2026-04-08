@@ -17,12 +17,13 @@ class ExtractionErrorTest {
   }
 
   @Test
-  fun `fails when no 2xx response exists`() {
+  fun `loads successfully when no 2xx response exists`() {
     // when
     val result = OpenApiLoader.loadOperations("src/test/resources/error/missing_2xx_response.yaml")
 
     // then
-    result.assertFailure()
+    val operations = result.assertSuccess()
+    assert(operations.size == 1)
   }
 
   @Test

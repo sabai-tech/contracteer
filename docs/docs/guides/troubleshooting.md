@@ -197,7 +197,6 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
 - **Multiple composition keywords on the same schema.** A schema combining `allOf`, `anyOf`, or `oneOf` at the same level is rejected.
   Restructure the schema to use a single composition keyword.
   See [Multiple composition keywords](../concepts/openapi-coverage.md#multiple-composition-keywords-on-the-same-schema) for the recommended pattern.
-- **Missing 2xx response.** Contracteer requires every operation to define at least one 2xx response.
 
 ### Extraction fails with plain text content type and structured schema
 
