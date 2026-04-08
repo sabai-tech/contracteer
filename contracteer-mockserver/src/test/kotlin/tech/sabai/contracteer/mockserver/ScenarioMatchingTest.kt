@@ -358,6 +358,53 @@ class ScenarioMatchingTest {
   }
 
   @Test
+  fun `uses Accept header to disambiguate scenarios with different response content types`() {
+    // Given
+    val operation = apiOperation(
+      path = "/v1/users/{id}",
+      method = "GET",
+      requestSchema = requestSchema(
+        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
+      ),
+      responses = mapOf(
+        200 to responseSchema(
+          bodies = listOf(
+            bodySchema(contentType = ContentType("application/json"),
+                       dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))),
+            bodySchema(contentType = ContentType("text/plain"),
+                       dataType = stringDataType())
+          )
+        )
+      ),
+      scenarios = listOf(
+        scenario(
+          path = "/v1/users/{id}", method = "GET", key = "user1", statusCode = 200,
+          requestParameterValues = mapOf(PathParam("id") to 42),
+          responseBody = ScenarioBody(ContentType("application/json"), mapOf("id" to 42, "name" to "John"))
+        ),
+        scenario(
+          path = "/v1/users/{id}", method = "GET", key = "user1", statusCode = 200,
+          requestParameterValues = mapOf(PathParam("id") to 42),
+          responseBody = ScenarioBody(ContentType("text/plain"), "User 42: John")
+        )
+      )
+    )
+    mockServer = MockServer(listOf(operation))
+    mockServer.start()
+    RestAssured.port = mockServer.port()
+
+    // When / Then
+    given()
+      .accept("application/json")
+      .get("/v1/users/42")
+      .then()
+      .assertThat()
+      .statusCode(200)
+      .body("id", equalTo(42))
+      .body("name", equalTo("John"))
+  }
+
+  @Test
   fun `responds with scenario for non 2xx status code`() {
     // Given
     val operation = apiOperation(

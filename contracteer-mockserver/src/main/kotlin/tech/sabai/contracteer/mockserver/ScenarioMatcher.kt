@@ -6,16 +6,31 @@ import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.RequestSchema
 import tech.sabai.contracteer.core.operation.Scenario
 import tech.sabai.contracteer.core.operation.ScenarioBody
+import tech.sabai.contracteer.mockserver.ScenarioMatchResult.*
 
 internal object ScenarioMatcher {
 
   fun match(request: Request, scenarios: List<Scenario>, requestSchema: RequestSchema): ScenarioMatchResult {
     val matches = scenarios.filter { it.matches(request, requestSchema) }
+    val disambiguated = if (matches.size > 1) disambiguateByAcceptHeader(matches, request.header("Accept")) else matches
     return when {
-      matches.size == 1 -> ScenarioMatchResult.SingleMatch(matches.first())
-      matches.size > 1  -> ScenarioMatchResult.Ambiguous(matches)
-      else              -> ScenarioMatchResult.NoMatch
+      disambiguated.size == 1 -> SingleMatch(disambiguated.first())
+      disambiguated.size > 1  -> Ambiguous(disambiguated)
+      else                    -> NoMatch
     }
+  }
+
+  private fun disambiguateByAcceptHeader(matches: List<Scenario>, acceptHeader: String?): List<Scenario> {
+    val accept = AcceptHeader.parse(acceptHeader)
+    return when {
+      accept.acceptsAny() -> matches
+      else                -> matches.filter { accept.matchesResponseContentType(it) }.ifEmpty { matches }
+    }
+  }
+
+  private fun AcceptHeader.matchesResponseContentType(scenario: Scenario): Boolean {
+    val responseContentType = scenario.response.body?.contentType ?: return true
+    return bestMatch(listOf(responseContentType)) != null
   }
 
   private fun Scenario.matches(request: Request, requestSchema: RequestSchema): Boolean =
@@ -27,7 +42,12 @@ internal object ScenarioMatcher {
     parameterValues: Map<ParameterElement, Any?>,
     requestSchema: RequestSchema
   ): Boolean =
-    parameterValues.all { (element, expectedValue) -> requestHasExpectedValue(request, element, expectedValue, requestSchema) }
+    parameterValues.all { (element, expectedValue) ->
+      requestHasExpectedValue(request,
+                              element,
+                              expectedValue,
+                              requestSchema)
+    }
 
   private fun requestHasExpectedValue(
     request: Request,
