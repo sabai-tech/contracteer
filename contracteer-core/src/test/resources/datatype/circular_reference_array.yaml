@@ -1,0 +1,31 @@
+openapi: 3.0.0
+info:
+  title: Circular Ref Array API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /trees:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeNode'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    TreeNode:
+      type: object
+      properties:
+        value:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+      required:
+        - value
+        - children

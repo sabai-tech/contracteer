@@ -302,16 +302,16 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 
 ### References ($ref)
 
-| Feature                                | Notes                                                                 |
-|----------------------------------------|-----------------------------------------------------------------------|
-| `$ref` to `#/components/schemas`       | Supported                                                             |
-| `$ref` to `#/components/parameters`    | Supported                                                             |
-| `$ref` to `#/components/requestBodies` | Supported                                                             |
-| `$ref` to `#/components/responses`     | Supported                                                             |
-| `$ref` to `#/components/headers`       | Supported                                                             |
-| `$ref` to `#/components/examples`      | Supported                                                             |
-| Recursive / chained `$ref`             | Supported (with depth limits)                                         |
-| External `$ref` (other files)          | Resolved by the OpenAPI parser before Contracteer processes the model |
+| Feature                                | Notes                                                                                                                                           |
+|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$ref` to `#/components/schemas`       | Supported                                                                                                                                       |
+| `$ref` to `#/components/parameters`    | Supported                                                                                                                                       |
+| `$ref` to `#/components/requestBodies` | Supported                                                                                                                                       |
+| `$ref` to `#/components/responses`     | Supported                                                                                                                                       |
+| `$ref` to `#/components/headers`       | Supported                                                                                                                                       |
+| `$ref` to `#/components/examples`      | Supported                                                                                                                                       |
+| Recursive / chained `$ref`             | Supported, including circular references. Infinite cycles (all properties in the cycle are required and non-nullable) are rejected at load time |
+| External `$ref` (other files)          | Resolved by the OpenAPI parser before Contracteer processes the model                                                                           |
 
 ### Responses
 

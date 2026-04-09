@@ -12,6 +12,8 @@ class ProxyDataType internal constructor(override val name: String): DataType<An
 
   internal lateinit var delegate: DataType<out Any>
 
+  internal val isResolved: Boolean get() = ::delegate.isInitialized
+
   override val openApiType: String get() = delegate.openApiType
   override val isNullable: Boolean get() = delegate.isNullable
   override val dataTypeClass: Class<out Any> get() = delegate.dataTypeClass

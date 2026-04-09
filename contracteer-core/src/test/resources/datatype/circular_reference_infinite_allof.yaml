@@ -1,0 +1,36 @@
+openapi: 3.0.0
+info:
+  title: Infinite Circular Ref AllOf API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /items:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtendedItem'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    BaseItem:
+      type: object
+      properties:
+        name:
+          type: string
+        child:
+          $ref: '#/components/schemas/ExtendedItem'
+      required:
+        - name
+        - child
+    ExtendedItem:
+      allOf:
+        - $ref: '#/components/schemas/BaseItem'
+        - type: object
+          properties:
+            extra:
+              type: string

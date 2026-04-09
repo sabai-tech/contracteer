@@ -32,19 +32,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       ref == null                    -> convertSchema(schema, defaultName)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
       inProgress.containsKey(ref)    -> success(inProgress[ref]!!).also { logger.debug { "Circular reference detected for Schema '$ref', returning proxy" } }
-      else                           -> {
-        val proxy = ProxyDataType(ref)
-        inProgress[ref] = proxy
-        val result = sharedComponents
-          .resolve(schema)
-          .flatMap { resolved -> convertSchema(resolved, ref) }
-        inProgress.remove(ref)
-        result.map { dataType ->
-          proxy.delegate = dataType
-          dataTypeCache[ref] = dataType
-          dataType
-        }
-      }
+      else                           -> resolveReferencedSchema(schema, ref)
     }
   }
 
@@ -129,6 +117,65 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       schema.isAnyType()        -> success(AnyDataType).also { logger.warn { "Schema '${schema.name}' is empty (anyType) and will be interpreted as accepting any type." } }
       else                      -> failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
     }
+
+  private fun resolveReferencedSchema(schema: Schema<*>, ref: String): Result<DataType<out Any>> {
+    val proxy = ProxyDataType(ref)
+    inProgress[ref] = proxy
+
+    return sharedComponents
+      .resolve(schema)
+      .flatMap { resolved -> convertSchema(resolved, ref) }
+      .also { inProgress.remove(ref) }
+      .flatMap { dataType ->
+        proxy.delegate = dataType
+        validateNoInfiniteCycle(proxy, dataType)
+      }
+  }
+
+  private fun validateNoInfiniteCycle(proxy: ProxyDataType, dataType: DataType<out Any>): Result<DataType<out Any>> {
+    val cyclePath = findNonBreakablePath(proxy.delegate, proxy, listOf(proxy.name))
+    return when {
+      cyclePath != null ->
+        failure("Circular reference with no optional, nullable, or collection exit point: ${cyclePath.joinToString(" → ")}")
+
+      else              -> {
+        dataTypeCache[proxy.name] = dataType
+        success(dataType)
+      }
+    }
+  }
+
+  private fun findNonBreakablePath(current: DataType<out Any>,
+                                   target: ProxyDataType,
+                                   path: List<String>): List<String>? =
+    when (current) {
+      is ProxyDataType  -> followProxy(current, target, path)
+      is ObjectDataType -> followRequiredNonNullableProperties(current, target, path)
+      is AllOfDataType  -> followAllOfSubTypes(current, target, path)
+      else              -> null
+    }
+
+  private fun followProxy(current: ProxyDataType, target: ProxyDataType, path: List<String>): List<String>? =
+    when {
+      current === target  -> path + current.name
+      !current.isResolved -> null
+      else                -> findNonBreakablePath(current.delegate, target, path)
+    }
+
+  private fun followRequiredNonNullableProperties(current: ObjectDataType,
+                                                  target: ProxyDataType,
+                                                  path: List<String>): List<String>? =
+    current.properties
+      .filter { (name, _) -> name in current.requiredProperties }
+      .filterValues { it.isNonBreakableEdge() }
+      .entries
+      .firstNotNullOfOrNull { (name, dataType) -> findNonBreakablePath(dataType, target, path + name) }
+
+  private fun followAllOfSubTypes(current: AllOfDataType, target: ProxyDataType, path: List<String>): List<String>? =
+    current.subTypes.firstNotNullOfOrNull { findNonBreakablePath(it, target, path) }
+
+  private fun DataType<out Any>.isNonBreakableEdge() =
+    (this is ProxyDataType && !isResolved) || !isNullable
 
   @Suppress("UNCHECKED_CAST")
   private fun addDiscriminators(schemas: Map<String, Schema<*>>) {

@@ -1,0 +1,39 @@
+openapi: 3.0.0
+info:
+  title: Infinite Circular Ref API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /nodes:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    Node:
+      type: object
+      properties:
+        value:
+          type: string
+        next:
+          $ref: '#/components/schemas/Link'
+      required:
+        - value
+        - next
+    Link:
+      type: object
+      properties:
+        label:
+          type: string
+        target:
+          $ref: '#/components/schemas/Node'
+      required:
+        - label
+        - target

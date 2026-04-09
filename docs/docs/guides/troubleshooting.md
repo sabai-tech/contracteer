@@ -183,6 +183,18 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
 
 ## Specification Issues
 
+### Circular schema reference rejected
+
+**Symptom:** Loading the specification fails with "Circular reference with no optional, nullable, or collection exit point."
+
+**Cause:** The specification contains a circular `$ref` chain where every property in the cycle is required and non-nullable.
+This describes an infinite structure that cannot be instantiated.
+
+For example, `Node.next → Link.target → Node` where both `next` and `target` are required and non-nullable creates a structure with no valid finite value.
+
+**Fix:** Break the cycle by making at least one property in the chain optional (remove it from `required`), nullable (`nullable: true` on the referenced schema), or a collection (`type: array`).
+Any of these gives Contracteer a finite stopping point.
+
 ### Spec loading fails
 
 **Symptom:** Contracteer reports errors when loading the OpenAPI specification.

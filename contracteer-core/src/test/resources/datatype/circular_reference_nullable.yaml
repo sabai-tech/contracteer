@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: Circular Ref Nullable API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /nodes:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Node'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    Node:
+      type: object
+      nullable: true
+      properties:
+        value:
+          type: string
+        next:
+          $ref: '#/components/schemas/Node'
+      required:
+        - value
+        - next

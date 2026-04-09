@@ -583,6 +583,44 @@ class SchemaConversionTest {
     assert(city.properties.containsKey("mayor"))
   }
 
+  @Test
+  fun `extract circular reference with required nullable property`() {
+    // when
+    val result = loadOperations("circular_reference_nullable.yaml")
+
+    // then
+    result.assertSuccess()
+  }
+
+  @Test
+  fun `extract circular reference through array items`() {
+    // when
+    val result = loadOperations("circular_reference_array.yaml")
+
+    // then
+    result.assertSuccess()
+  }
+
+  @Test
+  fun `fail to load spec with infinite circular reference`() {
+    // when
+    val result = loadOperations("circular_reference_infinite.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("Circular") && it.contains("Node") })
+  }
+
+  @Test
+  fun `fail to load spec with infinite circular reference through allOf`() {
+    // when
+    val result = loadOperations("circular_reference_infinite_allof.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("Circular") })
+  }
+
   // --- Helpers ---
 
   private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =
