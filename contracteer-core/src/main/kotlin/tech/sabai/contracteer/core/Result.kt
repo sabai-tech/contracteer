@@ -66,14 +66,14 @@ sealed class Result<out T> {
   /** Merges this result with [other], succeeding only if both succeed, and accumulating all errors otherwise. */
   infix fun combineWith(other: Result<*>): Result<Unit> =
     if (this is Success && other is Success) Success(Unit)
-    else Failure(this.propertyErrors() + other.propertyErrors())
+    else Failure(cappedErrors(this.propertyErrors(), other.propertyErrors()))
 
   /** Chains a follow-up validation: on success, runs [next]; on failure, accumulates errors from both this result and [next]. */
   infix fun <E> andThen(next: () -> Result<E>): Result<E> = when (this) {
     is Success -> next()
     is Failure -> {
       val nextResult = next()
-      Failure(propertyErrors + nextResult.propertyErrors())
+      Failure(cappedErrors(propertyErrors, nextResult.propertyErrors()))
     }
   }
 
@@ -96,6 +96,16 @@ sealed class Result<out T> {
   ): Result<Nothing>()
 
   companion object {
+    private const val MAX_ERRORS = 25
+
+    private fun cappedErrors(left: List<PropertyError>, right: List<PropertyError>): List<PropertyError> {
+      val combined = left + right
+      return if (combined.size <= MAX_ERRORS)
+        combined
+      else
+        combined.take(MAX_ERRORS - 1) + PropertyError(error = "${combined.size - MAX_ERRORS + 1} additional errors were truncated")
+    }
+
     /** Creates a successful result carrying [value]. */
     @JvmStatic
     fun <T> success(value: T): Result<T> = Success(value)

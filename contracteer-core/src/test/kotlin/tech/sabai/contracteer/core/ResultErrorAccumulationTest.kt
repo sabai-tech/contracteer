@@ -75,4 +75,41 @@ class ResultErrorAccumulationTest {
     val errors = result.assertFailure()
     assert(errors == listOf("first error", "second error"))
   }
+
+  // -- Error accumulation cap --
+
+  @Test
+  fun `accumulate caps errors at 25 with truncation message`() {
+    // when
+    val result = (1..30).toList().accumulate { failure<Int>("error $it") }
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 25)
+    assert(errors.last().contains("additional errors were truncated"))
+  }
+
+  @Test
+  fun `accumulate preserves all errors when under the cap`() {
+    // when
+    val result = (1..24).toList().accumulate { failure<Int>("error $it") }
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 24)
+  }
+
+  @Test
+  fun `andThen caps errors at 25 with truncation message`() {
+    // given
+    val first = (1..15).toList().accumulate { failure<Int>("error $it") }
+
+    // when
+    val result = first andThen { (16..40).toList().accumulate { failure<Int>("error $it") } }
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.size == 25)
+    assert(errors.last().contains("additional errors were truncated"))
+  }
 }
