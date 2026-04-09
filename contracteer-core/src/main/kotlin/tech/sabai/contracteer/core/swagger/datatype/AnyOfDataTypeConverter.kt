@@ -16,21 +16,20 @@ internal object AnyOfDataTypeConverter {
 
   fun convert(
     schema: ComposedSchema,
-    maxRecursiveDepth: Int,
-    convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>,
+    convert: (Schema<*>, String) -> Result<DataType<out Any>>,
     discriminator: (Schema<*>) -> Discriminator?
   ) =
     if (schema.anyOf == null) failure("'anyOf' must be defined")
     else schema.anyOf
       .mapIndexed { index, sub ->
-        convert(sub, "anyOf #$index", maxRecursiveDepth - 1)
+        convert(sub, "anyOf #$index")
       }
       .combineResults()
-      .map { subTypes -> subTypes!!.filter { it !is AnyDataType } }
+      .map { subTypes -> subTypes.filter { it !is AnyDataType } }
       .flatMap { subTypes ->
         AnyOfDataType.create(
           name = schema.name,
-          subTypes = subTypes!!,
+          subTypes = subTypes,
           discriminator = discriminator(schema),
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum()

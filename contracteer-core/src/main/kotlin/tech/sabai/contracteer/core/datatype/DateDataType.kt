@@ -8,7 +8,7 @@ import kotlin.random.Random
 
 /** OpenAPI `string` type with `format: date`. Values must conform to `YYYY-MM-DD`. */
 class DateDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
-    DataType<String>(name, "string/date", isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, "string/date", isNullable, String::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 

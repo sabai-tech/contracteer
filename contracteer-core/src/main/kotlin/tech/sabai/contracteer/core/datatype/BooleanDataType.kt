@@ -5,7 +5,7 @@ import kotlin.random.Random
 
 /** OpenAPI `boolean` type. */
 class BooleanDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
-    DataType<Boolean>(name, "boolean", isNullable, Boolean::class.javaObjectType, allowedValues) {
+    ResolvedDataType<Boolean>(name, "boolean", isNullable, Boolean::class.javaObjectType, allowedValues) {
 
   override fun isFullyStructured() = false
 

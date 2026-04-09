@@ -16,7 +16,7 @@ class ArrayDataType private constructor(name: String,
                                         val maxItems: Int?,
                                         val uniqueItems: Boolean,
                                         allowedValues: AllowedValues? = null):
-    DataType<List<Any?>>(name, "array", isNullable, List::class.java, allowedValues) {
+    ResolvedDataType<List<Any?>>(name, "array", isNullable, List::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 
@@ -91,12 +91,15 @@ class ArrayDataType private constructor(name: String,
           .map { ArrayDataType(name, itemDataType, isNullable, minItems, maxItems, uniqueItems, it) }
     }
 
-    private fun itemCardinality(itemDataType: DataType<out Any>): Long? = when {
-      itemDataType.allowedValues != null                              -> itemDataType.allowedValues.size.toLong()
-      itemDataType is BooleanDataType                                 -> 2L
-      itemDataType is IntegerDataType && itemDataType.range.isBounded -> integerCardinality(itemDataType)
-      itemDataType is NumberDataType && itemDataType.range.isBounded  -> numberCardinality(itemDataType)
-      else                                                            -> null
+    private fun itemCardinality(itemDataType: DataType<out Any>): Long? {
+      val enum = itemDataType.allowedValues
+      return when {
+        enum != null                                                   -> enum.size.toLong()
+        itemDataType is BooleanDataType                                -> 2L
+        itemDataType is IntegerDataType && itemDataType.range.isBounded -> integerCardinality(itemDataType)
+        itemDataType is NumberDataType && itemDataType.range.isBounded  -> numberCardinality(itemDataType)
+        else                                                            -> null
+      }
     }
 
     private fun integerCardinality(dataType: IntegerDataType): Long {

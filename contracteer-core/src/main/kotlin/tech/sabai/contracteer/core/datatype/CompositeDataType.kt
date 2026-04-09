@@ -9,4 +9,4 @@ abstract class CompositeDataType<T>(
   isNullable: Boolean,
   val subTypes: List<DataType<out T>>,
   dataTypeClass: Class<out T>,
-  allowedValues: AllowedValues? = null): DataType<T>(name, openApiType, isNullable, dataTypeClass, allowedValues)
+  allowedValues: AllowedValues? = null): ResolvedDataType<T>(name, openApiType, isNullable, dataTypeClass, allowedValues)

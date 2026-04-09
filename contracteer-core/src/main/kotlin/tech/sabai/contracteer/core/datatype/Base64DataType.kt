@@ -13,7 +13,7 @@ class Base64DataType private constructor(name: String,
                                          isNullable: Boolean,
                                          val lengthRange: Range,
                                          allowedValues: AllowedValues? = null):
-    DataType<String>(name, "string/byte", isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, "string/byte", isNullable, String::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 
@@ -71,7 +71,7 @@ class Base64DataType private constructor(name: String,
         else                                                                                   ->
           Range.create((minLength ?: 4).toBigDecimal(), maxLength?.toBigDecimal())
             .flatMap { range ->
-              val dataType = Base64DataType(name, isNullable, range!!)
+              val dataType = Base64DataType(name, isNullable, range)
               if (enum.isEmpty()) success(dataType)
               else AllowedValues.create(enum, dataType).map { Base64DataType(name, isNullable, range, it) }
             }

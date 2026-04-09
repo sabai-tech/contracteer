@@ -10,7 +10,7 @@ import kotlin.random.Random
 
 /** OpenAPI `string` type with `format: date-time`. Values must conform to ISO 8601 with offset. */
 class DateTimeDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
-    DataType<String>(name, "string/date-time", isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, "string/date-time", isNullable, String::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 

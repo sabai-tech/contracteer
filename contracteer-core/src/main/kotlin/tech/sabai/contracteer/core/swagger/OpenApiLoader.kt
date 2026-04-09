@@ -27,9 +27,8 @@ object OpenApiLoader {
   @JvmStatic
   fun loadOperations(path: String): Result<List<ApiOperation>> =
     path.loadOpenApiDocument()
-      .flatMap { parse(it!!) }
-      .flatMap {
-        val openAPI = it!!
+      .flatMap { parse(it) }
+      .flatMap { openAPI ->
         val sharedComponents = SharedComponents(
           schemas = openAPI.components.safeSchemas(),
           parameters = openAPI.components.safeParameters(),
@@ -57,7 +56,7 @@ object OpenApiLoader {
   }
 
   private fun loadFromUrl(path: String) =
-    path.toUrl().flatMap { it!!.loadOpenApiDocument() }
+    path.toUrl().flatMap { it.loadOpenApiDocument() }
 
   private fun parse(content: String): Result<OpenAPI> {
     val parseResult = OpenAPIV3Parser().readContents(content, emptyList(), ParseOptions().apply { isResolve = true })

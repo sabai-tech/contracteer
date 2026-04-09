@@ -8,7 +8,7 @@ class EmailDataType private constructor(name: String,
                                         isNullable: Boolean,
                                         val lengthRange: Range,
                                         allowedValues: AllowedValues? = null):
-    DataType<String>(name, "string/email", isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, "string/email", isNullable, String::class.java, allowedValues) {
 
   private val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
@@ -55,7 +55,7 @@ class EmailDataType private constructor(name: String,
         else                                                                         ->
           Range.create((minLength ?: 6).toBigDecimal(), maxLength?.toBigDecimal())
             .flatMap { range ->
-              val dataType = EmailDataType(name, isNullable, range!!)
+              val dataType = EmailDataType(name, isNullable, range)
 
               if (enum.isEmpty()) success(dataType)
               else AllowedValues.create(enum, dataType).map { EmailDataType(name, isNullable, range, it) }

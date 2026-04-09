@@ -561,6 +561,28 @@ class SchemaConversionTest {
     assert(dataType.maxProperties == 5)
   }
 
+  // --- Circular references ---
+
+  @Test
+  fun `extract circular reference with 3 member cycle`() {
+    // when
+    val result = loadOperations("circular_reference.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    val person = operations.first().requestSchema.bodies.first().dataType as ObjectDataType
+    assert(person.properties.containsKey("name"))
+    assert(person.properties.containsKey("address"))
+
+    val address = person.properties["address"] as ObjectDataType
+    assert(address.properties.containsKey("street"))
+    assert(address.properties.containsKey("city"))
+
+    val city = address.properties["city"] as ObjectDataType
+    assert(city.properties.containsKey("name"))
+    assert(city.properties.containsKey("mayor"))
+  }
+
   // --- Helpers ---
 
   private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =

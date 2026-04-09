@@ -15,19 +15,18 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 internal object AllOfDataTypeConverter {
 
   fun convert(schema: ComposedSchema,
-              maxRecursiveDepth: Int,
-              convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>,
+              convert: (Schema<*>, String) -> Result<DataType<out Any>>,
               discriminator: (Schema<*>) -> Discriminator?): Result<AllOfDataType> {
     if (schema.allOf == null) return failure("'allOf' must be defined.")
 
     val subTypeResults = schema.allOf
-      .mapIndexed { index, subSchema -> convert(subSchema, "allOf #$index", maxRecursiveDepth - 1) }
+      .mapIndexed { index, subSchema -> convert(subSchema, "allOf #$index") }
 
-    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, maxRecursiveDepth, convert)
+    val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert)
 
     return (subTypeResults + listOfNotNull(siblingResult))
       .combineResults()
-      .map { subDataTypes -> subDataTypes!!.filter { it !is AnyDataType } }
+      .map { subDataTypes -> subDataTypes.filter { it !is AnyDataType } }
       .flatMap { subDataTypes ->
         val discriminators = schema.allOf.mapNotNull { discriminator(it) }
         when {
@@ -35,7 +34,7 @@ internal object AllOfDataTypeConverter {
           else                    ->
             AllOfDataType.create(
               name = schema.name,
-              subTypes = subDataTypes!!,
+              subTypes = subDataTypes,
               isNullable = schema.safeNullable(),
               discriminator = discriminators.firstOrNull(),
               enum = schema.safeEnum())

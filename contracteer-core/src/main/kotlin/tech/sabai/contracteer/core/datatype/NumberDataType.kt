@@ -4,8 +4,6 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import java.math.BigDecimal
-import java.math.RoundingMode.CEILING
-import java.math.RoundingMode.FLOOR
 
 /** OpenAPI `number` type, with optional range constraints. Values are represented as [BigDecimal]. */
 class NumberDataType private constructor(name: String,
@@ -13,7 +11,7 @@ class NumberDataType private constructor(name: String,
                                          val range: Range,
                                          val multipleOf: BigDecimal?,
                                          allowedValues: AllowedValues? = null):
-    DataType<BigDecimal>(name, "number", isNullable, BigDecimal::class.java, allowedValues) {
+    ResolvedDataType<BigDecimal>(name, "number", isNullable, BigDecimal::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 
@@ -43,11 +41,11 @@ class NumberDataType private constructor(name: String,
         .create(minimum, maximum, exclusiveMinimum, exclusiveMaximum)
         .flatMap { range ->
           when {
-            multipleOf != null && !range!!.containsMultipleOf(multipleOf) -> failure("Range $range contains no multiple of $multipleOf")
-            enum.isEmpty()                                                -> success(NumberDataType(name, isNullable, range!!, multipleOf))
-            else                                                          ->
+            multipleOf != null && !range.containsMultipleOf(multipleOf) -> failure("Range $range contains no multiple of $multipleOf")
+            enum.isEmpty()                                              -> success(NumberDataType(name, isNullable, range, multipleOf))
+            else                                                        ->
               AllowedValues
-                .create(enum, NumberDataType(name, isNullable, range!!, multipleOf))
+                .create(enum, NumberDataType(name, isNullable, range, multipleOf))
                 .map { allowedValues -> NumberDataType(name, isNullable, range, multipleOf, allowedValues) }
           }
         }

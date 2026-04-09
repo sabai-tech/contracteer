@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  title: Circular Ref API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /people:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Person'
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+      required:
+        - name
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          $ref: '#/components/schemas/City'
+      required:
+        - street
+    City:
+      type: object
+      properties:
+        name:
+          type: string
+        mayor:
+          $ref: '#/components/schemas/Person'
+      required:
+        - name

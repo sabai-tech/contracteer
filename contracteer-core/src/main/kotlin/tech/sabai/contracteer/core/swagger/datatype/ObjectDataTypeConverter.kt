@@ -17,12 +17,11 @@ internal object ObjectDataTypeConverter {
 
   fun convert(
     schema: Schema<*>,
-    maxRecursiveDepth: Int,
-    convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>
+    convert: (Schema<*>, String) -> Result<DataType<out Any>>
   ): Result<ObjectDataType> {
     val propertyDataTypeResults = schema
       .safeProperties()
-      .mapValues { (name, subSchema) -> convert(subSchema, name, maxRecursiveDepth - 1).forProperty(name) }
+      .mapValues { (name, subSchema) -> convert(subSchema, name).forProperty(name) }
 
     val allowAdditionalProperties = (schema.additionalProperties as? Boolean?) != false
     val additionalPropertiesSchema = schema.additionalProperties.takeIf { it !is Boolean } as Schema<*>?
@@ -30,7 +29,7 @@ internal object ObjectDataTypeConverter {
       if (additionalPropertiesSchema == null)
         success(null)
       else
-        convert(additionalPropertiesSchema, "additionalProperties", maxRecursiveDepth - 1)
+        convert(additionalPropertiesSchema, "additionalProperties")
 
     return propertyDataTypeResults.values
       .combineResults()
@@ -63,10 +62,9 @@ internal object ObjectDataTypeConverter {
   }
 
   fun convertSiblingObject(schema: ComposedSchema,
-                           maxRecursiveDepth: Int,
-                           convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>): Result<DataType<out Any>>? {
+                           convert: (Schema<*>, String) -> Result<DataType<out Any>>): Result<DataType<out Any>>? {
     return if (schema.properties != null || schema.required != null || schema.additionalProperties != null)
-      convert(schema, maxRecursiveDepth, convert)
+      convert(schema, convert)
     else
       null
   }

@@ -12,14 +12,13 @@ import tech.sabai.contracteer.core.swagger.safeNullable
 internal object ArrayDataTypeConverter {
   fun convert(
     schema: ArraySchema,
-    maxRecursiveDepth: Int,
-    convert: (Schema<*>, String, Int) -> Result<DataType<out Any>>
+    convert: (Schema<*>, String) -> Result<DataType<out Any>>
   ) =
-    convert(schema.items, schema.name, maxRecursiveDepth - 1)
+    convert(schema.items, schema.name)
       .flatMap { itemDataType ->
         ArrayDataType.create(
           name = schema.name,
-          itemDataType = itemDataType!!,
+          itemDataType = itemDataType,
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum().map { it.normalize() },
           minItems = schema.minItems,

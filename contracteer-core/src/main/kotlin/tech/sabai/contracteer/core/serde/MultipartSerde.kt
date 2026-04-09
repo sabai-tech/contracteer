@@ -39,7 +39,7 @@ class MultipartSerde(
       .filter { (propName, _) -> propName in parts }
       .map { (propName, config) -> deserializePart(propName, config, parts.getValue(propName), targetDataType) }
       .combineResults()
-      .map { pairs -> pairs!!.filter { it.second != null }.toMap() }
+      .map { pairs -> pairs.filter { it.second != null }.toMap() }
   }
 
   private fun serializeProperty(name: String, value: Any?): List<String> {

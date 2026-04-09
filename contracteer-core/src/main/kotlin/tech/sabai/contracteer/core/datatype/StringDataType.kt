@@ -13,7 +13,7 @@ class StringDataType private constructor(name: String,
                                          val lengthRange: Range,
                                          val pattern: String? = null,
                                          allowedValues: AllowedValues? = null):
-    DataType<String>(name, openApiType, isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, openApiType, isNullable, String::class.java, allowedValues) {
 
   private val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
   private val compiledPattern = pattern?.let { Regex(it) }
@@ -64,7 +64,7 @@ class StringDataType private constructor(name: String,
 
       return Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
         .flatMap { range ->
-          val dataType = StringDataType(name, openApiType, isNullable, range!!, pattern)
+          val dataType = StringDataType(name, openApiType, isNullable, range, pattern)
           if (enum.isEmpty()) success(dataType)
           else AllowedValues
             .create(enum, dataType)

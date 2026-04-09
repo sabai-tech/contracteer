@@ -11,7 +11,7 @@ class IntegerDataType private constructor(name: String,
                                           val range: Range,
                                           val multipleOf: BigDecimal?,
                                           allowedValues: AllowedValues? = null):
-    DataType<BigDecimal>(name, "integer", isNullable, BigDecimal::class.java, allowedValues) {
+    ResolvedDataType<BigDecimal>(name, "integer", isNullable, BigDecimal::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 
@@ -50,11 +50,11 @@ class IntegerDataType private constructor(name: String,
           when {
             minimum != null && !minimum.isInteger()                       -> failure("minimum must be an integer.")
             maximum != null && !maximum.isInteger()                       -> failure("maximum must be an integer.")
-            multipleOf != null && !range!!.containsMultipleOf(multipleOf) -> failure("Range $range contains no multiple of $multipleOf")
-            enum.isEmpty()                                                -> success(IntegerDataType(name,isNullable,range!!,multipleOf))
-            else                                                          ->
+            multipleOf != null && !range.containsMultipleOf(multipleOf) -> failure("Range $range contains no multiple of $multipleOf")
+            enum.isEmpty()                                              -> success(IntegerDataType(name, isNullable, range, multipleOf))
+            else                                                        ->
               AllowedValues
-                .create(enum, IntegerDataType(name, isNullable, range!!, multipleOf))
+                .create(enum, IntegerDataType(name, isNullable, range, multipleOf))
                 .map { allowedValues -> IntegerDataType(name, isNullable, range, multipleOf, allowedValues) }
           }
         }

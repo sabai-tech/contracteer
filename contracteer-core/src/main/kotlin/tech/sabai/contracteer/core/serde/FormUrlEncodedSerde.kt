@@ -47,7 +47,7 @@ class FormUrlEncodedSerde(
           .map { propName to it }
       }
       .combineResults()
-      .map { pairs -> pairs!!.filter { it.second != null }.toMap() }
+      .map { pairs -> pairs.filter { it.second != null }.toMap() }
   }
 
   private fun buildValueExtractor(source: String): (String) -> List<String> {

@@ -19,7 +19,7 @@ class ObjectDataType private constructor(name: String,
                                          val minProperties: Int?,
                                          val maxProperties: Int?,
                                          allowedValues: AllowedValues? = null):
-    DataType<Map<String, Any?>>(name,
+    ResolvedDataType<Map<String, Any?>>(name,
                                 "object",
                                 isNullable,
                                 Map::class.java as Class<Map<String, Any?>>,

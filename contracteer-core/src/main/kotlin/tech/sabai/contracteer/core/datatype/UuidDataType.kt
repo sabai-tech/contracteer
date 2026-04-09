@@ -9,7 +9,7 @@ import java.util.UUID.randomUUID
 class UuidDataType private constructor(name: String,
                                        isNullable: Boolean = false,
                                        allowedValues: AllowedValues? = null):
-    DataType<String>(name, "string/uuid", isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, "string/uuid", isNullable, String::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 

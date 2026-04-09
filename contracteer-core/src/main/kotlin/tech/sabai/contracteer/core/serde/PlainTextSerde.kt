@@ -15,6 +15,7 @@ object PlainTextSerde: Serde() {
     if (source == null) success(null)
     else
       when (targetDataType) {
+        is ProxyDataType                        -> doDeserialize(source, targetDataType.delegate)
         is CompositeDataType                    -> deserializeComposite(source, targetDataType)
         is ObjectDataType                       -> failure(targetDataType.name, "'object' is not supported")
         is ArrayDataType                        -> failure(targetDataType.name, "'array' are not supported")

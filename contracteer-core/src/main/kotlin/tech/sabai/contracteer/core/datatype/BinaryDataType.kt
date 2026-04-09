@@ -9,7 +9,7 @@ class BinaryDataType private constructor(name: String,
                                          isNullable: Boolean,
                                          val lengthRange: Range,
                                          allowedValues: AllowedValues? = null):
-    DataType<String>(name, "string/binary", isNullable, String::class.java, allowedValues) {
+    ResolvedDataType<String>(name, "string/binary", isNullable, String::class.java, allowedValues) {
 
   override fun isFullyStructured() = false
 
@@ -41,7 +41,7 @@ class BinaryDataType private constructor(name: String,
       else
         Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
           .flatMap { range ->
-            val dataType = BinaryDataType(name, isNullable, range!!)
+            val dataType = BinaryDataType(name, isNullable, range)
             if (enum.isEmpty()) success(dataType)
             else AllowedValues.create(enum, dataType).map { BinaryDataType(name, isNullable, range, it) }
           }
