@@ -1080,6 +1080,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#verifier-reports-ambiguous-match-for-oneof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifier reports "Ambiguous match for oneOf"
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1181,10 +1192,43 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#circular-schema-reference-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Circular schema reference rejected
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#spec-loading-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
         Spec loading fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extraction-fails-with-nested-types-in-deepobject-or-form-urlencoded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extraction fails with nested types in deepObject or form-urlencoded
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extraction-fails-with-plain-text-content-type-and-structured-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extraction fails with plain text content type and structured schema
       
     </span>
   </a>
@@ -1382,6 +1426,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#verifier-reports-ambiguous-match-for-oneof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifier reports "Ambiguous match for oneOf"
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1483,10 +1538,43 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#circular-schema-reference-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Circular schema reference rejected
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#spec-loading-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
         Spec loading fails
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extraction-fails-with-nested-types-in-deepobject-or-form-urlencoded" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extraction fails with nested types in deepObject or form-urlencoded
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extraction-fails-with-plain-text-content-type-and-structured-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extraction fails with plain text content type and structured schema
       
     </span>
   </a>
@@ -1636,6 +1724,13 @@ Either add the field to the schema's <code>properties</code>, or remove <code>ad
 Contracteer needs at least one shared key between request and response elements.</p>
 <p><strong>Fix:</strong> Ensure the same example key appears on both a request element (parameter or request body) and a response element (header or response body).
 See <a href="../../concepts/scenarios/#common-mistakes">Common Mistakes</a> for details.</p>
+<h3 id="verifier-reports-ambiguous-match-for-oneof">Verifier reports "Ambiguous match for oneOf"<a class="headerlink" href="#verifier-reports-ambiguous-match-for-oneof" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The verifier rejects a response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."</p>
+<p><strong>Cause:</strong> The <code>oneOf</code> variants have overlapping structures.
+Without <code>required</code> properties, <code>additionalProperties: false</code>, or a <code>discriminator</code>, a valid value for one variant inevitably matches others too.</p>
+<p><strong>Fix:</strong> Make the variants distinguishable.
+Add <code>required</code> properties unique to each variant, set <code>additionalProperties: false</code>, or use a <code>discriminator</code>.
+Without these constraints, <code>oneOf</code> is effectively <code>anyOf</code> and strict validation cannot determine which variant matched.</p>
 <hr />
 <h2 id="mock-server-issues">Mock Server Issues<a class="headerlink" href="#mock-server-issues" title="Permanent link">&para;</a></h2>
 <h3 id="getting-418-instead-of-the-expected-response">Getting 418 instead of the expected response<a class="headerlink" href="#getting-418-instead-of-the-expected-response" title="Permanent link">&para;</a></h3>
@@ -1697,6 +1792,13 @@ Use <code>examples</code> on both request and response elements.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to do this.</p>
 <hr />
 <h2 id="specification-issues">Specification Issues<a class="headerlink" href="#specification-issues" title="Permanent link">&para;</a></h2>
+<h3 id="circular-schema-reference-rejected">Circular schema reference rejected<a class="headerlink" href="#circular-schema-reference-rejected" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "Circular reference with no optional, nullable, or collection exit point."</p>
+<p><strong>Cause:</strong> The specification contains a circular <code>$ref</code> chain where every property in the cycle is required and non-nullable.
+This describes an infinite structure that cannot be instantiated.</p>
+<p>For example, <code>Node.next → Link.target → Node</code> where both <code>next</code> and <code>target</code> are required and non-nullable creates a structure with no valid finite value.</p>
+<p><strong>Fix:</strong> Break the cycle by making at least one property in the chain optional (remove it from <code>required</code>), nullable (<code>nullable: true</code> on the referenced schema), or a collection (<code>type: array</code>).
+Any of these gives Contracteer a finite stopping point.</p>
 <h3 id="spec-loading-fails">Spec loading fails<a class="headerlink" href="#spec-loading-fails" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Contracteer reports errors when loading the OpenAPI specification.</p>
 <p><strong>Common causes:</strong></p>
@@ -1706,8 +1808,22 @@ See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to do thi
   OpenAPI 3.1 is not yet supported.</li>
 <li><strong><code>example</code> and <code>examples</code> on the same element.</strong> The OpenAPI specification declares these mutually exclusive.
   Contracteer rejects the specification if both are present on the same parameter or media type.</li>
-<li><strong>Missing 2xx response.</strong> Contracteer requires every operation to define at least one 2xx response.</li>
+<li><strong>Multiple composition keywords on the same schema.</strong> A schema combining <code>allOf</code>, <code>anyOf</code>, or <code>oneOf</code> at the same level is rejected.
+  Restructure the schema to use a single composition keyword.
+  See <a href="../../concepts/openapi-coverage/#multiple-composition-keywords-on-the-same-schema">Multiple composition keywords</a> for the recommended pattern.</li>
 </ul>
+<h3 id="extraction-fails-with-nested-types-in-deepobject-or-form-urlencoded">Extraction fails with nested types in deepObject or form-urlencoded<a class="headerlink" href="#extraction-fails-with-nested-types-in-deepobject-or-form-urlencoded" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)."</p>
+<p><strong>Cause:</strong> A <code>deepObject</code> query parameter or a <code>form-urlencoded</code> request body has properties with object or array types.
+The OpenAPI specification explicitly states that the behavior of <code>deepObject</code> for nested objects and arrays is undefined.
+Similarly, <code>form</code> style serialization is only defined for primitive property values.</p>
+<p><strong>Fix:</strong> Restructure the schema to use only primitive properties, or switch to a JSON-encoded parameter using the <code>content</code> keyword instead of <code>style</code>/<code>explode</code>.</p>
+<h3 id="extraction-fails-with-plain-text-content-type-and-structured-schema">Extraction fails with plain text content type and structured schema<a class="headerlink" href="#extraction-fails-with-plain-text-content-type-and-structured-schema" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "Content type text/plain supports only primitive schemas."</p>
+<p><strong>Cause:</strong> A request or response body uses a plain text content type (e.g., <code>text/plain</code>) with an object, array, or composition schema.
+Plain text has no standard serialization format for structured values -- there is no defined way to represent an object or an array as plain text.
+Contracteer cannot serialize or deserialize these types without a structured format like JSON.</p>
+<p><strong>Fix:</strong> Change the content type to <code>application/json</code> if the schema describes a structured type, or simplify the schema to a primitive type if the content type must remain plain text.</p>
 <h3 id="no-scenarios-created-at-all">No scenarios created at all<a class="headerlink" href="#no-scenarios-created-at-all" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The specification has example values, but Contracteer creates no scenarios.</p>
 <p><strong>Cause:</strong> The examples are defined under <code>schema.properties</code> instead of on the parameter or media type.
@@ -1748,9 +1864,12 @@ Contracteer produces no verification cases for them.</p>
 Operations are skipped when they use:</p>
 <ul>
 <li><code>application/xml</code> content types.</li>
+<li>Request or response bodies declared without a schema (e.g., <code>application/json: {}</code>).</li>
+<li>Parameters using the <code>content</code> keyword without a schema.</li>
 </ul>
 <p>Contracteer logs a warning for each skipped operation.</p>
-<p><strong>Fix:</strong> Check the <a href="../../concepts/openapi-coverage/">OpenAPI 3.0 Coverage</a> page for the full list of supported features.</p>
+<p><strong>Fix:</strong> Add a schema to the content type declaration, or remove the content type if no schema is needed.
+Check the <a href="../../concepts/openapi-coverage/">OpenAPI 3.0 Coverage</a> page for the full list of supported features.</p>
 <h3 id="confusing-example-and-examples">Confusing <code>example</code> and <code>examples</code><a class="headerlink" href="#confusing-example-and-examples" title="Permanent link">&para;</a></h3>
 <p><code>example</code> provides a single value.
 <code>examples</code> is a named map where each entry has a <code>value</code> field:</p>

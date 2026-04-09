@@ -1550,6 +1550,10 @@ The response is entirely handled by Contracteer.</p>
 <p>A status-code-prefixed key is exclusive to its status code.
 <code>404_UNKNOWN_MUSKETEER</code> is only eligible for the 404 response -- it never accidentally creates a scenario for a 200 response.</p>
 </div>
+<p>A status-code-prefixed key does not require an exact status code in the responses.
+If the operation defines a <code>4XX</code> class response or a <code>default</code> response, Contracteer uses it as a fallback.
+<code>404_UNKNOWN_MUSKETEER</code> works whether the operation defines <code>404</code>, <code>4XX</code>, or <code>default</code>.
+Contracteer resolves the response using the same priority as for automatic 400 testing: exact status code, then class response, then default.</p>
 <hr />
 <h2 id="example-validation">Example Validation<a class="headerlink" href="#example-validation" title="Permanent link">&para;</a></h2>
 <p>Contracteer validates example values against their schemas during extraction.

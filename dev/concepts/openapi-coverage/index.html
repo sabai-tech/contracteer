@@ -704,6 +704,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#allof-with-non-structured-sub-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        allOf with non-structured sub-schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-composition-keywords-on-the-same-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple composition keywords on the same schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nullable-on-composition-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nullable on composition schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -810,10 +843,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#examples-and-scenarios" class="md-nav__link">
+  <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples and scenarios
+        Examples
       
     </span>
   </a>
@@ -1290,6 +1323,39 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#allof-with-non-structured-sub-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        allOf with non-structured sub-schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-composition-keywords-on-the-same-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple composition keywords on the same schema
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nullable-on-composition-schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        nullable on composition schemas
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1396,10 +1462,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#examples-and-scenarios" class="md-nav__link">
+  <a href="#examples" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Examples and scenarios
+        Examples
       
     </span>
   </a>
@@ -1465,7 +1531,8 @@
 
 
 <h1 id="openapi-30-coverage">OpenAPI 3.0 Coverage<a class="headerlink" href="#openapi-30-coverage" title="Permanent link">&para;</a></h1>
-<p>This page describes which parts of the OpenAPI 3.0 specification Contracteer supports, where it deviates, and which features are not applicable to contract testing.</p>
+<p>This page describes which parts of the OpenAPI 3.0 specification Contracteer supports, where it deviates, and which
+features are not applicable to contract testing.</p>
 <p>Contracteer supports OpenAPI 3.0.x.</p>
 <hr />
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
@@ -1486,6 +1553,14 @@ Your specification still loads.</p>
 <td>Operations with XML-only content types are skipped with a warning.</td>
 </tr>
 <tr>
+<td>Missing schema on body or parameter content</td>
+<td>Operations with request/response bodies or parameter <code>content</code> entries that have no schema are skipped with a warning.</td>
+</tr>
+<tr>
+<td>Empty schema (<code>schema: {}</code>)</td>
+<td>Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.</td>
+</tr>
+<tr>
 <td><code>not</code> (schema negation)</td>
 <td>The keyword is ignored. Values are validated and generated without it.</td>
 </tr>
@@ -1503,7 +1578,7 @@ Your specification still loads.</p>
 </tr>
 <tr>
 <td>Unknown integer/number formats</td>
-<td>Rejected. Only <code>int32</code>, <code>int64</code>, <code>float</code>, <code>double</code> are supported.</td>
+<td>Ignored with a warning. Only <code>int32</code>, <code>int64</code>, <code>float</code>, <code>double</code> apply range constraints.</td>
 </tr>
 </tbody>
 </table>
@@ -1531,7 +1606,8 @@ If all enum values satisfy the active constraint, the specification is accepted.
 If any enum value violates it, the specification is rejected.</p>
 <p>Random value generation for patterns uses the <a href="https://github.com/curious-odd-man/rgxgen">RgxGen</a> library.
 RgxGen supports most common regex features, but lookaheads and lookbehinds do not generate correctly.
-If Contracteer generates invalid values for your pattern, use <code>enum</code> values instead, or provide explicit <code>examples</code> in your specification.</p>
+If Contracteer generates invalid values for your pattern, use <code>enum</code> values instead, or provide explicit <code>examples</code> in
+your specification.</p>
 <h3 id="multipart-default-content-types">Multipart default content types<a class="headerlink" href="#multipart-default-content-types" title="Permanent link">&para;</a></h3>
 <p>The OAS 3.0 specification defaults arrays of primitives to <code>text/plain</code> in multipart parts.
 Contracteer uses <code>application/json</code> for all arrays.
@@ -1567,9 +1643,89 @@ The specification does not define how to serialize an array as plain text in a m
 </tbody>
 </table>
 <p>Use the <code>encoding</code> object to override the default content type for specific properties.</p>
+<h3 id="allof-with-non-structured-sub-schemas"><code>allOf</code> with non-structured sub-schemas<a class="headerlink" href="#allof-with-non-structured-sub-schemas" title="Permanent link">&para;</a></h3>
+<p>A common real-world pattern wraps a <code>$ref</code> in a single-element <code>allOf</code> for documentation or tooling reasons:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="nt">NonEmptyString</span><span class="p">:</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">      </span><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">ProductName</span><span class="p">:</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/NonEmptyString&#39;</span>
+</code></pre></div>
+<p>Contracteer handles single-element <code>allOf</code> with any sub-schema type -- string, integer, object, or composite.</p>
+<p><strong>Multi-element <code>allOf</code></strong> requires all sub-schemas to be structured types (object, <code>allOf</code>, <code>anyOf</code>, or <code>oneOf</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Supported: multi-element allOf with objects</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Pet&#39;</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">huntingSkill</span><span class="p">:</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># Not supported: multi-element allOf with primitives</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">    </span><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">maxLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+<p>The OAS 3.0 specification allows <code>allOf</code> sub-schemas of any type, but Contracteer generates random values for each
+sub-schema and merges the results.
+For objects, this works -- different sub-schemas contribute different properties that combine cleanly.
+For primitives, constraints overlap on the same value.
+A <code>minLength: 5</code> from one sub-schema and a <code>maxLength: 10</code> from another would require computing the constraint
+intersection, which Contracteer does not do.</p>
+<p>If your specification uses multi-element <code>allOf</code> with primitives, combine the constraints into a single schema:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Equivalent single schema</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nt">maxLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</code></pre></div>
+<h3 id="multiple-composition-keywords-on-the-same-schema">Multiple composition keywords on the same schema<a class="headerlink" href="#multiple-composition-keywords-on-the-same-schema" title="Permanent link">&para;</a></h3>
+<p>JSON Schema allows <code>allOf</code>, <code>anyOf</code>, and <code>oneOf</code> to appear on the same schema, with each keyword applying independently:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Valid per the spec, but rejected by Contracteer</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">ProductOrService</span><span class="p">:</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Purchasable&#39;</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Product&#39;</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Service&#39;</span>
+</code></pre></div>
+<p>Contracteer rejects schemas that combine multiple composition keywords.
+Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one
+must match).
+Combining them would require a compound validation that Contracteer does not implement.</p>
+<p>This pattern is extremely rare in real-world specifications and is almost always a mistake.
+If your specification combines composition keywords, restructure it to use a single keyword:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Use allOf to combine the base schema with a oneOf</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">ProductOrService</span><span class="p">:</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Purchasable&#39;</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Product&#39;</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Service&#39;</span>
+</code></pre></div>
+<h3 id="nullable-on-composition-schemas"><code>nullable</code> on composition schemas<a class="headerlink" href="#nullable-on-composition-schemas" title="Permanent link">&para;</a></h3>
+<p>The OAS 3.0.4 specification states that <code>nullable</code> only takes effect when <code>type</code> is explicitly defined on the same
+schema.
+Composition schemas (<code>oneOf</code>, <code>anyOf</code>, <code>allOf</code>) typically do not declare <code>type</code>, which means <code>nullable: true</code> should
+technically have no effect:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">MySchema</span><span class="p">:</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">nullable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Cat&#39;</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Dog&#39;</span>
+</code></pre></div>
+<p>Contracteer honours <code>nullable: true</code> on composition schemas regardless of whether <code>type</code> is present.
+This matches the behavior of most OpenAPI tools (swagger-codegen, OpenAPI Generator, Redoc) and what users expect.
+The OAS 3.0 <code>nullable</code> rule is widely considered a specification design flaw, which OAS 3.1 resolved by replacing
+<code>nullable</code> with <code>type</code> arrays (e.g., <code>type: ["object", "null"]</code>).</p>
 <hr />
 <h2 id="not-applicable-to-contract-testing">Not Applicable to Contract Testing<a class="headerlink" href="#not-applicable-to-contract-testing" title="Permanent link">&para;</a></h2>
-<p>These features are defined in the OAS 3.0 specification but do not affect the structural contract between client and server.
+<p>These features are defined in the OAS 3.0 specification but do not affect the structural contract between client and
+server.
 Contracteer does not process them.</p>
 <table>
 <thead>
@@ -1730,6 +1886,10 @@ Contracteer does not process them.</p>
 <td><code>double</code></td>
 <td>Supported. Applies 64-bit double range; rejects explicit min/max outside range</td>
 </tr>
+<tr>
+<td>Other</td>
+<td>Ignored with a warning. No range constraint applied</td>
+</tr>
 </tbody>
 </table>
 <h3 id="schema-keywords">Schema keywords<a class="headerlink" href="#schema-keywords" title="Permanent link">&para;</a></h3>
@@ -1810,15 +1970,15 @@ Contracteer does not process them.</p>
 <tbody>
 <tr>
 <td><code>allOf</code></td>
-<td>Requires all sub-schemas to be structured types (object or composite)</td>
+<td>Single-element accepts any sub-schema type; multi-element requires structured types. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are folded in as an implicit sub-schema</td>
 </tr>
 <tr>
 <td><code>oneOf</code></td>
-<td>Validates that exactly one sub-schema matches</td>
+<td>Validates that exactly one sub-schema matches. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are supported</td>
 </tr>
 <tr>
 <td><code>anyOf</code></td>
-<td>Validates that at least one sub-schema matches</td>
+<td>Validates that at least one sub-schema matches. Sibling <code>properties</code>, <code>required</code>, and <code>additionalProperties</code> are supported</td>
 </tr>
 <tr>
 <td><code>discriminator</code></td>
@@ -1841,7 +2001,7 @@ Contracteer does not process them.</p>
 </tr>
 <tr>
 <td><code>in: query</code></td>
-<td>Primitive, array, and object types. Styles: <code>form</code>, <code>spaceDelimited</code>, <code>pipeDelimited</code>, <code>deepObject</code></td>
+<td>Primitive, array, and object types. Styles: <code>form</code>, <code>spaceDelimited</code>, <code>pipeDelimited</code>, <code>deepObject</code>. <code>deepObject</code> only supports flat objects with primitive properties.</td>
 </tr>
 <tr>
 <td><code>in: header</code></td>
@@ -1880,7 +2040,7 @@ Contracteer does not process them.</p>
 </tr>
 <tr>
 <td>Plain text content types</td>
-<td>Supported</td>
+<td>Primitive schemas only. Object, array, and composition schemas are rejected.</td>
 </tr>
 <tr>
 <td><code>multipart/*</code> (form-data, mixed, etc.)</td>
@@ -1888,7 +2048,7 @@ Contracteer does not process them.</p>
 </tr>
 <tr>
 <td><code>application/x-www-form-urlencoded</code></td>
-<td>Per-property encoding via the <code>encoding</code> object</td>
+<td>Per-property encoding via the <code>encoding</code> object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected.</td>
 </tr>
 <tr>
 <td>Multiple content types</td>
@@ -1904,7 +2064,7 @@ Contracteer does not process them.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="examples-and-scenarios">Examples and scenarios<a class="headerlink" href="#examples-and-scenarios" title="Permanent link">&para;</a></h3>
+<h3 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -1915,15 +2075,11 @@ Contracteer does not process them.</p>
 <tbody>
 <tr>
 <td><code>examples</code> map (parameter / media type level)</td>
-<td>Core mechanism for scenario creation</td>
+<td>Supported</td>
 </tr>
 <tr>
 <td>Single <code>example</code> (parameter / media type level)</td>
 <td>Supported</td>
-</tr>
-<tr>
-<td>Status-code-prefixed example keys</td>
-<td>Supported (<code>404_NOT_FOUND</code>, <code>400_INVALID_INPUT</code>)</td>
 </tr>
 </tbody>
 </table>
@@ -1963,7 +2119,7 @@ Contracteer does not process them.</p>
 </tr>
 <tr>
 <td>Recursive / chained <code>$ref</code></td>
-<td>Supported (with depth limits)</td>
+<td>Supported, including circular references. Infinite cycles (all properties in the cycle are required and non-nullable) are rejected at load time</td>
 </tr>
 <tr>
 <td>External <code>$ref</code> (other files)</td>
@@ -2005,7 +2161,8 @@ Contracteer does not process them.</p>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../../guides/troubleshooting/">Troubleshooting</a> -- common issues caused by unsupported features and how to work around them.</li>
+<li><a href="../../guides/troubleshooting/">Troubleshooting</a> -- common issues caused by unsupported features and how to work around
+  them.</li>
 <li><a href="../scenarios/">Creating Scenarios</a> -- how OpenAPI examples become scenarios and verification cases.</li>
 <li><a href="../testing-your-server/">Testing Your Server</a> -- what the verifier checks.</li>
 <li><a href="../testing-your-client/">Testing Your Client</a> -- how the mock server validates requests and generates responses.</li>
