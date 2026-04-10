@@ -5,11 +5,13 @@ import org.http4k.core.Response
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
 import org.http4k.routing.bind
+import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.codec.SimpleParameterCodec
+import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.serde.JsonSerde
@@ -333,5 +335,67 @@ class ServerVerifierTest {
     assert(capturedRawQuery!!.contains("https://example.com/cb?token=abc")) {
       "Expected reserved characters to be unencoded, but got: $capturedRawQuery"
     }
+  }
+
+  @Test
+  fun `url-encodes path parameter values containing URI-illegal characters`() {
+    // Given
+    var capturedId: String? = null
+
+    // Pattern guarantees at least one URI-illegal character (|, \, or >)
+    val dataType = StringDataType.create(
+      name = "id",
+      openApiType = "string",
+      pattern = """[a-z]+[|\\>][a-z]+"""
+    ).assertSuccess()
+
+    val apiOperation = ApiOperation(
+      path = "/resources/{id}",
+      method = "GET",
+      requestSchema = RequestSchema(
+        parameters = listOf(
+          ParameterSchema(
+            element = ParameterElement.PathParam("id"),
+            dataType = dataType,
+            isRequired = true,
+            codec = SimpleParameterCodec("id", false)
+          )
+        ),
+        bodies = emptyList()
+      ),
+      responses = mapOf(
+        200 to ResponseSchema(
+          headers = emptyList(),
+          bodies = listOf(
+            BodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+              isRequired = true,
+              serde = JsonSerde
+            )
+          )
+        )
+      ),
+      scenarios = emptyList()
+    )
+
+    val app = routes(
+      "/resources/{id}" bind GET to { request ->
+        capturedId = request.path("id")
+        Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+
+    // When
+    val results = cases.map { verifier.verify(it) }
+
+    // Then
+    server.stop()
+    assert(results.isNotEmpty())
+    assert(capturedId != null) { "Server should have received the request with encoded path" }
+    assert(capturedId!!.contains(Regex("""[|\\>]""")))
   }
 }

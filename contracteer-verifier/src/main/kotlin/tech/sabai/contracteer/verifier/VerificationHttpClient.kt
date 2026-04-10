@@ -4,7 +4,6 @@ import org.http4k.client.JavaHttpClient
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.UriTemplate
 import org.http4k.core.cookie.cookie
 import tech.sabai.contracteer.core.UrlEncoding
 import tech.sabai.contracteer.core.operation.*
@@ -13,7 +12,8 @@ import tech.sabai.contracteer.core.serde.MultipartSerde
 import tech.sabai.contracteer.core.serde.Serde
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
-internal class VerificationHttpClient(private val serverUrl: String) {
+internal class VerificationHttpClient(serverUrl: String) {
+  private val serverUrl = serverUrl.trimEnd('/')
   private val baseClient = JavaHttpClient()
 
   fun execute(case: VerificationCase): Pair<Request, Response> {
@@ -32,7 +32,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     val bodySerde = scenario.request.body?.let { body -> case.requestSchema.bodies.serdeFor(body.contentType) }
     val request = Request(
       method = Method.valueOf(scenario.method.uppercase()),
-      uri = UriTemplate.from("$serverUrl${scenario.path}").generate(pathParams))
+      uri = resolvePathUri(scenario.path, pathParams))
       .withScenarioParameters(scenario.request.parameterValues, case.requestSchema)
       .withScenarioBody(scenario.request.body, bodySerde)
       .withAcceptHeader(scenario.response.body?.contentType)
@@ -47,7 +47,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
 
     val request = Request(
       method = Method.valueOf(case.method.uppercase()),
-      uri = UriTemplate.from("$serverUrl${case.path}").generate(pathParams))
+      uri = resolvePathUri(case.path, pathParams))
       .withGeneratedParameters(case.requestSchema)
       .withGeneratedBody(
         case.requestSchema.bodies.find { it.contentType == case.requestContentType })
@@ -62,7 +62,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
     val pathParams = case.requestSchema.pathParameters.associate { param ->
       val value = when (mutatedElement) {
         is MutatedElement.Parameter if mutatedElement.element == param.element ->
-          UrlEncoding.encode(case.mutatedValue, false)
+          case.mutatedValue
         else ->
           param.codec
             .encode(param.dataType.randomValue())
@@ -73,7 +73,7 @@ internal class VerificationHttpClient(private val serverUrl: String) {
 
     val request = Request(
       method = Method.valueOf(case.method.uppercase()),
-      uri = UriTemplate.from("$serverUrl${case.path}").generate(pathParams))
+      uri = resolvePathUri(case.path, pathParams))
       .withTypeMismatchParameters(case)
       .withTypeMismatchBody(case)
       .withAcceptHeader(case.responseContentType)
@@ -179,6 +179,14 @@ internal class VerificationHttpClient(private val serverUrl: String) {
   private fun Request.withAcceptHeader(contentType: ContentType?): Request {
     return contentType?.let { header("Accept", it.value) } ?: this
   }
+
+  private fun resolvePathUri(path: String, pathParams: Map<String, String>): String =
+    pathParams.entries.fold("$serverUrl$path") { uri, (name, value) ->
+      uri.replace("{$name}", encodePathSegment(value))
+    }
+
+  private fun encodePathSegment(value: String): String =
+    UrlEncoding.encode(value, false).replace("+", "%20")
 
   private fun <V> Map<ParameterElement, V>.getOrGenerate(key: ParameterElement, generator: () -> V): V {
     return if (containsKey(key)) getValue(key) else generator()
