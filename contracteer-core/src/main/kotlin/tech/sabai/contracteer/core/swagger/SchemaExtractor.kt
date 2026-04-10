@@ -156,9 +156,6 @@ internal class SchemaExtractor(
                          mediaType: MediaType,
                          dataType: DataType<out Any>): Result<Serde> =
     when {
-      contentType.isJson() && !dataType.isFullyStructured() && dataType !is ArrayDataType ->
-        failure("Content type ${contentType.value} supports only 'object', 'anyOf', 'oneOf', 'allOf' or 'array' schema")
-
       contentType.isFormUrlEncoded() && dataType !is ObjectDataType                       ->
         failure("Content type application/x-www-form-urlencoded requires object schema")
 

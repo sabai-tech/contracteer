@@ -220,15 +220,15 @@ Similarly, `form` style serialization is only defined for primitive property val
 
 **Fix:** Restructure the schema to use only primitive properties, or switch to a JSON-encoded parameter using the `content` keyword instead of `style`/`explode`.
 
-### Extraction fails with plain text content type and structured schema
+### Extraction fails with non-JSON content type and structured schema
 
-**Symptom:** Loading the specification fails with "Content type text/plain supports only primitive schemas."
+**Symptom:** Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."
 
-**Cause:** A request or response body uses a plain text content type (e.g., `text/plain`) with an object, array, or composition schema.
-Plain text has no standard serialization format for structured values -- there is no defined way to represent an object or an array as plain text.
-Contracteer cannot serialize or deserialize these types without a structured format like JSON.
+**Cause:** A request or response body uses a media type that has no standard serialization for structured values -- `text/plain`, `text/html`, and `application/jwt` all describe scalar textual payloads.
+The OpenAPI specification does not define how to serialize an object, array, or composition for these media types, so any implementation would rely on an implicit convention between the spec author and the client.
+Contracteer rejects the combination at load time rather than silently applying a guess.
 
-**Fix:** Change the content type to `application/json` if the schema describes a structured type, or simplify the schema to a primitive type if the content type must remain plain text.
+**Fix:** Change the content type to `application/json` if the schema describes a structured value, or simplify the schema to a primitive type if the content type must remain as declared.
 
 ### No scenarios created at all
 

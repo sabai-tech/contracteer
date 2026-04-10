@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.assertSingle
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.operation.ParameterElement
+import tech.sabai.contracteer.core.serde.JsonSerde
 import kotlin.test.Test
 
 class OperationSchemaExtractionTest {
@@ -190,6 +191,28 @@ class OperationSchemaExtractionTest {
 
     val arrayOperation = operations.first { it.path == "/products" }
     assert(arrayOperation.responseFor(200)!!.bodies.single().dataType is ArrayDataType)
+  }
+
+  @Test
+  fun `accepts JSON content type with primitive body schema`() {
+    // when
+    val operations = loadOperations("json_body_accepts_primitive.yaml")
+
+    // then
+    val stringBody = operations.first { it.path == "/products/name" }
+      .responseFor(200)!!.bodies.single()
+    assert(stringBody.dataType is StringDataType)
+    assert(stringBody.serde === JsonSerde)
+
+    val integerBody = operations.first { it.path == "/products/count" }
+      .responseFor(200)!!.bodies.single()
+    assert(integerBody.dataType is IntegerDataType)
+    assert(integerBody.serde === JsonSerde)
+
+    val booleanBody = operations.first { it.path == "/products/in-stock" }
+      .responseFor(200)!!.bodies.single()
+    assert(booleanBody.dataType is BooleanDataType)
+    assert(booleanBody.serde === JsonSerde)
   }
 
   @Test

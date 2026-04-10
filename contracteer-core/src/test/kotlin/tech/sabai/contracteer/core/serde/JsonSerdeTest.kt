@@ -106,6 +106,24 @@ class JsonSerdeTest {
     // then
     assert(result.assertSuccess() ==null)
   }
+
+  @Test
+  fun `deserializes JSON string literal as String value`() {
+    // when
+    val result = JsonSerde.deserialize("\"hello\"", stringDataType())
+
+    // then
+    assert(result.assertSuccess() == "hello")
+  }
+
+  @Test
+  fun `deserializes JSON integer literal as BigDecimal value`() {
+    // when
+    val result = JsonSerde.deserialize("42", integerDataType())
+
+    // then
+    assert(result.assertSuccess() == BigDecimal.valueOf(42))
+  }
 }
 
 

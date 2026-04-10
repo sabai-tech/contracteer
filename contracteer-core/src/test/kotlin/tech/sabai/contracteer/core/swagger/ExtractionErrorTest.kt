@@ -33,13 +33,4 @@ class ExtractionErrorTest {
     val errors = result.assertFailure()
     assert(errors.size == 5) { "Expected 5 validation errors but got ${errors.size}: $errors" }
   }
-
-  @Test
-  fun `rejects JSON content type with non structured schema`() {
-    // when
-    val result = OpenApiLoader.loadOperations("src/test/resources/error/json_content_type_with_non_structured_schema.yaml")
-
-    // then
-    result.assertFailure()
-  }
 }

@@ -281,15 +281,15 @@ Contracteer does not process them.
 
 ### Request and response bodies
 
-| Feature                                | Notes                                                                                                                                                 |
-|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `application/json`                     | Supported                                                                                                                                             |
-| Plain text content types               | Primitive schemas only. Object, array, and composition schemas are rejected.                                                                          |
-| `multipart/*` (form-data, mixed, etc.) | Per-part content type via the `encoding` object                                                                                                       |
-| `application/x-www-form-urlencoded`    | Per-property encoding via the `encoding` object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected. |
-| Multiple content types                 | Produces one verification per content type combination                                                                                                |
-| `required` (request body)              | Supported                                                                                                                                             |
-| Content negotiation (Accept header)    | RFC 7231 support with quality factors and wildcard subtypes                                                                                           |
+| Feature                                      | Notes                                                                                                                                                             |
+|----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application/json`                           | Primitive, object, array, and composition schemas.                                                                                                                |
+| `text/plain`, `text/html`, `application/jwt` | Primitive schemas only. Object, array, and composition schemas are rejected at load time because no standard defines how to serialize them for these media types. |
+| `multipart/*` (form-data, mixed, etc.)       | Per-part content type via the `encoding` object                                                                                                                   |
+| `application/x-www-form-urlencoded`          | Per-property encoding via the `encoding` object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected.             |
+| Multiple content types                       | Produces one verification per content type combination                                                                                                            |
+| `required` (request body)                    | Supported                                                                                                                                                         |
+| Content negotiation (Accept header)          | RFC 7231 support with quality factors and wildcard subtypes                                                                                                       |
 
 ### Examples
 
