@@ -185,6 +185,42 @@ class StringDataTypeTest {
     }
 
     @Test
+    fun `creation fails when pattern uses Unicode category unsupported by the random value generator`() {
+      // given — pattern compiles in Java but trips RgxGen (unknown Unicode category)
+      val result = StringDataType.create(
+        name = "string",
+        openApiType = "string",
+        pattern = "\\p{IsLetter}+")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when pattern uses anchors inside alternation unsupported by the random value generator`() {
+      // given — valid Java regex but RgxGen rejects ^/$ inside alternation
+      val result = StringDataType.create(
+        name = "string",
+        openApiType = "string",
+        pattern = "(?:^foo$)|(?:^bar$)")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation fails when pattern uses shorthand escape in character class range`() {
+      // given — valid Java regex but RgxGen parses [0-9-\s] as a malformed range
+      val result = StringDataType.create(
+        name = "string",
+        openApiType = "string",
+        pattern = "^[a-zA-Z0-9-\\s().]+$")
+
+      // then
+      assert(result.isFailure())
+    }
+
+    @Test
     fun `enum values are validated against pattern at creation`() {
       // when
       val result = StringDataType.create(

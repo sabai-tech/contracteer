@@ -57,7 +57,13 @@ class StringDataType private constructor(name: String,
       if ((minLength != null && minLength < 0) || (maxLength != null && maxLength < 0))
         return failure("'minLength' and 'maxLength' must be greater than or equal to zero.")
 
-      if (isRegexPatternInvalid(pattern)) return failure("'pattern' is not a valid regular expression (ECMA-262 / Java regex): $pattern")
+      val regexError = regexPatternError(pattern)
+      if (regexError != null)
+        return failure("'pattern' is not a valid regular expression (ECMA-262 / Java regex): $pattern ($regexError)")
+
+      val generatorError = rgxGenError(pattern)
+      if (generatorError != null)
+        return failure("'pattern' uses constructs not supported by the random value generator: $pattern ($generatorError)")
 
       if (pattern != null && ((minLength != null && minLength > 0) || maxLength != null))
         logger.warn { "Schema '$name': 'minLength'/'maxLength' ignored because 'pattern' takes precedence." }
@@ -72,15 +78,24 @@ class StringDataType private constructor(name: String,
         }
     }
 
-    private fun isRegexPatternInvalid(pattern: String?): Boolean {
-      if (pattern != null) {
-        try {
-          Regex(pattern)
-        } catch (_: Exception) {
-          return true
-        }
+    private fun regexPatternError(pattern: String?): String? {
+      if (pattern == null) return null
+      return try {
+        Regex(pattern)
+        null
+      } catch (e: Exception) {
+        e.message?.lines()?.first() ?: e.javaClass.simpleName
       }
-      return false
+    }
+
+    private fun rgxGenError(pattern: String?): String? {
+      if (pattern == null) return null
+      return try {
+        RgxGen.parse(pattern)
+        null
+      } catch (e: Exception) {
+        e.message?.lines()?.first() ?: e.javaClass.simpleName
+      }
     }
   }
 }
