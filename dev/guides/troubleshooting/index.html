@@ -1225,10 +1225,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#extraction-fails-with-plain-text-content-type-and-structured-schema" class="md-nav__link">
+  <a href="#extraction-fails-with-non-json-content-type-and-structured-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extraction fails with plain text content type and structured schema
+        Extraction fails with non-JSON content type and structured schema
       
     </span>
   </a>
@@ -1571,10 +1571,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#extraction-fails-with-plain-text-content-type-and-structured-schema" class="md-nav__link">
+  <a href="#extraction-fails-with-non-json-content-type-and-structured-schema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Extraction fails with plain text content type and structured schema
+        Extraction fails with non-JSON content type and structured schema
       
     </span>
   </a>
@@ -1818,12 +1818,12 @@ Any of these gives Contracteer a finite stopping point.</p>
 The OpenAPI specification explicitly states that the behavior of <code>deepObject</code> for nested objects and arrays is undefined.
 Similarly, <code>form</code> style serialization is only defined for primitive property values.</p>
 <p><strong>Fix:</strong> Restructure the schema to use only primitive properties, or switch to a JSON-encoded parameter using the <code>content</code> keyword instead of <code>style</code>/<code>explode</code>.</p>
-<h3 id="extraction-fails-with-plain-text-content-type-and-structured-schema">Extraction fails with plain text content type and structured schema<a class="headerlink" href="#extraction-fails-with-plain-text-content-type-and-structured-schema" title="Permanent link">&para;</a></h3>
-<p><strong>Symptom:</strong> Loading the specification fails with "Content type text/plain supports only primitive schemas."</p>
-<p><strong>Cause:</strong> A request or response body uses a plain text content type (e.g., <code>text/plain</code>) with an object, array, or composition schema.
-Plain text has no standard serialization format for structured values -- there is no defined way to represent an object or an array as plain text.
-Contracteer cannot serialize or deserialize these types without a structured format like JSON.</p>
-<p><strong>Fix:</strong> Change the content type to <code>application/json</code> if the schema describes a structured type, or simplify the schema to a primitive type if the content type must remain plain text.</p>
+<h3 id="extraction-fails-with-non-json-content-type-and-structured-schema">Extraction fails with non-JSON content type and structured schema<a class="headerlink" href="#extraction-fails-with-non-json-content-type-and-structured-schema" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."</p>
+<p><strong>Cause:</strong> A request or response body uses a media type that has no standard serialization for structured values -- <code>text/plain</code>, <code>text/html</code>, and <code>application/jwt</code> all describe scalar textual payloads.
+The OpenAPI specification does not define how to serialize an object, array, or composition for these media types, so any implementation would rely on an implicit convention between the spec author and the client.
+Contracteer rejects the combination at load time rather than silently applying a guess.</p>
+<p><strong>Fix:</strong> Change the content type to <code>application/json</code> if the schema describes a structured value, or simplify the schema to a primitive type if the content type must remain as declared.</p>
 <h3 id="no-scenarios-created-at-all">No scenarios created at all<a class="headerlink" href="#no-scenarios-created-at-all" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> The specification has example values, but Contracteer creates no scenarios.</p>
 <p><strong>Cause:</strong> The examples are defined under <code>schema.properties</code> instead of on the parameter or media type.

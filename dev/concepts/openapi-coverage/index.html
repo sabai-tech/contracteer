@@ -2036,11 +2036,11 @@ Contracteer does not process them.</p>
 <tbody>
 <tr>
 <td><code>application/json</code></td>
-<td>Supported</td>
+<td>Primitive, object, array, and composition schemas.</td>
 </tr>
 <tr>
-<td>Plain text content types</td>
-<td>Primitive schemas only. Object, array, and composition schemas are rejected.</td>
+<td><code>text/plain</code>, <code>text/html</code>, <code>application/jwt</code></td>
+<td>Primitive schemas only. Object, array, and composition schemas are rejected at load time because no standard defines how to serialize them for these media types.</td>
 </tr>
 <tr>
 <td><code>multipart/*</code> (form-data, mixed, etc.)</td>
