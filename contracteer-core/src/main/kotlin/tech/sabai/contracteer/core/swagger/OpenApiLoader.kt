@@ -59,11 +59,15 @@ object OpenApiLoader {
     path.toUrl().flatMap { it.loadOpenApiDocument() }
 
   private fun parse(content: String): Result<OpenAPI> {
-    val parseResult = OpenAPIV3Parser().readContents(content, emptyList(), ParseOptions().apply { isResolve = true })
-    return when {
-      parseResult == null               -> failure("Failed to parse OpenAPI 3 Document")
-      parseResult.messages.isNotEmpty() -> failure(*parseResult.messages.toTypedArray())
-      else                              -> success(parseResult.openAPI)
+    return try {
+      val parseResult = OpenAPIV3Parser().readContents(content, emptyList(), ParseOptions().apply { isResolve = true })
+      when {
+        parseResult == null               -> failure("Failed to parse OpenAPI 3 Document")
+        parseResult.messages.isNotEmpty() -> failure(*parseResult.messages.toTypedArray())
+        else                              -> success(parseResult.openAPI)
+      }
+    } catch (t: Throwable) {
+      failure("Failed to parse OpenAPI 3 Document: ${t::class.simpleName}: ${t.message}")
     }
   }
 
