@@ -277,7 +277,8 @@ class OperationSchemaExtractionTest {
     // then
     val requestBody = operation.requestSchema.bodies.single().dataType as ObjectDataType
     val codeType = requestBody.properties["code"] as StringDataType
-    assert(codeType.pattern == "^[A-Z]{2}-\\d{4}$")
+    assert(codeType.validate("AB-1234").isSuccess())
+    assert(codeType.validate("no-match").isFailure())
   }
 
   // --- Helpers ---

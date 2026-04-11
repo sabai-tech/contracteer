@@ -1,6 +1,5 @@
 package tech.sabai.contracteer.core.datatype
 
-import com.github.curiousoddman.rgxgen.RgxGen
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
@@ -11,21 +10,16 @@ class StringDataType private constructor(name: String,
                                          openApiType: String,
                                          isNullable: Boolean,
                                          val lengthRange: Range,
-                                         val pattern: String? = null,
+                                         private val pattern: StringPattern? = null,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, openApiType, isNullable, String::class.java, allowedValues) {
-
-  private val candidateChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
-  private val compiledPattern = pattern?.let { Regex(it) }
-  private val patternGenerator = pattern?.let { RgxGen.parse(it) }
 
   override fun isFullyStructured() = false
 
   override fun doValidate(value: String): Result<String> =
     when {
-      compiledPattern != null && !compiledPattern.containsMatchIn(value) -> failure("Value '$value' does not match pattern '$pattern'.")
-      compiledPattern != null                                            -> success(value)
-      else                                                               ->
+      pattern != null -> pattern.validate(value)
+      else            ->
         lengthRange
           .contains(value.length.toBigDecimal())
           .mapErrors { "The value has an invalid length. Expected length within $lengthRange, but got : ${value.length}." }
@@ -33,69 +27,56 @@ class StringDataType private constructor(name: String,
     }
 
   override fun doRandomValue(): String =
-    if (patternGenerator != null)
-      patternGenerator.generate()
+    if (pattern != null) pattern.randomValue()
     else
       (1..lengthRange.randomIntegerValue().toLong().coerceIn(0, maxOf(10, lengthRange.minimum?.toLong() ?: 0)))
-        .map { candidateChars.random() }
+        .map { CANDIDATE_CHARS.random() }
         .joinToString("")
 
   companion object {
     private val logger = KotlinLogging.logger {}
+    private const val CANDIDATE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
 
     @JvmStatic
     @JvmOverloads
-    fun create(
-      name: String,
-      openApiType: String,
-      isNullable: Boolean = false,
-      enum: List<String?> = emptyList(),
-      minLength: Int? = 0,
-      maxLength: Int? = null,
-      pattern: String? = null): Result<StringDataType> {
+    fun create(name: String,
+               openApiType: String,
+               isNullable: Boolean = false,
+               enum: List<String?> = emptyList(),
+               minLength: Int? = 0,
+               maxLength: Int? = null,
+               pattern: String? = null): Result<StringDataType> {
 
       if ((minLength != null && minLength < 0) || (maxLength != null && maxLength < 0))
         return failure("'minLength' and 'maxLength' must be greater than or equal to zero.")
 
-      val regexError = regexPatternError(pattern)
-      if (regexError != null)
-        return failure("'pattern' is not a valid regular expression (ECMA-262 / Java regex): $pattern ($regexError)")
+      return parsePattern(pattern).flatMap { stringPattern ->
+        warnIfLengthIgnored(name, stringPattern, minLength, maxLength)
+        Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
+          .flatMap { range -> buildDataType(name, openApiType, isNullable, range, stringPattern, enum) }
+      }
+    }
 
-      val generatorError = rgxGenError(pattern)
-      if (generatorError != null)
-        return failure("'pattern' uses constructs not supported by the random value generator: $pattern ($generatorError)")
+    private fun parsePattern(pattern: String?): Result<StringPattern?> =
+      if (pattern == null) success(null) else StringPattern.create(pattern)
 
+    private fun warnIfLengthIgnored(name: String, pattern: StringPattern?, minLength: Int?, maxLength: Int?) {
       if (pattern != null && ((minLength != null && minLength > 0) || maxLength != null))
         logger.warn { "Schema '$name': 'minLength'/'maxLength' ignored because 'pattern' takes precedence." }
-
-      return Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
-        .flatMap { range ->
-          val dataType = StringDataType(name, openApiType, isNullable, range, pattern)
-          if (enum.isEmpty()) success(dataType)
-          else AllowedValues
-            .create(enum, dataType)
-            .map { StringDataType(name, openApiType, isNullable, range, pattern, it) }
-        }
     }
 
-    private fun regexPatternError(pattern: String?): String? {
-      if (pattern == null) return null
-      return try {
-        Regex(pattern)
-        null
-      } catch (e: Exception) {
-        e.message?.lines()?.first() ?: e.javaClass.simpleName
-      }
-    }
-
-    private fun rgxGenError(pattern: String?): String? {
-      if (pattern == null) return null
-      return try {
-        RgxGen.parse(pattern)
-        null
-      } catch (e: Exception) {
-        e.message?.lines()?.first() ?: e.javaClass.simpleName
-      }
+    private fun buildDataType(name: String,
+                              openApiType: String,
+                              isNullable: Boolean,
+                              range: Range,
+                              stringPattern: StringPattern?,
+                              enum: List<String?>): Result<StringDataType> {
+      val dataType = StringDataType(name, openApiType, isNullable, range, stringPattern)
+      return if (enum.isEmpty())
+        success(dataType)
+      else AllowedValues
+        .create(enum, dataType)
+        .map { StringDataType(name, openApiType, isNullable, range, stringPattern, it) }
     }
   }
 }
