@@ -70,7 +70,18 @@ internal class SchemaExtractor(
       .filter { it.`in` == "path" }
       .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
       .combineResults()
-      .flatMap { parameters -> parameters.map { it.toParameterSchema(PathParam(it.name)) }.combineResults() }
+      .flatMap { parameters ->
+        parameters
+          .onEach { enforceNonEmptyPathParameter(it) }
+          .map { it.toParameterSchema(PathParam(it.name)) }
+          .combineResults()
+      }
+
+  private fun enforceNonEmptyPathParameter(param: Parameter) {
+    val schema = param.schema ?: return
+    if (schema.type == "string" && (schema.minLength == null || schema.minLength < 1))
+      schema.minLength = 1
+  }
 
   private fun extractQueryParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
     operation.safeParameters()

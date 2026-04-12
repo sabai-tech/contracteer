@@ -6,6 +6,7 @@ import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.serde.JsonSerde
+import java.math.BigDecimal
 import kotlin.test.Test
 
 class OperationSchemaExtractionTest {
@@ -279,6 +280,17 @@ class OperationSchemaExtractionTest {
     val codeType = requestBody.properties["code"] as StringDataType
     assert(codeType.validate("AB-1234").isSuccess())
     assert(codeType.validate("no-match").isFailure())
+  }
+
+  @Test
+  fun `string path parameter enforces minimum length of 1`() {
+    // when
+    val operation = loadSingleOperation("string_path_parameter.yaml")
+
+    // then — the length range excludes 0, so empty strings cannot be generated
+    val dataType = operation.requestSchema.pathParameters.single().dataType as StringDataType
+    assert(dataType.lengthRange.contains(BigDecimal.ZERO).isFailure())
+    assert(dataType.lengthRange.contains(BigDecimal.ONE).isSuccess())
   }
 
   // --- Helpers ---
