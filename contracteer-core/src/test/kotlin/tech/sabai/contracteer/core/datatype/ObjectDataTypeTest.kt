@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.TestFixture.arrayDataType
 import tech.sabai.contracteer.core.TestFixture.booleanDataType
 import tech.sabai.contracteer.core.TestFixture.integerDataType
@@ -444,7 +445,7 @@ class ObjectDataTypeTest {
     }
 
     @Test
-    fun `creation fails when minProperties exceeds declared properties`() {
+    fun `creation fails when minProperties exceeds declared properties and no additionalProperties schema`() {
       // when
       val result = ObjectDataType.create(
         name = "object",
@@ -456,6 +457,25 @@ class ObjectDataTypeTest {
 
       // then
       assert(result.isFailure())
+    }
+
+    @Test
+    fun `creation succeeds when minProperties exceeds declared properties but additionalProperties schema is available`() {
+      // when
+      val result = ObjectDataType.create(
+        name = "Tags",
+        properties = emptyMap(),
+        allowAdditionalProperties = true,
+        additionalPropertiesDataType = stringDataType(),
+        isNullable = false,
+        minProperties = 1
+      )
+
+      // then
+      val dataType = result.assertSuccess()
+      val generated = dataType.randomValue()!!
+      assert(generated.isNotEmpty())
+      assert(generated.values.all { it is String })
     }
 
     @Test

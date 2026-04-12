@@ -49,7 +49,26 @@ class ObjectDataType private constructor(name: String,
     } else {
       properties
     }
-    return selected.mapValues { it.value.randomValue() }
+    val result = selected.mapValues { it.value.randomValue() }
+    return if (minProperties != null && result.size < minProperties && additionalPropertiesDataType != null)
+      result + generateAdditionalEntries(minProperties - result.size, result.keys)
+    else
+      result
+  }
+
+  private fun generateAdditionalEntries(count: Int, existingKeys: Set<String>): Map<String, Any?> {
+    val usedKeys = existingKeys.toMutableSet()
+    return (1..count).associate {
+      val key = generateUniqueKey(usedKeys)
+      usedKeys.add(key)
+      key to additionalPropertiesDataType!!.randomValue()
+    }
+  }
+
+  private fun generateUniqueKey(existingKeys: Set<String>): String {
+    var suffix = existingKeys.size + 1
+    while ("contracteer_key_$suffix" in existingKeys) suffix++
+    return "contracteer_key_$suffix"
   }
 
   override fun asRequestType(): DataType<Map<String, Any?>> {
@@ -128,8 +147,8 @@ class ObjectDataType private constructor(name: String,
         return failure("minProperties ($minProperties) must be less than or equal to maxProperties ($maxProperties)")
       if (maxProperties != null && maxProperties < requiredProperties.size)
         return failure("maxProperties ($maxProperties) is less than the number of required properties (${requiredProperties.size})")
-      if (minProperties != null && minProperties > properties.size)
-        return failure("minProperties ($minProperties) exceeds the number of declared properties (${properties.size})")
+      if (minProperties != null && minProperties > properties.size && additionalPropertiesDataType == null)
+        return failure("minProperties ($minProperties) exceeds the number of declared properties (${properties.size}) and no additionalProperties schema is available")
       if ((minProperties != null || maxProperties != null) && readOnlyProperties.isNotEmpty())
         return failure("minProperties/maxProperties cannot be combined with readOnly properties")
       if ((minProperties != null || maxProperties != null) && writeOnlyProperties.isNotEmpty())
