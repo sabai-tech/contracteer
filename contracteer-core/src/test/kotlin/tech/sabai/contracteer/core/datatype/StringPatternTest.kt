@@ -71,7 +71,7 @@ class StringPatternTest {
     val errors = StringPattern.create("(?:^foo\$)|(?:^bar\$)").assertFailure()
 
     // then
-    assert(errors.any { it.contains("value generator") || it.contains("random value generator") })
+    assert(errors.any { it.contains("not supported for value generation") })
   }
 
   @Test
@@ -80,7 +80,7 @@ class StringPatternTest {
     val errors = StringPattern.create("^[0-9a-z\\.\\-]*(?<!\\.)\$").assertFailure()
 
     // then
-    assert(errors.any { it.contains("do not match") })
+    assert(errors.any { it.contains("not supported for value generation") })
   }
 
   @Test

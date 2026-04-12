@@ -49,18 +49,18 @@ internal class StringPattern private constructor(
     private fun parseRgxGen(pattern: String): Result<RgxGen> =
       try {
         success(RgxGen.parse(PatternRewriter.rewrite(pattern)))
-      } catch (e: Throwable) {
-        failure("'pattern' uses constructs not supported by the random value generator: $pattern (${shortCause(e)})")
+      } catch (_: Throwable) {
+        patternNotSupported(pattern)
       }
 
     private fun verifySamples(pattern: String, compiledRegex: Regex, generator: RgxGen): Result<StringPattern> =
       generateSamples(generator, pattern).flatMap { samples ->
         try {
           val firstBad = samples.firstOrNull { !compiledRegex.containsMatchIn(it) }
-          if (firstBad != null) silentCorruptionFailure(pattern, firstBad)
+          if (firstBad != null) patternNotSupported(pattern)
           else success(StringPattern(pattern, compiledRegex, generator))
         } catch (_: StackOverflowError) {
-          failure("'pattern' is too complex for the regex engine: $pattern")
+          patternNotSupported(pattern)
         }
       }
 
@@ -69,11 +69,11 @@ internal class StringPattern private constructor(
         (1..SAMPLE_COUNT).map { generator.generate() }
       }.fold(
         onSuccess = { success(it) },
-        onFailure = { e -> failure("'pattern' value generation failed: $pattern (${shortCause(e)})") }
+        onFailure = { _ -> patternNotSupported(pattern) }
       )
 
-    private fun silentCorruptionFailure(pattern: String, sample: String): Result<StringPattern> =
-      failure("'pattern' value generation produces values that do not match the pattern: $pattern (e.g., '${sample.take(40)}')")
+    private fun <T> patternNotSupported(pattern: String): Result<T> =
+      failure("'pattern' is not supported for value generation: $pattern. Use OpenAPI examples to provide explicit values for this property (creating Scenarios), or simplify the pattern.")
 
     private fun shortCause(e: Throwable): String =
       e.message?.lines()?.firstOrNull() ?: e::class.simpleName.orEmpty()
