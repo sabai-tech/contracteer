@@ -4,8 +4,11 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import java.math.BigDecimal
+import java.math.BigDecimal.ONE
+import java.math.BigInteger
 import java.math.RoundingMode.*
 import kotlin.random.Random
+import kotlin.random.asJavaRandom
 
 /**
  * A numeric range defined by optional minimum and maximum bounds, with optional exclusivity.
@@ -37,59 +40,59 @@ class Range private constructor(
     }
   }
 
-  fun containsIntegers(): Boolean {
-    val intLowerBound = effectiveMinimum().setScale(0, CEILING)
-    var intUpperBound = effectiveMaximum().setScale(0, FLOOR)
-
-    if (exclusiveMaximum) {
-      intUpperBound = intUpperBound.subtract(BigDecimal.ONE)
-    }
-
-    return intLowerBound <= intUpperBound
-  }
+  fun containsIntegers(): Boolean =
+    firstValidMultipleIndex(ONE) <= lastValidMultipleIndex(ONE)
 
   fun randomIntegerValue(): BigDecimal {
     if (!containsIntegers()) throw IllegalArgumentException("Cannot generate random integer for the range $this as it does not contain any integer value.")
 
-    val intMinimum = effectiveMinimum().setScale(0, CEILING)
-    var intMaximum = effectiveMaximum().setScale(0, FLOOR)
-
-    if (exclusiveMaximum) {
-      intMaximum = intMaximum.subtract(BigDecimal.ONE)
+    val min = firstValidMultipleIndex(ONE).toBigInteger()
+    val max = lastValidMultipleIndex(ONE).toBigInteger()
+    return when (min) {
+      max  -> min.toBigDecimal()
+      else -> randomBigInteger(min, max).toBigDecimal()
     }
-
-    val minLong = intMinimum.toLong()
-    val maxLong = intMaximum.toLong()
-
-    if (minLong == maxLong) return BigDecimal.valueOf(minLong)
-    if (maxLong == Long.MAX_VALUE) return BigDecimal.valueOf(Random.nextLong(minLong, maxLong))
-    return BigDecimal.valueOf(Random.nextLong(minLong, maxLong + 1))
   }
 
   fun randomValue(): BigDecimal {
     val min = effectiveMinimum().max(DEFAULT_WIDTH.negate())
     val max = effectiveMaximum().min(DEFAULT_WIDTH)
     val diff = max.subtract(min)
-    val randomFactor = BigDecimal.valueOf(Random.nextDouble())
-    var result = min.add(diff.multiply(randomFactor))
-
-    if (exclusiveMaximum && result.compareTo(max) == 0) {
-      val epsilon = BigDecimal.ONE.scaleByPowerOfTen(-diff.scale())
-      result = result.subtract(epsilon)
-    }
-    return result.setScale(4, HALF_UP)
+    val raw = min.add(diff.multiply(BigDecimal.valueOf(Random.nextDouble())))
+    return when {
+      exclusiveMaximum && raw.compareTo(max) == 0 -> raw.subtract(ONE.scaleByPowerOfTen(-diff.scale()))
+      else                                        -> raw
+    }.setScale(4, HALF_UP)
   }
 
-  fun containsMultipleOf(multipleOf: BigDecimal): Boolean {
-    val min = effectiveMinimum().divide(multipleOf, 0, CEILING).toLong()
-    val max = effectiveMaximum().divide(multipleOf, 0, FLOOR).toLong()
-    return min <= max
-  }
+  fun containsMultipleOf(multipleOf: BigDecimal): Boolean =
+    firstValidMultipleIndex(multipleOf) <= lastValidMultipleIndex(multipleOf)
 
   fun randomMultipleOf(multipleOf: BigDecimal): BigDecimal {
-    val min = effectiveMinimum().divide(multipleOf, 0, CEILING).toLong()
-    val max = effectiveMaximum().divide(multipleOf, 0, FLOOR).toLong()
-    return BigDecimal.valueOf(Random.nextLong(min, max + 1)).multiply(multipleOf)
+    val min = firstValidMultipleIndex(multipleOf).toBigInteger()
+    val max = lastValidMultipleIndex(multipleOf).toBigInteger()
+    return randomBigInteger(min, max).toBigDecimal().multiply(multipleOf)
+  }
+
+  private fun firstValidMultipleIndex(multipleOf: BigDecimal): BigDecimal {
+    val index = effectiveMinimum().divide(multipleOf, 0, CEILING)
+    return when {
+      exclusiveMinimum && index.multiply(multipleOf).compareTo(effectiveMinimum()) == 0 -> index.add(ONE)
+      else -> index
+    }
+  }
+
+  private fun lastValidMultipleIndex(multipleOf: BigDecimal): BigDecimal {
+    val index = effectiveMaximum().divide(multipleOf, 0, FLOOR)
+    return when {
+      exclusiveMaximum && index.multiply(multipleOf).compareTo(effectiveMaximum()) == 0 -> index.subtract(ONE)
+      else -> index
+    }
+  }
+
+  private fun randomBigInteger(min: BigInteger, max: BigInteger): BigInteger {
+    val range = max - min
+    return min + BigInteger(range.bitLength(), Random.asJavaRandom()).mod(range + BigInteger.ONE)
   }
 
   private fun effectiveMinimum() =

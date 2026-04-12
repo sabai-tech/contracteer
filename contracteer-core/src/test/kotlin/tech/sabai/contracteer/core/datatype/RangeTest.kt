@@ -96,6 +96,30 @@ class RangeTest {
   }
 
   @Test
+  fun `exclusiveMinimum excludes the integer bound from generation`() {
+    // given
+    val range = Range.create(bigDecimal(10), bigDecimal(12), exclusiveMinimum = true).assertSuccess()
+
+    // when
+    repeat(50) {
+      val value = range.randomIntegerValue()
+      assert(value >= BigDecimal.valueOf(11))
+      assert(range.contains(value).isSuccess())
+    }
+  }
+
+  @Test
+  fun `exclusiveMaximum with non-integer bound does not over-exclude`() {
+    // given
+    val range = Range.create(bigDecimal(10), bigDecimal(10.5), exclusiveMaximum = true).assertSuccess()
+
+    // then
+    assert(range.containsIntegers())
+    val value = range.randomIntegerValue()
+    assert(value.compareTo(BigDecimal.TEN) == 0)
+  }
+
+  @Test
   fun `generates random integer value in the range`() {
     // given
     val range = Range.create(10.toBigDecimal(), 20.toBigDecimal()).assertSuccess()
@@ -105,6 +129,90 @@ class RangeTest {
 
     //
     assert(range.contains(value).isSuccess())
+  }
+
+  @Test
+  fun `generates random integer value when bounds exceed Long range`() {
+    // given
+    val range = Range.create(
+      BigDecimal.ONE,
+      BigDecimal("9223372036854776000")
+    ).assertSuccess()
+
+    // when
+    val value = range.randomIntegerValue()
+
+    // then
+    assert(range.contains(value).isSuccess())
+  }
+
+  @Test
+  fun `generates random integer value when range width equals Long MAX_VALUE`() {
+    // given
+    val range = Range.create(
+      BigDecimal.ZERO,
+      BigDecimal.valueOf(Long.MAX_VALUE)
+    ).assertSuccess()
+
+    // when
+    val value = range.randomIntegerValue()
+
+    // then
+    assert(range.contains(value).isSuccess())
+  }
+
+  @Test
+  fun `generates random multiple when bounds exceed Long range`() {
+    // given
+    val range = Range.create(
+      BigDecimal.ZERO,
+      BigDecimal("9223372036854776000")
+    ).assertSuccess()
+
+    // when
+    val value = range.randomMultipleOf(BigDecimal("1000"))
+
+    // then
+    assert(range.contains(value).isSuccess())
+    assert(value.remainder(BigDecimal("1000")).compareTo(BigDecimal.ZERO) == 0)
+  }
+
+  @Test
+  fun `containsMultipleOf works when bounds exceed Long range`() {
+    // given
+    val range = Range.create(
+      BigDecimal.ONE,
+      BigDecimal("9223372036854776000")
+    ).assertSuccess()
+
+    // then
+    assert(range.containsMultipleOf(BigDecimal("1000")))
+  }
+
+  @Test
+  fun `exclusiveMinimum excludes the bound from multipleOf generation`() {
+    // given
+    val range = Range.create(BigDecimal.ZERO, bigDecimal(15), exclusiveMinimum = true).assertSuccess()
+
+    // when
+    repeat(50) {
+      val value = range.randomMultipleOf(bigDecimal(5))
+      assert(value > BigDecimal.ZERO) { "Generated $value which violates exclusiveMinimum" }
+      assert(range.contains(value).isSuccess())
+    }
+  }
+
+  @Test
+  fun `exclusiveMaximum excludes the bound from multipleOf generation`() {
+    // given
+    val range = Range.create(BigDecimal.ZERO, bigDecimal(10), exclusiveMaximum = true).assertSuccess()
+
+    // when
+    repeat(50) {
+      val value = range.randomMultipleOf(bigDecimal(5))
+      assert(value < bigDecimal(10)) { "Generated $value which violates exclusiveMaximum" }
+      assert(range.contains(value).isSuccess())
+    }
   }
 
   @Test
