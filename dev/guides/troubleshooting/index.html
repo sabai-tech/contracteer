@@ -1258,6 +1258,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pattern-uses-unsupported-regex-constructs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern uses unsupported regex constructs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-value-generation-produces-non-matching-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern value generation produces non-matching values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-is-too-complex-for-the-regex-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern is too complex for the regex engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unexpected-behavior-from-unsupported-schema-keywords" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1604,6 +1637,39 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pattern-uses-unsupported-regex-constructs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern uses unsupported regex constructs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-value-generation-produces-non-matching-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern value generation produces non-matching values
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pattern-is-too-complex-for-the-regex-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern is too complex for the regex engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unexpected-behavior-from-unsupported-schema-keywords" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1846,6 +1912,28 @@ The lower-priority constraint is ignored for both validation and generation.</p>
 See <a href="../../concepts/openapi-coverage/#string-constraint-precedence">String constraint precedence</a> for the full explanation.
 If you need the pattern to apply, remove the <code>format</code>.
 If you need length constraints to apply, remove the <code>pattern</code>.</p>
+<h3 id="pattern-uses-unsupported-regex-constructs">Pattern uses unsupported regex constructs<a class="headerlink" href="#pattern-uses-unsupported-regex-constructs" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "pattern uses constructs not supported for value generation."</p>
+<p><strong>Cause:</strong> The <code>pattern</code> uses a regex construct that Contracteer's value generator cannot handle.
+Contracteer automatically rewrites common Java-specific constructs (POSIX classes like <code>\p{Print}</code>, Java aliases like <code>\p{IsLetter}</code>, dash-position issues in character classes) into compatible equivalents.
+Patterns that cannot be rewritten -- such as anchors inside alternation branches or inline flags -- are rejected.</p>
+<p><strong>Fix:</strong> Simplify the pattern to use standard character classes and quantifiers.
+Alternatively, provide explicit <code>examples</code> on the parameter or media type so that Contracteer uses your example values instead of generating random ones.
+See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provide examples.</p>
+<h3 id="pattern-value-generation-produces-non-matching-values">Pattern value generation produces non-matching values<a class="headerlink" href="#pattern-value-generation-produces-non-matching-values" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "value generation produces values that do not match the pattern."</p>
+<p><strong>Cause:</strong> The <code>pattern</code> compiles and the value generator accepts it, but the generated values do not satisfy the original pattern.
+This typically happens with patterns that combine lookahead or lookbehind assertions with anchors -- the generator ignores the assertion semantics and produces values that violate the constraint.</p>
+<p><strong>Fix:</strong> Simplify the pattern to avoid lookahead or lookbehind assertions.
+Alternatively, provide explicit <code>examples</code> on the parameter or media type so that Contracteer uses your example values instead of generating random ones.
+See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provide examples.</p>
+<h3 id="pattern-is-too-complex-for-the-regex-engine">Pattern is too complex for the regex engine<a class="headerlink" href="#pattern-is-too-complex-for-the-regex-engine" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "pattern is too complex for the regex engine."</p>
+<p><strong>Cause:</strong> The <code>pattern</code> contains deeply nested quantifiers that cause the Java regex engine to overflow its stack when validating generated values.
+This is a known limitation of Java's recursive regex implementation, not a Contracteer bug.</p>
+<p><strong>Fix:</strong> Simplify the pattern by reducing nested quantifiers or breaking it into smaller alternatives.
+Alternatively, provide explicit <code>examples</code> on the parameter or media type so that Contracteer uses your example values instead of generating random ones.
+See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provide examples.</p>
 <h3 id="unexpected-behavior-from-unsupported-schema-keywords">Unexpected behavior from unsupported schema keywords<a class="headerlink" href="#unexpected-behavior-from-unsupported-schema-keywords" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.</p>
 <p><strong>Cause:</strong> Your specification uses an OpenAPI schema keyword that Contracteer does not yet support.

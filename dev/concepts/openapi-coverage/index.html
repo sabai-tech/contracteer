@@ -1574,7 +1574,7 @@ Your specification still loads.</p>
 </tr>
 <tr>
 <td>Pattern generation (regex)</td>
-<td>Some regex features (lookaheads, lookbehinds) do not generate correctly.</td>
+<td>Common Java-specific constructs (POSIX classes, <code>\p{Is...}</code> aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See <a href="../../guides/troubleshooting/#pattern-value-generation-fails">Troubleshooting</a> for details.</td>
 </tr>
 <tr>
 <td>Unknown integer/number formats</td>
