@@ -262,6 +262,40 @@ See [String constraint precedence](../concepts/openapi-coverage.md#string-constr
 If you need the pattern to apply, remove the `format`.
 If you need length constraints to apply, remove the `pattern`.
 
+### Pattern uses unsupported regex constructs
+
+**Symptom:** Loading the specification fails with "pattern uses constructs not supported for value generation."
+
+**Cause:** The `pattern` uses a regex construct that Contracteer's value generator cannot handle.
+Contracteer automatically rewrites common Java-specific constructs (POSIX classes like `\p{Print}`, Java aliases like `\p{IsLetter}`, dash-position issues in character classes) into compatible equivalents.
+Patterns that cannot be rewritten -- such as anchors inside alternation branches or inline flags -- are rejected.
+
+**Fix:** Simplify the pattern to use standard character classes and quantifiers.
+Alternatively, provide explicit `examples` on the parameter or media type so that Contracteer uses your example values instead of generating random ones.
+See [Creating Scenarios](../concepts/scenarios.md) for how to provide examples.
+
+### Pattern value generation produces non-matching values
+
+**Symptom:** Loading the specification fails with "value generation produces values that do not match the pattern."
+
+**Cause:** The `pattern` compiles and the value generator accepts it, but the generated values do not satisfy the original pattern.
+This typically happens with patterns that combine lookahead or lookbehind assertions with anchors -- the generator ignores the assertion semantics and produces values that violate the constraint.
+
+**Fix:** Simplify the pattern to avoid lookahead or lookbehind assertions.
+Alternatively, provide explicit `examples` on the parameter or media type so that Contracteer uses your example values instead of generating random ones.
+See [Creating Scenarios](../concepts/scenarios.md) for how to provide examples.
+
+### Pattern is too complex for the regex engine
+
+**Symptom:** Loading the specification fails with "pattern is too complex for the regex engine."
+
+**Cause:** The `pattern` contains deeply nested quantifiers that cause the Java regex engine to overflow its stack when validating generated values.
+This is a known limitation of Java's recursive regex implementation, not a Contracteer bug.
+
+**Fix:** Simplify the pattern by reducing nested quantifiers or breaking it into smaller alternatives.
+Alternatively, provide explicit `examples` on the parameter or media type so that Contracteer uses your example values instead of generating random ones.
+See [Creating Scenarios](../concepts/scenarios.md) for how to provide examples.
+
 ### Unexpected behavior from unsupported schema keywords
 
 **Symptom:** Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.

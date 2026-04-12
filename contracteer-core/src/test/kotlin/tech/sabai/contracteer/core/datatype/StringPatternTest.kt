@@ -80,7 +80,17 @@ class StringPatternTest {
     val errors = StringPattern.create("^[0-9a-z\\.\\-]*(?<!\\.)\$").assertFailure()
 
     // then
-    assert(errors.any { it.contains("do not match") || it.contains("value generator") })
+    assert(errors.any { it.contains("do not match") })
+  }
+
+  @Test
+  fun `create fails gracefully when pattern causes StackOverflowError during validation`() {
+    // given — deeply nested quantifiers can overflow Java's recursive regex matcher
+    val result = StringPattern.create(
+      "abc:[a-z0-9-\\.]{1,63}:[a-z0-9-\\.]{0,63}:[a-z0-9-\\.]{0,63}:[a-z0-9-\\.]{0,63}:[^/].{0,1023}")
+
+    // then — returns a Result (success or failure), never crashes with StackOverflowError
+    assert(result.isSuccess() || result.isFailure())
   }
 
   // --- Rewrite integration (end-to-end) ---

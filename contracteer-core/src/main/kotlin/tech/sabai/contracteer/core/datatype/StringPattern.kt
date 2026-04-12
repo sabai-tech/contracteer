@@ -54,23 +54,26 @@ internal class StringPattern private constructor(
       }
 
     private fun verifySamples(pattern: String, compiledRegex: Regex, generator: RgxGen): Result<StringPattern> =
-      generateSamples(generator, pattern)
-        .flatMap { samples ->
+      generateSamples(generator, pattern).flatMap { samples ->
+        try {
           val firstBad = samples.firstOrNull { !compiledRegex.containsMatchIn(it) }
           if (firstBad != null) silentCorruptionFailure(pattern, firstBad)
           else success(StringPattern(pattern, compiledRegex, generator))
+        } catch (_: StackOverflowError) {
+          failure("'pattern' is too complex for the regex engine: $pattern")
         }
+      }
 
     private fun generateSamples(generator: RgxGen, pattern: String): Result<List<String>> =
       runCatching {
         (1..SAMPLE_COUNT).map { generator.generate() }
       }.fold(
         onSuccess = { success(it) },
-        onFailure = { e -> failure("'pattern' random value generation failed: $pattern (${shortCause(e)})") }
+        onFailure = { e -> failure("'pattern' value generation failed: $pattern (${shortCause(e)})") }
       )
 
     private fun silentCorruptionFailure(pattern: String, sample: String): Result<StringPattern> =
-      failure("'pattern' random value generator produces values that do not match: $pattern (e.g., '${sample.take(40)}')")
+      failure("'pattern' value generation produces values that do not match the pattern: $pattern (e.g., '${sample.take(40)}')")
 
     private fun shortCause(e: Throwable): String =
       e.message?.lines()?.firstOrNull() ?: e::class.simpleName.orEmpty()
