@@ -33,5 +33,5 @@ internal object OneOfDataTypeConverter {
           isNullable = schema.safeNullable(),
           enum = schema.safeEnum()
         )
-      }.forProperty("${schema.name}")
+      }
 }

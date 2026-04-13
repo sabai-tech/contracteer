@@ -8,6 +8,7 @@ import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.failureForKey
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.accumulate
@@ -25,11 +26,11 @@ internal class SchemaExtractor(
 ) {
 
   fun extractRequestSchema(operation: Operation): Result<RequestSchema> {
-    val pathParameters = extractPathParameterSchemas(operation).forProperty("path")
-    val queryParameters = extractQueryParameterSchemas(operation).forProperty("query")
-    val headers = extractRequestHeaderSchemas(operation).forProperty("header")
-    val cookies = extractRequestCookieSchemas(operation).forProperty("cookie")
-    val bodies = extractRequestBodySchemas(operation).forProperty("body")
+    val pathParameters = extractPathParameterSchemas(operation).forProperty("request.path")
+    val queryParameters = extractQueryParameterSchemas(operation).forProperty("request.query")
+    val headers = extractRequestHeaderSchemas(operation).forProperty("request.header")
+    val cookies = extractRequestCookieSchemas(operation).forProperty("request.cookie")
+    val bodies = extractRequestBodySchemas(operation).forProperty("request.body")
 
     return if (pathParameters is Success && queryParameters is Success && headers is Success && cookies is Success && bodies is Success)
       success(RequestSchema(
@@ -51,7 +52,7 @@ internal class SchemaExtractor(
         if (headers is Success && bodies is Success)
           success(statusCode to ResponseSchema(headers = headers.value, bodies = bodies.value))
         else
-          (headers combineWith bodies).retypeError()
+          (headers combineWith bodies).forKey(code).forProperty("response").retypeError()
       }
     }
 
@@ -312,7 +313,7 @@ internal class SchemaExtractor(
         is ParameterElement.Header -> "header"
         is Cookie                  -> "cookie"
       }
-      return failure(paramName, "Style '${style ?: actualStyle}' is not supported for $locationName parameters")
+      return failureForKey(paramName, "Style '${style ?: actualStyle}' is not supported for $locationName parameters")
     }
 
     validateStyleConstraints(actualStyle, actualExplode, dataType, paramName)?.let { return it }
@@ -325,7 +326,7 @@ internal class SchemaExtractor(
       "spacedelimited" -> success(SpaceDelimitedParameterCodec(paramName))
       "pipedelimited"  -> success(PipeDelimitedParameterCodec(paramName))
       "deepobject"     -> success(DeepObjectParameterCodec(paramName))
-      else             -> failure(paramName, "Unknown style '$actualStyle'")
+      else             -> failureForKey(paramName, "Unknown style '$actualStyle'")
     }
   }
 
@@ -334,24 +335,37 @@ internal class SchemaExtractor(
                                        dataType: DataType<out Any>,
                                        paramName: String): Result<ParameterCodec>? =
     when (style) {
-      "deepobject"     -> when {
-        dataType !is ObjectDataType          -> failure(paramName, "Style 'deepObject' requires object type")
-        !explode                             -> failure(paramName, "Style 'deepObject' requires explode=true")
-        dataType.hasNonPrimitiveProperties() -> failure(paramName, "Style 'deepObject' does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)")
-        else                                 -> null
-      }
-      "spacedelimited" -> when {
-        dataType !is ArrayDataType -> failure(paramName, "Style 'spaceDelimited' requires array type")
-        explode                    -> failure(paramName, "Style 'spaceDelimited' requires explode=false")
-        else                       -> null
-      }
-      "pipedelimited"  -> when {
-        dataType !is ArrayDataType -> failure(paramName, "Style 'pipeDelimited' requires array type")
-        explode                    -> failure(paramName, "Style 'pipeDelimited' requires explode=false")
-        else                       -> null
-      }
+      "deepobject"     -> validateDeepObjectParameters(dataType, paramName, explode)
+      "spacedelimited" -> validateSpaceDelimitedParameters(dataType, paramName, explode)
+      "pipedelimited"  -> validatePipeDelimitedParameters(dataType, paramName, explode)
       else             -> null
     }
+
+  private fun validateDeepObjectParameters(dataType: DataType<out Any>,
+                                           paramName: String,
+                                           explode: Boolean): Result<ParameterCodec>? =
+    when {
+      dataType !is ObjectDataType          -> failureForKey(paramName, "Style 'deepObject' requires object type")
+      !explode                             -> failureForKey(paramName, "Style 'deepObject' requires explode=true")
+      dataType.hasNonPrimitiveProperties() -> failureForKey(paramName, "Style 'deepObject' does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)")
+      else                                 -> null
+    }
+
+  private fun validatePipeDelimitedParameters(dataType: DataType<out Any>,
+                                              paramName: String,
+                                              explode: Boolean): Result<ParameterCodec>? = when {
+    dataType !is ArrayDataType -> failureForKey(paramName, "Style 'pipeDelimited' requires array type")
+    explode                    -> failureForKey(paramName, "Style 'pipeDelimited' requires explode=false")
+    else                       -> null
+  }
+
+  private fun validateSpaceDelimitedParameters(dataType: DataType<out Any>,
+                                               paramName: String,
+                                               explode: Boolean): Result<ParameterCodec>? = when {
+    dataType !is ArrayDataType -> failureForKey(paramName, "Style 'spaceDelimited' requires array type")
+    explode                    -> failureForKey(paramName, "Style 'spaceDelimited' requires explode=false")
+    else                       -> null
+  }
 
   private fun ObjectDataType.hasNonPrimitiveProperties(): Boolean =
     properties.values.any { it.isNonPrimitive() }

@@ -39,6 +39,6 @@ internal object AllOfDataTypeConverter {
               discriminator = discriminators.firstOrNull(),
               enum = schema.safeEnum())
         }
-      }.forProperty(schema.name)
+      }
   }
 }

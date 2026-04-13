@@ -26,8 +26,8 @@ class AllowedValues private constructor(values: List<Any?>) {
     @JvmStatic
     fun <T, DT: DataType<T>> create(values: List<Any?>, dataType: DT) =
       when {
-        values.isEmpty()                              -> failure("'enum' cannot be empty")
-        values.contains(null) && !dataType.isNullable -> failure("'enum' cannot contain a null value when schema is not nullable")
+        values.isEmpty()                              -> failure("enum", "cannot be empty")
+        values.contains(null) && !dataType.isNullable -> failure("enum", "cannot contain a null value when schema is not nullable")
         else                                          ->
           values.accumulate { dataType.validate(it) }.forProperty("enum").map { AllowedValues(values) }
       }

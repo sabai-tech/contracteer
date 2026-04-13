@@ -3,6 +3,7 @@ package tech.sabai.contracteer.mockserver
 import org.http4k.core.Request
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.failureForKey
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Failure
 import tech.sabai.contracteer.core.Result.Success
@@ -18,16 +19,16 @@ internal fun RequestSchema.validate(request: Request): Result<Unit> =
     val extractor = request.valueExtractorFor(paramSchema.element)
     when (val result = paramSchema.codec.decode(extractor, paramSchema.dataType)) {
       is Failure                                                   ->
-        result.retypeError<Unit>().forProperty(paramSchema.element.name)
+        result.forKey(paramSchema.element.name)
 
       is Success if result.value == null && paramSchema.isRequired ->
-        failure(paramSchema.element.name, "is missing")
+        failureForKey(paramSchema.element.name, "is missing")
 
       is Success if result.value == null                           ->
         success()
 
       is Success                                                   ->
-        paramSchema.dataType.tolerantValidate(result.value).forProperty(paramSchema.element.name)
+        paramSchema.dataType.tolerantValidate(result.value).forKey(paramSchema.element.name)
     }
   } andThen { bodies.validateBody(request) }
 

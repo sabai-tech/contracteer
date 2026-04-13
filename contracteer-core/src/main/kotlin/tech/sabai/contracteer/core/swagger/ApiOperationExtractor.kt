@@ -45,9 +45,10 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
 
     if (!(requestSchema is Success && responseSchemas is Success && classResponses is Success && defaultResponse is Success))
       return (requestSchema combineWith
-          responseSchemas combineWith
-          classResponses combineWith
-          defaultResponse).retypeError()
+              responseSchemas combineWith
+              classResponses combineWith defaultResponse)
+        .mapErrors { "${method.uppercase()} $path: $it" }
+        .retypeError<ApiOperation>()
 
     return scenarioExtractor
       .extractScenarios(path,
@@ -66,6 +67,7 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
                      defaultResponse.value,
                      it)
       }
+      .mapErrors { "${method.uppercase()} $path: $it" }
   }
 
   private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =

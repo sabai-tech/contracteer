@@ -25,5 +25,5 @@ internal object ArrayDataTypeConverter {
           maxItems = schema.maxItems,
           uniqueItems = schema.uniqueItems ?: false
         )
-      }.forProperty(schema.name)
+      }
 }

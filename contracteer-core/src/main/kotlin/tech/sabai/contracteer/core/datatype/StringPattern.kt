@@ -43,7 +43,7 @@ internal class StringPattern private constructor(
       try {
         success(Regex(pattern))
       } catch (e: Throwable) {
-        failure("'pattern' is not a valid regular expression (ECMA-262 / Java regex): $pattern (${shortCause(e)})")
+        failure("pattern", "'$pattern' is not a valid regular expression (${shortCause(e)})")
       }
 
     private fun parseRgxGen(pattern: String): Result<RgxGen> =
@@ -73,7 +73,7 @@ internal class StringPattern private constructor(
       )
 
     private fun <T> patternNotSupported(pattern: String): Result<T> =
-      failure("'pattern' is not supported for value generation: $pattern. Use OpenAPI examples to provide explicit values for this property (creating Scenarios), or simplify the pattern.")
+      failure("pattern", "'$pattern' is not supported for value generation. Use OpenAPI examples to provide explicit values for this property (creating Scenarios), or simplify the pattern.")
 
     private fun shortCause(e: Throwable): String =
       e.message?.lines()?.firstOrNull() ?: e::class.simpleName.orEmpty()

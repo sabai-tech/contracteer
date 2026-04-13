@@ -13,7 +13,6 @@ import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
 private fun Headers.hasHeader(name: String) = any { it.first.equals(name, ignoreCase = true) }
-private fun Headers.headerValue(name: String) = find { it.first.equals(name, ignoreCase = true) }?.second
 private fun Response.contentType(): String? = header("Content-Type")
 
 internal object ResponseValidator {
@@ -57,9 +56,13 @@ internal object ResponseValidator {
         paramSchema.isRequired && !responseHeaders.hasHeader(element.name)  -> failure("Response header '${element.name}' is missing")
         else                                                                ->
           paramSchema.codec
-            .decode({ key -> responseHeaders.filter { it.first.equals(key, ignoreCase = true) }.mapNotNull { it.second } }, paramSchema.dataType)
+            .decode({ key ->
+                      responseHeaders
+                        .filter { it.first.equals(key, ignoreCase = true) }
+                        .mapNotNull { it.second }
+                    }, paramSchema.dataType)
             .flatMap { paramSchema.dataType.validate(it) }
-            .forProperty(element.name)
+            .forKey(element.name)
       }
     }
   }
@@ -76,15 +79,12 @@ internal object ResponseValidator {
       bodySchemas.isNotEmpty() && responseContentType.isNullOrEmpty() -> failure("Content-Type is missing, expected one of: ${bodySchemas.map { it.contentType.value }}")
       else                                                            -> {
         val matchingSchema = bodySchemas.find { it.contentType.validate(responseContentType!!).isSuccess() }
-
-        if (matchingSchema == null) {
-          failure("Content-Type '$responseContentType' does not match any expected: ${bodySchemas.map { it.contentType.value }}")
-        } else {
-          matchingSchema.serde
-            .deserialize(response.bodyString(), matchingSchema.dataType)
-            .flatMap { matchingSchema.dataType.validate(it) }
-            .map { }
-        }
+        matchingSchema
+          ?.serde
+          ?.deserialize(response.bodyString(), matchingSchema.dataType)
+          ?.flatMap { matchingSchema.dataType.validate(it) }
+          ?.map { }
+        ?: failure("Content-Type '$responseContentType' does not match any expected: ${bodySchemas.map { it.contentType.value }}")
       }
     }
   }

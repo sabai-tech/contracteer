@@ -310,8 +310,8 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   private fun validateScenarioExamples(exampleKey: String,
                                        request: ScenarioRequestExamples,
                                        response: ScenarioResponseExamples): Result<Any?> {
-    val requestValidation = validateRequestExamples(exampleKey, request)
-    val responseValidation = validateResponseExamples(exampleKey, response)
+    val requestValidation = validateRequestExamples(exampleKey, request).forProperty("request")
+    val responseValidation = validateResponseExamples(exampleKey, response).forProperty("response")
     return requestValidation combineWith responseValidation
   }
 
@@ -363,10 +363,10 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
 
   private fun elementName(element: ParameterElement) =
     when (element) {
-      is PathParam  -> "path.${element.name}"
-      is QueryParam -> "query.${element.name}"
-      is Header     -> "header.${element.name}"
-      is Cookie     -> "cookie.${element.name}"
+      is PathParam  -> "path[${element.name}]"
+      is QueryParam -> "query[${element.name}]"
+      is Header     -> "header[${element.name}]"
+      is Cookie     -> "cookie[${element.name}]"
     }
 
   private data class ExampleValues(

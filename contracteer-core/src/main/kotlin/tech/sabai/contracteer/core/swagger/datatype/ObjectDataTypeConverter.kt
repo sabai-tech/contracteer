@@ -58,7 +58,7 @@ internal object ObjectDataTypeConverter {
               maxProperties = schema.maxProperties
             )
           }
-      }.forProperty(schema.name)
+      }
   }
 
   fun convertSiblingObject(schema: ComposedSchema,

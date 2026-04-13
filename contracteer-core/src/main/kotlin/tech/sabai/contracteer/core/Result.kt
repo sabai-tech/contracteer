@@ -33,6 +33,9 @@ sealed class Result<out T> {
     is Failure -> Failure(propertyErrors.map { it.prependIndex(index) })
   }
 
+  /** Returns a new result with every error path prefixed by the named key `[key]`. Used for parameter names, status codes, content types — selections from a named set. */
+  fun forKey(key: String): Result<T> = forProperty("[$key]")
+
   /** Returns the list of human-readable error messages, each prefixed with its property path. */
   fun errors(): List<String> = when (this) {
     is Success -> emptyList()
@@ -128,6 +131,11 @@ sealed class Result<out T> {
     @JvmStatic
     fun <T> failure(propertyName: String, error: String): Result<T> =
       Failure(listOf(PropertyError(propertyName, error)))
+
+    /** Creates a failed result with [error] scoped to the named key `[key]`. Used for parameter names, status codes, content types. */
+    @JvmStatic
+    fun <T> failureForKey(key: String, error: String): Result<T> =
+      Failure(listOf(PropertyError("[$key]", error)))
   }
 
   internal class PropertyError(val path: String = "", val error: String) {
