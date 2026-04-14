@@ -1,0 +1,47 @@
+openapi: 3.0.0
+info:
+  title: Multi Content Invalid Examples API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /documents:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+            examples:
+              CREATE:
+                value:
+                  title: 'Hello'
+          text/plain:
+            schema:
+              type: string
+            examples:
+              CREATE:
+                value: 123
+      responses:
+        '200':
+          description: document created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+              examples:
+                CREATE:
+                  value:
+                    id: 10
+            text/plain:
+              schema:
+                type: string
+              examples:
+                CREATE:
+                  value: 456

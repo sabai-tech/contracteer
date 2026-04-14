@@ -120,7 +120,8 @@ internal class SchemaExtractor(
   private fun convertRequestBodySchema(body: RequestBody): Result<List<BodySchema>> =
     if (body.content == null)
       success(emptyList())
-    else
+    else {
+      val multiContent = body.content.size > 1
       body.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
@@ -130,8 +131,9 @@ internal class SchemaExtractor(
             else
               buildSerde(contentType, mediaType, dataType)
                 .map { BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it) }
-          }
+          }.let { if (multiContent) it.forKey(contentType.value) else it }
         }.combineResults()
+    }
 
   private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ParameterSchema>> =
     response
@@ -144,7 +146,8 @@ internal class SchemaExtractor(
   private fun extractResponseBodySchemas(response: ApiResponse): Result<List<BodySchema>> =
     if (response.content == null)
       success(emptyList())
-    else
+    else {
+      val multiContent = response.content.size > 1
       response.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
@@ -156,9 +159,10 @@ internal class SchemaExtractor(
                 .map {
                   BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), it)
                 }
-          }
+          }.let { if (multiContent) it.forKey(contentType.value) else it }
         }.combineResults()
         .forProperty("body")
+    }
 
   private fun convertDataType(mediaType: MediaType): Result<DataType<out Any>> =
     if (mediaType.schema == null) success(AnyDataType)

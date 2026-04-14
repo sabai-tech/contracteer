@@ -324,13 +324,16 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       }
     }.combineResults()
 
+    val multiContent = request.schema.bodies.size > 1
     val bodyValidation = request.bodies.map { body ->
       if (body == null)
         success()
       else {
         when (val schema = request.schema.bodies.find { it.contentType.value == body.contentType.value }) {
           null -> failure("Example '$exampleKey' has no schema for request body '${body.contentType.value}'")
-          else -> schema.dataType.validate(body.value).forProperty("body")
+          else -> schema.dataType.validate(body.value)
+                    .let { if (multiContent) it.forKey(body.contentType.value) else it }
+                    .forProperty("body")
         }
       }
     }.combineResults()
@@ -347,13 +350,16 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       }
     }.combineResults()
 
+    val multiContent = response.schema.bodies.size > 1
     val bodyValidation = response.bodies.map { body ->
       if (body == null)
         success()
       else {
         when (val schema = response.schema.bodies.find { it.contentType.value == body.contentType.value }) {
           null -> failure("Example '$exampleKey' has no schema for response body '${body.contentType.value}'")
-          else -> schema.dataType.validate(body.value).forProperty("body")
+          else -> schema.dataType.validate(body.value)
+                    .let { if (multiContent) it.forKey(body.contentType.value) else it }
+                    .forProperty("body")
         }
       }
     }.combineResults()

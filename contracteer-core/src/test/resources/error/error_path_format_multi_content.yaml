@@ -1,0 +1,59 @@
+openapi: 3.0.0
+info:
+  title: Error Path Format Multi Content Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /documents:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentRequest'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/InvalidDocumentRequest'
+      responses:
+        '200':
+          description: document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/InvalidDocumentResponse'
+components:
+  schemas:
+    DocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+    InvalidDocumentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 0
+    DocumentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+    InvalidDocumentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        metadata:
+          type: object
+          properties:
+            author:
+              type: string
+              minLength: 1
+              maxLength: 0
