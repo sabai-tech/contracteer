@@ -1203,6 +1203,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#recursive-array-generates-fewer-items-than-minitems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursive array generates fewer items than minItems
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#spec-loading-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1560,6 +1571,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#recursive-array-generates-fewer-items-than-minitems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recursive array generates fewer items than minItems
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#spec-loading-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1821,6 +1843,13 @@ This describes an infinite structure that cannot be instantiated.</p>
 <p>For example, <code>Node.next → Link.target → Node</code> where both <code>next</code> and <code>target</code> are required and non-nullable creates a structure with no valid finite value.</p>
 <p><strong>Fix:</strong> Break the cycle by making at least one property in the chain optional (remove it from <code>required</code>), nullable (<code>nullable: true</code> on the referenced schema), or a collection (<code>type: array</code>).
 Any of these gives Contracteer a finite stopping point.</p>
+<h3 id="recursive-array-generates-fewer-items-than-minitems">Recursive array generates fewer items than minItems<a class="headerlink" href="#recursive-array-generates-fewer-items-than-minitems" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The verifier reports "Array has 0 items but minItems is N" on a recursive schema property.</p>
+<p><strong>Cause:</strong> The schema contains a recursive <code>$ref</code> cycle through an array property with a <code>minItems</code> constraint.
+At the recursion depth limit, Contracteer generates an empty array to avoid producing null values for non-nullable items.
+This may violate the <code>minItems</code> constraint.</p>
+<p><strong>Fix:</strong> Remove the <code>minItems</code> constraint from the recursive array property, or make the array items nullable.
+Recursive arrays with <code>minItems</code> describe a structure that requires infinite depth to satisfy -- no finite value can conform.</p>
 <h3 id="spec-loading-fails">Spec loading fails<a class="headerlink" href="#spec-loading-fails" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Contracteer reports errors when loading the OpenAPI specification.</p>
 <p><strong>Common causes:</strong></p>
