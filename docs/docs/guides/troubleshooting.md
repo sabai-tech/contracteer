@@ -195,6 +195,17 @@ For example, `Node.next → Link.target → Node` where both `next` and `target`
 **Fix:** Break the cycle by making at least one property in the chain optional (remove it from `required`), nullable (`nullable: true` on the referenced schema), or a collection (`type: array`).
 Any of these gives Contracteer a finite stopping point.
 
+### Recursive array generates fewer items than minItems
+
+**Symptom:** The verifier reports "Array has 0 items but minItems is N" on a recursive schema property.
+
+**Cause:** The schema contains a recursive `$ref` cycle through an array property with a `minItems` constraint.
+At the recursion depth limit, Contracteer generates an empty array to avoid producing null values for non-nullable items.
+This may violate the `minItems` constraint.
+
+**Fix:** Remove the `minItems` constraint from the recursive array property, or make the array items nullable.
+Recursive arrays with `minItems` describe a structure that requires infinite depth to satisfy -- no finite value can conform.
+
 ### Spec loading fails
 
 **Symptom:** Contracteer reports errors when loading the OpenAPI specification.

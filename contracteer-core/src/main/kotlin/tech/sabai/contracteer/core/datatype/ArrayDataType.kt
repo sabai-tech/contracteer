@@ -51,13 +51,14 @@ class ArrayDataType private constructor(name: String,
     val min = minItems ?: minOf(1, max)
     val count = (min..max).random()
 
-    return if (!uniqueItems)
-      List(count) { itemDataType.randomValue() }
-    else
-      (1..MAX_GENERATION_ATTEMPTS)
-        .asSequence()
-        .map { generateSequence { itemDataType.randomValue() }.distinct().take(count).toList() }
-        .firstOrNull { it.size == count }
+    if (!uniqueItems) {
+      val items = List(count) { itemDataType.randomValue() }
+      return if (!itemDataType.isNullable) items.filterNotNull() else items
+    }
+    return (1..MAX_GENERATION_ATTEMPTS)
+      .asSequence()
+      .map { generateSequence { itemDataType.randomValue() }.distinct().take(count).toList() }
+      .firstOrNull { it.size == count }
       ?: error("Failed to generate an array with $count unique items after $MAX_GENERATION_ATTEMPTS attempts")
   }
 

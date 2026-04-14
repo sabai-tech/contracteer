@@ -20,17 +20,17 @@ class ObjectDataType private constructor(name: String,
                                          val maxProperties: Int?,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<Map<String, Any?>>(name,
-                                "object",
-                                isNullable,
-                                Map::class.java as Class<Map<String, Any?>>,
-                                allowedValues) {
+                                        "object",
+                                        isNullable,
+                                        Map::class.java as Class<Map<String, Any?>>,
+                                        allowedValues) {
 
   override fun isFullyStructured() = true
 
   override fun doValidate(value: Map<String, Any?>): Result<Map<String, Any?>> =
     validatePropertyCount(value) andThen
-      { validateProperties(value) } andThen
-      { validateAdditionalProperties(value) }
+        { validateProperties(value) } andThen
+        { validateAdditionalProperties(value) }
 
   private fun validatePropertyCount(value: Map<String, Any?>): Result<Map<String, Any?>> = when {
     minProperties != null && value.size < minProperties -> failure("Object has ${value.size} properties but minProperties is $minProperties")
@@ -39,21 +39,38 @@ class ObjectDataType private constructor(name: String,
   }
 
   override fun doRandomValue(): Map<String, Any?> {
-    val selected = if (maxProperties != null && maxProperties < properties.size) {
-      val required = properties.filterKeys { it in requiredProperties }
-      val optional = properties.filterKeys { it !in requiredProperties }
-        .entries.shuffled()
-        .take(maxProperties - required.size)
-        .associate { it.key to it.value }
-      required + optional
-    } else {
-      properties
-    }
-    val result = selected.mapValues { it.value.randomValue() }
+    val selected = selectProperties()
+    val result = selected
+      .mapValues { it.value.randomValue() }
+      .filterNot { (key, value) -> value == null && !selected[key]!!.isNullable && key !in requiredProperties }
+      .mapValues { (key, value) -> value ?: cycleEmptyValue(selected[key]!!) }
+
     return if (minProperties != null && result.size < minProperties && additionalPropertiesDataType != null)
       result + generateAdditionalEntries(minProperties - result.size, result.keys)
     else
       result
+  }
+
+  private fun selectProperties(): Map<String, DataType<out Any>> {
+    if (maxProperties == null || maxProperties >= properties.size) return properties
+    val required = properties.filterKeys { it in requiredProperties }
+    val optional = properties
+      .filterKeys { it !in requiredProperties }
+      .entries
+      .shuffled()
+      .take(maxProperties - required.size)
+      .associate { it.key to it.value }
+    return required + optional
+  }
+
+  private fun cycleEmptyValue(dataType: DataType<out Any>): Any? {
+    val resolved = if (dataType is ProxyDataType) dataType.delegate else dataType
+    return when {
+      resolved.isNullable      -> null
+      resolved is ArrayDataType -> emptyList<Any>()
+      resolved is ObjectDataType -> emptyMap<String, Any>()
+      else                      -> error("Unexpected cycle boundary type: ${resolved.openApiType}")
+    }
   }
 
   private fun generateAdditionalEntries(count: Int, existingKeys: Set<String>): Map<String, Any?> {
