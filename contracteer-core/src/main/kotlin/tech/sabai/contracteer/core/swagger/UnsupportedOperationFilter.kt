@@ -26,7 +26,9 @@ internal fun filterUnsupportedOperation(operation: ApiOperation): ApiOperation? 
     .filterValues { it != null }
     .mapValues { it.value!! }
   val defaultResponse = operation.defaultResponse?.let { filterUnsupportedBodies(it) }
-  val scenarios = operation.scenarios.filterNot { it.hasXmlContentType() }
+  val scenarios = operation.scenarios
+    .filterNot { it.hasXmlContentType() }
+    .filter { responses[it.statusCode] ?: classResponses[it.statusCode / 100] ?: defaultResponse != null }
 
   if (operation.requestSchema.bodies.isNotEmpty() && requestBodies.isEmpty()) {
     logger.warn { "Operation '${operation.method} ${operation.path}' excluded: no supported request body content type." }

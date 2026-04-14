@@ -49,6 +49,18 @@ class UnsupportedOperationFilterTest {
   }
 
   @Test
+  fun `filters scenarios targeting responses with unsupported body schemas`() {
+    // when
+    val result = loadResult("schemaless_response_scenario.yaml")
+
+    // then
+    val operations = result.assertSuccess()
+    assert(operations.size == 1)
+    assert(operations.first().scenarios.size == 1)
+    assert(operations.first().scenarios.first().key == "good_scenario")
+  }
+
+  @Test
   fun `excludes operations with null or empty schema on parameter content`() {
     // when
     val result = loadResult("schemaless_parameter_content.yaml")

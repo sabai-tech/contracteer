@@ -1,0 +1,39 @@
+openapi: 3.0.0
+info:
+  title: Schemaless Response Scenario Filter Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - name: id
+          in: query
+          schema:
+            type: integer
+          examples:
+            good_scenario:
+              value: 1
+            bad_scenario:
+              value: 2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+              examples:
+                good_scenario:
+                  value:
+                    id: 1
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: {}
+              examples:
+                bad_scenario:
+                  value: {}
