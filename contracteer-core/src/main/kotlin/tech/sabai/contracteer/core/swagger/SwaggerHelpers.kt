@@ -99,6 +99,8 @@ internal fun ApiResponse.shortRef() =
 private fun singleExampleMap(exampleValue: Any) =
   mapOf("_example" to Example().apply { value = exampleValue })
 
-
 internal fun isClassCode(code: String): Boolean =
   code.length == 3 && code[0].isDigit() && code.substring(1).uppercase() == "XX"
+
+internal fun isBodylessStatusCode(statusCode: Int): Boolean =
+  statusCode in 100..199 || statusCode == 204 || statusCode == 205 || statusCode == 304

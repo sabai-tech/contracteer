@@ -293,6 +293,29 @@ class OperationSchemaExtractionTest {
     assert(dataType.lengthRange.contains(BigDecimal.ONE).isSuccess())
   }
 
+  @Test
+  fun `allows bodyless status code without body declaration`() {
+    // when
+    val operation = loadSingleOperation("bodyless_status_code_without_body.yaml")
+
+    // then
+    val responseSchema = operation.responseFor(204)!!
+    assert(responseSchema.bodies.isEmpty())
+    assert(responseSchema.headers.size == 1)
+  }
+
+  @Test
+  fun `allows HEAD response without body declaration`() {
+    // when
+    val operation = loadSingleOperation("head_without_response_body.yaml")
+
+    // then
+    assert(operation.method == "HEAD")
+    val responseSchema = operation.responseFor(200)!!
+    assert(responseSchema.bodies.isEmpty())
+    assert(responseSchema.headers.size == 1)
+  }
+
   // --- Helpers ---
 
   private fun loadSingleOperation(yamlFile: String) =

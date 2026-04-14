@@ -47,14 +47,26 @@ internal class SchemaExtractor(
   fun extractResponseSchema(code: String, response: ApiResponse): Result<Pair<Int, ResponseSchema>> =
     parseStatusCode(code).flatMap { statusCode ->
       sharedComponents.resolve(response).flatMap { resolved ->
-        val headers = extractResponseHeaderSchemas(resolved)
-        val bodies = extractResponseBodySchemas(resolved)
-        if (headers is Success && bodies is Success)
-          success(statusCode to ResponseSchema(headers = headers.value, bodies = bodies.value))
-        else
-          (headers combineWith bodies).forKey(code).forProperty("response").retypeError()
+        rejectBodylessResponseWithBody(statusCode, resolved)
+          .flatMap { buildResponseSchema(code, resolved) }
+          .map { statusCode to it }
       }
     }
+
+  private fun rejectBodylessResponseWithBody(statusCode: Int, response: ApiResponse): Result<Unit> =
+    if (isBodylessStatusCode(statusCode) && !response.content.isNullOrEmpty())
+      failure("Response $statusCode declares a body, but HTTP $statusCode MUST NOT include a message body (RFC 7231)")
+    else
+      success()
+
+  private fun buildResponseSchema(code: String, response: ApiResponse): Result<ResponseSchema> {
+    val headers = extractResponseHeaderSchemas(response)
+    val bodies = extractResponseBodySchemas(response)
+    return if (headers is Success && bodies is Success)
+      success(ResponseSchema(headers = headers.value, bodies = bodies.value))
+    else
+      (headers combineWith bodies).forKey(code).forProperty("response").retypeError()
+  }
 
   fun extractResponseSchema(response: ApiResponse): Result<ResponseSchema> =
     sharedComponents.resolve(response).flatMap { resolved ->

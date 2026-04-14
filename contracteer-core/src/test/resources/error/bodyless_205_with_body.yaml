@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /form:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+      responses:
+        205:
+          description: Reset content
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
