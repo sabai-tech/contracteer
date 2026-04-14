@@ -83,6 +83,26 @@ class HeaderParameterStyleExtractionTest {
     assert(header.codec is SimpleParameterCodec)
   }
 
+  @Test
+  fun `rejects simple style header with nested object property`() {
+    // when
+    val result = loadResult("header_simple_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("X-Filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects simple style header with array property`() {
+    // when
+    val result = loadResult("header_simple_array_property.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("X-Filter") && it.contains("nested") })
+  }
+
   @ParameterizedTest(name = "rejects header parameter with unsupported style {0}")
   @ValueSource(strings = ["form", "label", "matrix", "spaceDelimited", "pipeDelimited", "deepObject"])
   fun `parameterized test for all unsupported header parameter styles`(style: String) {
@@ -102,6 +122,9 @@ class HeaderParameterStyleExtractionTest {
 
   private fun loadOperations() =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/header_parameters.yaml").assertSuccess()
+
+  private fun loadResult(yamlFile: String) =
+    OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/$yamlFile")
 
   private fun loadInvalidStyleOperationsResult() =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/header_invalid_styles.yaml")

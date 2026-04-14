@@ -105,6 +105,36 @@ class PathParameterStyleExtractionTest {
     assert(pathParam.codec is SimpleParameterCodec)
   }
 
+  @Test
+  fun `rejects simple style path parameter with nested object property`() {
+    // when
+    val result = loadResult("path_simple_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects label style path parameter with nested object property`() {
+    // when
+    val result = loadResult("path_label_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects matrix style path parameter with nested object property`() {
+    // when
+    val result = loadResult("path_matrix_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
   @ParameterizedTest(name = "rejects path parameter with unsupported style {0}")
   @ValueSource(strings = ["form", "spaceDelimited", "pipeDelimited", "deepObject"])
   fun `parameterized test for all unsupported path parameter styles`(style: String) {
@@ -121,6 +151,9 @@ class PathParameterStyleExtractionTest {
   private fun loadOperationByPath(path: String) =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/path_parameters.yaml").assertSuccess()
       .single { it.path == path }
+
+  private fun loadResult(yamlFile: String) =
+    OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/$yamlFile")
 
   private fun loadInvalidStyleOperationsResult() =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/path_invalid_styles.yaml")

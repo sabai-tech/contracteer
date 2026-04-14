@@ -57,6 +57,16 @@ class CookieParameterStyleExtractionTest {
     assert(cookieParam.codec is FormParameterCodec)
   }
 
+  @Test
+  fun `rejects form style cookie parameter with nested object property`() {
+    // when
+    val result = loadResult("cookie_form_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("session") && it.contains("nested") })
+  }
+
   @ParameterizedTest(name = "rejects cookie parameter with unsupported style {0}")
   @ValueSource(strings = ["simple", "label", "matrix", "spaceDelimited", "pipeDelimited", "deepObject"])
   fun `parameterized test for all unsupported cookie parameter styles`(style: String) {
@@ -76,6 +86,9 @@ class CookieParameterStyleExtractionTest {
 
   private fun loadOperations() =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/cookie_parameters.yaml").assertSuccess()
+
+  private fun loadResult(yamlFile: String) =
+    OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/$yamlFile")
 
   private fun loadInvalidStyleOperationsResult() =
     OpenApiLoader.loadOperations("src/test/resources/operation/parameter_style/cookie_invalid_styles.yaml")

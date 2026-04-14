@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Header Simple Nested Object Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: header
+          name: X-Filter
+          schema:
+            type: object
+            properties:
+              address:
+                type: object
+                properties:
+                  city:
+                    type: string
+      responses:
+        '200':
+          description: Success

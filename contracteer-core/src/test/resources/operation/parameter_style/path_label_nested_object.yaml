@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Path Label Nested Object Test
+  version: '1.0'
+paths:
+  /test/{filter}:
+    get:
+      parameters:
+        - in: path
+          name: filter
+          required: true
+          style: label
+          schema:
+            type: object
+            properties:
+              address:
+                type: object
+                properties:
+                  city:
+                    type: string
+      responses:
+        '200':
+          description: Success

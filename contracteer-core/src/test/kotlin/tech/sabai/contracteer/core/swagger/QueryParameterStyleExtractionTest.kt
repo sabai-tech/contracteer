@@ -161,6 +161,26 @@ class QueryParameterStyleExtractionTest {
     assert(result.errors().any { it.contains("status") && it.contains("explode=false") })
   }
 
+  @Test
+  fun `rejects form style query parameter with nested object property`() {
+    // when
+    val result = loadResult("query_form_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects form style query parameter with array property`() {
+    // when
+    val result = loadResult("query_form_array_property.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
   @ParameterizedTest(name = "rejects query parameter with unsupported style {0}")
   @ValueSource(strings = ["simple", "label", "matrix"])
   fun `parameterized test for all unsupported query parameter styles`(style: String) {

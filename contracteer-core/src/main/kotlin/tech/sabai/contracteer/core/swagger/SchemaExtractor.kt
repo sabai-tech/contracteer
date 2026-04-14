@@ -275,6 +275,99 @@ internal class SchemaExtractor(
           .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), it) }
       }
 
+  private fun createCodecForParameter(element: ParameterElement,
+                                      style: String?,
+                                      explode: Boolean?,
+                                      dataType: DataType<out Any>,
+                                      paramName: String) =
+    resolveStyle(element, style, explode, paramName).flatMap { (actualStyle, actualExplode) ->
+      val validation = validateStyleConstraints(actualStyle, actualExplode, dataType, paramName)
+      if (validation.isFailure())
+        validation.retypeError()
+      else
+        when (actualStyle) {
+          "simple"         -> success(SimpleParameterCodec(paramName, actualExplode))
+          "form"           -> success(FormParameterCodec(paramName, actualExplode))
+          "label"          -> success(LabelParameterCodec(paramName, actualExplode))
+          "matrix"         -> success(MatrixParameterCodec(paramName, actualExplode))
+          "spacedelimited" -> success(SpaceDelimitedParameterCodec(paramName))
+          "pipedelimited"  -> success(PipeDelimitedParameterCodec(paramName))
+          "deepobject"     -> success(DeepObjectParameterCodec(paramName))
+          else             -> failureForKey(paramName, "Unknown style '$actualStyle'")
+        }
+    }
+
+  private fun resolveStyle(element: ParameterElement,
+                           style: String?,
+                           explode: Boolean?,
+                           paramName: String): Result<Pair<String, Boolean>> {
+    val normalizedStyle = style?.lowercase()?.replace("_", "")
+    val (defaultStyle, defaultExplode, supportedStyles, locationName) = when (element) {
+      is PathParam               -> StyleDefaults("simple", false, setOf("simple", "label", "matrix"), "path")
+      is QueryParam              -> StyleDefaults("form", true, setOf("form", "spacedelimited", "pipedelimited", "deepobject"), "query")
+      is ParameterElement.Header -> StyleDefaults("simple", false, setOf("simple"), "header")
+      is Cookie                  -> StyleDefaults("form", true, setOf("form"), "cookie")
+    }
+    val actualStyle = normalizedStyle ?: defaultStyle
+
+    return when (actualStyle) {
+      in supportedStyles -> success(actualStyle to (explode ?: defaultExplode))
+      else               ->
+        failureForKey(paramName, "Style '${style ?: actualStyle}' is not supported for $locationName parameters")
+    }
+  }
+
+  private fun validateStyleConstraints(style: String,explode: Boolean,dataType: DataType<out Any>,paramName: String) =
+    when (style) {
+      "simple", "form",
+      "label", "matrix" -> validateFlatObjectProperties(style, dataType, paramName)
+      "deepobject"      -> validateDeepObjectParameters(dataType, paramName, explode)
+      "spacedelimited"  -> validateSpaceDelimitedParameters(dataType, paramName, explode)
+      "pipedelimited"   -> validatePipeDelimitedParameters(dataType, paramName, explode)
+      else              -> success()
+    }
+
+  private fun validateFlatObjectProperties(style: String, dataType: DataType<out Any>, paramName: String) =
+    if (dataType is ObjectDataType && dataType.hasNonPrimitiveProperties())
+      failureForKey(paramName,
+                    "Style '$style' does not support objects with nested objects or arrays in properties (undefined behavior in the OpenAPI specification)")
+    else
+      success()
+
+  private fun validateDeepObjectParameters(dataType: DataType<out Any>, paramName: String, explode: Boolean) =
+    when {
+      dataType !is ObjectDataType          -> failureForKey(paramName, "Style 'deepObject' requires object type")
+      !explode                             -> failureForKey(paramName, "Style 'deepObject' requires explode=true")
+      dataType.hasNonPrimitiveProperties() -> failureForKey(paramName,
+                                                            "Style 'deepObject' does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)")
+      else                                 -> success()
+    }
+
+  private fun validatePipeDelimitedParameters(dataType: DataType<out Any>, paramName: String, explode: Boolean) =
+    when {
+      dataType !is ArrayDataType -> failureForKey(paramName, "Style 'pipeDelimited' requires array type")
+      explode                    -> failureForKey(paramName, "Style 'pipeDelimited' requires explode=false")
+      else                       -> success()
+    }
+
+  private fun validateSpaceDelimitedParameters(dataType: DataType<out Any>, paramName: String, explode: Boolean) =
+    when {
+      dataType !is ArrayDataType -> failureForKey(paramName, "Style 'spaceDelimited' requires array type")
+      explode                    -> failureForKey(paramName, "Style 'spaceDelimited' requires explode=false")
+      else                       -> success()
+    }
+
+  private fun parseStatusCode(code: String): Result<Int> =
+    code.toIntOrNull()?.let { success(it) } ?: failure("Response status code '$code' is not supported.")
+
+  private fun ObjectDataType.hasNonPrimitiveProperties(): Boolean =
+    properties.values.any { it.isNonPrimitive() }
+
+  private fun DataType<out Any>.isNonPrimitive(): Boolean =
+    isFullyStructured() || this is ArrayDataType
+
+  private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
+
   private fun Header.toParameterSchema(name: String): Result<ParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
@@ -285,100 +378,14 @@ internal class SchemaExtractor(
         }
     }
 
-  private fun createCodecForParameter(element: ParameterElement,
-                                      style: String?,
-                                      explode: Boolean?,
-                                      dataType: DataType<out Any>,
-                                      paramName: String): Result<ParameterCodec> {
-    val normalizedStyle = style?.lowercase()?.replace("_", "")
-    val (defaultStyle, defaultExplode) = when (element) {
-      is PathParam               -> "simple" to false
-      is QueryParam              -> "form" to true
-      is ParameterElement.Header -> "simple" to false
-      is Cookie                  -> "form" to true
-    }
-    val actualStyle = normalizedStyle ?: defaultStyle
-    val actualExplode = explode ?: defaultExplode
-    val supportedStyles = when (element) {
-      is PathParam               -> setOf("simple", "label", "matrix")
-      is QueryParam              -> setOf("form", "spacedelimited", "pipedelimited", "deepobject")
-      is ParameterElement.Header -> setOf("simple")
-      is Cookie                  -> setOf("form")
-    }
-
-    if (actualStyle !in supportedStyles) {
-      val locationName = when (element) {
-        is PathParam               -> "path"
-        is QueryParam              -> "query"
-        is ParameterElement.Header -> "header"
-        is Cookie                  -> "cookie"
-      }
-      return failureForKey(paramName, "Style '${style ?: actualStyle}' is not supported for $locationName parameters")
-    }
-
-    validateStyleConstraints(actualStyle, actualExplode, dataType, paramName)?.let { return it }
-
-    return when (actualStyle) {
-      "simple"         -> success(SimpleParameterCodec(paramName, actualExplode))
-      "form"           -> success(FormParameterCodec(paramName, actualExplode))
-      "label"          -> success(LabelParameterCodec(paramName, actualExplode))
-      "matrix"         -> success(MatrixParameterCodec(paramName, actualExplode))
-      "spacedelimited" -> success(SpaceDelimitedParameterCodec(paramName))
-      "pipedelimited"  -> success(PipeDelimitedParameterCodec(paramName))
-      "deepobject"     -> success(DeepObjectParameterCodec(paramName))
-      else             -> failureForKey(paramName, "Unknown style '$actualStyle'")
-    }
-  }
-
-  private fun validateStyleConstraints(style: String,
-                                       explode: Boolean,
-                                       dataType: DataType<out Any>,
-                                       paramName: String): Result<ParameterCodec>? =
-    when (style) {
-      "deepobject"     -> validateDeepObjectParameters(dataType, paramName, explode)
-      "spacedelimited" -> validateSpaceDelimitedParameters(dataType, paramName, explode)
-      "pipedelimited"  -> validatePipeDelimitedParameters(dataType, paramName, explode)
-      else             -> null
-    }
-
-  private fun validateDeepObjectParameters(dataType: DataType<out Any>,
-                                           paramName: String,
-                                           explode: Boolean): Result<ParameterCodec>? =
-    when {
-      dataType !is ObjectDataType          -> failureForKey(paramName, "Style 'deepObject' requires object type")
-      !explode                             -> failureForKey(paramName, "Style 'deepObject' requires explode=true")
-      dataType.hasNonPrimitiveProperties() -> failureForKey(paramName, "Style 'deepObject' does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)")
-      else                                 -> null
-    }
-
-  private fun validatePipeDelimitedParameters(dataType: DataType<out Any>,
-                                              paramName: String,
-                                              explode: Boolean): Result<ParameterCodec>? = when {
-    dataType !is ArrayDataType -> failureForKey(paramName, "Style 'pipeDelimited' requires array type")
-    explode                    -> failureForKey(paramName, "Style 'pipeDelimited' requires explode=false")
-    else                       -> null
-  }
-
-  private fun validateSpaceDelimitedParameters(dataType: DataType<out Any>,
-                                               paramName: String,
-                                               explode: Boolean): Result<ParameterCodec>? = when {
-    dataType !is ArrayDataType -> failureForKey(paramName, "Style 'spaceDelimited' requires array type")
-    explode                    -> failureForKey(paramName, "Style 'spaceDelimited' requires explode=false")
-    else                       -> null
-  }
-
-  private fun ObjectDataType.hasNonPrimitiveProperties(): Boolean =
-    properties.values.any { it.isNonPrimitive() }
-
-  private fun DataType<out Any>.isNonPrimitive(): Boolean =
-    isFullyStructured() || this is ArrayDataType
-
-  private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
-
-  private fun parseStatusCode(code: String): Result<Int> =
-    code.toIntOrNull()?.let { success(it) } ?: failure("Response status code '$code' is not supported.")
-
   companion object {
     private val IGNORED_REQUEST_HEADERS = setOf("Accept", "Content-Type", "Authorization")
   }
 }
+
+private data class StyleDefaults(
+  val defaultStyle: String,
+  val defaultExplode: Boolean,
+  val supportedStyles: Set<String>,
+  val locationName: String
+)

@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Query Form Array Property Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          schema:
+            type: object
+            properties:
+              tags:
+                type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: Success
