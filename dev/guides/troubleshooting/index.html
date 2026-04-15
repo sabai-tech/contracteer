@@ -1192,6 +1192,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#equivalent-paths-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Equivalent paths rejected
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#circular-schema-reference-rejected" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1560,6 +1571,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#equivalent-paths-rejected" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Equivalent paths rejected
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#circular-schema-reference-rejected" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1836,6 +1858,13 @@ Use <code>examples</code> on both request and response elements.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to do this.</p>
 <hr />
 <h2 id="specification-issues">Specification Issues<a class="headerlink" href="#specification-issues" title="Permanent link">&para;</a></h2>
+<h3 id="equivalent-paths-rejected">Equivalent paths rejected<a class="headerlink" href="#equivalent-paths-rejected" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."</p>
+<p><strong>Cause:</strong> The specification defines two paths that differ only in parameter names.
+The OpenAPI specification considers these identical and invalid (OAS 3.0 §4.7.9) because both match the same set of URLs.
+Parameter types and constraints do not matter -- equivalence is purely structural.</p>
+<p><strong>Fix:</strong> Rename one of the paths so that the static segments differ, or merge both operations under a single path.</p>
+<hr />
 <h3 id="circular-schema-reference-rejected">Circular schema reference rejected<a class="headerlink" href="#circular-schema-reference-rejected" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Loading the specification fails with "Circular reference with no optional, nullable, or collection exit point."</p>
 <p><strong>Cause:</strong> The specification contains a circular <code>$ref</code> chain where every property in the cycle is required and non-nullable.
