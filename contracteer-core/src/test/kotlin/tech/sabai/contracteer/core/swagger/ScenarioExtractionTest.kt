@@ -228,6 +228,31 @@ class ScenarioExtractionTest {
     assert(classAndDefaultOp.scenarios.single().response.body == null)
   }
 
+  @Test
+  fun `extracts scenario when requestBody uses a $ref`() {
+    // when
+    val operation = loadSingleOperation("ref_request_body.yaml")
+
+    // then
+    assert(operation.scenarios.size == 1)
+
+    val scenario = operation.scenarios.single()
+    assert(scenario.key == "NEW_PRODUCT")
+    assert(scenario.statusCode == 201)
+    assert(scenario.request.body!!.contentType.value == "application/json")
+    assert(scenario.request.body.value == mapOf(
+      "id" to 10,
+      "name" to "Duvel",
+      "quantity" to 24
+    ).normalize())
+    assert(scenario.response.body!!.contentType.value == "application/json")
+    assert(scenario.response.body.value == mapOf(
+      "id" to 10,
+      "name" to "Duvel",
+      "quantity" to 24
+    ).normalize())
+  }
+
   // --- Helpers ---
   private fun loadSingleOperation(yamlFile: String) =
     OpenApiLoader.loadOperations("src/test/resources/scenario/$yamlFile")

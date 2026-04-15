@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.media.Content
 import io.swagger.v3.oas.models.parameters.Parameter
+import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
@@ -25,7 +26,24 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
                        responseSchemas: Map<Int, ResponseSchema>,
                        classResponses: Map<Int, ResponseSchema>,
                        defaultResponse: ResponseSchema?): Result<List<Scenario>> {
-    val requestExampleKeys = operation.requestExampleKeys()
+    val resolvedRequestBody = operation.requestBody
+                                ?.let { sharedComponents.resolve(it) }
+                                ?: success(null)
+
+    return resolvedRequestBody.flatMap { requestBody ->
+      extractScenariosWithResolvedBody(path, method, operation, requestBody, requestSchema, responseSchemas, classResponses, defaultResponse)
+    }
+  }
+
+  private fun extractScenariosWithResolvedBody(path: String,
+                                               method: String,
+                                               operation: Operation,
+                                               resolvedRequestBody: RequestBody?,
+                                               requestSchema: RequestSchema,
+                                               responseSchemas: Map<Int, ResponseSchema>,
+                                               classResponses: Map<Int, ResponseSchema>,
+                                               defaultResponse: ResponseSchema?): Result<List<Scenario>> {
+    val requestExampleKeys = operation.requestExampleKeys(resolvedRequestBody)
     if (requestExampleKeys.isEmpty()) return success(emptyList())
 
     val explicitStatusCodes = operation.responses.keys.mapNotNull { it.toIntOrNull() }.toSet()
@@ -34,7 +52,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
     val explicitScenarios = operation.responses
       .filter { (code, _) -> code.toIntOrNull() != null }
       .map { (code, response) ->
-        extractScenariosForResponse(path,method,code.toInt(),response,operation,requestExampleKeys,requestSchema,responseSchemas)
+        extractScenariosForResponse(path,method,code.toInt(),response,operation,resolvedRequestBody,requestExampleKeys,requestSchema,responseSchemas)
       }
       .combineResults()
       .map { scenarios -> scenarios.flatten() }
@@ -42,6 +60,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
     val fallbackScenarios = extractScenariosFromFallbackResponses(path,
                                                                   method,
                                                                   operation,
+                                                                  resolvedRequestBody,
                                                                   requestExampleKeys,
                                                                   explicitStatusCodes,
                                                                   requestSchema,
@@ -78,13 +97,14 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
                                           statusCode: Int,
                                           response: ApiResponse,
                                           operation: Operation,
+                                          resolvedRequestBody: RequestBody?,
                                           requestExampleKeys: Set<String>,
                                           requestSchema: RequestSchema,
                                           responseSchemas: Map<Int, ResponseSchema>): Result<List<Scenario>> =
     sharedComponents
       .resolve(response)
       .flatMap { resolved ->
-        extractScenariosFromResolved(path,method,statusCode,resolved,operation,requestExampleKeys,requestSchema,responseSchemas)
+        extractScenariosFromResolved(path,method,statusCode,resolved,operation,resolvedRequestBody,requestExampleKeys,requestSchema,responseSchemas)
       }
 
   private fun extractScenariosFromResolved(path: String,
@@ -92,6 +112,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
                                            statusCode: Int,
                                            resolved: ApiResponse,
                                            operation: Operation,
+                                           resolvedRequestBody: RequestBody?,
                                            requestExampleKeys: Set<String>,
                                            requestSchema: RequestSchema,
                                            responseSchemas: Map<Int, ResponseSchema>): Result<List<Scenario>> {
@@ -107,7 +128,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
 
     return scenarioKeys
       .map { key ->
-        resolved.extractScenarioForKey(path, method, statusCode, operation, key, requestSchema, responseSchema)
+        resolved.extractScenarioForKey(path, method, statusCode, operation, resolvedRequestBody, key, requestSchema, responseSchema)
       }
       .combineResults()
       .map { scenarios -> scenarios.flatten() }
@@ -116,6 +137,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   private fun extractScenariosFromFallbackResponses(path: String,
                                                     method: String,
                                                     operation: Operation,
+                                                    resolvedRequestBody: RequestBody?,
                                                     requestExampleKeys: Set<String>,
                                                     explicitStatusCodes: Set<Int>,
                                                     requestSchema: RequestSchema,
@@ -131,7 +153,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       else                            ->
         unmatchedPrefixedKeys
           .map { key ->
-            extractScenarioForFallbackKey(path, method, operation, key, requestSchema, classResponses, defaultResponse)
+            extractScenarioForFallbackKey(path, method, operation, resolvedRequestBody, key, requestSchema, classResponses, defaultResponse)
           }
           .combineResults()
           .map { scenarios -> scenarios.flatten() }
@@ -141,6 +163,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
   private fun extractScenarioForFallbackKey(path: String,
                                             method: String,
                                             operation: Operation,
+                                            resolvedRequestBody: RequestBody?,
                                             key: String,
                                             requestSchema: RequestSchema,
                                             classResponses: Map<Int, ResponseSchema>,
@@ -150,7 +173,7 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
                                         ?: return success(emptyList())
 
     return sharedComponents.resolve(apiResponse).flatMap { resolved ->
-      resolved.extractScenarioForKey(path, method, statusCode, operation, key, requestSchema, responseSchema)
+      resolved.extractScenarioForKey(path, method, statusCode, operation, resolvedRequestBody, key, requestSchema, responseSchema)
     }
   }
 
@@ -185,10 +208,11 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
                                                 method: String,
                                                 statusCode: Int,
                                                 operation: Operation,
+                                                resolvedRequestBody: RequestBody?,
                                                 key: String,
                                                 requestSchema: RequestSchema,
                                                 responseSchema: ResponseSchema): Result<List<Scenario>> {
-    return extractExampleValues(operation, key)
+    return extractExampleValues(operation, resolvedRequestBody, key)
       .flatMap { examples ->
         val scenarios = generateScenarioCombinations(path, method, statusCode, key, examples)
         if (statusCode == 400)
@@ -199,9 +223,9 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       }
   }
 
-  private fun ApiResponse.extractExampleValues(operation: Operation, key: String): Result<ExampleValues> {
+  private fun ApiResponse.extractExampleValues(operation: Operation, resolvedRequestBody: RequestBody?, key: String): Result<ExampleValues> {
     val requestParams = operation.extractExampleParameterValues(key).forProperty("request")
-    val requestBodies = operation.extractExampleRequestBodies(key).forProperty("requestBody")
+    val requestBodies = extractExampleRequestBodies(resolvedRequestBody, key).forProperty("requestBody")
     val responseHeaders = extractExampleHeaderValues(key).forProperty("response")
     val responseBodies = extractExampleResponseBodies(key).forProperty("responseBody")
 
@@ -242,11 +266,11 @@ internal class ScenarioExtractor(private val sharedComponents: SharedComponents)
       else     -> Header(name)
     }
 
-  private fun Operation.extractExampleRequestBodies(exampleKey: String): Result<List<ScenarioBody>> =
-    if (requestBody?.content == null)
+  private fun extractExampleRequestBodies(resolvedRequestBody: RequestBody?, exampleKey: String): Result<List<ScenarioBody>> =
+    if (resolvedRequestBody?.content == null)
       success(emptyList())
     else
-      requestBody!!.content
+      resolvedRequestBody.content
         .filter { (_, mediaType) -> mediaType.safeExamples().containsKey(exampleKey) }
         .map { (contentType, mediaType) ->
           sharedComponents.resolve(mediaType.safeExamples()[exampleKey]!!)
@@ -407,8 +431,8 @@ internal fun ApiResponse.exampleKeys() =
 internal fun ApiResponse.bodyExampleKeys() =
   content?.exampleKeys() ?: emptySet()
 
-internal fun Operation.requestExampleKeys() =
-  safeParameters().exampleKeys() + (requestBody?.content?.exampleKeys() ?: emptySet())
+internal fun Operation.requestExampleKeys(resolvedRequestBody: RequestBody?) =
+  safeParameters().exampleKeys() + (resolvedRequestBody?.content?.exampleKeys() ?: emptySet())
 
 internal fun Map<String, io.swagger.v3.oas.models.headers.Header>.exampleKeys() =
   flatMap { it.value.safeExamples().keys }.toSet()
