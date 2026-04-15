@@ -20,14 +20,20 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
   private val schemaExtractor = SchemaExtractor(sharedComponents, dataTypeConverter)
   private val scenarioExtractor = ScenarioExtractor(sharedComponents)
 
-  fun extract(openAPI: OpenAPI): Result<List<ApiOperation>> =
-    openAPI.paths
-      .flatMap { it.toApiOperations() }
-      .combineResults()
-      .map {
-        it.mapNotNull { operation -> filterUnsupportedOperation(operation) }
-          .also { operations -> logExtractedOperations(operations) }
-      }
+  fun extract(openAPI: OpenAPI): Result<List<ApiOperation>> {
+    val equivalentPathErrors = findEquivalentPaths(openAPI)
+    return when {
+      equivalentPathErrors.isNotEmpty() -> failure(*equivalentPathErrors.toTypedArray())
+      else                              ->
+        openAPI.paths
+          .flatMap { it.toApiOperations() }
+          .combineResults()
+          .map {
+            it.mapNotNull { operation -> filterUnsupportedOperation(operation) }
+              .also { operations -> logExtractedOperations(operations) }
+          }
+    }
+  }
 
   private fun Map.Entry<String, PathItem>.toApiOperations() =
     value
@@ -51,7 +57,8 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
     return when (headValidation) {
       !is Success -> headValidation.mapErrors { "${method.uppercase()} $path: $it" }.retypeError()
       else        ->
-        scenarioExtractor.extractScenarios(path,method,operation,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value)
+        scenarioExtractor
+          .extractScenarios(path,method,operation,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value)
           .map {
             ApiOperation(path,method,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value,it)
           }
@@ -93,6 +100,15 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
       ?.let { schemaExtractor.extractResponseSchema(it) }
     ?: success(null)
 
+  private fun findEquivalentPaths(openAPI: OpenAPI): List<String> =
+    openAPI.paths.keys
+      .groupBy { it.replace(PATH_PARAMETER_PATTERN, "{}") }
+      .filterValues { it.size > 1 }
+      .map { (_, paths) ->
+        "Equivalent paths found: ${paths.joinToString(" and ") { "'$it'" }}. " +
+        "These paths are identical after ignoring parameter names and are considered invalid by the OpenAPI specification (OAS 3.0 §4.7.9)."
+      }
+
   private fun logExtractedOperations(operations: List<ApiOperation>) {
     if (operations.isEmpty()) {
       logger.warn { "No valid operations were generated." }
@@ -105,5 +121,9 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
         }
       }
     }
+  }
+
+  companion object {
+    private val PATH_PARAMETER_PATTERN = Regex("\\{[^}]+}")
   }
 }

@@ -75,6 +75,18 @@ class ExtractionErrorTest {
   }
 
   @Test
+  fun `fails when paths are equivalent (differ only in parameter names)`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/equivalent_paths.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("/resources/{resourceId}/items") && it.contains("/resources/{parentId}/items")
+    })
+  }
+
+  @Test
   fun `fails when non 400 scenario example violates schema`() {
     // when
     val result = OpenApiLoader.loadOperations("src/test/resources/error/invalid_non_400_examples.yaml")

@@ -1,0 +1,29 @@
+openapi: 3.0.0
+info:
+  title: Equivalent Paths API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /resources/{resourceId}/items:
+    get:
+      parameters:
+        - in: path
+          name: resourceId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+  /resources/{parentId}/items:
+    get:
+      parameters:
+        - in: path
+          name: parentId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK

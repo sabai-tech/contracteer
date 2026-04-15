@@ -183,6 +183,18 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
 
 ## Specification Issues
 
+### Equivalent paths rejected
+
+**Symptom:** Loading the specification fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."
+
+**Cause:** The specification defines two paths that differ only in parameter names.
+The OpenAPI specification considers these identical and invalid (OAS 3.0 §4.7.9) because both match the same set of URLs.
+Parameter types and constraints do not matter -- equivalence is purely structural.
+
+**Fix:** Rename one of the paths so that the static segments differ, or merge both operations under a single path.
+
+---
+
 ### Circular schema reference rejected
 
 **Symptom:** Loading the specification fails with "Circular reference with no optional, nullable, or collection exit point."
