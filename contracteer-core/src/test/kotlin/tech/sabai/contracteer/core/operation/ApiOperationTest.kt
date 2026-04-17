@@ -15,8 +15,8 @@ class ApiOperationTest {
     val operation = apiOperation(responses = mapOf(200 to successResponse, 400 to badRequestResponse))
 
     // then
-    assert(operation.responseFor(200) === successResponse)
-    assert(operation.responseFor(400) === badRequestResponse)
+    assert(operation.responseSchemas.responseFor(200) === successResponse)
+    assert(operation.responseSchemas.responseFor(400) === badRequestResponse)
   }
 
   @Test
@@ -28,8 +28,8 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.responseFor(404) === defaultResponse)
-    assert(operation.responseFor(500) === defaultResponse)
+    assert(operation.responseSchemas.responseFor(404) === defaultResponse)
+    assert(operation.responseSchemas.responseFor(500) === defaultResponse)
   }
 
   @Test
@@ -41,8 +41,8 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.responseFor(200) === successResponse)
-    assert(operation.responseFor(200) !== defaultResponse)
+    assert(operation.responseSchemas.responseFor(200) === successResponse)
+    assert(operation.responseSchemas.responseFor(200) !== defaultResponse)
   }
 
   @Test
@@ -51,7 +51,7 @@ class ApiOperationTest {
     val operation = apiOperation(responses = mapOf(200 to successResponse))
 
     // then
-    assert(operation.responseFor(404) == null)
+    assert(operation.responseSchemas.responseFor(404) == null)
   }
 
   @Test
@@ -63,7 +63,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.badRequestResponse() === badRequestResponse)
+    assert(operation.responseSchemas.badRequestResponse() === badRequestResponse)
   }
 
   @Test
@@ -75,7 +75,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.badRequestResponse() === defaultResponse)
+    assert(operation.responseSchemas.badRequestResponse() === defaultResponse)
   }
 
   @Test
@@ -84,7 +84,7 @@ class ApiOperationTest {
     val operation = apiOperation(responses = mapOf(200 to successResponse))
 
     // then
-    assert(operation.badRequestResponse() == null)
+    assert(operation.responseSchemas.badRequestResponse() == null)
   }
 
   @Test
@@ -96,8 +96,8 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.responseFor(404) === classResponse4xx)
-    assert(operation.responseFor(403) === classResponse4xx)
+    assert(operation.responseSchemas.responseFor(404) === classResponse4xx)
+    assert(operation.responseSchemas.responseFor(403) === classResponse4xx)
   }
 
   @Test
@@ -109,7 +109,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.responseFor(400) === badRequestResponse)
+    assert(operation.responseSchemas.responseFor(400) === badRequestResponse)
   }
 
   @Test
@@ -122,7 +122,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.responseFor(500) === defaultResponse)
+    assert(operation.responseSchemas.responseFor(500) === defaultResponse)
   }
 
   @Test
@@ -135,7 +135,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.badRequestResponse() === classResponse4xx)
+    assert(operation.responseSchemas.badRequestResponse() === classResponse4xx)
   }
 
   @Test
@@ -147,7 +147,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.successResponses() == mapOf(200 to successResponse))
+    assert(operation.responseSchemas.successResponses() == mapOf(200 to successResponse))
   }
 
   @Test
@@ -159,7 +159,7 @@ class ApiOperationTest {
     )
 
     // then
-    assert(operation.successResponses() == mapOf(200 to successResponse))
+    assert(operation.responseSchemas.successResponses() == mapOf(200 to successResponse))
   }
 
   private fun apiOperation(
@@ -170,9 +170,7 @@ class ApiOperationTest {
     path = "/test",
     method = "get",
     requestSchema = RequestSchema(parameters = emptyList(), bodies = emptyList()),
-    responses = responses,
-    classResponses = classResponses,
-    defaultResponse = defaultResponse,
+    responseSchemas = ResponseSchemas(responses, classResponses, defaultResponse),
     scenarios = emptyList()
   )
 }

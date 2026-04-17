@@ -215,7 +215,7 @@ class VerificationCaseFactoryTypeMismatchTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
@@ -228,7 +228,7 @@ class VerificationCaseFactoryTypeMismatchTest {
                      isRequired = true,
                      serde = JsonSerde)
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -241,7 +241,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
     assert(typeMismatchCases[0].mutatedValue == "<<not a object>>")
     assert(typeMismatchCases[0].requestContentType == ContentType("application/json"))
-    assert(typeMismatchCases[0].responseSchema == apiOperation.badRequestResponse())
+    assert(typeMismatchCases[0].responseSchema == apiOperation.responseSchemas.badRequestResponse())
     assert(typeMismatchCases[0].path == "/users")
     assert(typeMismatchCases[0].method == "POST")
   }
@@ -263,14 +263,14 @@ class VerificationCaseFactoryTypeMismatchTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
                      isRequired = true,
                      serde = JsonSerde)
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -298,7 +298,7 @@ class VerificationCaseFactoryTypeMismatchTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
@@ -306,7 +306,7 @@ class VerificationCaseFactoryTypeMismatchTest {
                      isRequired = true,
                      serde = JsonSerde)
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -327,7 +327,7 @@ class VerificationCaseFactoryTypeMismatchTest {
         parameters = emptyList(),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
@@ -340,7 +340,7 @@ class VerificationCaseFactoryTypeMismatchTest {
                      isRequired = true,
                      serde = JsonSerde)
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -374,7 +374,7 @@ class VerificationCaseFactoryTypeMismatchTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
@@ -382,7 +382,7 @@ class VerificationCaseFactoryTypeMismatchTest {
                      isRequired = true,
                      serde = JsonSerde)
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -413,7 +413,7 @@ class VerificationCaseFactoryTypeMismatchTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         201 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(contentType = ContentType("application/json"),
                      dataType = objectDataType(properties = mapOf("id" to integerDataType())),
@@ -426,7 +426,7 @@ class VerificationCaseFactoryTypeMismatchTest {
                      isRequired = true,
                      serde = JsonSerde)
         ))
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/users",
@@ -560,7 +560,7 @@ class VerificationCaseFactoryTypeMismatchTest {
     path = path,
     method = method,
     requestSchema = RequestSchema(parameters = parameters, bodies = bodies),
-    responses = mapOf(
+    responseSchemas = ResponseSchemas(byStatusCode = mapOf(
       200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
       400 to ResponseSchema(headers = emptyList(), bodies = listOf(
         BodySchema(contentType = ContentType("application/json"),
@@ -568,7 +568,7 @@ class VerificationCaseFactoryTypeMismatchTest {
                    isRequired = true,
                    serde = JsonSerde)
       ))
-    ),
+    )),
     scenarios = emptyList()
   )
 }

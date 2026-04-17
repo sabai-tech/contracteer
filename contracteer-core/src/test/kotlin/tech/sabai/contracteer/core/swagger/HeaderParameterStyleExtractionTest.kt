@@ -63,7 +63,7 @@ class HeaderParameterStyleExtractionTest {
     val operation = loadOperationByPath("/response-header-default")
 
     // then
-    val responseSchema = operation.responseFor(200)!!
+    val responseSchema = operation.responseSchemas.responseFor(200)!!
     val header = responseSchema.headers.single()
     assert(header.element == ParameterElement.Header("X-Rate-Limit"))
     assert(header.dataType is ArrayDataType)
@@ -77,7 +77,7 @@ class HeaderParameterStyleExtractionTest {
     val operation = loadOperationByPath("/response-header-object")
 
     // then
-    val responseSchema = operation.responseFor(200)!!
+    val responseSchema = operation.responseSchemas.responseFor(200)!!
     val header = responseSchema.headers.single()
     assert(header.dataType is ObjectDataType)
     assert(header.codec is SimpleParameterCodec)

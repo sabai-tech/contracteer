@@ -78,8 +78,8 @@ class ScenarioExtractionTest {
     val operation = loadSingleOperation("2xx_schema_with_4xx_scenario.yaml")
 
     // then
-    assert(operation.responseFor(200) != null)
-    assert(operation.responseFor(404) != null)
+    assert(operation.responseSchemas.responseFor(200) != null)
+    assert(operation.responseSchemas.responseFor(404) != null)
     assert(operation.scenarios.size == 1)
     assert(operation.scenarios.single().statusCode == 404)
   }

@@ -39,7 +39,7 @@ class ServerVerifierTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -55,7 +55,7 @@ class ServerVerifierTest {
           headers = emptyList(),
           bodies = emptyList()
         )
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/users/{id}",
@@ -135,7 +135,7 @@ class ServerVerifierTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -147,7 +147,7 @@ class ServerVerifierTest {
             )
           )
         )
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/users/{userId}/orders/{orderId}",
@@ -208,7 +208,7 @@ class ServerVerifierTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -220,7 +220,7 @@ class ServerVerifierTest {
             )
           )
         )
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/users/{id}",
@@ -288,7 +288,7 @@ class ServerVerifierTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -300,7 +300,7 @@ class ServerVerifierTest {
             )
           )
         )
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/search",
@@ -363,7 +363,7 @@ class ServerVerifierTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -375,7 +375,7 @@ class ServerVerifierTest {
             )
           )
         )
-      ),
+      )),
       scenarios = emptyList()
     )
 

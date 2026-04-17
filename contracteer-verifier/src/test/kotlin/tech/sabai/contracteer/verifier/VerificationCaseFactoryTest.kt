@@ -29,7 +29,7 @@ class VerificationCaseFactoryTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -45,7 +45,7 @@ class VerificationCaseFactoryTest {
           headers = emptyList(),
           bodies = emptyList()
         )
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/users/{id}",
@@ -101,7 +101,7 @@ class VerificationCaseFactoryTest {
         parameters = emptyList(),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -113,7 +113,7 @@ class VerificationCaseFactoryTest {
             )
           )
         )
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -149,7 +149,7 @@ class VerificationCaseFactoryTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         201 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -167,7 +167,7 @@ class VerificationCaseFactoryTest {
             )
           )
         )
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -197,7 +197,7 @@ class VerificationCaseFactoryTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         201 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -209,7 +209,7 @@ class VerificationCaseFactoryTest {
             )
           )
         )
-      ),
+      )),
       scenarios = listOf(
         Scenario(
           path = "/orders",
@@ -254,7 +254,7 @@ class VerificationCaseFactoryTest {
         parameters = emptyList(),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(
           headers = emptyList(),
           bodies = listOf(
@@ -277,7 +277,7 @@ class VerificationCaseFactoryTest {
             )
           )
         )
-      ),
+      )),
       scenarios = emptyList()
     )
 

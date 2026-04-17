@@ -77,6 +77,6 @@ object TestFixture {
     ApiOperation(path = path,
                  method = method,
                  requestSchema = requestSchema,
-                 responses = responses,
+                 responseSchemas = ResponseSchemas(byStatusCode = responses, byClass = emptyMap(), defaultResponse = null),
                  scenarios = scenarios)
 }

@@ -7,10 +7,11 @@ import io.swagger.v3.oas.models.PathItem
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Failure
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.operation.ApiOperation
-import tech.sabai.contracteer.core.operation.ResponseSchema
+import tech.sabai.contracteer.core.operation.ResponseSchemas
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
 internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
@@ -18,7 +19,6 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
   private val logger = KotlinLogging.logger {}
   private val dataTypeConverter = DataTypeConverter(sharedComponents)
   private val schemaExtractor = SchemaExtractor(sharedComponents, dataTypeConverter)
-  private val scenarioExtractor = ScenarioExtractor(sharedComponents)
 
   fun extract(openAPI: OpenAPI): Result<List<ApiOperation>> {
     val equivalentPathErrors = findEquivalentPaths(openAPI)
@@ -38,55 +38,58 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
   private fun Map.Entry<String, PathItem>.toApiOperations() =
     value
       .readOperationsMap()
-      .map { (method, operation) -> extractApiOperation(key, method.name, operation) }
+      .map { (method, operation) -> extractApiOperation(method.name, key, operation) }
 
-  private fun extractApiOperation(path: String, method: String, operation: Operation): Result<ApiOperation> {
-    val requestSchema = schemaExtractor.extractRequestSchema(operation)
-    val responseSchemas = extractResponseSchemas(operation)
-    val classResponses = extractClassResponses(operation)
-    val defaultResponse = extractDefaultResponse(operation)
+  private fun extractApiOperation(method: String, path: String, operation: Operation): Result<ApiOperation> {
+    val extractedRequest = schemaExtractor.extractRequestSchema(operation)
+    val extractedByStatusCode = extractResponseSchemas(operation)
+    val extractedByClass = extractClassResponses(operation)
+    val extractedDefault = extractDefaultResponse(operation)
 
-    if (!(requestSchema is Success && responseSchemas is Success && classResponses is Success && defaultResponse is Success))
-      return (requestSchema combineWith responseSchemas combineWith classResponses combineWith defaultResponse)
+    if (!(extractedRequest is Success && extractedByStatusCode is Success && extractedByClass is Success && extractedDefault is Success))
+      return (extractedRequest combineWith extractedByStatusCode combineWith extractedByClass combineWith extractedDefault)
         .mapErrors { "${method.uppercase()} $path: $it" }
         .retypeError<ApiOperation>()
 
-    val headValidation =
-      validateHeadResponses(method, responseSchemas.value, classResponses.value, defaultResponse.value)
+    val requestSchema = extractedRequest.value.toRequestSchema()
+    val responseSchemas = ResponseSchemas(
+      extractedByStatusCode.value.mapValues { it.value.toResponseSchema() },
+      extractedByClass.value.mapValues { it.value.toResponseSchema() },
+      extractedDefault.value?.toResponseSchema()
+    )
 
-    return when (headValidation) {
-      !is Success -> headValidation.mapErrors { "${method.uppercase()} $path: $it" }.retypeError()
-      else        ->
-        scenarioExtractor
-          .extractScenarios(path,method,operation,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value)
-          .map {
-            ApiOperation(path,method,requestSchema.value,responseSchemas.value,classResponses.value,defaultResponse.value,it)
-          }
+    return when (val headValidation = validateHeadResponses(method, responseSchemas)) {
+      is Failure -> headValidation.mapErrors { "${method.uppercase()} $path: $it" }.retypeError()
+      else       ->
+        ScenarioBuilder
+          .buildScenarios(method,
+                          path,
+                          extractedRequest.value,
+                          extractedByStatusCode.value,
+                          extractedByClass.value,
+                          extractedDefault.value)
+          .map { scenarios -> ApiOperation(path, method, requestSchema, responseSchemas, scenarios) }
           .mapErrors { "${method.uppercase()} $path: $it" }
     }
   }
 
-  private fun validateHeadResponses(method: String,
-                                    responses: Map<Int, ResponseSchema>,
-                                    classResponses: Map<Int, ResponseSchema>,
-                                    defaultResponse: ResponseSchema?): Result<Unit> {
+  private fun validateHeadResponses(method: String, responseSchemas: ResponseSchemas): Result<Unit> {
     if (!method.equals("head", ignoreCase = true)) return success()
 
-    val allResponses = responses.values + classResponses.values + listOfNotNull(defaultResponse)
-    return if (allResponses.any { it.bodies.isNotEmpty() })
-      failure("HEAD responses MUST NOT include a message body (RFC 7231)")
-    else
-      success()
+    return when {
+      responseSchemas.hasAnyBody() -> failure("HEAD responses MUST NOT include a message body (RFC 7231)")
+      else                         -> success()
+    }
   }
 
-  private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ResponseSchema>> =
+  private fun extractResponseSchemas(operation: Operation): Result<Map<Int, ExtractedResponseSchema>> =
     operation.responses
       .filter { (code, _) -> code != "default" && !isClassCode(code) }
       .map { (code, response) -> schemaExtractor.extractResponseSchema(code, response) }
       .combineResults()
       .map { list -> list.associate { it.first to it.second } }
 
-  private fun extractClassResponses(operation: Operation): Result<Map<Int, ResponseSchema>> =
+  private fun extractClassResponses(operation: Operation): Result<Map<Int, ExtractedResponseSchema>> =
     operation.responses
       .filter { (code, _) -> isClassCode(code) }
       .map { (code, response) ->
@@ -95,7 +98,7 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
       .combineResults()
       .map { list -> list.associate { it.first to it.second } }
 
-  private fun extractDefaultResponse(operation: Operation): Result<ResponseSchema?> =
+  private fun extractDefaultResponse(operation: Operation): Result<ExtractedResponseSchema?> =
     operation.responses["default"]
       ?.let { schemaExtractor.extractResponseSchema(it) }
     ?: success(null)
@@ -116,8 +119,7 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
       logger.info { "Found ${operations.size} valid operation(s)." }
       logger.debug {
         operations.joinToString("${System.lineSeparator()}- ", "Operations:${System.lineSeparator()}- ") { operation ->
-          val responseCodes = operation.responses.keys.sorted().joinToString(", ")
-          "${operation.method.uppercase()} ${operation.path} -> [$responseCodes]"
+          "${operation.method.uppercase()} ${operation.path} -> [${operation.responseSchemas.summary()}]"
         }
       }
     }

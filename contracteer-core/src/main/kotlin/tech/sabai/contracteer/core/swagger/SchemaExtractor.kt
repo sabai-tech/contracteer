@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core.swagger
 
 import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.parameters.Parameter
@@ -15,8 +16,12 @@ import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.codec.*
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.normalize
+import tech.sabai.contracteer.core.operation.BodySchema
+import tech.sabai.contracteer.core.operation.ContentType
+import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.core.serde.*
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
@@ -25,7 +30,7 @@ internal class SchemaExtractor(
   private val dataTypeConverter: DataTypeConverter
 ) {
 
-  fun extractRequestSchema(operation: Operation): Result<RequestSchema> {
+  fun extractRequestSchema(operation: Operation): Result<ExtractedRequestSchema> {
     val pathParameters = extractPathParameterSchemas(operation).forProperty("request.path")
     val queryParameters = extractQueryParameterSchemas(operation).forProperty("request.query")
     val headers = extractRequestHeaderSchemas(operation).forProperty("request.header")
@@ -33,24 +38,24 @@ internal class SchemaExtractor(
     val bodies = extractRequestBodySchemas(operation).forProperty("request.body")
 
     return if (pathParameters is Success && queryParameters is Success && headers is Success && cookies is Success && bodies is Success)
-      success(RequestSchema(
-        parameters = pathParameters.value + queryParameters.value + headers.value + cookies.value,
-        bodies = bodies.value
-      ))
+      success(
+        ExtractedRequestSchema(
+          parameters = pathParameters.value + queryParameters.value + headers.value + cookies.value,
+          bodies = bodies.value
+        ))
     else
-      (pathParameters combineWith
-          queryParameters combineWith
-          headers combineWith
-          cookies combineWith bodies).retypeError()
+      (pathParameters combineWith queryParameters combineWith headers combineWith cookies combineWith bodies).retypeError()
   }
 
-  fun extractResponseSchema(code: String, response: ApiResponse): Result<Pair<Int, ResponseSchema>> =
+  fun extractResponseSchema(code: String, response: ApiResponse): Result<Pair<Int, ExtractedResponseSchema>> =
     parseStatusCode(code).flatMap { statusCode ->
-      sharedComponents.resolve(response).flatMap { resolved ->
-        rejectBodylessResponseWithBody(statusCode, resolved)
-          .flatMap { buildResponseSchema(code, resolved) }
-          .map { statusCode to it }
-      }
+      sharedComponents
+        .resolve(response)
+        .flatMap { resolved ->
+          rejectBodylessResponseWithBody(statusCode, resolved)
+            .flatMap { buildResponseSchema(code, resolved) }
+            .map { statusCode to it }
+        }
     }
 
   private fun rejectBodylessResponseWithBody(statusCode: Int, response: ApiResponse): Result<Unit> =
@@ -59,26 +64,28 @@ internal class SchemaExtractor(
     else
       success()
 
-  private fun buildResponseSchema(code: String, response: ApiResponse): Result<ResponseSchema> {
+  private fun buildResponseSchema(code: String, response: ApiResponse): Result<ExtractedResponseSchema> {
     val headers = extractResponseHeaderSchemas(response)
     val bodies = extractResponseBodySchemas(response)
     return if (headers is Success && bodies is Success)
-      success(ResponseSchema(headers = headers.value, bodies = bodies.value))
+      success(ExtractedResponseSchema(headers.value, bodies.value))
     else
       (headers combineWith bodies).forKey(code).forProperty("response").retypeError()
   }
 
-  fun extractResponseSchema(response: ApiResponse): Result<ResponseSchema> =
-    sharedComponents.resolve(response).flatMap { resolved ->
-      val headers = extractResponseHeaderSchemas(resolved)
-      val bodies = extractResponseBodySchemas(resolved)
-      if (headers is Success && bodies is Success)
-        success(ResponseSchema(headers = headers.value, bodies = bodies.value))
-      else
-        (headers combineWith bodies).retypeError()
-    }
+  fun extractResponseSchema(response: ApiResponse): Result<ExtractedResponseSchema> =
+    sharedComponents
+      .resolve(response)
+      .flatMap { resolved ->
+        val headers = extractResponseHeaderSchemas(resolved)
+        val bodies = extractResponseBodySchemas(resolved)
+        if (headers is Success && bodies is Success)
+          success(ExtractedResponseSchema(headers.value, bodies.value))
+        else
+          (headers combineWith bodies).retypeError()
+      }
 
-  private fun extractPathParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
+  private fun extractPathParameterSchemas(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "path" }
       .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
@@ -96,7 +103,7 @@ internal class SchemaExtractor(
       schema.minLength = 1
   }
 
-  private fun extractQueryParameterSchemas(operation: Operation): Result<List<ParameterSchema>> =
+  private fun extractQueryParameterSchemas(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "query" }
       .map { param ->
@@ -108,28 +115,28 @@ internal class SchemaExtractor(
       }
       .combineResults()
 
-  private fun extractRequestHeaderSchemas(operation: Operation): Result<List<ParameterSchema>> =
+  private fun extractRequestHeaderSchemas(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "header" && IGNORED_REQUEST_HEADERS.none { h -> h.equals(it.name, ignoreCase = true) } }
       .map { it.toParameterSchema(Header(it.name)) }
       .combineResults()
 
-  private fun extractRequestCookieSchemas(operation: Operation): Result<List<ParameterSchema>> =
+  private fun extractRequestCookieSchemas(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "cookie" }
       .map { it.toParameterSchema(Cookie(it.name)) }
       .combineResults()
 
-  private fun extractRequestBodySchemas(operation: Operation): Result<List<BodySchema>> =
+  private fun extractRequestBodySchemas(operation: Operation): Result<List<ExtractedBodySchema>> =
     if (operation.requestBody == null)
       success(emptyList())
     else
       extractRequestBodySchemas(operation.requestBody!!)
 
-  private fun extractRequestBodySchemas(requestBody: RequestBody): Result<List<BodySchema>> =
+  private fun extractRequestBodySchemas(requestBody: RequestBody): Result<List<ExtractedBodySchema>> =
     sharedComponents.resolve(requestBody).flatMap { convertRequestBodySchema(it) }
 
-  private fun convertRequestBodySchema(body: RequestBody): Result<List<BodySchema>> =
+  private fun convertRequestBodySchema(body: RequestBody): Result<List<ExtractedBodySchema>> =
     if (body.content == null)
       success(emptyList())
     else {
@@ -137,17 +144,25 @@ internal class SchemaExtractor(
       body.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
-          convertDataType(mediaType).flatMap { dataType ->
-            if (dataType is AnyDataType)
-              success(BodySchema(contentType, dataType, body.safeRequired(), PlainTextSerde))
-            else
-              buildSerde(contentType, mediaType, dataType)
-                .map { BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it) }
-          }.let { if (multiContent) it.forKey(contentType.value) else it }
+          convertDataType(mediaType)
+            .flatMap { dataType ->
+              resolveExamples(mediaType.safeExamples())
+                .flatMap { examples ->
+                  if (dataType is AnyDataType)
+                    success(ExtractedBodySchema(BodySchema(contentType, dataType, body.safeRequired(), PlainTextSerde),
+                                                examples))
+                  else
+                    buildSerde(contentType, mediaType, dataType)
+                      .map {
+                        ExtractedBodySchema(BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it),
+                                            examples)
+                      }
+                }
+            }.let { if (multiContent) it.forKey(contentType.value) else it }
         }.combineResults()
     }
 
-  private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ParameterSchema>> =
+  private fun extractResponseHeaderSchemas(response: ApiResponse): Result<List<ExtractedParameterSchema>> =
     response
       .safeHeaders()
       .filterKeys { !it.equals("Content-Type", ignoreCase = true) }
@@ -155,7 +170,7 @@ internal class SchemaExtractor(
       .combineResults()
       .forProperty("header")
 
-  private fun extractResponseBodySchemas(response: ApiResponse): Result<List<BodySchema>> =
+  private fun extractResponseBodySchemas(response: ApiResponse): Result<List<ExtractedBodySchema>> =
     if (response.content == null)
       success(emptyList())
     else {
@@ -164,13 +179,18 @@ internal class SchemaExtractor(
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
           convertDataType(mediaType).flatMap { dataType ->
-            if (dataType is AnyDataType)
-              success(BodySchema(contentType, dataType, false, PlainTextSerde))
-            else
-              buildSerde(contentType, mediaType, dataType)
-                .map {
-                  BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), it)
-                }
+            resolveExamples(mediaType.safeExamples()).flatMap { examples ->
+              if (dataType is AnyDataType)
+                success(ExtractedBodySchema(BodySchema(contentType, dataType, false, PlainTextSerde), examples))
+              else
+                buildSerde(contentType, mediaType, dataType)
+                  .map {
+                    ExtractedBodySchema(BodySchema(contentType,
+                                                   dataType.asResponseType(),
+                                                   mediaType.schema.safeNullable(),
+                                                   it), examples)
+                  }
+            }
           }.let { if (multiContent) it.forKey(contentType.value) else it }
         }.combineResults()
         .forProperty("body")
@@ -259,7 +279,7 @@ internal class SchemaExtractor(
   private fun serdeForContentType(contentType: String): Serde =
     if ("json" in contentType.lowercase()) JsonSerde else PlainTextSerde
 
-  private fun Parameter.toParameterSchema(element: ParameterElement): Result<ParameterSchema> =
+  private fun Parameter.toParameterSchema(element: ParameterElement): Result<ExtractedParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
       if (resolved.content != null && resolved.content.isNotEmpty())
         createContentParameterSchema(resolved, element)
@@ -267,28 +287,45 @@ internal class SchemaExtractor(
         createStyleParameterSchema(resolved, element)
     }
 
-  private fun createContentParameterSchema(parameter: Parameter, element: ParameterElement): Result<ParameterSchema> {
+  private fun createContentParameterSchema(parameter: Parameter,
+                                           element: ParameterElement): Result<ExtractedParameterSchema> {
     val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
     val contentType = ContentType(mediaTypeString)
     return convertDataType(mediaTypeObj).flatMap { dataType ->
-      if (dataType is AnyDataType)
-        success(ParameterSchema(element,
-                                dataType,
-                                parameter.safeIsRequired(),
-                                ContentCodec(parameter.name, PlainTextSerde))
-        )
-      else
-        buildSerde(contentType, mediaTypeObj, dataType)
-          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it)) }
+      resolveExamples(parameter.safeExamples()).flatMap { examples ->
+        if (dataType is AnyDataType)
+          success(ExtractedParameterSchema(
+            ParameterSchema(element,
+                            dataType,
+                            parameter.safeIsRequired(),
+                            ContentCodec(parameter.name, PlainTextSerde)),
+            examples))
+        else
+          buildSerde(contentType, mediaTypeObj, dataType)
+            .map {
+              ExtractedParameterSchema(
+                ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it)),
+                examples)
+            }
+      }
     }
   }
 
-  private fun createStyleParameterSchema(parameter: Parameter, element: ParameterElement): Result<ParameterSchema> =
+  private fun createStyleParameterSchema(parameter: Parameter,
+                                         element: ParameterElement): Result<ExtractedParameterSchema> =
     dataTypeConverter
       .convertToDataType(parameter.schema, "")
       .flatMap { dataType ->
         createCodecForParameter(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name)
-          .map { ParameterSchema(element, dataType, parameter.safeIsRequired(), it) }
+          .flatMap { codec ->
+            resolveExamples(parameter.safeExamples())
+              .map { examples ->
+                ExtractedParameterSchema(ParameterSchema(element,
+                                                         dataType,
+                                                         parameter.safeIsRequired(),
+                                                         codec), examples)
+              }
+          }
       }
 
   private fun createCodecForParameter(element: ParameterElement,
@@ -333,7 +370,10 @@ internal class SchemaExtractor(
     }
   }
 
-  private fun validateStyleConstraints(style: String,explode: Boolean,dataType: DataType<out Any>,paramName: String) =
+  private fun validateStyleConstraints(style: String,
+                                       explode: Boolean,
+                                       dataType: DataType<out Any>,
+                                       paramName: String) =
     when (style) {
       "simple", "form",
       "label", "matrix" -> validateFlatObjectProperties(style, dataType, paramName)
@@ -384,15 +424,29 @@ internal class SchemaExtractor(
 
   private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
 
-  private fun Header.toParameterSchema(name: String): Result<ParameterSchema> =
+  private fun Header.toParameterSchema(name: String): Result<ExtractedParameterSchema> =
     sharedComponents.resolve(this).flatMap { resolved ->
       dataTypeConverter
         .convertToDataType(resolved.schema, "")
         .flatMap { dataType ->
           createCodecForParameter(Header(name), resolved.style?.toString(), resolved.explode, dataType, name)
-            .map { ParameterSchema(Header(name), dataType, resolved.safeIsRequired(), it) }
+            .flatMap { codec ->
+              resolveExamples(resolved.safeExamples())
+                .map { examples ->
+                  ExtractedParameterSchema(ParameterSchema(Header(name),
+                                                           dataType,
+                                                           resolved.safeIsRequired(),
+                                                           codec), examples)
+                }
+            }
         }
     }
+
+  private fun resolveExamples(examples: Map<String, Example>): Result<Map<String, Any?>> =
+    if (examples.isEmpty()) success(emptyMap())
+    else examples.map { (key, example) ->
+      sharedComponents.resolve(example).map { key to it.value?.normalize() }
+    }.combineResults().map { it.toMap() }
 
   companion object {
     private val IGNORED_REQUEST_HEADERS = setOf("Accept", "Content-Type", "Authorization")

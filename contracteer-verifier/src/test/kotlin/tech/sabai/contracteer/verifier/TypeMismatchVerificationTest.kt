@@ -55,7 +55,7 @@ class TypeMismatchVerificationTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(
@@ -65,7 +65,7 @@ class TypeMismatchVerificationTest {
             serde = JsonSerde
           )
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -110,7 +110,7 @@ class TypeMismatchVerificationTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(
@@ -120,7 +120,7 @@ class TypeMismatchVerificationTest {
             serde = JsonSerde
           )
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -170,7 +170,7 @@ class TypeMismatchVerificationTest {
         ),
         bodies = emptyList()
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(
@@ -180,7 +180,7 @@ class TypeMismatchVerificationTest {
             serde = JsonSerde
           )
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
@@ -228,7 +228,7 @@ class TypeMismatchVerificationTest {
           )
         )
       ),
-      responses = mapOf(
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
         200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
         400 to ResponseSchema(headers = emptyList(), bodies = listOf(
           BodySchema(
@@ -238,7 +238,7 @@ class TypeMismatchVerificationTest {
             serde = JsonSerde
           )
         ))
-      ),
+      )),
       scenarios = emptyList()
     )
 
