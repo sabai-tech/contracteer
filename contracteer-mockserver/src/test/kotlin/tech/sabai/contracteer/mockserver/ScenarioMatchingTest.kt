@@ -11,13 +11,13 @@ import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.operation.ScenarioBody
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
-import tech.sabai.contracteer.mockserver.TestFixture.integerDataType
-import tech.sabai.contracteer.mockserver.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.mockserver.TestFixture.parameterSchema
 import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
 import tech.sabai.contracteer.mockserver.TestFixture.scenario
-import tech.sabai.contracteer.mockserver.TestFixture.stringDataType
 import kotlin.test.Test
 
 class ScenarioMatchingTest {

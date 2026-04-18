@@ -16,9 +16,9 @@ import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.verifier.TestFixture.integerDataType
-import tech.sabai.contracteer.verifier.TestFixture.objectDataType
-import tech.sabai.contracteer.verifier.TestFixture.stringDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatch
 import kotlin.test.Test
 

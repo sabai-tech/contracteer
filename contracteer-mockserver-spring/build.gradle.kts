@@ -11,6 +11,7 @@ dependencies {
   implementation(libs.spring.boot.test)
   implementation(libs.spring.test)
 
+  testImplementation(testFixtures(project(":contracteer-core")))
   testImplementation(libs.spring.boot.starter.test)
   testImplementation(libs.rest.assured)
 }

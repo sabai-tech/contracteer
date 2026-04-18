@@ -12,13 +12,13 @@ import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
-import tech.sabai.contracteer.mockserver.TestFixture.integerDataType
-import tech.sabai.contracteer.mockserver.TestFixture.objectDataType
-import tech.sabai.contracteer.mockserver.TestFixture.oneOfDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.oneOfDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.mockserver.TestFixture.parameterSchema
 import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
-import tech.sabai.contracteer.mockserver.TestFixture.stringDataType
 import kotlin.test.Test
 
 class RequestValidationTest {
@@ -107,7 +107,7 @@ class RequestValidationTest {
         parameters = listOf(
           ParameterSchema(
             QueryParam("filter"),
-            oneOfDataType(listOf(variantA, variantB)),
+            oneOfDataType(subTypes = listOf(variantA, variantB)),
             isRequired = true,
             ContentCodec("filter", JsonSerde)
           )
@@ -509,7 +509,7 @@ class RequestValidationTest {
       requestSchema = requestSchema(
         bodies = listOf(bodySchema(
           contentType = ContentType("application/json"),
-          dataType = oneOfDataType(listOf(variantA, variantB))))
+          dataType = oneOfDataType(subTypes = listOf(variantA, variantB))))
       ),
       responses = mapOf(
         201 to responseSchema(
@@ -545,7 +545,7 @@ class RequestValidationTest {
       requestSchema = requestSchema(
         bodies = listOf(bodySchema(
           contentType = ContentType("application/json"),
-          dataType = oneOfDataType(listOf(variantA, variantB))))
+          dataType = oneOfDataType(subTypes = listOf(variantA, variantB))))
       ),
       responses = mapOf(
         201 to responseSchema(

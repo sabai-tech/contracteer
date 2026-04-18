@@ -8,8 +8,8 @@ import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
 import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
-import tech.sabai.contracteer.mockserver.TestFixture.integerDataType
-import tech.sabai.contracteer.mockserver.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
 import tech.sabai.contracteer.mockserver.TestFixture.parameterSchema
 import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
 import tech.sabai.contracteer.mockserver.TestFixture.responseSchema

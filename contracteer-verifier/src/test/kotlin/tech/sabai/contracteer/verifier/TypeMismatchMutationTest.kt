@@ -1,10 +1,11 @@
 package tech.sabai.contracteer.verifier
 
+import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.verifier.TestFixture.arrayDataType
-import tech.sabai.contracteer.verifier.TestFixture.integerDataType
-import tech.sabai.contracteer.verifier.TestFixture.objectDataType
-import tech.sabai.contracteer.verifier.TestFixture.stringDataType
+import tech.sabai.contracteer.core.TestFixture.arrayDataType
+import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.TestFixture.objectDataType
+import tech.sabai.contracteer.core.TestFixture.stringDataType
 import kotlin.test.Test
 
 class TypeMismatchMutationTest {

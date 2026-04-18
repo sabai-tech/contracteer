@@ -1,5 +1,6 @@
 plugins {
   id("library-conventions")
+  `java-test-fixtures`
 }
 
 dependencies {
