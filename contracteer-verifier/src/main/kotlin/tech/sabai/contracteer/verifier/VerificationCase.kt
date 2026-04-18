@@ -18,17 +18,26 @@ sealed class VerificationCase {
   /** A human-readable description of this verification case, suitable for test output. */
   abstract val displayName: String
 
-  /** A verification case driven by a named [Scenario] from the OpenAPI specification. */
+  /**
+   * A verification case driven by a named [Scenario] from the OpenAPI specification.
+   *
+   * [requestContentType] is the content type used for the request body. When the scenario carries
+   * an explicit body example, it equals `scenario.request.body.contentType`. When the scenario has
+   * no body example but the request schema declares a required body, it is the content type chosen
+   * for schema-driven body generation at request time. When the request carries no body, it is
+   * `null`.
+   */
   data class ScenarioBased(
     val scenario: Scenario,
     val requestSchema: RequestSchema,
-    val responseSchema: ResponseSchema
+    val responseSchema: ResponseSchema,
+    val requestContentType: ContentType?
   ): VerificationCase() {
     override val displayName: String
       get() {
-        val requestContentType = scenario.request.body?.contentType?.let { " (${it.value})" } ?: ""
-        val responseContentType = scenario.response.body?.contentType?.let { " (${it.value})" } ?: ""
-        return "${scenario.method.uppercase()} ${scenario.path}$requestContentType -> ${scenario.statusCode}$responseContentType with scenario '${scenario.key}'"
+        val requestCT = requestContentType?.let { " (${it.value})" } ?: ""
+        val responseCT = scenario.response.body?.contentType?.let { " (${it.value})" } ?: ""
+        return "${scenario.method.uppercase()} ${scenario.path}$requestCT -> ${scenario.statusCode}$responseCT with scenario '${scenario.key}'"
       }
   }
 

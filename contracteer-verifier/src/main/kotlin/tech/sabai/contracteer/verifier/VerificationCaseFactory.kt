@@ -27,16 +27,25 @@ object VerificationCaseFactory {
   }
 
   private fun createScenarioBasedCases(apiOperation: ApiOperation): List<ScenarioBased> {
-    return apiOperation.scenarios.map { scenario ->
+    return apiOperation.scenarios.flatMap { scenario ->
       val responseSchema = apiOperation.responseSchemas.responseFor(scenario.statusCode)
                            ?: error("No response schema found for status code ${scenario.statusCode} in operation ${apiOperation.method} ${apiOperation.path}")
 
-      ScenarioBased(
-        scenario = scenario,
-        requestSchema = apiOperation.requestSchema,
-        responseSchema = responseSchema
-      )
+      requestContentTypesFor(scenario, apiOperation.requestSchema).map { contentType ->
+        ScenarioBased(
+          scenario = scenario,
+          requestSchema = apiOperation.requestSchema,
+          responseSchema = responseSchema,
+          requestContentType = contentType
+        )
+      }
     }
+  }
+
+  private fun requestContentTypesFor(scenario: Scenario, requestSchema: RequestSchema): List<ContentType?> {
+    scenario.request.body?.let { return listOf(it.contentType) }
+    val requiredBodies = requestSchema.bodies.filter { it.isRequired }
+    return if (requiredBodies.isEmpty()) listOf(null) else requiredBodies.map { it.contentType }
   }
 
   private fun createSchemaBasedCasesIfNeeded(apiOperation: ApiOperation): List<SchemaBased> {

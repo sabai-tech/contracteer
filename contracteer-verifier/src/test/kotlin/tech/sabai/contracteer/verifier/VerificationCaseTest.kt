@@ -61,7 +61,7 @@ class VerificationCaseTest {
             serde = JsonSerde
           )
         )
-      ))
+      ), requestContentType = ContentType("application/json"))
 
     // When
     val displayName = case.displayName
@@ -102,7 +102,7 @@ class VerificationCaseTest {
       ResponseSchema(
         headers = emptyList(),
         bodies = emptyList()
-      ))
+      ), requestContentType = null)
 
     // When
     val displayName = case.displayName
@@ -158,7 +158,7 @@ class VerificationCaseTest {
             serde = JsonSerde
           )
         )
-      ))
+      ), requestContentType = ContentType("application/json"))
 
     // When
     val displayName = case.displayName

@@ -398,4 +398,77 @@ class ServerVerifierTest {
     assert(capturedId != null) { "Server should have received the request with encoded path" }
     assert(capturedId!!.contains(Regex("""[|\\>]""")))
   }
+
+  @Test
+  fun `generates random body when scenario has no body example and request body is required`() {
+    // Given
+    var capturedBody: String? = null
+    var capturedContentType: String? = null
+
+    val apiOperation = ApiOperation(
+      path = "/predictions",
+      method = "POST",
+      requestSchema = RequestSchema(
+        parameters = emptyList(),
+        bodies = listOf(
+          BodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+            isRequired = true,
+            serde = JsonSerde
+          )
+        )
+      ),
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
+        200 to ResponseSchema(
+          headers = emptyList(),
+          bodies = listOf(
+            BodySchema(
+              contentType = ContentType("application/json"),
+              dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+              isRequired = true,
+              serde = JsonSerde
+            )
+          )
+        )
+      )),
+      scenarios = listOf(
+        Scenario(
+          path = "/predictions",
+          method = "POST",
+          key = "successfulPrediction",
+          statusCode = 200,
+          request = ScenarioRequest(parameterValues = emptyMap(), body = null),
+          response = ScenarioResponse(
+            headers = emptyMap(),
+            body = ScenarioBody(
+              contentType = ContentType("application/json"),
+              value = mapOf("id" to 1)
+            )
+          )
+        )
+      )
+    )
+
+    val app = routes(
+      "/predictions" bind org.http4k.core.Method.POST to { request ->
+        capturedBody = request.bodyString()
+        capturedContentType = request.header("Content-Type")
+        Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
+      }
+    )
+    val server = app.asServer(SunHttp(0)).start()
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+    val results = cases.map { verifier.verify(it) }
+
+    // Then
+    server.stop()
+    assert(results.size == 1)
+    assert(results.all { it.result.isSuccess() }) { "Expected success but got: ${results.map { it.result.errors() }}" }
+    assert(capturedContentType == "application/json") { "Expected application/json but got: $capturedContentType" }
+    assert(!capturedBody.isNullOrEmpty()) { "Expected non-empty body but got: $capturedBody" }
+  }
 }

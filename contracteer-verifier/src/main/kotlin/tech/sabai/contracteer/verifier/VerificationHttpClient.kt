@@ -29,16 +29,23 @@ internal class VerificationHttpClient(serverUrl: String) {
     validateScenarioParameterElements(scenario.request.parameterValues, case.requestSchema)
 
     val pathParams = buildPathParameters(scenario.request.parameterValues, case.requestSchema)
-    val bodySerde = scenario.request.body?.let { body -> case.requestSchema.bodies.serdeFor(body.contentType) }
+    val bodySchema = case.requestContentType?.let { ct -> case.requestSchema.bodies.find { it.contentType == ct } }
     val request = Request(
       method = Method.valueOf(scenario.method.uppercase()),
       uri = resolvePathUri(scenario.path, pathParams))
       .withScenarioParameters(scenario.request.parameterValues, case.requestSchema)
-      .withScenarioBody(scenario.request.body, bodySerde)
+      .withScenarioRequestBody(scenario.request.body, bodySchema)
       .withAcceptHeader(scenario.response.body?.contentType)
 
     return request to baseClient(request)
   }
+
+  private fun Request.withScenarioRequestBody(body: ScenarioBody?, bodySchema: BodySchema?): Request =
+    when {
+      body != null       -> withScenarioBody(body, bodySchema?.serde)
+      bodySchema != null -> withGeneratedBody(bodySchema)
+      else               -> this
+    }
 
   private fun executeSchemaBased(case: SchemaBased): Pair<Request, Response> {
     val pathParams = case.requestSchema.pathParameters
@@ -63,7 +70,7 @@ internal class VerificationHttpClient(serverUrl: String) {
       val value = when (mutatedElement) {
         is MutatedElement.Parameter if mutatedElement.element == param.element ->
           case.mutatedValue
-        else ->
+        else                                                                   ->
           param.codec
             .encode(param.dataType.randomValue())
             .single().second
@@ -192,6 +199,3 @@ internal class VerificationHttpClient(serverUrl: String) {
     return if (containsKey(key)) getValue(key) else generator()
   }
 }
-
-private fun List<BodySchema>.serdeFor(contentType: ContentType): Serde? =
-  find { it.contentType == contentType }?.serde

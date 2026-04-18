@@ -245,6 +245,145 @@ class VerificationCaseFactoryTest {
   }
 
   @Test
+  fun `fans out scenario based cases per required content type when scenario has no body example`() {
+    // Given a scenario with no body example and a required request body with two content types
+    val apiOperation = ApiOperation(
+      path = "/upload",
+      method = "POST",
+      requestSchema = RequestSchema(
+        parameters = emptyList(),
+        bodies = listOf(
+          BodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+            isRequired = true,
+            serde = JsonSerde
+          ),
+          BodySchema(
+            contentType = ContentType("application/xml"),
+            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
+            isRequired = true,
+            serde = JsonSerde
+          )
+        )
+      ),
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
+        200 to ResponseSchema(headers = emptyList(), bodies = emptyList())
+      )),
+      scenarios = listOf(
+        Scenario(
+          path = "/upload",
+          method = "POST",
+          key = "K1",
+          statusCode = 200,
+          request = ScenarioRequest(parameterValues = emptyMap(), body = null),
+          response = ScenarioResponse(headers = emptyMap(), body = null)
+        )
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.size == 2)
+    assert(cases.all { it is ScenarioBased })
+    val names = cases.map { it.displayName }
+    assert(names.any { it.contains("application/json") && it.contains("K1") })
+    assert(names.any { it.contains("application/xml") && it.contains("K1") })
+  }
+
+  @Test
+  fun `marks request content type when scenario has no body example and single required content type`() {
+    // Given a scenario with no body example and a required request body with a single content type
+    val apiOperation = ApiOperation(
+      path = "/upload",
+      method = "POST",
+      requestSchema = RequestSchema(
+        parameters = emptyList(),
+        bodies = listOf(
+          BodySchema(
+            contentType = ContentType("multipart/form-data"),
+            dataType = objectDataType(properties = mapOf("file" to stringDataType())),
+            isRequired = true,
+            serde = JsonSerde
+          )
+        )
+      ),
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
+        200 to ResponseSchema(headers = emptyList(), bodies = emptyList())
+      )),
+      scenarios = listOf(
+        Scenario(
+          path = "/upload",
+          method = "POST",
+          key = "K1",
+          statusCode = 200,
+          request = ScenarioRequest(parameterValues = emptyMap(), body = null),
+          response = ScenarioResponse(headers = emptyMap(), body = null)
+        )
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.size == 1)
+    assert(cases[0] is ScenarioBased)
+    assert(cases[0].displayName.contains("multipart/form-data"))
+    assert(cases[0].displayName.contains("K1"))
+  }
+
+  @Test
+  fun `does not fan out scenario based cases when request body is optional`() {
+    // Given a scenario with no body example and an optional request body
+    val apiOperation = ApiOperation(
+      path = "/search",
+      method = "POST",
+      requestSchema = RequestSchema(
+        parameters = emptyList(),
+        bodies = listOf(
+          BodySchema(
+            contentType = ContentType("application/json"),
+            dataType = objectDataType(properties = mapOf("q" to stringDataType())),
+            isRequired = false,
+            serde = JsonSerde
+          ),
+          BodySchema(
+            contentType = ContentType("application/xml"),
+            dataType = objectDataType(properties = mapOf("q" to stringDataType())),
+            isRequired = false,
+            serde = JsonSerde
+          )
+        )
+      ),
+      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
+        200 to ResponseSchema(headers = emptyList(), bodies = emptyList())
+      )),
+      scenarios = listOf(
+        Scenario(
+          path = "/search",
+          method = "POST",
+          key = "K1",
+          statusCode = 200,
+          request = ScenarioRequest(parameterValues = emptyMap(), body = null),
+          response = ScenarioResponse(headers = emptyMap(), body = null)
+        )
+      )
+    )
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.size == 1)
+    assert(cases[0] is ScenarioBased)
+    assert(!cases[0].displayName.contains("application/json"))
+    assert(!cases[0].displayName.contains("application/xml"))
+  }
+
+  @Test
   fun `does not generate schema based case when multiple 2xx responses exist without scenarios`() {
     // Given
     val apiOperation = ApiOperation(
