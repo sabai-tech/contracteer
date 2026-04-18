@@ -9,6 +9,7 @@ import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.combineResults
 
 internal class SharedComponents(
   val schemas: Map<String, Schema<*>>,
@@ -36,6 +37,12 @@ internal class SharedComponents(
 
   fun resolve(response: ApiResponse): Result<ApiResponse> =
     resolveRef(response, responses, ApiResponse::shortRef, "Response", "components/responses")
+
+  fun resolve(examples: Map<String, Example>): Result<Map<String, Example>> =
+    examples
+      .map { (key, example) -> resolve(example).map { key to it } }
+      .combineResults()
+      .map { it.toMap() }
 
   private fun <T> resolveRef(component: T,
                              sharedComponents: Map<String, T>,

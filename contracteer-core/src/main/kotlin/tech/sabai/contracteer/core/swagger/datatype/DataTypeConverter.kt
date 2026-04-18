@@ -36,6 +36,10 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     }
   }
 
+  fun convertMediaTypeSchema(mediaType: MediaType): Result<DataType<out Any>> =
+    if (mediaType.schema == null) success(AnyDataType)
+    else convertToDataType(mediaType.schema, "")
+
   fun convertToDiscriminator(schema: Schema<*>) =
     if (schema.shortRef() != null) discriminatorCache[schema.shortRef()]
     else schema.discriminator?.let {
