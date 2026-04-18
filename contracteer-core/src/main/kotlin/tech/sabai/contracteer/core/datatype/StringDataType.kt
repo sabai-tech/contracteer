@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.result
 
 /** OpenAPI `string` type, with optional length constraints and format variants (date, email, uuid, etc.). */
 class StringDataType private constructor(name: String,
@@ -50,10 +51,11 @@ class StringDataType private constructor(name: String,
       if ((minLength != null && minLength < 0) || (maxLength != null && maxLength < 0))
         return failure("'minLength' and 'maxLength' must be greater than or equal to zero.")
 
-      return parsePattern(pattern).flatMap { stringPattern ->
+      return result {
+        val stringPattern = parsePattern(pattern).bind()
         warnIfLengthIgnored(name, stringPattern, minLength, maxLength)
-        Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal())
-          .flatMap { range -> buildDataType(name, openApiType, isNullable, range, stringPattern, enum) }
+        val range = Range.create(minLength?.toBigDecimal(), maxLength?.toBigDecimal()).bind()
+        buildDataType(name, openApiType, isNullable, range, stringPattern, enum).bind()
       }
     }
 

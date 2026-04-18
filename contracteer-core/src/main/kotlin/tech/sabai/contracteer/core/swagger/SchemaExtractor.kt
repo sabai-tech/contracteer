@@ -7,16 +7,13 @@ import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
-import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.*
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.failureForKey
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
-import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.codec.*
-import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement
@@ -47,15 +44,13 @@ internal class SchemaExtractor(
       (pathParameters combineWith queryParameters combineWith headers combineWith cookies combineWith bodies).retypeError()
   }
 
-  fun extractResponseSchema(code: String, response: ApiResponse): Result<Pair<Int, ExtractedResponseSchema>> =
-    parseStatusCode(code).flatMap { statusCode ->
-      sharedComponents
-        .resolve(response)
-        .flatMap { resolved ->
-          rejectBodylessResponseWithBody(statusCode, resolved)
-            .flatMap { buildResponseSchema(code, resolved) }
-            .map { statusCode to it }
-        }
+  fun extractResponseSchema(code: String, response: ApiResponse) =
+    result {
+      val statusCode = parseStatusCode(code).bind()
+      val resolved = sharedComponents.resolve(response).bind()
+      rejectBodylessResponseWithBody(statusCode, resolved).bind()
+      val schema = buildResponseSchema(code, resolved).bind()
+      statusCode to schema
     }
 
   private fun rejectBodylessResponseWithBody(statusCode: Int, response: ApiResponse): Result<Unit> =
@@ -144,21 +139,17 @@ internal class SchemaExtractor(
       body.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
-          convertDataType(mediaType)
-            .flatMap { dataType ->
-              resolveExamples(mediaType.safeExamples())
-                .flatMap { examples ->
-                  if (dataType is AnyDataType)
-                    success(ExtractedBodySchema(BodySchema(contentType, dataType, body.safeRequired(), PlainTextSerde),
-                                                examples))
-                  else
-                    buildSerde(contentType, mediaType, dataType)
-                      .map {
-                        ExtractedBodySchema(BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), it),
-                                            examples)
-                      }
-                }
-            }.let { if (multiContent) it.forKey(contentType.value) else it }
+          result {
+            val dataType = convertDataType(mediaType).bind()
+            val examples = resolveExamples(mediaType.safeExamples()).bind()
+            if (dataType is AnyDataType)
+              ExtractedBodySchema(BodySchema(contentType, dataType, body.safeRequired(), PlainTextSerde), examples)
+            else {
+              val serde = buildSerde(contentType, mediaType, dataType).bind()
+              ExtractedBodySchema(
+                BodySchema(contentType, dataType.asRequestType(), body.safeRequired(), serde), examples)
+            }
+          }.let { if (multiContent) it.forKey(contentType.value) else it }
         }.combineResults()
     }
 
@@ -178,18 +169,20 @@ internal class SchemaExtractor(
       response.content
         .map { ContentType(it.key) to it.value!! }
         .map { (contentType, mediaType) ->
-          convertDataType(mediaType).flatMap { dataType ->
-            resolveExamples(mediaType.safeExamples()).flatMap { examples ->
-              if (dataType is AnyDataType)
-                success(ExtractedBodySchema(BodySchema(contentType, dataType, false, PlainTextSerde), examples))
-              else
-                buildSerde(contentType, mediaType, dataType)
-                  .map {
-                    ExtractedBodySchema(BodySchema(contentType,
-                                                   dataType.asResponseType(),
-                                                   mediaType.schema.safeNullable(),
-                                                   it), examples)
-                  }
+          result {
+            val dataType = convertDataType(mediaType).bind()
+            val examples = resolveExamples(mediaType.safeExamples()).bind()
+            if (dataType is AnyDataType)
+              ExtractedBodySchema(
+                BodySchema(contentType, dataType, false, PlainTextSerde),
+                examples
+              )
+            else {
+              val serde = buildSerde(contentType, mediaType, dataType).bind()
+              ExtractedBodySchema(
+                BodySchema(contentType, dataType.asResponseType(), mediaType.schema.safeNullable(), serde),
+                examples
+              )
             }
           }.let { if (multiContent) it.forKey(contentType.value) else it }
         }.combineResults()
@@ -291,42 +284,33 @@ internal class SchemaExtractor(
                                            element: ParameterElement): Result<ExtractedParameterSchema> {
     val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
     val contentType = ContentType(mediaTypeString)
-    return convertDataType(mediaTypeObj).flatMap { dataType ->
-      resolveExamples(parameter.safeExamples()).flatMap { examples ->
-        if (dataType is AnyDataType)
-          success(ExtractedParameterSchema(
-            ParameterSchema(element,
-                            dataType,
-                            parameter.safeIsRequired(),
-                            ContentCodec(parameter.name, PlainTextSerde)),
-            examples))
-        else
-          buildSerde(contentType, mediaTypeObj, dataType)
-            .map {
-              ExtractedParameterSchema(
-                ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, it)),
-                examples)
-            }
+    return result {
+      val dataType = convertDataType(mediaTypeObj).bind()
+      val examples = resolveExamples(parameter.safeExamples()).bind()
+      if (dataType is AnyDataType)
+        ExtractedParameterSchema(
+          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, PlainTextSerde)),
+          examples)
+      else {
+        val serde = buildSerde(contentType, mediaTypeObj, dataType).bind()
+        ExtractedParameterSchema(
+          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, serde)),
+          examples)
       }
     }
   }
 
   private fun createStyleParameterSchema(parameter: Parameter,
-                                         element: ParameterElement): Result<ExtractedParameterSchema> =
-    dataTypeConverter
-      .convertToDataType(parameter.schema, "")
-      .flatMap { dataType ->
-        createCodecForParameter(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name)
-          .flatMap { codec ->
-            resolveExamples(parameter.safeExamples())
-              .map { examples ->
-                ExtractedParameterSchema(ParameterSchema(element,
-                                                         dataType,
-                                                         parameter.safeIsRequired(),
-                                                         codec), examples)
-              }
-          }
-      }
+                                         element: ParameterElement): Result<ExtractedParameterSchema> = result {
+    val dataType = dataTypeConverter.convertToDataType(parameter.schema, "").bind()
+    val codec =
+      createCodecForParameter(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name).bind()
+    val examples = resolveExamples(parameter.safeExamples()).bind()
+    ExtractedParameterSchema(ParameterSchema(element,
+                                             dataType,
+                                             parameter.safeIsRequired(),
+                                             codec), examples)
+  }
 
   private fun createCodecForParameter(element: ParameterElement,
                                       style: String?,
@@ -357,7 +341,10 @@ internal class SchemaExtractor(
     val normalizedStyle = style?.lowercase()?.replace("_", "")
     val (defaultStyle, defaultExplode, supportedStyles, locationName) = when (element) {
       is PathParam               -> StyleDefaults("simple", false, setOf("simple", "label", "matrix"), "path")
-      is QueryParam              -> StyleDefaults("form", true, setOf("form", "spacedelimited", "pipedelimited", "deepobject"), "query")
+      is QueryParam              -> StyleDefaults("form",
+                                                  true,
+                                                  setOf("form", "spacedelimited", "pipedelimited", "deepobject"),
+                                                  "query")
       is ParameterElement.Header -> StyleDefaults("simple", false, setOf("simple"), "header")
       is Cookie                  -> StyleDefaults("form", true, setOf("form"), "cookie")
     }
@@ -424,22 +411,17 @@ internal class SchemaExtractor(
 
   private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
 
-  private fun Header.toParameterSchema(name: String): Result<ExtractedParameterSchema> =
-    sharedComponents.resolve(this).flatMap { resolved ->
-      dataTypeConverter
-        .convertToDataType(resolved.schema, "")
-        .flatMap { dataType ->
-          createCodecForParameter(Header(name), resolved.style?.toString(), resolved.explode, dataType, name)
-            .flatMap { codec ->
-              resolveExamples(resolved.safeExamples())
-                .map { examples ->
-                  ExtractedParameterSchema(ParameterSchema(Header(name),
-                                                           dataType,
-                                                           resolved.safeIsRequired(),
-                                                           codec), examples)
-                }
-            }
-        }
+  private fun Header.toParameterSchema(name: String) =
+    result {
+      val resolved = sharedComponents.resolve(this@toParameterSchema).bind()
+      val dataType = dataTypeConverter.convertToDataType(resolved.schema, "").bind()
+      val codec =
+        createCodecForParameter(Header(name), resolved.style?.toString(), resolved.explode, dataType, name).bind()
+      val examples = resolveExamples(resolved.safeExamples()).bind()
+      ExtractedParameterSchema(
+        ParameterSchema(Header(name), dataType, resolved.safeIsRequired(), codec),
+        examples
+      )
     }
 
   private fun resolveExamples(examples: Map<String, Example>): Result<Map<String, Any?>> =

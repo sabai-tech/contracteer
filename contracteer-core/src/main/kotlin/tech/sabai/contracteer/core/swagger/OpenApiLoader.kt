@@ -7,6 +7,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.operation.ApiOperation
+import tech.sabai.contracteer.core.result
 import java.io.File
 import java.net.*
 
@@ -26,19 +27,19 @@ object OpenApiLoader {
    */
   @JvmStatic
   fun loadOperations(path: String): Result<List<ApiOperation>> =
-    path.loadOpenApiDocument()
-      .flatMap { parse(it) }
-      .flatMap { openAPI ->
-        val sharedComponents = SharedComponents(
-          schemas = openAPI.components.safeSchemas(),
-          parameters = openAPI.components.safeParameters(),
-          requestBodies = openAPI.components.safeRequestBodies(),
-          headers = openAPI.components.safeHeaders(),
-          examples = openAPI.components.safeExamples(),
-          responses = openAPI.components.safeResponses()
-        )
-        ApiOperationExtractor(sharedComponents).extract(openAPI)
-      }
+    result {
+      val content = path.loadOpenApiDocument().bind()
+      val openAPI = parse(content).bind()
+      val sharedComponents = SharedComponents(
+        schemas = openAPI.components.safeSchemas(),
+        parameters = openAPI.components.safeParameters(),
+        requestBodies = openAPI.components.safeRequestBodies(),
+        headers = openAPI.components.safeHeaders(),
+        examples = openAPI.components.safeExamples(),
+        responses = openAPI.components.safeResponses()
+      )
+      ApiOperationExtractor(sharedComponents).extract(openAPI).bind()
+    }
 
   private fun String.loadOpenApiDocument() =
     when {

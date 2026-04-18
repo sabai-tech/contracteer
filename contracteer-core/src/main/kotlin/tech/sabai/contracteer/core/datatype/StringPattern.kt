@@ -4,6 +4,7 @@ import com.github.curiousoddman.rgxgen.RgxGen
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.result
 
 /**
  * Encapsulates an OpenAPI `pattern` value end-to-end: validation of string values against
@@ -32,12 +33,11 @@ internal class StringPattern private constructor(
   companion object {
     private const val SAMPLE_COUNT = 50
 
-    fun create(pattern: String) =
-      compileJavaRegex(pattern).flatMap { compiledRegex ->
-        parseRgxGen(pattern).flatMap { generator ->
-          verifySamples(pattern, compiledRegex, generator)
-        }
-      }
+    fun create(pattern: String) = result {
+      val compiledRegex = compileJavaRegex(pattern).bind()
+      val generator = parseRgxGen(pattern).bind()
+      verifySamples(pattern, compiledRegex, generator).bind()
+    }
 
     private fun compileJavaRegex(pattern: String): Result<Regex> =
       try {

@@ -155,6 +155,37 @@ sealed class Result<out T> {
       else                   -> "$propertyName.${path}"
     }
   }
+
+}
+
+/**
+ * Runs [block] with [ResultScope.bind] available to sequentially unwrap [Result] values.
+ *
+ * Inside the block, `result.bind()` returns the [Success] value or short-circuits the block
+ * with the first [Failure]. This flattens nested [Result.flatMap] chains into straight-line code
+ * for cases where each step depends on the previous value.
+ *
+ * For independent operations whose errors should accumulate, use [combineWith] or [combineResults] instead.
+ */
+inline fun <T> result(block: ResultScope.() -> T): Result<T> =
+  try {
+    success(ResultScope.block())
+  } catch (e: BindException) {
+    e.failure
+  }
+
+/** Scope providing [bind] to unwrap [Result] values inside a [result] block. */
+object ResultScope {
+  /** Returns the [Success] value or short-circuits the enclosing [result] block with this [Failure]. */
+  fun <T> Result<T>.bind(): T = when (this) {
+    is Success -> value
+    is Failure -> throw BindException(this)
+  }
+}
+
+@PublishedApi
+internal class BindException(val failure: Failure): RuntimeException() {
+  override fun fillInStackTrace(): Throwable = this
 }
 
 /** Applies [transform] to each element, accumulating all errors across the collection into a single result. */
