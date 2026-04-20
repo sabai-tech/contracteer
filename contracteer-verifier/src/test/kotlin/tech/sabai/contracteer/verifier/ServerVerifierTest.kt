@@ -12,15 +12,10 @@ import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.form
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType
 import tech.sabai.contracteer.core.dsl.stringType
-import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
-import tech.sabai.contracteer.core.operation.Scenario
-import tech.sabai.contracteer.core.operation.ScenarioBody
-import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.operation.ScenarioRequest
-import tech.sabai.contracteer.core.operation.ScenarioResponse
 import kotlin.test.Test
 
 class ServerVerifierTest {
@@ -173,14 +168,9 @@ class ServerVerifierTest {
       }
     )
 
-    // DSL doesn't expose allowReserved on the scenario value side: the
-    // `queryParam["name"] = v` subscript always creates a QueryParam with
-    // allowReserved = false, so the scenario key wouldn't match the schema
-    // element. Fall back to a direct Scenario construction for this one case.
-    // TODO: see Trello backlog card about allowReserved in the scenario DSL.
     val apiOperation = apiOperation("GET", "/search") {
       request {
-        queryParam("callback", stringType(), isRequired = true, allowReserved = true)
+        queryParam("callback", stringType(), isRequired = true, codec = form(allowReserved = true))
       }
 
       response(200) {
@@ -188,32 +178,16 @@ class ServerVerifierTest {
           properties { "id" to integerType() }
         })
       }
+
+      scenario("withCallback", status = 200) {
+        request { queryParam["callback"] = "https://example.com/cb?token=abc" }
+        response { jsonBody { "id" to 1 } }
+      }
     }
-    val operationWithScenario = apiOperation.copy(
-      scenarios = listOf(
-        Scenario(
-          path = "/search",
-          method = "GET",
-          key = "withCallback",
-          statusCode = 200,
-          request = ScenarioRequest(
-            parameterValues = mapOf(QueryParam("callback", allowReserved = true) to "https://example.com/cb?token=abc"),
-            body = null
-          ),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = ScenarioBody(
-              contentType = ContentType("application/json"),
-              value = mapOf("id" to 1)
-            )
-          )
-        )
-      )
-    )
 
     // When
     withHttpServer(app) { port ->
-      val cases = VerificationCaseFactory.create(operationWithScenario)
+      val cases = VerificationCaseFactory.create(apiOperation)
       val verifier = ServerVerifier(ServerConfiguration(port = port))
       cases.forEach { verifier.verify(it) }
     }

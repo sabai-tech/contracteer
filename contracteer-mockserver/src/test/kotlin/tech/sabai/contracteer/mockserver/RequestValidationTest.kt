@@ -236,10 +236,10 @@ class RequestValidationTest {
       requestSchema = requestSchema(
         parameters = listOf(
           ParameterSchema(
-            QueryParam("path", allowReserved = true),
+            QueryParam("path"),
             stringDataType(),
             isRequired = true,
-            FormParameterCodec("path", true)
+            FormParameterCodec("path", explode = true, allowReserved = true)
           )
         )
       ),

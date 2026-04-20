@@ -92,11 +92,12 @@ internal class VerificationHttpClient(serverUrl: String) {
     val mutatedElement = case.mutatedElement
     return case.requestSchema.parameters.fold(this) { req, param ->
       when {
-        param.element is PathParam                                                            -> req
+        param.element is PathParam                                                            ->
+          req
         mutatedElement is MutatedElement.Parameter && mutatedElement.element == param.element ->
-          req.placeRawValue(param.element, case.mutatedValue)
+          req.placeRawValue(param, case.mutatedValue)
         else                                                                                  ->
-          req.placeEncodedEntries(param.element, param.codec.encode(param.dataType.randomValue()))
+          req.placeEncodedEntries(param, param.codec.encode(param.dataType.randomValue()))
       }
     }
   }
@@ -128,7 +129,7 @@ internal class VerificationHttpClient(serverUrl: String) {
     requestSchema.parameters.fold(this) { req, param ->
       when (param.element) {
         is PathParam -> req
-        else         -> req.placeEncodedEntries(param.element, param.codec.encode(valueProvider(param)))
+        else         -> req.placeEncodedEntries(param, param.codec.encode(valueProvider(param)))
       }
     }
 
@@ -146,24 +147,24 @@ internal class VerificationHttpClient(serverUrl: String) {
     return header("Content-Type", contentTypeHeaderValue(body.contentType, serde)).body(serde.serialize(body.value))
   }
 
-  private fun Request.placeEncodedEntries(element: ParameterElement, entries: List<Pair<String, String>>): Request =
+  private fun Request.placeEncodedEntries(param: ParameterSchema, entries: List<Pair<String, String>>): Request =
     entries.fold(this) { request, (key, value) ->
-      when (element) {
-        is QueryParam if (element.allowReserved) -> request.appendRawQueryEntry(key, value)
-        is QueryParam                            -> request.query(key, value)
-        is Header                                -> request.header(key, value)
-        is Cookie                                -> request.cookie(key, value)
-        else                                     -> request
+      when (param.element) {
+        is QueryParam if (param.codec.allowReserved) -> request.appendRawQueryEntry(key, value)
+        is QueryParam                                -> request.query(key, value)
+        is Header                                    -> request.header(key, value)
+        is Cookie                                    -> request.cookie(key, value)
+        else                                         -> request
       }
     }
 
-  private fun Request.placeRawValue(element: ParameterElement, value: String): Request =
-    when (element) {
-      is QueryParam if (element.allowReserved) -> appendRawQueryEntry(element.name, value)
-      is QueryParam                            -> query(element.name, value)
-      is Header                                -> header(element.name, value)
-      is Cookie                                -> cookie(element.name, value)
-      else                                     -> this
+  private fun Request.placeRawValue(param: ParameterSchema, value: String): Request =
+    when (param.element) {
+      is QueryParam if (param.codec.allowReserved) -> appendRawQueryEntry(param.element.name, value)
+      is QueryParam                                -> query(param.element.name, value)
+      is Header                                    -> header(param.element.name, value)
+      is Cookie                                    -> cookie(param.element.name, value)
+      else                                         -> this
     }
 
   private fun Request.appendRawQueryEntry(key: String, value: String): Request {

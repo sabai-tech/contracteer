@@ -14,7 +14,10 @@ import tech.sabai.contracteer.core.datatype.DataType
  *
  * URL encoding of spaces (%20) is handled by the HTTP framework, not by this codec.
  */
-data class SpaceDelimitedParameterCodec(override val paramName: String) : ParameterCodec {
+data class SpaceDelimitedParameterCodec(
+  override val paramName: String,
+  override val allowReserved: Boolean = false
+) : ParameterCodec {
   val explode = false
 
   override fun encode(value: Any?): List<Pair<String, String>> = when (value) {

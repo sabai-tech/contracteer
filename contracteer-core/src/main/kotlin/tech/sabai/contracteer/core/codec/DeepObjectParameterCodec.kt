@@ -12,7 +12,10 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  *
  * Encoding: multiple entries `(name[key1], value1), (name[key2], value2), ...`
  */
-data class DeepObjectParameterCodec(override val paramName: String) : ParameterCodec {
+data class DeepObjectParameterCodec(
+  override val paramName: String,
+  override val allowReserved: Boolean = false
+) : ParameterCodec {
   val explode = true
 
   override fun encode(value: Any?): List<Pair<String, String>> = when (value) {

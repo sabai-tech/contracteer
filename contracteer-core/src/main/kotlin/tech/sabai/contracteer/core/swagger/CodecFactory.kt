@@ -33,22 +33,23 @@ internal class CodecFactory {
                   style: String?,
                   explode: Boolean?,
                   dataType: DataType<out Any>,
-                  paramName: String): Result<ParameterCodec> =
+                  paramName: String,
+                  allowReserved: Boolean = false): Result<ParameterCodec> =
     result {
       val (actualStyle, actualExplode) = resolveStyle(element, style, explode, paramName).bind()
       validateStyleConstraints(actualStyle, actualExplode, dataType, paramName).bind()
-      buildCodec(actualStyle, actualExplode, paramName)
+      buildCodec(actualStyle, actualExplode, paramName, allowReserved)
     }
 
-  private fun buildCodec(style: Style, explode: Boolean, paramName: String): ParameterCodec =
+  private fun buildCodec(style: Style, explode: Boolean, paramName: String, allowReserved: Boolean): ParameterCodec =
     when (style) {
       Simple         -> SimpleParameterCodec(paramName, explode)
-      Form           -> FormParameterCodec(paramName, explode)
+      Form           -> FormParameterCodec(paramName, explode, allowReserved)
       Label          -> LabelParameterCodec(paramName, explode)
       Matrix         -> MatrixParameterCodec(paramName, explode)
-      SpaceDelimited -> SpaceDelimitedParameterCodec(paramName)
-      PipeDelimited  -> PipeDelimitedParameterCodec(paramName)
-      DeepObject     -> DeepObjectParameterCodec(paramName)
+      SpaceDelimited -> SpaceDelimitedParameterCodec(paramName, allowReserved)
+      PipeDelimited  -> PipeDelimitedParameterCodec(paramName, allowReserved)
+      DeepObject     -> DeepObjectParameterCodec(paramName, allowReserved)
     }
 
   private fun resolveStyle(element: ParameterElement,

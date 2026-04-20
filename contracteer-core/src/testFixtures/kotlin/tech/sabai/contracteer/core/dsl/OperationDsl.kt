@@ -56,8 +56,8 @@ class RequestBuilder internal constructor() {
     parameters += ParameterSchema(ParameterElement.PathParam(name), dataType, isRequired, codec(name))
   }
 
-  fun queryParam(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, allowReserved: Boolean = false, codec: CodecFactory = form()) {
-    parameters += ParameterSchema(ParameterElement.QueryParam(name, allowReserved), dataType, isRequired, codec(name))
+  fun queryParam(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, codec: CodecFactory = form()) {
+    parameters += ParameterSchema(ParameterElement.QueryParam(name), dataType, isRequired, codec(name))
   }
 
   fun header(name: String, dataType: DataType<out Any>, isRequired: Boolean = false, codec: CodecFactory = simple()) {

@@ -12,7 +12,10 @@ import tech.sabai.contracteer.core.datatype.DataType
  *
  * Encoding: single entry `(name, "value1|value2|value3")`
  */
-data class PipeDelimitedParameterCodec(override val paramName: String): ParameterCodec {
+data class PipeDelimitedParameterCodec(
+  override val paramName: String,
+  override val allowReserved: Boolean = false
+): ParameterCodec {
   val explode = false
 
   override fun encode(value: Any?): List<Pair<String, String>> =

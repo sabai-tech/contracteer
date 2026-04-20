@@ -28,6 +28,13 @@ sealed interface ParameterCodec {
   val paramName: String
 
   /**
+   * Whether RFC 3986 reserved characters are preserved (not percent-encoded) during encoding.
+   *
+   * Only meaningful for query-parameter codecs. Defaults to `false` for all other codecs.
+   */
+  val allowReserved: Boolean get() = false
+
+  /**
    * Encodes a typed value into key-value pairs for HTTP transport.
    *
    * Single-value styles produce one pair. Multi-value styles (e.g. `form` with

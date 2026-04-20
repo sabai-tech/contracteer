@@ -41,7 +41,7 @@ internal class ParameterExtractor(
   fun extractQuery(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "query" }
-      .map { it.toParameterSchema(QueryParam(it.name, it.safeAllowReserved())) }
+      .map { it.toParameterSchema(QueryParam(it.name), allowReserved = it.safeAllowReserved()) }
       .combineResults()
 
   fun extractRequestHeaders(operation: Operation): Result<List<ExtractedParameterSchema>> =
@@ -68,17 +68,21 @@ internal class ParameterExtractor(
       ?.apply { minLength = 1 }
   }
 
-  private fun Parameter.toParameterSchema(element: ParameterElement): Result<ExtractedParameterSchema> =
+  private fun Parameter.toParameterSchema(
+    element: ParameterElement,
+    allowReserved: Boolean = false
+  ): Result<ExtractedParameterSchema> =
     sharedComponents.resolve(this)
       .flatMap { resolved ->
         if (resolved.content != null && resolved.content.isNotEmpty())
-          createContentParameterSchema(resolved, element)
+          createContentParameterSchema(resolved, element, allowReserved)
         else
-          createStyleParameterSchema(resolved, element)
+          createStyleParameterSchema(resolved, element, allowReserved)
       }
 
   private fun createContentParameterSchema(parameter: Parameter,
-                                           element: ParameterElement): Result<ExtractedParameterSchema> {
+                                           element: ParameterElement,
+                                           allowReserved: Boolean): Result<ExtractedParameterSchema> {
     val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
     val contentType = ContentType(mediaTypeString)
     return result {
@@ -89,19 +93,20 @@ internal class ParameterExtractor(
 
       if (dataType is AnyDataType)
         ExtractedParameterSchema(
-          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, PlainTextSerde)),
+          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, PlainTextSerde, allowReserved)),
           examples)
       else {
         val serde = serdeFactory.buildSerde(contentType, mediaTypeObj, dataType).bind()
         ExtractedParameterSchema(
-          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, serde)),
+          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, serde, allowReserved)),
           examples)
       }
     }
   }
 
   private fun createStyleParameterSchema(parameter: Parameter,
-                                         element: ParameterElement): Result<ExtractedParameterSchema> =
+                                         element: ParameterElement,
+                                         allowReserved: Boolean): Result<ExtractedParameterSchema> =
     result {
       val dataType = dataTypeConverter.convertToDataType(parameter.schema, "").bind()
       val examples = sharedComponents
@@ -109,7 +114,7 @@ internal class ParameterExtractor(
         .bind()
         .mapValues { (_, example) -> example.value?.normalize() }
       val codec = codecFactory
-        .createCodec(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name)
+        .createCodec(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name, allowReserved)
         .bind()
 
       ExtractedParameterSchema(ParameterSchema(element, dataType, parameter.safeIsRequired(), codec), examples)

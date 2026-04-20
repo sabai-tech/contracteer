@@ -14,8 +14,8 @@ class AllowReservedExtractionTest {
 
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
-    assert(queryParam.element == QueryParam("path", allowReserved = true))
-    assert((queryParam.element as QueryParam).allowReserved)
+    assert(queryParam.element == QueryParam("path"))
+    assert(queryParam.codec.allowReserved)
   }
 
   @Test
@@ -25,8 +25,8 @@ class AllowReservedExtractionTest {
 
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
-    assert(queryParam.element == QueryParam("filter", allowReserved = false))
-    assert(!(queryParam.element as QueryParam).allowReserved)
+    assert(queryParam.element == QueryParam("filter"))
+    assert(!queryParam.codec.allowReserved)
   }
 
   @Test
@@ -37,7 +37,7 @@ class AllowReservedExtractionTest {
     // then
     val queryParam = operation.requestSchema.queryParameters.single()
     assert(queryParam.element == QueryParam("q"))
-    assert(!(queryParam.element as QueryParam).allowReserved)
+    assert(!queryParam.codec.allowReserved)
   }
 
   @Test

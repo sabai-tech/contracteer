@@ -17,7 +17,11 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  * - Object explode=false: single entry `(name, "key1,value1,key2,value2")`
  * - Object explode=true: multiple entries `(key1, value1), (key2, value2), ...`
  */
-data class FormParameterCodec(override val paramName: String, val explode: Boolean) : ParameterCodec {
+data class FormParameterCodec(
+  override val paramName: String,
+  val explode: Boolean,
+  override val allowReserved: Boolean = false
+) : ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> = when {
     value is List<*> && explode  -> value.map { paramName to PlainTextSerde.serialize(it) }

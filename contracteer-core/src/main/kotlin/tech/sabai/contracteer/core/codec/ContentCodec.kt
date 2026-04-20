@@ -11,7 +11,11 @@ import tech.sabai.contracteer.core.serde.Serde
  * Instead of using OAS style/explode rules, the parameter value is serialized
  * and deserialized using a [Serde] (e.g., JSON-encoded query parameter).
  */
-data class ContentCodec(override val paramName: String, val serde: Serde) : ParameterCodec {
+data class ContentCodec(
+  override val paramName: String,
+  val serde: Serde,
+  override val allowReserved: Boolean = false
+) : ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> =
     listOf(paramName to serde.serialize(value))
