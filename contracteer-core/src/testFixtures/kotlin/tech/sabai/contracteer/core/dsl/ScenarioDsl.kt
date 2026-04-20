@@ -40,6 +40,10 @@ class ScenarioRequestBuilder internal constructor() {
     body = ScenarioBody(ContentType("application/json"), value)
   }
 
+  fun jsonBody(block: JsonObjectBuilder.() -> Unit) {
+    jsonBody(json(block))
+  }
+
   fun plainTextBody(value: Any?) {
     body = ScenarioBody(ContentType("text/plain"), value)
   }
@@ -61,6 +65,10 @@ class ScenarioResponseBuilder internal constructor() {
 
   fun jsonBody(value: Any?) {
     body = ScenarioBody(ContentType("application/json"), value)
+  }
+
+  fun jsonBody(block: JsonObjectBuilder.() -> Unit) {
+    jsonBody(json(block))
   }
 
   fun plainTextBody(value: Any?) {
