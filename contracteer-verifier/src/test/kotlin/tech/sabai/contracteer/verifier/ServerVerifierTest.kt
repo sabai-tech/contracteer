@@ -1,24 +1,26 @@
 package tech.sabai.contracteer.verifier
 
 import org.http4k.core.Method.GET
+import org.http4k.core.Method.POST
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.core.Status.Companion.OK
+import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
-import tech.sabai.contracteer.core.codec.FormParameterCodec
-import tech.sabai.contracteer.core.codec.SimpleParameterCodec
-import tech.sabai.contracteer.core.datatype.StringDataType
-import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
-import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.operation.Scenario
+import tech.sabai.contracteer.core.operation.ScenarioBody
+import tech.sabai.contracteer.core.operation.ContentType
+import tech.sabai.contracteer.core.operation.ScenarioRequest
+import tech.sabai.contracteer.core.operation.ScenarioResponse
 import kotlin.test.Test
 
 class ServerVerifierTest {
@@ -26,71 +28,29 @@ class ServerVerifierTest {
   @Test
   fun `verifies scenario based case successfully`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users/{id}",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("id", false)
-          )
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(
-          headers = emptyList(),
-          bodies = listOf(
-            BodySchema(
-              contentType = ContentType("application/json"),
-              dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-              isRequired = true,
-              serde = JsonSerde
-            )
-          )
-        ),
-        404 to ResponseSchema(
-          headers = emptyList(),
-          bodies = emptyList()
-        )
-      )),
-      scenarios = listOf(
-        Scenario(
-          path = "/users/{id}",
-          method = "GET",
-          key = "validUser",
-          statusCode = 200,
-          request = ScenarioRequest(
-            parameterValues = mapOf(ParameterElement.PathParam("id") to 1),
-            body = null
-          ),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = ScenarioBody(
-              contentType = ContentType("application/json"),
-              value = mapOf("id" to 1, "name" to "John")
-            )
-          )
-        ),
-        Scenario(
-          path = "/users/{id}",
-          method = "GET",
-          key = "notFound",
-          statusCode = 404,
-          request = ScenarioRequest(
-            parameterValues = mapOf(ParameterElement.PathParam("id") to 999),
-            body = null
-          ),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = null
-          )
-        )
-      )
-    )
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+      }
+
+      response(200) {
+        jsonBody(objectType {
+          properties {
+            "id" to integerType()
+            "name" to stringType()
+          }
+        })
+      }
+      response(404) {}
+
+      scenario("validUser", status = 200) {
+        request { pathParam["id"] = 1 }
+        response { jsonBody { "id" to 1; "name" to "John" } }
+      }
+      scenario("notFound", status = 404) {
+        request { pathParam["id"] = 999 }
+      }
+    }
 
     val app = routes(
       "/users/1" bind GET to {
@@ -100,15 +60,15 @@ class ServerVerifierTest {
         Response(NOT_FOUND)
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     // When
-    val cases = VerificationCaseFactory.create(apiOperation)
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
-    val results = cases.map { verifier.verify(it) }
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
 
     // Then
-    server.stop()
     assert(results.size == 2)
     assert(results.all { it.result.isSuccess() })
   }
@@ -116,59 +76,26 @@ class ServerVerifierTest {
   @Test
   fun `generates missing request parameter values for scenario based case`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users/{userId}/orders/{orderId}",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = ParameterElement.PathParam("userId"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("userId", false)
-          ),
-          ParameterSchema(
-            element = ParameterElement.PathParam("orderId"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("orderId", false)
-          )
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(
-          headers = emptyList(),
-          bodies = listOf(
-            BodySchema(
-              contentType = ContentType("application/json"),
-              dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-              isRequired = true,
-              serde = JsonSerde
-            )
-          )
-        )
-      )),
-      scenarios = listOf(
-        Scenario(
-          path = "/users/{userId}/orders/{orderId}",
-          method = "GET",
-          key = "validOrder",
-          statusCode = 200,
-          request = ScenarioRequest(
-            parameterValues = mapOf(ParameterElement.PathParam("userId") to 1),
-            body = null
-          ),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = ScenarioBody(
-              contentType = ContentType("application/json"),
-              value = mapOf("id" to 1, "name" to "Order")
-            )
-          )
-        )
-      )
-    )
+    val apiOperation = apiOperation("GET", "/users/{userId}/orders/{orderId}") {
+      request {
+        pathParam("userId", integerType())
+        pathParam("orderId", integerType())
+      }
+
+      response(200) {
+        jsonBody(objectType {
+          properties {
+            "id" to integerType()
+            "name" to stringType()
+          }
+        })
+      }
+
+      scenario("validOrder", status = 200) {
+        request { pathParam["userId"] = 1 }
+        response { jsonBody { "id" to 1; "name" to "Order" } }
+      }
+    }
 
     val app = routes(
       "/users/{userId}/orders/{orderId}" bind GET to { request ->
@@ -179,15 +106,15 @@ class ServerVerifierTest {
           Response(NOT_FOUND)
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     // When
-    val cases = VerificationCaseFactory.create(apiOperation)
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
-    val results = cases.map { verifier.verify(it) }
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
 
     // Then
-    server.stop()
     assert(results.size == 1)
     assert(results.all { it.result.isSuccess() })
   }
@@ -195,68 +122,40 @@ class ServerVerifierTest {
   @Test
   fun `returns failure when verification fails`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users/{id}",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("id", false)
-          )
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(
-          headers = emptyList(),
-          bodies = listOf(
-            BodySchema(
-              contentType = ContentType("application/json"),
-              dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-              isRequired = true,
-              serde = JsonSerde
-            )
-          )
-        )
-      )),
-      scenarios = listOf(
-        Scenario(
-          path = "/users/{id}",
-          method = "GET",
-          key = "validUser",
-          statusCode = 200,
-          request = ScenarioRequest(
-            parameterValues = mapOf(ParameterElement.PathParam("id") to 1),
-            body = null
-          ),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = ScenarioBody(
-              contentType = ContentType("application/json"),
-              value = mapOf("id" to 1, "name" to "John")
-            )
-          )
-        )
-      )
-    )
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+      }
+
+      response(200) {
+        jsonBody(objectType {
+          properties {
+            "id" to integerType()
+            "name" to stringType()
+          }
+        })
+      }
+
+      scenario("validUser", status = 200) {
+        request { pathParam["id"] = 1 }
+        response { jsonBody { "id" to 1; "name" to "John" } }
+      }
+    }
 
     val app = routes(
       "/users/{id}" bind GET to {
         Response(OK).header("Content-Type", "application/json").body("""{"id": "invalid", "name": "John"}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     // When
-    val cases = VerificationCaseFactory.create(apiOperation)
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
-    val results = cases.map { verifier.verify(it) }
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
 
     // Then
-    server.stop()
     assert(results.size == 1)
     assert(results[0].result.isFailure())
     assert(results[0].result.errors().isNotEmpty())
@@ -273,35 +172,24 @@ class ServerVerifierTest {
         Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
-    val apiOperation = ApiOperation(
-      path = "/search",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = QueryParam("callback", allowReserved = true),
-            dataType = stringDataType(),
-            isRequired = true,
-            codec = FormParameterCodec("callback", true)
-          )
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(
-          headers = emptyList(),
-          bodies = listOf(
-            BodySchema(
-              contentType = ContentType("application/json"),
-              dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-              isRequired = true,
-              serde = JsonSerde
-            )
-          )
-        )
-      )),
+    // DSL doesn't expose allowReserved on the scenario value side: the
+    // `queryParam["name"] = v` subscript always creates a QueryParam with
+    // allowReserved = false, so the scenario key wouldn't match the schema
+    // element. Fall back to a direct Scenario construction for this one case.
+    // TODO: see Trello backlog card about allowReserved in the scenario DSL.
+    val apiOperation = apiOperation("GET", "/search") {
+      request {
+        queryParam("callback", stringType(), isRequired = true, allowReserved = true)
+      }
+
+      response(200) {
+        jsonBody(objectType {
+          properties { "id" to integerType() }
+        })
+      }
+    }
+    val operationWithScenario = apiOperation.copy(
       scenarios = listOf(
         Scenario(
           path = "/search",
@@ -323,14 +211,14 @@ class ServerVerifierTest {
       )
     )
 
-    val cases = VerificationCaseFactory.create(apiOperation)
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
-
     // When
-    cases.forEach { verifier.verify(it) }
+    withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(operationWithScenario)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.forEach { verifier.verify(it) }
+    }
 
     // Then
-    server.stop()
     assert(capturedRawQuery != null)
     // Reserved characters (:, /, ?) should NOT be percent-encoded
     assert(capturedRawQuery!!.contains("https://example.com/cb?token=abc")) {
@@ -344,41 +232,17 @@ class ServerVerifierTest {
     var capturedId: String? = null
 
     // Pattern guarantees at least one URI-illegal character (|, \, or >)
-    val dataType = StringDataType.create(
-      name = "id",
-      openApiType = "string",
-      pattern = """[a-z]+[|\\>][a-z]+"""
-    ).assertSuccess()
+    val apiOperation = apiOperation("GET", "/resources/{id}") {
+      request {
+        pathParam("id", stringType(name = "id", pattern = """[a-z]+[|\\>][a-z]+"""))
+      }
 
-    val apiOperation = ApiOperation(
-      path = "/resources/{id}",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = ParameterElement.PathParam("id"),
-            dataType = dataType,
-            isRequired = true,
-            codec = SimpleParameterCodec("id", false)
-          )
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(
-          headers = emptyList(),
-          bodies = listOf(
-            BodySchema(
-              contentType = ContentType("application/json"),
-              dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-              isRequired = true,
-              serde = JsonSerde
-            )
-          )
-        )
-      )),
-      scenarios = emptyList()
-    )
+      response(200) {
+        jsonBody(objectType {
+          properties { "id" to integerType() }
+        })
+      }
+    }
 
     val app = routes(
       "/resources/{id}" bind GET to { request ->
@@ -386,15 +250,15 @@ class ServerVerifierTest {
         Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
-    val cases = VerificationCaseFactory.create(apiOperation)
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
 
     // When
-    val results = cases.map { verifier.verify(it) }
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
 
     // Then
-    server.stop()
     assert(results.isNotEmpty())
     assert(capturedId != null) { "Server should have received the request with encoded path" }
     assert(capturedId!!.contains(Regex("""[|\\>]""")))
@@ -406,70 +270,54 @@ class ServerVerifierTest {
     var capturedBody: String? = null
     var capturedContentType: String? = null
 
-    val apiOperation = ApiOperation(
-      path = "/predictions",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(
-          headers = emptyList(),
-          bodies = listOf(
-            BodySchema(
-              contentType = ContentType("application/json"),
-              dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-              isRequired = true,
-              serde = JsonSerde
-            )
-          )
-        )
-      )),
-      scenarios = listOf(
-        Scenario(
-          path = "/predictions",
-          method = "POST",
-          key = "successfulPrediction",
-          statusCode = 200,
-          request = ScenarioRequest(parameterValues = emptyMap(), body = null),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = ScenarioBody(
-              contentType = ContentType("application/json"),
-              value = mapOf("id" to 1)
-            )
-          )
-        )
-      )
-    )
+    val apiOperation = apiOperation("POST", "/predictions") {
+      request {
+        jsonBody(objectType {
+          properties { "name" to stringType() }
+        })
+      }
+
+      response(200) {
+        jsonBody(objectType {
+          properties { "id" to integerType() }
+        })
+      }
+
+      scenario("successfulPrediction", status = 200) {
+        response { jsonBody { "id" to 1 } }
+      }
+    }
 
     val app = routes(
-      "/predictions" bind org.http4k.core.Method.POST to { request ->
+      "/predictions" bind POST to { request ->
         capturedBody = request.bodyString()
         capturedContentType = request.header("Content-Type")
         Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
       }
     )
-    val server = app.asServer(SunHttp(0)).start()
 
     // When
-    val cases = VerificationCaseFactory.create(apiOperation)
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
-    val results = cases.map { verifier.verify(it) }
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
 
     // Then
-    server.stop()
     assert(results.size == 1)
     assert(results.all { it.result.isSuccess() }) { "Expected success but got: ${results.map { it.result.errors() }}" }
     assert(capturedContentType == "application/json") { "Expected application/json but got: $capturedContentType" }
     assert(!capturedBody.isNullOrEmpty()) { "Expected non-empty body but got: $capturedBody" }
+  }
+
+  // --- helpers ---
+
+  private fun <T> withHttpServer(routes: RoutingHttpHandler, block: (port: Int) -> T): T {
+    val server = routes.asServer(SunHttp(0)).start()
+    try {
+      return block(server.port())
+    } finally {
+      server.stop()
+    }
   }
 }

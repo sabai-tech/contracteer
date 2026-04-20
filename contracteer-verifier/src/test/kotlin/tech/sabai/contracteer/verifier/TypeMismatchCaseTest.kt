@@ -1,15 +1,17 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.codec.SimpleParameterCodec
-import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
+import tech.sabai.contracteer.core.operation.ContentType
+import tech.sabai.contracteer.core.operation.ParameterElement.Cookie
+import tech.sabai.contracteer.core.operation.ParameterElement.Header
+import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
+import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import kotlin.test.Test
 
-class TypeMismatchTest {
+class TypeMismatchCaseTest {
 
   @Test
   fun `display name for body type mismatch`() {
@@ -21,8 +23,11 @@ class TypeMismatchTest {
       mutatedValue = "<<not a object>>"
     )
 
+    // When
+    val displayName = case.displayName
+
     // Then
-    assert(case.displayName == "POST /users -> 400 (auto: body type mismatch)")
+    assert(displayName == "POST /users -> 400 (auto: body type mismatch)")
   }
 
   @Test
@@ -35,8 +40,11 @@ class TypeMismatchTest {
       mutatedValue = "<<not a integer>>"
     )
 
+    // When
+    val displayName = case.displayName
+
     // Then
-    assert(case.displayName == "GET /users/{id} -> 400 (auto: path 'id' type mismatch)")
+    assert(displayName == "GET /users/{id} -> 400 (auto: path 'id' type mismatch)")
   }
 
   @Test
@@ -49,8 +57,11 @@ class TypeMismatchTest {
       mutatedValue = "<<not a integer>>"
     )
 
+    // When
+    val displayName = case.displayName
+
     // Then
-    assert(case.displayName == "GET /users -> 400 (auto: query 'page' type mismatch)")
+    assert(displayName == "GET /users -> 400 (auto: query 'page' type mismatch)")
   }
 
   @Test
@@ -63,8 +74,11 @@ class TypeMismatchTest {
       mutatedValue = "<<not a string/uuid>>"
     )
 
+    // When
+    val displayName = case.displayName
+
     // Then
-    assert(case.displayName == "GET /users -> 400 (auto: header 'X-Request-Id' type mismatch)")
+    assert(displayName == "GET /users -> 400 (auto: header 'X-Request-Id' type mismatch)")
   }
 
   @Test
@@ -77,8 +91,11 @@ class TypeMismatchTest {
       mutatedValue = "<<not a integer>>"
     )
 
+    // When
+    val displayName = case.displayName
+
     // Then
-    assert(case.displayName == "GET /users -> 400 (auto: cookie 'session_ttl' type mismatch)")
+    assert(displayName == "GET /users -> 400 (auto: cookie 'session_ttl' type mismatch)")
   }
 
   private fun typeMismatchCase(
@@ -86,41 +103,25 @@ class TypeMismatchTest {
     method: String = "POST",
     mutatedElement: MutatedElement,
     mutatedValue: String
-  ) = VerificationCase.TypeMismatch(
-    path = path,
-    method = method,
-    requestContentType = ContentType("application/json"),
-    responseContentType = ContentType("application/json"),
-    requestSchema = RequestSchema(
-      parameters = listOf(
-        ParameterSchema(
-          element = PathParam("id"),
-          dataType = integerDataType(),
-          isRequired = true,
-          codec = SimpleParameterCodec("id", false)
-        )
-      ),
-      bodies = listOf(
-        BodySchema(
-          contentType = ContentType("application/json"),
-          dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-          isRequired = true,
-          serde = JsonSerde
-        )
-      )
-    ),
-    responseSchema = ResponseSchema(
-      headers = emptyList(),
-      bodies = listOf(
-        BodySchema(
-          contentType = ContentType("application/json"),
-          dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-          isRequired = true,
-          serde = JsonSerde
-        )
-      )
-    ),
-    mutatedElement = mutatedElement,
-    mutatedValue = mutatedValue
-  )
+  ): VerificationCase.TypeMismatch {
+    val op = apiOperation(method, path) {
+      request {
+        pathParam("id", integerType())
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(400) {
+        jsonBody(objectType { properties { "error" to stringType() } })
+      }
+    }
+    return VerificationCase.TypeMismatch(
+      path = path,
+      method = method,
+      requestContentType = ContentType("application/json"),
+      responseContentType = ContentType("application/json"),
+      requestSchema = op.requestSchema,
+      responseSchema = op.responseSchemas.responseFor(400)!!,
+      mutatedElement = mutatedElement,
+      mutatedValue = mutatedValue
+    )
+  }
 }

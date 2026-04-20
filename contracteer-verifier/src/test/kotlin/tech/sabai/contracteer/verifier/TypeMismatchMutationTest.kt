@@ -1,115 +1,69 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.datatype.AnyDataType
+import tech.sabai.contracteer.core.dsl.allOfType
+import tech.sabai.contracteer.core.dsl.anyOfType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.base64Type
+import tech.sabai.contracteer.core.dsl.binaryType
+import tech.sabai.contracteer.core.dsl.booleanType
+import tech.sabai.contracteer.core.dsl.dateTimeType
+import tech.sabai.contracteer.core.dsl.dateType
+import tech.sabai.contracteer.core.dsl.emailType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.numberType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.oneOfType
+import tech.sabai.contracteer.core.dsl.stringType
+import tech.sabai.contracteer.core.dsl.uuidType
 import kotlin.test.Test
 
 class TypeMismatchMutationTest {
 
   @Test
   fun `produces invalid value for IntegerDataType`() {
-    // Given
-    val dataType = integerDataType()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a integer>>")
+    assert(TypeMismatchMutation.mutate(integerType()) == "<<not a integer>>")
   }
 
   @Test
   fun `produces invalid value for NumberDataType`() {
-    // Given
-    val dataType = NumberDataType.create("number").assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a number>>")
+    assert(TypeMismatchMutation.mutate(numberType()) == "<<not a number>>")
   }
 
   @Test
   fun `produces invalid value for BooleanDataType`() {
-    // Given
-    val dataType = BooleanDataType.create("boolean").assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a boolean>>")
+    assert(TypeMismatchMutation.mutate(booleanType()) == "<<not a boolean>>")
   }
 
   @Test
   fun `produces invalid value for DateDataType`() {
-    // Given
-    val dataType = DateDataType.create("date").assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a string/date>>")
+    assert(TypeMismatchMutation.mutate(dateType()) == "<<not a string/date>>")
   }
 
   @Test
   fun `produces invalid value for DateTimeDataType`() {
-    // Given
-    val dataType = DateTimeDataType.create("dateTime").assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a string/date-time>>")
+    assert(TypeMismatchMutation.mutate(dateTimeType()) == "<<not a string/date-time>>")
   }
 
   @Test
   fun `produces invalid value for UuidDataType`() {
-    // Given
-    val dataType = UuidDataType.create("uuid", false, emptyList()).assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a string/uuid>>")
+    assert(TypeMismatchMutation.mutate(uuidType()) == "<<not a string/uuid>>")
   }
 
   @Test
   fun `produces invalid value for EmailDataType`() {
-    // Given
-    val dataType = EmailDataType.create("email").assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a string/email>>")
+    assert(TypeMismatchMutation.mutate(emailType()) == "<<not a string/email>>")
   }
 
   @Test
   fun `produces invalid value for Base64DataType`() {
-    // Given
-    val dataType = Base64DataType.create("base64").assertSuccess()
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a string/byte>>")
+    assert(TypeMismatchMutation.mutate(base64Type()) == "<<not a string/byte>>")
   }
 
   @Test
   fun `produces invalid value for ObjectDataType`() {
     // Given
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+    val dataType = objectType { properties { "name" to stringType() } }
 
     // When
     val result = TypeMismatchMutation.mutate(dataType)
@@ -120,20 +74,13 @@ class TypeMismatchMutationTest {
 
   @Test
   fun `produces invalid value for ArrayDataType with non-string items`() {
-    // Given
-    val dataType = arrayDataType(itemDataType = integerDataType())
-
-    // When
-    val result = TypeMismatchMutation.mutate(dataType)
-
-    // Then
-    assert(result == "<<not a array>>")
+    assert(TypeMismatchMutation.mutate(arrayType(items = integerType())) == "<<not a array>>")
   }
 
   @Test
   fun `returns null for ArrayDataType with string items`() {
     // Given
-    val dataType = arrayDataType(itemDataType = stringDataType())
+    val dataType = arrayType(items = stringType())
 
     // When
     val result = TypeMismatchMutation.mutate(dataType)
@@ -145,10 +92,10 @@ class TypeMismatchMutationTest {
   @Test
   fun `produces invalid value for OneOfDataType`() {
     // Given
-    val dataType = OneOfDataType.create(
-      "oneOf",
-      listOf(integerDataType(), stringDataType())
-    ).assertSuccess()
+    val dataType = oneOfType {
+      subType(integerType())
+      subType(stringType())
+    }
 
     // When
     val result = TypeMismatchMutation.mutate(dataType)
@@ -160,10 +107,10 @@ class TypeMismatchMutationTest {
   @Test
   fun `produces invalid value for AnyOfDataType`() {
     // Given
-    val dataType = AnyOfDataType.create(
-      "anyOf",
-      listOf(integerDataType(), stringDataType())
-    ).assertSuccess()
+    val dataType = anyOfType {
+      subType(integerType())
+      subType(stringType())
+    }
 
     // When
     val result = TypeMismatchMutation.mutate(dataType)
@@ -175,13 +122,10 @@ class TypeMismatchMutationTest {
   @Test
   fun `produces invalid value for AllOfDataType`() {
     // Given
-    val dataType = AllOfDataType.create(
-      "allOf",
-      listOf(
-        objectDataType(properties = mapOf("a" to stringDataType())),
-        objectDataType(properties = mapOf("b" to integerDataType()))
-      )
-    ).assertSuccess()
+    val dataType = allOfType {
+      subType(objectType { properties { "a" to stringType() } })
+      subType(objectType { properties { "b" to integerType() } })
+    }
 
     // When
     val result = TypeMismatchMutation.mutate(dataType)
@@ -192,12 +136,12 @@ class TypeMismatchMutationTest {
 
   @Test
   fun `returns null for StringDataType`() {
-    assert(TypeMismatchMutation.mutate(stringDataType()) == null)
+    assert(TypeMismatchMutation.mutate(stringType()) == null)
   }
 
   @Test
   fun `returns null for BinaryDataType`() {
-    assert(TypeMismatchMutation.mutate(BinaryDataType.create("binary").assertSuccess()) == null)
+    assert(TypeMismatchMutation.mutate(binaryType()) == null)
   }
 
   @Test

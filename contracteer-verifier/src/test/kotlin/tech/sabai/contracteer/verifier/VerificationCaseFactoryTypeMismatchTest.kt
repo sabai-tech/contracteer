@@ -1,14 +1,17 @@
 package tech.sabai.contracteer.verifier
 
-import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.operation.ParameterElement.*
-import tech.sabai.contracteer.core.codec.DeepObjectParameterCodec
-import tech.sabai.contracteer.core.codec.FormParameterCodec
-import tech.sabai.contracteer.core.codec.SimpleParameterCodec
+import tech.sabai.contracteer.core.dsl.ApiOperationBuilder
+import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.deepObject
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
+import tech.sabai.contracteer.core.operation.ContentType
+import tech.sabai.contracteer.core.operation.ParameterElement.Cookie
+import tech.sabai.contracteer.core.operation.ParameterElement.Header
+import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
+import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
 import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.verifier.VerificationCase.ScenarioBased
 import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatch
 import kotlin.test.Test
@@ -18,14 +21,11 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case for path parameter`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = PathParam("id"),
-                        dataType = integerDataType(),
-                        isRequired = true,
-                        codec = SimpleParameterCodec("id", false))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        pathParam("id", integerType())
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -40,14 +40,11 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case for query parameter`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = QueryParam("page"),
-                        dataType = integerDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("page", true))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam("page", integerType())
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -62,14 +59,11 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case for header parameter`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = Header("X-Request-Id"),
-                        dataType = integerDataType(),
-                        isRequired = true,
-                        codec = SimpleParameterCodec("X-Request-Id", false))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        header("X-Request-Id", integerType(), isRequired = true)
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -84,14 +78,11 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case for cookie parameter`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = Cookie("session_ttl"),
-                        dataType = integerDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("session_ttl", true))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        cookie("session_ttl", integerType())
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -106,32 +97,15 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates one type mismatch case per element category`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = PathParam("id"),
-                        dataType = integerDataType(),
-                        isRequired = true,
-                        codec = SimpleParameterCodec("id", false)),
-        ParameterSchema(element = QueryParam("page"),
-                        dataType = integerDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("page", true)),
-        ParameterSchema(element = Header("X-Correlation-Id"),
-                        dataType = integerDataType(),
-                        isRequired = true,
-                        codec = SimpleParameterCodec("X-Correlation-Id", false)),
-        ParameterSchema(element = Cookie("token"),
-                        dataType = integerDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("token", true))
-      ),
-      bodies = listOf(
-        BodySchema(contentType = ContentType("application/json"),
-                   dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-                   isRequired = true,
-                   serde = JsonSerde)
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        pathParam("id", integerType())
+        queryParam("page", integerType())
+        header("X-Correlation-Id", integerType(), isRequired = true)
+        cookie("token", integerType())
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -149,22 +123,13 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `picks first mutable parameter when category has multiple parameters`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = QueryParam("name"),
-                        dataType = stringDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("name", true)),
-        ParameterSchema(element = QueryParam("page"),
-                        dataType = integerDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("page", true)),
-        ParameterSchema(element = QueryParam("limit"),
-                        dataType = integerDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("limit", true))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam("name", stringType())
+        queryParam("page", integerType())
+        queryParam("limit", integerType())
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -178,18 +143,12 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `does not generate parameter type mismatch case when all parameters in category are non-mutable`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = QueryParam("name"),
-                        dataType = stringDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("name", true)),
-        ParameterSchema(element = QueryParam("filter"),
-                        dataType = stringDataType(),
-                        isRequired = false,
-                        codec = FormParameterCodec("filter", true))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam("name", stringType())
+        queryParam("filter", stringType())
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -201,36 +160,17 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case for body when operation has 400 response and mutable request body`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        )),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(400) {
+        jsonBody(objectType { properties { "error" to stringType() } })
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -249,30 +189,14 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `does not generate type mismatch case when operation has no 400 response`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -284,31 +208,15 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `does not generate type mismatch case for body when all request body data types are non-mutable`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("text/plain"),
-            dataType = stringDataType(),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        body("text/plain", stringType(), JsonSerde)
+      }
+      response(200) {}
+      response(400) {
+        jsonBody(objectType { properties { "error" to stringType() } })
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -320,29 +228,14 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `does not generate type mismatch case when operation has no request body and no mutable parameters`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        )),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("GET", "/users") {
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(400) {
+        jsonBody(objectType { properties { "error" to stringType() } })
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -354,37 +247,16 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case for first mutable body when multiple content types exist`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/data",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("text/plain"),
-            dataType = stringDataType(),
-            isRequired = true,
-            serde = JsonSerde
-          ),
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("value" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("POST", "/data") {
+      request {
+        body("text/plain", stringType(), JsonSerde)
+        jsonBody(objectType { properties { "value" to stringType() } })
+      }
+      response(200) {}
+      response(400) {
+        jsonBody(objectType { properties { "error" to stringType() } })
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -399,52 +271,21 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates type mismatch case alongside explicit 400 scenarios`() {
     // Given
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        201 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("id" to integerDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        )),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(contentType = ContentType("application/json"),
-                     dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                     isRequired = true,
-                     serde = JsonSerde)
-        ))
-      )),
-      scenarios = listOf(
-        Scenario(
-          path = "/users",
-          method = "POST",
-          key = "invalidUser",
-          statusCode = 400,
-          request = ScenarioRequest(
-            parameterValues = emptyMap(),
-            body = ScenarioBody(contentType = ContentType("application/json"), value = mapOf("name" to ""))
-          ),
-          response = ScenarioResponse(
-            headers = emptyMap(),
-            body = ScenarioBody(contentType = ContentType("application/json"),
-                                value = mapOf("error" to "name is required"))
-          )
-        )
-      )
-    )
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(201) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(400) {
+        jsonBody(objectType { properties { "error" to stringType() } })
+      }
+      scenario("invalidUser", status = 400) {
+        request { jsonBody { "name" to "" } }
+        response { jsonBody { "error" to "name is required" } }
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -462,16 +303,16 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `does not generate body type mismatch for form-urlencoded with all optional properties`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      bodies = listOf(
-        BodySchema(
-          contentType = ContentType("application/x-www-form-urlencoded"),
-          dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-          isRequired = true,
-          serde = JsonSerde
+    val apiOperation = apiOperationWith400 {
+      request {
+        // Intentional serde mismatch: application/x-www-form-urlencoded with JsonSerde (preserved from legacy).
+        body(
+          "application/x-www-form-urlencoded",
+          objectType { properties { "name" to stringType() } },
+          JsonSerde
         )
-      )
-    )
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -483,19 +324,18 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates body type mismatch for form-urlencoded with required properties`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      bodies = listOf(
-        BodySchema(
-          contentType = ContentType("application/x-www-form-urlencoded"),
-          dataType = objectDataType(
-            properties = mapOf("name" to stringDataType()),
-            requiredProperties = setOf("name")
-          ),
-          isRequired = true,
-          serde = JsonSerde
+    val apiOperation = apiOperationWith400 {
+      request {
+        body(
+          "application/x-www-form-urlencoded",
+          objectType {
+            properties { "name" to stringType() }
+            required("name")
+          },
+          JsonSerde
         )
-      )
-    )
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -509,19 +349,17 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `generates body type mismatch for form-urlencoded with additionalProperties false`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      bodies = listOf(
-        BodySchema(
-          contentType = ContentType("application/x-www-form-urlencoded"),
-          dataType = objectDataType(
-            properties = mapOf("name" to stringDataType()),
-            allowAdditionalProperties = false
-          ),
-          isRequired = true,
-          serde = JsonSerde
+    val apiOperation = apiOperationWith400 {
+      request {
+        body(
+          "application/x-www-form-urlencoded",
+          objectType(allowAdditionalProperties = false) {
+            properties { "name" to stringType() }
+          },
+          JsonSerde
         )
-      )
-    )
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -535,14 +373,15 @@ class VerificationCaseFactoryTypeMismatchTest {
   @Test
   fun `does not generate parameter type mismatch for deepObject with all optional properties`() {
     // Given
-    val apiOperation = apiOperationWith400(
-      parameters = listOf(
-        ParameterSchema(element = QueryParam("filter"),
-                        dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-                        isRequired = false,
-                        codec = DeepObjectParameterCodec("filter"))
-      )
-    )
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam(
+          "filter",
+          objectType { properties { "name" to stringType() } },
+          codec = deepObject()
+        )
+      }
+    }
 
     // When
     val cases = VerificationCaseFactory.create(apiOperation)
@@ -554,21 +393,12 @@ class VerificationCaseFactoryTypeMismatchTest {
   private fun apiOperationWith400(
     path: String = "/users",
     method: String = "POST",
-    parameters: List<ParameterSchema> = emptyList(),
-    bodies: List<BodySchema> = emptyList()
-  ) = ApiOperation(
-    path = path,
-    method = method,
-    requestSchema = RequestSchema(parameters = parameters, bodies = bodies),
-    responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-      200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-      400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-        BodySchema(contentType = ContentType("application/json"),
-                   dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-                   isRequired = true,
-                   serde = JsonSerde)
-      ))
-    )),
-    scenarios = emptyList()
-  )
+    block: ApiOperationBuilder.() -> Unit = {}
+  ) = apiOperation(method, path) {
+    block()
+    response(200) {}
+    response(400) {
+      jsonBody(objectType { properties { "error" to stringType() } })
+    }
+  }
 }

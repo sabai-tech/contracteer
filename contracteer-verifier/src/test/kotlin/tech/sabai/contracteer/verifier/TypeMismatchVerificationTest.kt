@@ -10,15 +10,11 @@ import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
-import tech.sabai.contracteer.core.operation.*
+import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
-import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
-import tech.sabai.contracteer.core.codec.FormParameterCodec
-import tech.sabai.contracteer.core.codec.SimpleParameterCodec
-import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
 import tech.sabai.contracteer.verifier.VerificationCase.TypeMismatch
 import kotlin.test.Test
 
@@ -41,33 +37,21 @@ class TypeMismatchVerificationTest {
     )
     val server = app.asServer(SunHttp(0)).start()
 
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType {
+          properties { "name" to stringType() }
+        })
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+        })
+      }
+    }
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
@@ -98,31 +82,19 @@ class TypeMismatchVerificationTest {
     )
     val server = app.asServer(SunHttp(0)).start()
 
-    val apiOperation = ApiOperation(
-      path = "/users/{id}",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(element = PathParam("id"),
-                          dataType = integerDataType(),
-                          isRequired = true,
-                          codec = SimpleParameterCodec("id", false))
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+        })
+      }
+    }
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
@@ -154,35 +126,20 @@ class TypeMismatchVerificationTest {
     )
     val server = app.asServer(SunHttp(0)).start()
 
-    val apiOperation = ApiOperation(
-      path = "/users/{id}",
-      method = "GET",
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(element = PathParam("id"),
-                          dataType = integerDataType(),
-                          isRequired = true,
-                          codec = SimpleParameterCodec("id", false)),
-          ParameterSchema(element = QueryParam("page"),
-                          dataType = integerDataType(),
-                          isRequired = false,
-                          codec = FormParameterCodec("page", true))
-        ),
-        bodies = emptyList()
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("GET", "/users/{id}") {
+      request {
+        pathParam("id", integerType())
+        queryParam("page", integerType())
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+        })
+      }
+    }
 
     val cases = VerificationCaseFactory.create(apiOperation)
     // The factory generates 2 cases: one for path, one for query. Get the path one.
@@ -214,33 +171,21 @@ class TypeMismatchVerificationTest {
     )
     val server = app.asServer(SunHttp(0)).start()
 
-    val apiOperation = ApiOperation(
-      path = "/users",
-      method = "POST",
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchemas = ResponseSchemas(byStatusCode = mapOf(
-        200 to ResponseSchema(headers = emptyList(), bodies = emptyList()),
-        400 to ResponseSchema(headers = emptyList(), bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        ))
-      )),
-      scenarios = emptyList()
-    )
+    val apiOperation = apiOperation("POST", "/users") {
+      request {
+        jsonBody(objectType {
+          properties { "name" to stringType() }
+        })
+      }
+
+      response(200) {}
+
+      response(400) {
+        jsonBody(objectType {
+          properties { "error" to stringType() }
+        })
+      }
+    }
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()

@@ -1,12 +1,12 @@
 package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.operation.*
-import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
-import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.ApiOperationBuilder
+import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import kotlin.test.Test
 
 class VerificationCaseTest {
@@ -14,54 +14,25 @@ class VerificationCaseTest {
   @Test
   fun `display name for scenario based with request and response bodies`() {
     // Given
-    val case = VerificationCase.ScenarioBased(
-      Scenario(
-        path = "/users/{id}",
-        method = "GET",
-        key = "validUser",
-        statusCode = 200,
-        request = ScenarioRequest(
-          parameterValues = mapOf(PathParam("id") to 123),
-          body = ScenarioBody(
-            contentType = ContentType("application/json"),
-            value = mapOf("name" to "John")
-          )
-        ),
-        response = ScenarioResponse(
-          headers = emptyMap(),
-          body = ScenarioBody(
-            contentType = ContentType("application/json"),
-            value = mapOf("id" to 123, "name" to "John")
-          )
-        )
-      ), RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = PathParam("id"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("id", false)
-          )
-        ),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ), ResponseSchema(
-        headers = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ), requestContentType = ContentType("application/json"))
+    val case = scenarioBasedCase("GET", "/users/{id}", statusCode = 200, key = "validUser",
+      requestContentType = ContentType("application/json")) {
+      request {
+        pathParam("id", integerType())
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType(); "name" to stringType() } })
+      }
+      scenario("validUser", status = 200) {
+        request {
+          pathParam["id"] = 123
+          jsonBody { "name" to "John" }
+        }
+        response {
+          jsonBody { "id" to 123; "name" to "John" }
+        }
+      }
+    }
 
     // When
     val displayName = case.displayName
@@ -73,36 +44,18 @@ class VerificationCaseTest {
   @Test
   fun `display name for scenario based without request body`() {
     // Given
-    val case = VerificationCase.ScenarioBased(
-      Scenario(
-        path = "/users/{id}",
-        method = "GET",
-        key = "notFound",
-        statusCode = 404,
-        request = ScenarioRequest(
-          parameterValues = mapOf(PathParam("id") to 999),
-          body = null
-        ),
-        response = ScenarioResponse(
-          headers = emptyMap(),
-          body = null
-        )
-      ),
-      RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = PathParam("id"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("id", false)
-          )
-        ),
-        bodies = emptyList()
-      ),
-      ResponseSchema(
-        headers = emptyList(),
-        bodies = emptyList()
-      ), requestContentType = null)
+    val case = scenarioBasedCase("GET", "/users/{id}", statusCode = 404, key = "notFound") {
+      request {
+        pathParam("id", integerType())
+      }
+      response(404)
+      scenario("notFound", status = 404) {
+        request {
+          pathParam["id"] = 999
+        }
+        response {}
+      }
+    }
 
     // When
     val displayName = case.displayName
@@ -114,51 +67,28 @@ class VerificationCaseTest {
   @Test
   fun `display name for scenario based with POST method`() {
     // Given
-
-    val case = VerificationCase.ScenarioBased(
-      Scenario(
-        path = "/orders",
-        method = "POST",
-        key = "success",
-        statusCode = 201,
-        request = ScenarioRequest(
-          parameterValues = emptyMap(),
-          body = ScenarioBody(
-            contentType = ContentType("application/json"),
-            value = mapOf("product" to "laptop", "quantity" to 1)
-          )
-        ),
-        response = ScenarioResponse(
-          headers = emptyMap(),
-          body = ScenarioBody(
-            contentType = ContentType("application/json"),
-            value = mapOf("orderId" to "12345")
-          )
-        )
-      ),
-      RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("product" to stringDataType(),
-                                                         "quantity" to integerDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      ResponseSchema(
-        headers = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("orderId" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ), requestContentType = ContentType("application/json"))
+    val case = scenarioBasedCase("POST", "/orders", statusCode = 201, key = "success",
+      requestContentType = ContentType("application/json")) {
+      request {
+        jsonBody(objectType {
+          properties {
+            "product" to stringType()
+            "quantity" to integerType()
+          }
+        })
+      }
+      response(201) {
+        jsonBody(objectType { properties { "orderId" to stringType() } })
+      }
+      scenario("success", status = 201) {
+        request {
+          jsonBody { "product" to "laptop"; "quantity" to 1 }
+        }
+        response {
+          jsonBody { "orderId" to "12345" }
+        }
+      }
+    }
 
     // When
     val displayName = case.displayName
@@ -170,43 +100,17 @@ class VerificationCaseTest {
   @Test
   fun `display name for schema only with request and response bodies`() {
     // Given
-
-    val case = VerificationCase.SchemaBased(
-      path = "/products",
-      method = "GET",
-      statusCode = 200,
+    val case = schemaBasedCase("GET", "/products", statusCode = 200,
       requestContentType = ContentType("application/json"),
-      responseContentType = ContentType("application/json"),
-      requestSchema = RequestSchema(
-        parameters = listOf(
-          ParameterSchema(
-            element = PathParam("id"),
-            dataType = integerDataType(),
-            isRequired = true,
-            codec = SimpleParameterCodec("id", false)
-          )
-        ),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchema = ResponseSchema(
-        headers = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      )
-    )
+      responseContentType = ContentType("application/json")) {
+      request {
+        pathParam("id", integerType())
+        jsonBody(objectType { properties { "name" to stringType() } })
+      }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType(); "name" to stringType() } })
+      }
+    }
 
     // When
     val displayName = case.displayName
@@ -218,29 +122,12 @@ class VerificationCaseTest {
   @Test
   fun `display name for schema only without request body`() {
     // Given
-
-    val case = VerificationCase.SchemaBased(
-      path = "/products",
-      method = "GET",
-      statusCode = 200,
-      requestContentType = null,
-      responseContentType = ContentType("application/json"),
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = emptyList()
-      ),
-      responseSchema = ResponseSchema(
-        headers = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("items" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      )
-    )
+    val case = schemaBasedCase("GET", "/products", statusCode = 200,
+      responseContentType = ContentType("application/json")) {
+      response(200) {
+        jsonBody(objectType { properties { "items" to stringType() } })
+      }
+    }
 
     // When
     val displayName = case.displayName
@@ -252,36 +139,16 @@ class VerificationCaseTest {
   @Test
   fun `display name for schema only with XML content types`() {
     // Given
-
-    val case = VerificationCase.SchemaBased(
-      path = "/legacy/endpoint",
-      method = "POST",
-      statusCode = 201,
+    val case = schemaBasedCase("POST", "/legacy/endpoint", statusCode = 201,
       requestContentType = ContentType("application/xml"),
-      responseContentType = ContentType("application/xml"),
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/xml"),
-            dataType = objectDataType(properties = mapOf("name" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      ),
-      responseSchema = ResponseSchema(
-        headers = emptyList(),
-        bodies = listOf(
-          BodySchema(
-            contentType = ContentType("application/xml"),
-            dataType = objectDataType(properties = mapOf("result" to stringDataType())),
-            isRequired = true,
-            serde = JsonSerde
-          )
-        )
-      )
-    )
+      responseContentType = ContentType("application/xml")) {
+      request {
+        body("application/xml", objectType { properties { "name" to stringType() } }, JsonSerde)
+      }
+      response(201) {
+        body("application/xml", objectType { properties { "result" to stringType() } }, JsonSerde)
+      }
+    }
 
     // When
     val displayName = case.displayName
@@ -293,27 +160,48 @@ class VerificationCaseTest {
   @Test
   fun `display name for schema only without any bodies`() {
     // Given
-
-    val case = VerificationCase.SchemaBased(
-      path = "/health",
-      method = "GET",
-      statusCode = 204,
-      requestContentType = null,
-      responseContentType = null,
-      requestSchema = RequestSchema(
-        parameters = emptyList(),
-        bodies = emptyList()
-      ),
-      responseSchema = ResponseSchema(
-        headers = emptyList(),
-        bodies = emptyList()
-      )
-    )
+    val case = schemaBasedCase("GET", "/health", statusCode = 204) {
+      response(204)
+    }
 
     // When
     val displayName = case.displayName
 
     // Then
     assert(displayName == "GET /health -> 204 (generated)")
+  }
+
+  // --- helpers ---
+
+  private fun scenarioBasedCase(
+    method: String, path: String, statusCode: Int, key: String,
+    requestContentType: ContentType? = null,
+    block: ApiOperationBuilder.() -> Unit
+  ): VerificationCase.ScenarioBased {
+    val op = apiOperation(method, path, block)
+    return VerificationCase.ScenarioBased(
+      op.scenarios.first { it.key == key },
+      op.requestSchema,
+      op.responseSchemas.responseFor(statusCode)!!,
+      requestContentType
+    )
+  }
+
+  private fun schemaBasedCase(
+    method: String, path: String, statusCode: Int,
+    requestContentType: ContentType? = null,
+    responseContentType: ContentType? = null,
+    block: ApiOperationBuilder.() -> Unit
+  ): VerificationCase.SchemaBased {
+    val op = apiOperation(method, path, block)
+    return VerificationCase.SchemaBased(
+      path = path,
+      method = method,
+      statusCode = statusCode,
+      requestContentType = requestContentType,
+      responseContentType = responseContentType,
+      requestSchema = op.requestSchema,
+      responseSchema = op.responseSchemas.responseFor(statusCode)!!
+    )
   }
 }
