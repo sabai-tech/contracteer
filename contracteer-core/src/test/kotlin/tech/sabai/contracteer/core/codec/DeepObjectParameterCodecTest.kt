@@ -1,7 +1,7 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.rgbObjectDataType
+import tech.sabai.contracteer.core.rgbObjectType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
@@ -19,7 +19,7 @@ class DeepObjectParameterCodecTest {
     val extractor = valueExtractor("color[R]" to listOf("100"), "color[G]" to listOf("200"), "color[B]" to listOf("150"))
 
     // when
-    val result = DeepObjectParameterCodec("color").decode(extractor, rgbObjectDataType())
+    val result = DeepObjectParameterCodec("color").decode(extractor, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
@@ -31,7 +31,7 @@ class DeepObjectParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = DeepObjectParameterCodec("color").decode(valueExtractor(), rgbObjectDataType())
+    val result = DeepObjectParameterCodec("color").decode(valueExtractor(), rgbObjectType())
 
     // then
     assert(result.assertSuccess() == null)

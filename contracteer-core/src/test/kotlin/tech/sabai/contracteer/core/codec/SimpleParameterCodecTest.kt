@@ -3,7 +3,7 @@ package tech.sabai.contracteer.core.codec
 import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.stringType
-import tech.sabai.contracteer.core.rgbObjectDataType
+import tech.sabai.contracteer.core.rgbObjectType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
@@ -76,7 +76,7 @@ class SimpleParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("R,100,G,200,B,150"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(extractor, rgbObjectDataType())
+    val result = SimpleParameterCodec("color", explode = false).decode(extractor, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
@@ -91,7 +91,7 @@ class SimpleParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("R=100,G=200,B=150"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = true).decode(extractor, rgbObjectDataType())
+    val result = SimpleParameterCodec("color", explode = true).decode(extractor, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
