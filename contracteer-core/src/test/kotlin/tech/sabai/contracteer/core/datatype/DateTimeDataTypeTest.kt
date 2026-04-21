@@ -1,14 +1,14 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.dateTimeDataType
+import tech.sabai.contracteer.core.dsl.dateTimeType
 
 class DateTimeDataTypeTest {
 
   @Test
   fun `validates a value of type string representing a date-time`() {
     // given
-    val dateTimeDateType = dateTimeDataType()
+    val dateTimeDateType = dateTimeType()
 
     // when
     val result = dateTimeDateType.validate("2024-12-20T15:30:45+02:00")
@@ -20,7 +20,7 @@ class DateTimeDataTypeTest {
   @Test
   fun `does not validate string value which does not represent a date-time`() {
     // given
-    val dateTimeDateType = dateTimeDataType()
+    val dateTimeDateType = dateTimeType()
 
     // when
     val result = dateTimeDateType.validate("john doe")
@@ -31,7 +31,7 @@ class DateTimeDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val dateTimeDateType = dateTimeDataType(isNullable = true)
+    val dateTimeDateType = dateTimeType(isNullable = true)
 
     // when
     val result = dateTimeDateType.validate(null)
@@ -43,7 +43,7 @@ class DateTimeDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val dateTimeDateType = dateTimeDataType(isNullable = false)
+    val dateTimeDateType = dateTimeType(isNullable = false)
 
     // when
     val result = dateTimeDateType.validate(null)
@@ -55,7 +55,7 @@ class DateTimeDataTypeTest {
   @Test
   fun `should generate a string representing a date-time`() {
     // given
-    val dateTimeDateType = dateTimeDataType()
+    val dateTimeDateType = dateTimeType()
 
     // when
     val randomDateTime = dateTimeDateType.randomValue()
@@ -67,7 +67,7 @@ class DateTimeDataTypeTest {
   @Test
   fun `validates a string representing a date-time with enum values`() {
     // given
-    val dateTimeDataType = dateTimeDataType(enum = listOf("2024-12-20T15:30:45+02:00", "2030-10-20T20:12:45Z"))
+    val dateTimeDataType = dateTimeType(enum = listOf("2024-12-20T15:30:45+02:00", "2030-10-20T20:12:45Z"))
 
     // when
     val result = dateTimeDataType.validate("2030-10-20T20:12:45Z")
@@ -79,7 +79,7 @@ class DateTimeDataTypeTest {
   @Test
   fun `does not validate a string representing a date with enum values`() {
     // given
-    val dateTimeDataType = dateTimeDataType(enum = listOf("2024-12-20T15:30:45+02:00", "2030-10-20T20:12:45Z"))
+    val dateTimeDataType = dateTimeType(enum = listOf("2024-12-20T15:30:45+02:00", "2030-10-20T20:12:45Z"))
 
     // when
     val result = dateTimeDataType.validate("2015-12-20T15:30:45Z")
@@ -92,7 +92,7 @@ class DateTimeDataTypeTest {
   fun `generates random value with enum values`() {
     // given
     val enum = listOf("2024-12-20T15:30:45+02:00", "2030-10-20T20:12:45Z")
-    val dateTimeDataType = dateTimeDataType(enum = enum)
+    val dateTimeDataType = dateTimeType(enum = enum)
 
     // when
     val result = dateTimeDataType.randomValue()

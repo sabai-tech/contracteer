@@ -1,14 +1,13 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.serde.JsonSerde
 import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.core.valueExtractor
-import java.math.BigDecimal
 import kotlin.test.Test
 
 class ContentCodecTest {
@@ -41,10 +40,12 @@ class ContentCodecTest {
   fun `decode JSON string to object`() {
     // given
     val extractor = valueExtractor("filter" to listOf("""{"status":"active","limit":10}"""))
-    val dataType = objectDataType(
-      properties = mapOf(
-        "status" to stringDataType(),
-        "limit" to integerDataType()))
+    val dataType = objectType {
+      properties {
+        "status" to stringType()
+        "limit" to integerType()
+      }
+    }
 
     // when
     val result = ContentCodec("filter", JsonSerde).decode(extractor, dataType)
@@ -59,7 +60,7 @@ class ContentCodecTest {
     val extractor = valueExtractor()
 
     // when
-    val result = ContentCodec("filter", JsonSerde).decode(extractor, stringDataType())
+    val result = ContentCodec("filter", JsonSerde).decode(extractor, stringType())
 
     // then
     assert(result.assertSuccess() == null)
@@ -69,8 +70,7 @@ class ContentCodecTest {
   fun `decode returns failure for invalid JSON`() {
     // given
     val extractor = valueExtractor("filter" to listOf("not-valid-json{"))
-    val dataType = objectDataType(
-      properties = mapOf("status" to stringDataType()))
+    val dataType = objectType { properties { "status" to stringType() } }
 
     // when
     val result = ContentCodec("filter", JsonSerde).decode(extractor, dataType)

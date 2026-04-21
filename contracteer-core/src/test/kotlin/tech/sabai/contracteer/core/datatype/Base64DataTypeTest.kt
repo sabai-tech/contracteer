@@ -3,14 +3,14 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.base64DataType
+import tech.sabai.contracteer.core.dsl.base64Type
 
 class Base64DataTypeTest {
 
   @Test
   fun `validates base64 encoded string`() {
     // given
-    val base64DataType = base64DataType()
+    val base64DataType = base64Type()
 
     // when
     val result = base64DataType.validate("Sm9obiBEb2U=")
@@ -22,7 +22,7 @@ class Base64DataTypeTest {
   @Test
   fun `does not validate string value which is not base64 encoded`() {
     // given
-    val base64DataType = base64DataType()
+    val base64DataType = base64Type()
 
     // when
     val result = base64DataType.validate("Hello1234")
@@ -34,7 +34,7 @@ class Base64DataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val base64DataType = base64DataType(isNullable = true)
+    val base64DataType = base64Type(isNullable = true)
 
     // when
     val result = base64DataType.validate(null)
@@ -46,7 +46,7 @@ class Base64DataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val base64DataType = base64DataType(isNullable = false)
+    val base64DataType = base64Type(isNullable = false)
 
     // when
     val result = base64DataType.validate(null)
@@ -58,7 +58,7 @@ class Base64DataTypeTest {
   @Test
   fun `generates a random string encoded in base64`() {
     // given
-    val base64DataType = base64DataType()
+    val base64DataType = base64Type()
 
     // when
     val randomBase64 = base64DataType.randomValue()!!
@@ -87,7 +87,7 @@ class Base64DataTypeTest {
     @Test
     fun `validates a base64 encoded string with enum values`() {
       // given
-      val base64DataType = base64DataType(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+      val base64DataType = base64Type(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
 
       // when
       val result = base64DataType.validate("Az9obiBEb4e=")
@@ -99,7 +99,7 @@ class Base64DataTypeTest {
     @Test
     fun `does not validate a base64 encoded string with enum values`() {
       // given
-      val base64DataType = base64DataType(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
+      val base64DataType = base64Type(enum = listOf("Sm9obiBEb2U=", "Az9obiBEb4e="))
 
       // when
       val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
@@ -112,7 +112,7 @@ class Base64DataTypeTest {
     fun `generates random value with enum values`() {
       // given
       val enum = listOf("Sm9obiBEb2U=", "SGVsbG8gV29ybGQgIQ==")
-      val base64DataType = base64DataType(enum = enum)
+      val base64DataType = base64Type(enum = enum)
 
       // when
       val result = base64DataType.randomValue()!!
@@ -168,7 +168,7 @@ class Base64DataTypeTest {
     @Test
     fun `does not validate when value length is not in the range`() {
       // given
-      val base64DataType = base64DataType(minLength = 4, maxLength = 8)
+      val base64DataType = base64Type(minLength = 4, maxLength = 8)
 
       // when
       val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
@@ -180,7 +180,7 @@ class Base64DataTypeTest {
     @Test
     fun `validates when value length is in the range`() {
       // given
-      val base64DataType = base64DataType(maxLength = 32)
+      val base64DataType = base64Type(maxLength = 32)
 
       // when
       val result = base64DataType.validate("SGVsbG8gV29ybGQgIQ==")
@@ -192,7 +192,7 @@ class Base64DataTypeTest {
     @Test
     fun `generates random value with length inside the range`() {
       // given
-      val base64DataType = base64DataType(minLength = 12, maxLength = 16)
+      val base64DataType = base64Type(minLength = 12, maxLength = 16)
 
       // when
       val result = base64DataType.randomValue()!!

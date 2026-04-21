@@ -2,11 +2,11 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.booleanDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.numberDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.booleanType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.numberType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.normalize
 import java.math.BigDecimal
 
@@ -15,7 +15,7 @@ class ArrayDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = stringDataType(), isNullable = true)
+    val arrayDataType = arrayType(items = stringType(), isNullable = true)
 
     // when
     val result = arrayDataType.validate(null)
@@ -27,7 +27,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = stringDataType(), isNullable = false)
+    val arrayDataType = arrayType(items = stringType(), isNullable = false)
 
     // when
     val result = arrayDataType.validate(null)
@@ -39,7 +39,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate value whose type is not array`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = stringDataType())
+    val arrayDataType = arrayType(items = stringType())
 
     // when
     val result = arrayDataType.validate("value")
@@ -51,7 +51,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate array with wrong item type`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = stringDataType())
+    val arrayDataType = arrayType(items = stringType())
 
     // when
     val result = arrayDataType.validate(listOf(1, 2, 3))
@@ -63,7 +63,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate array when item type is not nullable`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = stringDataType(isNullable = false))
+    val arrayDataType = arrayType(items = stringType(isNullable = false))
 
     // when
     val result = arrayDataType.validate(listOf("1", null, "3"))
@@ -77,7 +77,7 @@ class ArrayDataTypeTest {
   @Test
   fun `validates an array with right item type`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = integerDataType())
+    val arrayDataType = arrayType(items = integerType())
 
     // when
     val result = arrayDataType.validate(listOf(1, 2, 3))
@@ -89,7 +89,7 @@ class ArrayDataTypeTest {
   @Test
   fun `validates an array with enum values`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(listOf(1, 3), listOf(2, 4)))
+    val arrayDataType = arrayType(items = integerType(), enum = listOf(listOf(1, 3), listOf(2, 4)))
 
     // when
     val result = arrayDataType.validate(listOf(2, 4))
@@ -101,7 +101,7 @@ class ArrayDataTypeTest {
   @Test
   fun `does not validate an array with enum values`() {
     // given
-    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = listOf(listOf(1, 3), listOf(2, 4)))
+    val arrayDataType = arrayType(items = integerType(), enum = listOf(listOf(1, 3), listOf(2, 4)))
 
     // when
     val result = arrayDataType.validate(listOf(1, 2))
@@ -114,7 +114,7 @@ class ArrayDataTypeTest {
   fun `generates random value with enum values`() {
     // given
     val enum = listOf(listOf(1, 3), listOf(2, 4))
-    val arrayDataType = arrayDataType(itemDataType = integerDataType(), enum = enum)
+    val arrayDataType = arrayType(items = integerType(), enum = enum)
 
     // when
     val result = arrayDataType.randomValue()!!
@@ -129,7 +129,7 @@ class ArrayDataTypeTest {
     @Test
     fun `creation fails when minItems is negative`() {
       // when
-      val result = ArrayDataType.create("array", stringDataType(), minItems = -1)
+      val result = ArrayDataType.create("array", stringType(), minItems = -1)
 
       // then
       assert(result.isFailure())
@@ -138,7 +138,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation fails when array has fewer items than minItems`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 3)
+      val arrayDataType = arrayType(items = stringType(), minItems = 3)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b"))
@@ -150,7 +150,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation succeeds when array has exactly minItems`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 2)
+      val arrayDataType = arrayType(items = stringType(), minItems = 2)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b"))
@@ -162,7 +162,7 @@ class ArrayDataTypeTest {
     @Test
     fun `generates array with at least minItems elements`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 3)
+      val arrayDataType = arrayType(items = stringType(), minItems = 3)
 
       // when
       val result = arrayDataType.randomValue()!!
@@ -178,7 +178,7 @@ class ArrayDataTypeTest {
     @Test
     fun `creation fails when maxItems is negative`() {
       // when
-      val result = ArrayDataType.create("array", stringDataType(), maxItems = -1)
+      val result = ArrayDataType.create("array", stringType(), maxItems = -1)
 
       // then
       assert(result.isFailure())
@@ -187,7 +187,7 @@ class ArrayDataTypeTest {
     @Test
     fun `generates empty array when maxItems is 0`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 0)
+      val arrayDataType = arrayType(items = stringType(), maxItems = 0)
 
       // when
       val result = arrayDataType.randomValue()!!
@@ -199,7 +199,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation fails when array has more items than maxItems`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 2)
+      val arrayDataType = arrayType(items = stringType(), maxItems = 2)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b", "c"))
@@ -211,7 +211,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation succeeds when array has exactly maxItems`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 3)
+      val arrayDataType = arrayType(items = stringType(), maxItems = 3)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b", "c"))
@@ -223,7 +223,7 @@ class ArrayDataTypeTest {
     @Test
     fun `generates array with at most maxItems elements`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), maxItems = 3)
+      val arrayDataType = arrayType(items = stringType(), maxItems = 3)
 
       // when
       val values = (1..20).map { arrayDataType.randomValue()!! }
@@ -239,7 +239,7 @@ class ArrayDataTypeTest {
     @Test
     fun `creation fails when minItems is greater than maxItems`() {
       // when
-      val result = ArrayDataType.create("array", stringDataType(), minItems = 5, maxItems = 2)
+      val result = ArrayDataType.create("array", stringType(), minItems = 5, maxItems = 2)
 
       // then
       assert(result.isFailure())
@@ -248,7 +248,7 @@ class ArrayDataTypeTest {
     @Test
     fun `generates array within minItems and maxItems bounds`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), minItems = 2, maxItems = 4)
+      val arrayDataType = arrayType(items = stringType(), minItems = 2, maxItems = 4)
 
       // when
       val values = (1..20).map { arrayDataType.randomValue()!! }
@@ -264,7 +264,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation fails when array has duplicate items`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), uniqueItems = true)
+      val arrayDataType = arrayType(items = stringType(), uniqueItems = true)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b", "a"))
@@ -276,7 +276,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation succeeds when array has unique items`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), uniqueItems = true)
+      val arrayDataType = arrayType(items = stringType(), uniqueItems = true)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b", "c"))
@@ -288,7 +288,7 @@ class ArrayDataTypeTest {
     @Test
     fun `validation succeeds when uniqueItems is false and array has duplicates`() {
       // given
-      val arrayDataType = arrayDataType(itemDataType = stringDataType(), uniqueItems = false)
+      val arrayDataType = arrayType(items = stringType(), uniqueItems = false)
 
       // when
       val result = arrayDataType.validate(listOf("a", "b", "a"))
@@ -302,7 +302,7 @@ class ArrayDataTypeTest {
       // when
       val result = ArrayDataType.create(
         "array",
-        booleanDataType(),
+        booleanType(),
         uniqueItems = true,
         minItems = 3
       )
@@ -316,7 +316,7 @@ class ArrayDataTypeTest {
       // when
       val result = ArrayDataType.create(
         "array",
-        stringDataType(enum = listOf("a", "b")),
+        stringType(enum = listOf("a", "b")),
         uniqueItems = true, minItems = 3)
 
       // then
@@ -328,7 +328,7 @@ class ArrayDataTypeTest {
       // when
       val result = ArrayDataType.create(
         "array",
-        integerDataType(minimum = BigDecimal.ZERO,
+        integerType(minimum = BigDecimal.ZERO,
                         maximum = BigDecimal.TWO),
         uniqueItems = true,
         minItems = 4
@@ -343,7 +343,7 @@ class ArrayDataTypeTest {
       // when
       val result = ArrayDataType.create(
         "array",
-        integerDataType(minimum = BigDecimal.ZERO,
+        integerType(minimum = BigDecimal.ZERO,
                         maximum = BigDecimal.TEN,
                         multipleOf = BigDecimal(5)),
         uniqueItems = true,
@@ -359,7 +359,7 @@ class ArrayDataTypeTest {
       // when
       val result = ArrayDataType.create(
         "array",
-        numberDataType(minimum = BigDecimal.ZERO,
+        numberType(minimum = BigDecimal.ZERO,
                        maximum = BigDecimal.TEN,
                        multipleOf = BigDecimal(5)),
         uniqueItems = true,
@@ -375,7 +375,7 @@ class ArrayDataTypeTest {
       // when — exclusiveMinimum excludes 0 as a multiple, leaving only 5 and 10 (cardinality 2)
       val result = ArrayDataType.create(
         "array",
-        numberDataType(minimum = BigDecimal.ZERO,
+        numberType(minimum = BigDecimal.ZERO,
                        maximum = BigDecimal.TEN,
                        exclusiveMinimum = true,
                        multipleOf = BigDecimal(5)),
@@ -390,8 +390,8 @@ class ArrayDataTypeTest {
     @Test
     fun `generates array with unique items`() {
       // given
-      val arrayDataType = arrayDataType(
-        itemDataType = stringDataType(enum = listOf("a", "b", "c", "d", "e")),
+      val arrayDataType = arrayType(
+        items = stringType(enum = listOf("a", "b", "c", "d", "e")),
         uniqueItems = true,
         minItems = 3,
         maxItems = 5

@@ -3,14 +3,14 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.stringType
 
 class StringDataTypeTest {
 
   @Test
   fun `validates a value of type string`() {
     // given
-    val stringDataType = stringDataType()
+    val stringDataType = stringType()
 
     // when
     val result = stringDataType.validate("john doe")
@@ -22,7 +22,7 @@ class StringDataTypeTest {
   @Test
   fun `does not validate value whose type is not string`() {
     // given
-    val stringDataType = stringDataType()
+    val stringDataType = stringType()
 
     // when
     val result = stringDataType.validate(true)
@@ -34,7 +34,7 @@ class StringDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val stringDataType = stringDataType(isNullable = true)
+    val stringDataType = stringType(isNullable = true)
 
     // when
     val result = stringDataType.validate(null)
@@ -46,7 +46,7 @@ class StringDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val stringDataType = stringDataType(isNullable = false)
+    val stringDataType = stringType(isNullable = false)
 
     // when
     val result = stringDataType.validate(null)
@@ -74,7 +74,7 @@ class StringDataTypeTest {
     @Test
     fun `validates a string with enum values`() {
       // given
-      val stringDataType = stringDataType(enum = listOf("Hello", "World"))
+      val stringDataType = stringType(enum = listOf("Hello", "World"))
 
       // when
       val result = stringDataType.validate("World")
@@ -86,7 +86,7 @@ class StringDataTypeTest {
     @Test
     fun `does not validate a string with enum values`() {
       // given
-      val stringDataType = stringDataType(enum = listOf("Hello", "World"))
+      val stringDataType = stringType(enum = listOf("Hello", "World"))
 
       // when
       val result = stringDataType.validate("John")
@@ -99,7 +99,7 @@ class StringDataTypeTest {
     fun `generates random value with enum values`() {
       // given
       val enum = listOf("Hello", "World")
-      val stringDataType = stringDataType(enum = enum)
+      val stringDataType = stringType(enum = enum)
 
       // when
       val result = stringDataType.randomValue()!!
@@ -115,7 +115,7 @@ class StringDataTypeTest {
     @Test
     fun `validates a string matching the pattern`() {
       // given
-      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
+      val dataType = stringType(pattern = "^[A-Z]{2}-\\d{4}$")
 
       // when
       val result = dataType.validate("AB-1234")
@@ -127,7 +127,7 @@ class StringDataTypeTest {
     @Test
     fun `does not validate a string not matching the pattern`() {
       // given
-      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
+      val dataType = stringType(pattern = "^[A-Z]{2}-\\d{4}$")
 
       // when
       val result = dataType.validate("invalid")
@@ -139,7 +139,7 @@ class StringDataTypeTest {
     @Test
     fun `generates random value matching the pattern`() {
       // given
-      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$")
+      val dataType = stringType(pattern = "^[A-Z]{2}-\\d{4}$")
 
       // when
       val value = dataType.randomValue()!!
@@ -151,7 +151,7 @@ class StringDataTypeTest {
     @Test
     fun `pattern takes precedence over length constraints for validation`() {
       // given
-      val dataType = stringDataType(pattern = "^[A-Z]{2}$", minLength = 5, maxLength = 10)
+      val dataType = stringType(pattern = "^[A-Z]{2}$", minLength = 5, maxLength = 10)
 
       // when
       val result = dataType.validate("AB")
@@ -163,7 +163,7 @@ class StringDataTypeTest {
     @Test
     fun `pattern takes precedence over length constraints for generation`() {
       // given
-      val dataType = stringDataType(pattern = "^\\d{3}$", minLength = 10)
+      val dataType = stringType(pattern = "^\\d{3}$", minLength = 10)
 
       // when
       val value = dataType.randomValue()!!
@@ -201,7 +201,7 @@ class StringDataTypeTest {
     fun `enum takes precedence over pattern for generation`() {
       // given
       val enum = listOf("AB-1234", "CD-5678")
-      val dataType = stringDataType(pattern = "^[A-Z]{2}-\\d{4}$", enum = enum)
+      val dataType = stringType(pattern = "^[A-Z]{2}-\\d{4}$", enum = enum)
 
       // when
       val value = dataType.randomValue()!!
@@ -226,7 +226,7 @@ class StringDataTypeTest {
     @Test
     fun `does not validate when value length is not in the range`() {
       // given
-      val stringDataType = stringDataType(minLength = 1, maxLength = 5)
+      val stringDataType = stringType(minLength = 1, maxLength = 5)
 
       // when
       val result = stringDataType.validate("Hello World !")
@@ -238,7 +238,7 @@ class StringDataTypeTest {
     @Test
     fun `validates when value length is in the range`() {
       // given
-      val stringDataType = stringDataType(minLength = 1, maxLength = 15)
+      val stringDataType = stringType(minLength = 1, maxLength = 15)
 
       // when
       val result = stringDataType.validate("Hello World !")
@@ -250,7 +250,7 @@ class StringDataTypeTest {
     @Test
     fun `generates random value with length inside the range`() {
       // given
-      val stringDataType = stringDataType(minLength = 1, maxLength = 5)
+      val stringDataType = stringType(minLength = 1, maxLength = 5)
 
       // when
       val result = stringDataType.randomValue()!!
@@ -264,7 +264,7 @@ class StringDataTypeTest {
     @Test
     fun `generates random value respecting maxLength when minLength is not set`() {
       // given
-      val stringDataType = stringDataType(maxLength = 1)
+      val stringDataType = stringType(maxLength = 1)
 
       // when
       val result = stringDataType.randomValue()!!
@@ -276,7 +276,7 @@ class StringDataTypeTest {
     @Test
     fun `generates random value respecting minLength greater than 10`() {
       // given
-      val stringDataType = stringDataType(minLength = 15, maxLength = 20)
+      val stringDataType = stringType(minLength = 15, maxLength = 20)
 
       // when
       val result = stringDataType.randomValue()!!

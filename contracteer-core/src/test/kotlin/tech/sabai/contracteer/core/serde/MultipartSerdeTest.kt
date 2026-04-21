@@ -1,11 +1,11 @@
 package tech.sabai.contracteer.core.serde
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.binaryDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.binaryType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import kotlin.test.Test
 
 class MultipartSerdeTest {
@@ -61,7 +61,12 @@ class MultipartSerdeTest {
   fun `deserialize object with primitive properties`() {
     // given
     val serde = multipartSerde("name" to textPart(), "age" to textPart())
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType(), "age" to integerDataType()))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "age" to integerType()
+      }
+    }
     val body = buildMultipartBody(
       "name" to ("text/plain" to "John"),
       "age" to ("text/plain" to "30")
@@ -80,10 +85,12 @@ class MultipartSerdeTest {
   fun `deserialize object with JSON part`() {
     // given
     val serde = multipartSerde("name" to textPart(), "metadata" to jsonPart())
-    val dataType = objectDataType(properties = mapOf(
-      "name" to stringDataType(),
-      "metadata" to objectDataType(properties = mapOf("key" to stringDataType()))
-    ))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "metadata" to objectType { properties { "key" to stringType() } }
+      }
+    }
     val body = buildMultipartBody(
       "name" to ("text/plain" to "John"),
       "metadata" to ("application/json" to "{\"key\":\"value\"}")
@@ -103,7 +110,12 @@ class MultipartSerdeTest {
   fun `deserialize object with binary part`() {
     // given
     val serde = multipartSerde("name" to textPart(), "file" to binaryPart())
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType(), "file" to binaryDataType()))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "file" to binaryType()
+      }
+    }
     val body = buildMultipartBody(
       "name" to ("text/plain" to "John"),
       "file" to ("application/octet-stream" to "binary-content")
@@ -122,7 +134,7 @@ class MultipartSerdeTest {
   fun `deserialize extracts boundary from body`() {
     // given
     val serde = multipartSerde("name" to textPart())
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+    val dataType = objectType { properties { "name" to stringType() } }
     val body = buildMultipartBody("name" to ("text/plain" to "John"), boundary = "custom-boundary")
 
     // when
@@ -137,7 +149,7 @@ class MultipartSerdeTest {
   fun `deserialize returns null for null source`() {
     // given
     val serde = multipartSerde("name" to textPart())
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+    val dataType = objectType { properties { "name" to stringType() } }
 
     // when
     val result = serde.deserialize(null, dataType)
@@ -150,7 +162,7 @@ class MultipartSerdeTest {
   fun `deserialize fails when body is not multipart format`() {
     // given
     val serde = multipartSerde("name" to textPart())
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+    val dataType = objectType { properties { "name" to stringType() } }
 
     // when
     val result = serde.deserialize("this is not a multipart body", dataType)
@@ -178,10 +190,12 @@ class MultipartSerdeTest {
   fun `deserialize multiple parts with same name into array`() {
     // given
     val serde = multipartSerde("name" to textPart(), "files" to fileParts())
-    val dataType = objectDataType(properties = mapOf(
-      "name" to stringDataType(),
-      "files" to arrayDataType(itemDataType = binaryDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "files" to arrayType(items = binaryType())
+      }
+    }
     val body = buildMultipartBody(
       "name" to ("text/plain" to "John"),
       "files" to ("application/octet-stream" to "content1"),
@@ -201,10 +215,12 @@ class MultipartSerdeTest {
   fun `serialize then deserialize roundtrip with file array`() {
     // given
     val serde = multipartSerde("name" to textPart(), "files" to fileParts())
-    val dataType = objectDataType(properties = mapOf(
-      "name" to stringDataType(),
-      "files" to arrayDataType(itemDataType = binaryDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "files" to arrayType(items = binaryType())
+      }
+    }
     val original = mapOf("name" to "John", "files" to listOf("content1", "content2"))
 
     // when
@@ -221,10 +237,12 @@ class MultipartSerdeTest {
   fun `serialize then deserialize roundtrip`() {
     // given
     val serde = multipartSerde("name" to textPart(), "metadata" to jsonPart())
-    val dataType = objectDataType(properties = mapOf(
-      "name" to stringDataType(),
-      "metadata" to objectDataType(properties = mapOf("key" to stringDataType()))
-    ))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "metadata" to objectType { properties { "key" to stringType() } }
+      }
+    }
     val original = mapOf("name" to "John", "metadata" to mapOf("key" to "value"))
 
     // when

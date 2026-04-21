@@ -3,11 +3,11 @@ package tech.sabai.contracteer.core.datatype
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.booleanDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.booleanType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 
 class ObjectDataTypeTest {
 
@@ -15,8 +15,8 @@ class ObjectDataTypeTest {
   fun `creation fails when a required property is not defined as a property`() {
     // when
     val result = ObjectDataType.create(name = "cat",
-                                       properties = mapOf("hunts" to booleanDataType(),
-                                                          "age" to integerDataType()),
+                                       properties = mapOf("hunts" to booleanType(),
+                                                          "age" to integerType()),
                                        allowAdditionalProperties = false,
                                        isNullable = false,
                                        requiredProperties = setOf("hunts", "age", "type"))
@@ -28,7 +28,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validation succeeds for a null value when nullable`() {
     // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()), isNullable = true)
+    val objectDataType = objectType(isNullable = true) { properties { "prop" to integerType() } }
 
     // when
     val result = objectDataType.validate(null)
@@ -40,7 +40,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validation fails for a null value when not nullable`() {
     // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()), isNullable = false)
+    val objectDataType = objectType(isNullable = false) { properties { "prop" to integerType() } }
 
     // when
     val result = objectDataType.validate(null)
@@ -52,7 +52,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validation fails when a value is not of type Map`() {
     // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()))
+    val objectDataType = objectType { properties { "prop" to integerType() } }
 
     // when
     val result = objectDataType.validate(123)
@@ -64,7 +64,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validation succeeds when a value is of type Map`() {
     // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()))
+    val objectDataType = objectType { properties { "prop" to integerType() } }
 
     // when
     val result = objectDataType.validate(mapOf("prop" to 1))
@@ -76,12 +76,13 @@ class ObjectDataTypeTest {
   @Test
   fun `validation succeeds when a non required property is not present`() {
     // given
-    val objectDataType = objectDataType(
-      properties = mapOf(
-        "prop" to integerDataType(),
-        "prop2" to integerDataType()),
-      requiredProperties = setOf("prop")
-    )
+    val objectDataType = objectType {
+      properties {
+        "prop" to integerType()
+        "prop2" to integerType()
+      }
+      required("prop")
+    }
     // when
     val result = objectDataType.validate(mapOf("prop" to 1))
 
@@ -92,12 +93,13 @@ class ObjectDataTypeTest {
   @Test
   fun `validation succeeds when a non required and non nullable property is not present`() {
     // given
-    val objectDataType = objectDataType(
-      properties = mapOf(
-        "prop" to integerDataType(),
-        "prop2" to integerDataType(isNullable = false)
-      ),
-      requiredProperties = setOf("prop"))
+    val objectDataType = objectType {
+      properties {
+        "prop" to integerType()
+        "prop2" to integerType(isNullable = false)
+      }
+      required("prop")
+    }
     // when
     val result = objectDataType.validate(mapOf("prop" to 1))
 
@@ -108,7 +110,7 @@ class ObjectDataTypeTest {
   @Test
   fun `validation fails when a property is not of the expected type`() {
     // given
-    val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()))
+    val objectDataType = objectType { properties { "prop" to integerType() } }
 
     // when
     val result = objectDataType.validate(mapOf("prop" to true))
@@ -120,10 +122,12 @@ class ObjectDataTypeTest {
   @Test
   fun `validation fails when a non nullable property is null`() {
     // given
-    val objectDataType = objectDataType(properties = mapOf(
-      "prop" to integerDataType(isNullable = false),
-      "prop2" to booleanDataType()
-    ))
+    val objectDataType = objectType {
+      properties {
+        "prop" to integerType(isNullable = false)
+        "prop2" to booleanType()
+      }
+    }
 
     // when
     val result = objectDataType.validate(mapOf(
@@ -137,11 +141,13 @@ class ObjectDataTypeTest {
   @Test
   fun `validation fails when a required property is missing`() {
     // given
-    val objectDataType = objectDataType(
-      properties = mapOf(
-        "prop" to integerDataType(),
-        "prop2" to booleanDataType()),
-      requiredProperties = setOf("prop"))
+    val objectDataType = objectType {
+      properties {
+        "prop" to integerType()
+        "prop2" to booleanType()
+      }
+      required("prop")
+    }
 
     // when
     val result = objectDataType.validate(mapOf("prop2" to true))
@@ -159,7 +165,7 @@ class ObjectDataTypeTest {
     fun `validation fails when extra properties are provided and additionalProperties is disabled`() {
       // given
       val objectDataType =
-        objectDataType(properties = mapOf("prop" to integerDataType()), allowAdditionalProperties = false)
+        objectType(allowAdditionalProperties = false) { properties { "prop" to integerType() } }
 
       // when
       val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to 2, "prop3" to 3))
@@ -171,10 +177,10 @@ class ObjectDataTypeTest {
     @Test
     fun `validation fails when extra properties are not of the expected type`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("prop" to integerDataType()),
+      val objectDataType = objectType(
         allowAdditionalProperties = true,
-        additionalPropertiesDataType = stringDataType())
+        additionalPropertiesDataType = stringType()
+      ) { properties { "prop" to integerType() } }
 
       // when
       val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to true, "prop3" to 3.5))
@@ -186,9 +192,9 @@ class ObjectDataTypeTest {
     @Test
     fun `validation succeeds when extra properties datatype is not specified`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("prop" to integerDataType()),
-        allowAdditionalProperties = true)
+      val objectDataType = objectType(allowAdditionalProperties = true) {
+        properties { "prop" to integerType() }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("prop" to 1, "prop2" to true, "prop3" to 3.5))
@@ -200,9 +206,9 @@ class ObjectDataTypeTest {
     @Test
     fun `validation succeeds when allow additional properties is true but there is no extra properties`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("prop" to integerDataType()),
-        allowAdditionalProperties = true)
+      val objectDataType = objectType(allowAdditionalProperties = true) {
+        properties { "prop" to integerType() }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("prop" to 1))
@@ -214,10 +220,10 @@ class ObjectDataTypeTest {
     @Test
     fun `validation succeeds when allow additional properties datatype is specified but there is no extra properties`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("prop" to integerDataType()),
+      val objectDataType = objectType(
         allowAdditionalProperties = true,
-        additionalPropertiesDataType = stringDataType())
+        additionalPropertiesDataType = stringType()
+      ) { properties { "prop" to integerType() } }
 
       // when
       val result = objectDataType.validate(mapOf("prop" to 1))
@@ -231,11 +237,14 @@ class ObjectDataTypeTest {
   @Test
   fun `asRequestType removes readOnly properties and adjusts requiredProperties`() {
     // given
-    val dataType = objectDataType(
-      properties = mapOf("id" to integerDataType(), "name" to stringDataType(), "password" to stringDataType()),
-      requiredProperties = setOf("id", "name", "password"),
-      readOnlyProperties = setOf("id")
-    )
+    val dataType = objectType(readOnlyProperties = setOf("id")) {
+      properties {
+        "id" to integerType()
+        "name" to stringType()
+        "password" to stringType()
+      }
+      required("id", "name", "password")
+    }
 
     // when
     val requestType = dataType.asRequestType() as ObjectDataType
@@ -251,11 +260,14 @@ class ObjectDataTypeTest {
   @Test
   fun `asResponseType removes writeOnly properties and adjusts requiredProperties`() {
     // given
-    val dataType = objectDataType(
-      properties = mapOf("id" to integerDataType(), "name" to stringDataType(), "password" to stringDataType()),
-      requiredProperties = setOf("id", "name", "password"),
-      writeOnlyProperties = setOf("password")
-    )
+    val dataType = objectType(writeOnlyProperties = setOf("password")) {
+      properties {
+        "id" to integerType()
+        "name" to stringType()
+        "password" to stringType()
+      }
+      required("id", "name", "password")
+    }
 
     // when
     val responseType = dataType.asResponseType() as ObjectDataType
@@ -271,7 +283,7 @@ class ObjectDataTypeTest {
   @Test
   fun `asRequestType and asResponseType return this when no readOnly or writeOnly properties`() {
     // given
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+    val dataType = objectType { properties { "name" to stringType() } }
 
     // then
     assert(dataType.asRequestType() === dataType)
@@ -281,11 +293,16 @@ class ObjectDataTypeTest {
   @Test
   fun `request variant randomValue excludes readOnly and response variant excludes writeOnly`() {
     // given
-    val dataType = objectDataType(
-      properties = mapOf("id" to integerDataType(), "name" to stringDataType(), "password" to stringDataType()),
+    val dataType = objectType(
       readOnlyProperties = setOf("id"),
       writeOnlyProperties = setOf("password")
-    )
+    ) {
+      properties {
+        "id" to integerType()
+        "name" to stringType()
+        "password" to stringType()
+      }
+    }
 
     // when
     val requestValue = dataType.asRequestType().randomValue()!!
@@ -299,11 +316,13 @@ class ObjectDataTypeTest {
   @Test
   fun `request variant validation succeeds without readOnly required field`() {
     // given
-    val requestType = objectDataType(
-      properties = mapOf("id" to integerDataType(), "name" to stringDataType()),
-      requiredProperties = setOf("id", "name"),
-      readOnlyProperties = setOf("id")
-    ).asRequestType()
+    val requestType = objectType(readOnlyProperties = setOf("id")) {
+      properties {
+        "id" to integerType()
+        "name" to stringType()
+      }
+      required("id", "name")
+    }.asRequestType()
 
     // when
     val result = requestType.validate(mapOf("name" to "Athos"))
@@ -315,11 +334,13 @@ class ObjectDataTypeTest {
   @Test
   fun `response variant validation succeeds without writeOnly required field`() {
     // given
-    val responseType = objectDataType(
-      properties = mapOf("password" to stringDataType(), "name" to stringDataType()),
-      requiredProperties = setOf("password", "name"),
-      writeOnlyProperties = setOf("password")
-    ).asResponseType()
+    val responseType = objectType(writeOnlyProperties = setOf("password")) {
+      properties {
+        "password" to stringType()
+        "name" to stringType()
+      }
+      required("password", "name")
+    }.asResponseType()
 
     // when
     val result = responseType.validate(mapOf("name" to "Athos"))
@@ -331,12 +352,18 @@ class ObjectDataTypeTest {
   @Test
   fun `asRequestType transforms nested objects recursively`() {
     // given
-    val address = objectDataType(
-      name = "address",
-      properties = mapOf("id" to integerDataType(), "street" to stringDataType()),
-      readOnlyProperties = setOf("id")
-    )
-    val user = objectDataType(properties = mapOf("address" to address, "name" to stringDataType()))
+    val address = objectType(name = "address", readOnlyProperties = setOf("id")) {
+      properties {
+        "id" to integerType()
+        "street" to stringType()
+      }
+    }
+    val user = objectType {
+      properties {
+        "address" to address
+        "name" to stringType()
+      }
+    }
 
     // when
     val requestType = user.asRequestType() as ObjectDataType
@@ -350,14 +377,18 @@ class ObjectDataTypeTest {
   @Test
   fun `asRequestType transforms objects nested inside arrays`() {
     // given
-    val item = objectDataType(
-      name = "item",
-      properties = mapOf("id" to integerDataType(), "name" to stringDataType()),
-      readOnlyProperties = setOf("id")
-    )
-    val parent = objectDataType(
-      properties = mapOf("items" to arrayDataType(item), "label" to stringDataType())
-    )
+    val item = objectType(name = "item", readOnlyProperties = setOf("id")) {
+      properties {
+        "id" to integerType()
+        "name" to stringType()
+      }
+    }
+    val parent = objectType {
+      properties {
+        "items" to arrayType(item)
+        "label" to stringType()
+      }
+    }
 
     // when
     val requestType = parent.asRequestType() as ObjectDataType
@@ -376,7 +407,7 @@ class ObjectDataTypeTest {
     fun `creation fails when enum contains a value that does not match any provided sub datatype`() {
       // when
       val result = ObjectDataType.create(name = "object",
-                                         properties = mapOf("prop" to integerDataType(), "prop2" to integerDataType()),
+                                         properties = mapOf("prop" to integerType(), "prop2" to integerType()),
                                          requiredProperties = setOf("prop2"),
                                          allowAdditionalProperties = true,
                                          isNullable = false,
@@ -389,8 +420,9 @@ class ObjectDataTypeTest {
     @Test
     fun `validation succeeds when the value is included in the enum`() {
       // given
-      val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()),
-                                          enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2)))
+      val objectDataType = objectType(enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2))) {
+        properties { "prop" to integerType() }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("prop" to 1))
@@ -402,8 +434,9 @@ class ObjectDataTypeTest {
     @Test
     fun `validation fails when the value is not included in the enum`() {
       // given
-      val objectDataType = objectDataType(properties = mapOf("prop" to integerDataType()),
-                                          enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2)))
+      val objectDataType = objectType(enum = listOf(mapOf("prop" to 1), mapOf("prop" to 2))) {
+        properties { "prop" to integerType() }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("john" to 5))
@@ -416,7 +449,7 @@ class ObjectDataTypeTest {
     fun `generates valid random value that matches one of the enumerated values`() {
       // given
       val enum = listOf(mapOf("prop" to "value1"), mapOf("prop" to "value2"))
-      val objectDataType = objectDataType(properties = mapOf("prop" to stringDataType()), enum = enum)
+      val objectDataType = objectType(enum = enum) { properties { "prop" to stringType() } }
 
       // when
       val result = objectDataType.randomValue()!!
@@ -434,7 +467,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType()),
+        properties = mapOf("a" to stringType()),
         allowAdditionalProperties = true,
         isNullable = false,
         minProperties = -1
@@ -449,7 +482,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        properties = mapOf("a" to stringType(), "b" to stringType()),
         allowAdditionalProperties = true,
         isNullable = false,
         minProperties = 3
@@ -466,7 +499,7 @@ class ObjectDataTypeTest {
         name = "Tags",
         properties = emptyMap(),
         allowAdditionalProperties = true,
-        additionalPropertiesDataType = stringDataType(),
+        additionalPropertiesDataType = stringType(),
         isNullable = false,
         minProperties = 1
       )
@@ -481,10 +514,12 @@ class ObjectDataTypeTest {
     @Test
     fun `validation fails when object has fewer properties than minProperties`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
-        minProperties = 2
-      )
+      val objectDataType = objectType(minProperties = 2) {
+        properties {
+          "a" to stringType()
+          "b" to stringType()
+        }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("a" to "hello"))
@@ -496,10 +531,12 @@ class ObjectDataTypeTest {
     @Test
     fun `validation succeeds when object has exactly minProperties`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
-        minProperties = 2
-      )
+      val objectDataType = objectType(minProperties = 2) {
+        properties {
+          "a" to stringType()
+          "b" to stringType()
+        }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("a" to "hello", "b" to "world"))
@@ -517,7 +554,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType()),
+        properties = mapOf("a" to stringType()),
         allowAdditionalProperties = true,
         isNullable = false,
         maxProperties = -1
@@ -532,7 +569,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType(), "c" to stringDataType()),
+        properties = mapOf("a" to stringType(), "b" to stringType(), "c" to stringType()),
         requiredProperties = setOf("a", "b", "c"),
         allowAdditionalProperties = true,
         isNullable = false,
@@ -546,11 +583,12 @@ class ObjectDataTypeTest {
     @Test
     fun `validation fails when object has more properties than maxProperties`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
-        allowAdditionalProperties = true,
-        maxProperties = 1
-      )
+      val objectDataType = objectType(allowAdditionalProperties = true, maxProperties = 1) {
+        properties {
+          "a" to stringType()
+          "b" to stringType()
+        }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("a" to "hello", "b" to "world"))
@@ -562,10 +600,12 @@ class ObjectDataTypeTest {
     @Test
     fun `validation succeeds when object has exactly maxProperties`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
-        maxProperties = 2
-      )
+      val objectDataType = objectType(maxProperties = 2) {
+        properties {
+          "a" to stringType()
+          "b" to stringType()
+        }
+      }
 
       // when
       val result = objectDataType.validate(mapOf("a" to "hello", "b" to "world"))
@@ -577,11 +617,14 @@ class ObjectDataTypeTest {
     @Test
     fun `generates object with at most maxProperties including required`() {
       // given
-      val objectDataType = objectDataType(
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType(), "c" to stringDataType()),
-        requiredProperties = setOf("a"),
-        maxProperties = 2
-      )
+      val objectDataType = objectType(maxProperties = 2) {
+        properties {
+          "a" to stringType()
+          "b" to stringType()
+          "c" to stringType()
+        }
+        required("a")
+      }
 
       // when
       val result = objectDataType.randomValue()!!
@@ -600,7 +643,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        properties = mapOf("a" to stringType(), "b" to stringType()),
         readOnlyProperties = setOf("a"),
         allowAdditionalProperties = true,
         isNullable = false,
@@ -616,7 +659,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType()),
+        properties = mapOf("a" to stringType(), "b" to stringType()),
         writeOnlyProperties = setOf("a"),
         allowAdditionalProperties = true,
         isNullable = false,
@@ -632,7 +675,7 @@ class ObjectDataTypeTest {
       // when
       val result = ObjectDataType.create(
         name = "object",
-        properties = mapOf("a" to stringDataType(), "b" to stringDataType(), "c" to stringDataType()),
+        properties = mapOf("a" to stringType(), "b" to stringType(), "c" to stringType()),
         allowAdditionalProperties = true,
         isNullable = false,
         minProperties = 3,

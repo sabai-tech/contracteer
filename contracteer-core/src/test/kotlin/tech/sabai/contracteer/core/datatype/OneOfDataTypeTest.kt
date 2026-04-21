@@ -2,34 +2,40 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.booleanDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.oneOfDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.booleanType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.oneOfType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.normalize
 
 class OneOfDataTypeTest {
 
-  private val dog = objectDataType(name = "dog",
-                                   properties = mapOf("barks" to booleanDataType(),
-                                                      "age" to integerDataType(),
-                                                      "type" to stringDataType()),
-                                   requiredProperties = setOf("type", "barks"))
-  private val cat = objectDataType(name = "cat",
-                                   properties = mapOf("hunts" to booleanDataType(),
-                                                      "age" to integerDataType(),
-                                                      "type" to stringDataType()),
-                                   requiredProperties = setOf("type", "hunts"))
+  private val dog = objectType(name = "dog") {
+    properties {
+      "barks" to booleanType()
+      "age" to integerType()
+      "type" to stringType()
+    }
+    required("type", "barks")
+  }
+  private val cat = objectType(name = "cat") {
+    properties {
+      "hunts" to booleanType()
+      "age" to integerType()
+      "type" to stringType()
+    }
+    required("type", "hunts")
+  }
 
-  private val quantity = integerDataType(name = "quantity")
+  private val quantity = integerType(name = "quantity")
 
-  private val name = stringDataType(name = "name")
+  private val name = stringType(name = "name")
 
   @Test
   fun `validation fails when none of sub datatype validates the value`() {
     // given
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat, quantity, name))
+    val oneOfDataType = oneOfType { subType(dog); subType(cat); subType(quantity); subType(name) }
 
     // when
     val result = oneOfDataType.validate(true)
@@ -45,7 +51,7 @@ class OneOfDataTypeTest {
   @Test
   fun `validation fails when multiple sub datatypes validate the value`() {
     // given
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
+    val oneOfDataType = oneOfType { subType(dog); subType(cat) }
 
     // when
     val result = oneOfDataType.validate(mapOf(
@@ -64,7 +70,7 @@ class OneOfDataTypeTest {
   @Test
   fun `validation succeeds when a single sub datatype validates the value`() {
     // given
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
+    val oneOfDataType = oneOfType { subType(dog); subType(cat) }
 
     // when
     val result = oneOfDataType.validate(mapOf(
@@ -80,7 +86,7 @@ class OneOfDataTypeTest {
   @Test
   fun `generates a valid random value`() {
     // given
-    val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat))
+    val oneOfDataType = oneOfType { subType(dog); subType(cat) }
 
     // when
     val randomValue = oneOfDataType.randomValue()
@@ -108,8 +114,7 @@ class OneOfDataTypeTest {
     @Test
     fun `validation succeeds when the value is included in the enum`() {
       // given
-      val oneOfDataType = oneOfDataType(
-        subTypes = listOf(dog, cat),
+      val oneOfDataType = oneOfType(
         enum = listOf(
           mapOf("barks" to true,
                 "breed" to "breed",
@@ -117,7 +122,7 @@ class OneOfDataTypeTest {
           mapOf("hunts" to true,
                 "age" to 2,
                 "type" to "cat"))
-      )
+      ) { subType(dog); subType(cat) }
 
       // when
       val result = oneOfDataType.validate(mapOf("barks" to true,
@@ -131,11 +136,11 @@ class OneOfDataTypeTest {
     @Test
     fun `validation fails when the value is not included in the enum`() {
       // given
-      val oneOfDataType = oneOfDataType(
-        subTypes = listOf(dog, cat, quantity, name),
+      val oneOfDataType = oneOfType(
         enum = listOf(mapOf("barks" to true, "age" to 3, "type" to "dog"),
                       mapOf("hunts" to true, "age" to 2, "type" to "cat"),
-                      42))
+                      42)
+      ) { subType(dog); subType(cat); subType(quantity); subType(name) }
 
       // when
       val result = oneOfDataType.validate(mapOf("barks" to false, "age" to 2))
@@ -151,7 +156,9 @@ class OneOfDataTypeTest {
                         mapOf("hunts" to true, "age" to 2, "type" to "cat"),
                         42,
                         "John")
-      val oneOfDataType = oneOfDataType(subTypes = listOf(dog, cat, quantity, name), enum = enum)
+      val oneOfDataType = oneOfType(enum = enum) {
+        subType(dog); subType(cat); subType(quantity); subType(name)
+      }
 
       // when
       val result = oneOfDataType.randomValue()
@@ -197,15 +204,16 @@ class OneOfDataTypeTest {
         name = "oneOf",
         subTypes = listOf(
           dog,
-          oneOfDataType(
-            name = "other",
-            subTypes = listOf(
-              cat,
-              objectDataType(
-                name = "lizard",
-                properties = mapOf("age" to integerDataType(), "type" to stringDataType()),
-                requiredProperties = setOf("age", "type")
-              )))),
+          oneOfType(name = "other") {
+            subType(cat)
+            subType(objectType(name = "lizard") {
+              properties {
+                "age" to integerType()
+                "type" to stringType()
+              }
+              required("age", "type")
+            })
+          }),
         discriminator = Discriminator("type")
       )
 
@@ -216,9 +224,10 @@ class OneOfDataTypeTest {
     @Test
     fun `validation succeeds with discriminator mapping`() {
       // given
-      val oneOfDataType = oneOfDataType(
-        subTypes = listOf(dog, cat),
-        discriminator = Discriminator("type", mapOf("DOG" to "dog")))
+      val oneOfDataType = oneOfType {
+        subType(dog); subType(cat)
+        discriminator("type") { mapping("DOG", "dog") }
+      }
 
       // when
       val result = oneOfDataType.validate(mapOf("type" to "DOG", "barks" to true))
@@ -230,9 +239,10 @@ class OneOfDataTypeTest {
     @Test
     fun `generates random valid value with discriminator`() {
       // given
-      val oneOfDataType = oneOfDataType(
-        subTypes = listOf(dog, cat),
-        discriminator = Discriminator("type"))
+      val oneOfDataType = oneOfType {
+        subType(dog); subType(cat)
+        discriminator("type")
+      }
 
       // when
       val randomValue = oneOfDataType.randomValue() as Map<*, *>
@@ -246,20 +256,20 @@ class OneOfDataTypeTest {
     @Test
     fun `generates random valid value for composite structured sub datatypes`() {
       // given
-      val oneOfDataType = oneOfDataType(
-        subTypes = listOf(
-          dog,
-          oneOfDataType(
-            name = "other",
-            subTypes = listOf(
-              cat,
-              objectDataType(
-                name = "lizard",
-                properties = mapOf("lovesRocks" to booleanDataType(), "type" to stringDataType()),
-                requiredProperties = setOf("type", "lovesRocks")
-              )))),
-        discriminator = Discriminator("type")
-      )
+      val oneOfDataType = oneOfType {
+        subType(dog)
+        subType(oneOfType(name = "other") {
+          subType(cat)
+          subType(objectType(name = "lizard") {
+            properties {
+              "lovesRocks" to booleanType()
+              "type" to stringType()
+            }
+            required("type", "lovesRocks")
+          })
+        })
+        discriminator("type")
+      }
 
       // when
       val randomValue = oneOfDataType.randomValue()

@@ -2,10 +2,10 @@ package tech.sabai.contracteer.core.serde
 
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.normalize
 import java.math.BigDecimal
 
@@ -38,11 +38,13 @@ class JsonSerdeTest {
           },
           "array": [ 1,2,3]
         }""".trimIndent()
-    val dataType = objectDataType(properties = mapOf(
-      "id" to integerDataType(),
-      "nested" to objectDataType(properties = mapOf("name" to stringDataType())),
-      "array" to arrayDataType(integerDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "id" to integerType()
+        "nested" to objectType { properties { "name" to stringType() } }
+        "array" to arrayType(integerType())
+      }
+    }
 
     // when
     val result = JsonSerde.deserialize(value, dataType)
@@ -59,11 +61,13 @@ class JsonSerdeTest {
   fun `fails to deserialize when string does not match datatype`() {
     // given
     val value = "Hello World"
-    val dataType = objectDataType(properties = mapOf(
-      "id" to integerDataType(),
-      "nested" to objectDataType(properties = mapOf("name" to stringDataType())),
-      "array" to arrayDataType(integerDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "id" to integerType()
+        "nested" to objectType { properties { "name" to stringType() } }
+        "array" to arrayType(integerType())
+      }
+    }
 
     // when
     val result = JsonSerde.deserialize(value, dataType)
@@ -76,10 +80,12 @@ class JsonSerdeTest {
   fun `deserialize normalizes values`() {
     // given
     val value = """{"id": 42, "items": [1, 2, 3]}"""
-    val dataType = objectDataType(properties = mapOf(
-      "id" to integerDataType(),
-      "items" to arrayDataType(integerDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "id" to integerType()
+        "items" to arrayType(integerType())
+      }
+    }
 
     // when
     val result = JsonSerde.deserialize(value, dataType)
@@ -94,11 +100,13 @@ class JsonSerdeTest {
   @Test
   fun `fails to deserialize when string is null`() {
     // given
-    val dataType = objectDataType(properties = mapOf(
-      "id" to integerDataType(),
-      "nested" to objectDataType(properties = mapOf("name" to stringDataType())),
-      "array" to arrayDataType(integerDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "id" to integerType()
+        "nested" to objectType { properties { "name" to stringType() } }
+        "array" to arrayType(integerType())
+      }
+    }
 
     // when
     val result = JsonSerde.deserialize(null, dataType)
@@ -110,7 +118,7 @@ class JsonSerdeTest {
   @Test
   fun `deserializes JSON string literal as String value`() {
     // when
-    val result = JsonSerde.deserialize("\"hello\"", stringDataType())
+    val result = JsonSerde.deserialize("\"hello\"", stringType())
 
     // then
     assert(result.assertSuccess() == "hello")
@@ -119,7 +127,7 @@ class JsonSerdeTest {
   @Test
   fun `deserializes JSON integer literal as BigDecimal value`() {
     // when
-    val result = JsonSerde.deserialize("42", integerDataType())
+    val result = JsonSerde.deserialize("42", integerType())
 
     // then
     assert(result.assertSuccess() == BigDecimal.valueOf(42))

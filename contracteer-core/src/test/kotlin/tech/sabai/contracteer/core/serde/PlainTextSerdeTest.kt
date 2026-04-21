@@ -1,13 +1,13 @@
 package tech.sabai.contracteer.core.serde
 
-import tech.sabai.contracteer.core.TestFixture.anyOfDataType
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.booleanDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.numberDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.oneOfDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.anyOfType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.booleanType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.numberType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.oneOfType
+import tech.sabai.contracteer.core.dsl.stringType
 import kotlin.test.Test
 
 class PlainTextSerdeTest {
@@ -15,7 +15,7 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes null value`() {
     // when
-    val result = PlainTextSerde.deserialize(null, integerDataType())
+    val result = PlainTextSerde.deserialize(null, integerType())
 
     // then
     assert(result.isSuccess())
@@ -25,7 +25,7 @@ class PlainTextSerdeTest {
   @Test
   fun `fails to deserialize to ArrayDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("[1,2,3]", arrayDataType(itemDataType = integerDataType()))
+    val result = PlainTextSerde.deserialize("[1,2,3]", arrayType(items = integerType()))
 
     // then
     assert(result.isFailure())
@@ -35,7 +35,7 @@ class PlainTextSerdeTest {
   fun `fails to deserialize to ObjectDatatype`() {
     // when
     val result =
-      PlainTextSerde.deserialize("{\"prop1\":42}", objectDataType(properties = mapOf("prop1" to integerDataType())))
+      PlainTextSerde.deserialize("{\"prop1\":42}", objectType { properties { "prop1" to integerType() } })
 
     // then
     assert(result.isFailure())
@@ -45,7 +45,7 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes to IntegerDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("42", integerDataType())
+    val result = PlainTextSerde.deserialize("42", integerType())
 
     // then
     assert(result.isSuccess())
@@ -54,7 +54,7 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes to NumberDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("42.5", numberDataType())
+    val result = PlainTextSerde.deserialize("42.5", numberType())
 
     // then
     assert(result.isSuccess())
@@ -63,7 +63,7 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes to StringDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("test", stringDataType())
+    val result = PlainTextSerde.deserialize("test", stringType())
 
     // then
     assert(result.isSuccess())
@@ -72,7 +72,7 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes to BooleanDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("true", booleanDataType())
+    val result = PlainTextSerde.deserialize("true", booleanType())
 
     // then
     assert(result.isSuccess())
@@ -81,7 +81,7 @@ class PlainTextSerdeTest {
   @Test
   fun `fails to deserialize invalid value to BooleanDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("notABoolean", booleanDataType())
+    val result = PlainTextSerde.deserialize("notABoolean", booleanType())
 
     // then
     assert(result.isFailure())
@@ -90,7 +90,7 @@ class PlainTextSerdeTest {
   @Test
   fun `fails to deserialize invalid value to IntegerDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("notAnInteger", integerDataType())
+    val result = PlainTextSerde.deserialize("notAnInteger", integerType())
 
     // then
     assert(result.isFailure())
@@ -99,7 +99,7 @@ class PlainTextSerdeTest {
   @Test
   fun `fails to deserialize invalid value to NumberDatatype`() {
     // when
-    val result = PlainTextSerde.deserialize("notANumber", numberDataType())
+    val result = PlainTextSerde.deserialize("notANumber", numberType())
 
     // then
     assert(result.isFailure())
@@ -145,7 +145,10 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes oneOf with primitive subtypes`() {
     // when
-    val result = PlainTextSerde.deserialize("123", oneOfDataType(subTypes = listOf(stringDataType(), integerDataType())))
+    val result = PlainTextSerde.deserialize("123", oneOfType {
+      subType(stringType())
+      subType(integerType())
+    })
 
     // then
     assert(result.isSuccess())
@@ -154,7 +157,10 @@ class PlainTextSerdeTest {
   @Test
   fun `successfully deserializes anyOf with primitive subtypes`() {
     // when
-    val result = PlainTextSerde.deserialize("true", anyOfDataType(subTypes = listOf(stringDataType(), booleanDataType())))
+    val result = PlainTextSerde.deserialize("true", anyOfType {
+      subType(stringType())
+      subType(booleanType())
+    })
 
     // then
     assert(result.isSuccess())
@@ -165,10 +171,10 @@ class PlainTextSerdeTest {
     // when
     val result = PlainTextSerde.deserialize(
       "hello",
-      oneOfDataType(subTypes = listOf(
-        objectDataType(properties = mapOf("a" to stringDataType())),
-        stringDataType()
-      ))
+      oneOfType {
+        subType(objectType { properties { "a" to stringType() } })
+        subType(stringType())
+      }
     )
 
     // then
@@ -180,10 +186,10 @@ class PlainTextSerdeTest {
     // when
     val result = PlainTextSerde.deserialize(
       "test",
-      oneOfDataType(subTypes = listOf(
-        objectDataType(properties = mapOf("a" to stringDataType())),
-        objectDataType(properties = mapOf("b" to integerDataType()))
-      ))
+      oneOfType {
+        subType(objectType { properties { "a" to stringType() } })
+        subType(objectType { properties { "b" to integerType() } })
+      }
     )
 
     // then

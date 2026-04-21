@@ -3,7 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.integerDataType
+import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.normalize
 import java.math.BigDecimal
 
@@ -12,7 +12,7 @@ class IntegerDataTypeTest {
   @Test
   fun `validation succeeds when a value is of type Integer`() {
     // given
-    val integerDataType = integerDataType()
+    val integerDataType = integerType()
 
     // when
     val result = integerDataType.validate(123)
@@ -24,7 +24,7 @@ class IntegerDataTypeTest {
   @Test
   fun `validation succeeds when the value is a floating point with zero decimal part`() {
     // given
-    val integerDataType = integerDataType()
+    val integerDataType = integerType()
 
     // when
     val result = integerDataType.validate(1.0)
@@ -36,7 +36,7 @@ class IntegerDataTypeTest {
   @Test
   fun `validation fails when the value is a floating point with a non-zero decimal part`() {
     // given
-    val integerDataType = integerDataType()
+    val integerDataType = integerType()
 
     // when
     val result = integerDataType.validate(1.1)
@@ -48,7 +48,7 @@ class IntegerDataTypeTest {
   @Test
   fun `validation fails when the value is not a number`() {
     // given
-    val integerDataType = integerDataType()
+    val integerDataType = integerType()
 
     // when
     val result = integerDataType.validate(true)
@@ -60,7 +60,7 @@ class IntegerDataTypeTest {
   @Test
   fun `validation succeeds for a null value when nullable`() {
     // given
-    val integerDataType = integerDataType(isNullable = true)
+    val integerDataType = integerType(isNullable = true)
 
     // when
     val result = integerDataType.validate(null)
@@ -72,7 +72,7 @@ class IntegerDataTypeTest {
   @Test
   fun `validation fails for a null value when not nullable`() {
     // given
-    val integerDataType = integerDataType(isNullable = false)
+    val integerDataType = integerType(isNullable = false)
 
     // when
     val result = integerDataType.validate(null)
@@ -87,7 +87,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation succeeds when the value is included in the enum`() {
       // given
-      val integerDataType = integerDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
+      val integerDataType = integerType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
       // when
       val result = integerDataType.validate(1)
@@ -99,7 +99,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation fails when the value is not included in the enum`() {
       // given
-      val integerDataType = integerDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
+      val integerDataType = integerType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
       // when
       val result = integerDataType.validate(3)
@@ -112,7 +112,7 @@ class IntegerDataTypeTest {
     fun `generates valid random value with enum`() {
       // given
       val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
-      val integerDataType = integerDataType(enum = enum)
+      val integerDataType = integerType(enum = enum)
 
       // when
       val result = integerDataType.randomValue()!!
@@ -137,7 +137,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation succeeds when the value is within the range`() {
       // given
-      val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
+      val integerDataType = integerType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
       val result = integerDataType.validate(11)
@@ -149,7 +149,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation fails when the value is outside of the range`() {
       // given
-      val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
+      val integerDataType = integerType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
       val result = integerDataType.validate(30)
@@ -161,7 +161,7 @@ class IntegerDataTypeTest {
     @Test
     fun `generates a valid random value within the range`() {
       // given
-      val integerDataType = integerDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
+      val integerDataType = integerType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
       val result = integerDataType.randomValue()!!
@@ -173,7 +173,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation rejects value outside int32 range`() {
       // given
-      val integerDataType = integerDataType(
+      val integerDataType = integerType(
         minimum = Int.MIN_VALUE.toBigDecimal(),
         maximum = Int.MAX_VALUE.toBigDecimal()
       )
@@ -188,7 +188,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation accepts value within int32 range`() {
       // given
-      val integerDataType = integerDataType(
+      val integerDataType = integerType(
         minimum = Int.MIN_VALUE.toBigDecimal(),
         maximum = Int.MAX_VALUE.toBigDecimal()
       )
@@ -221,7 +221,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation succeeds when value is a multiple`() {
       // given
-      val integerDataType = integerDataType(multipleOf = 5.toBigDecimal())
+      val integerDataType = integerType(multipleOf = 5.toBigDecimal())
 
       // when
       val result = integerDataType.validate(15)
@@ -233,7 +233,7 @@ class IntegerDataTypeTest {
     @Test
     fun `validation fails when value is not a multiple`() {
       // given
-      val integerDataType = integerDataType(multipleOf = 5.toBigDecimal())
+      val integerDataType = integerType(multipleOf = 5.toBigDecimal())
 
       // when
       val result = integerDataType.validate(13)
@@ -245,7 +245,7 @@ class IntegerDataTypeTest {
     @Test
     fun `generates random value that is a multiple`() {
       // given
-      val integerDataType = integerDataType(
+      val integerDataType = integerType(
         minimum = 0.toBigDecimal(),
         maximum = 100.toBigDecimal(),
         multipleOf = 7.toBigDecimal()

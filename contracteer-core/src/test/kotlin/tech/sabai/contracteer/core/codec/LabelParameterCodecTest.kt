@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectDataType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
@@ -48,7 +48,7 @@ class LabelParameterCodecTest {
     val extractor = valueExtractor("color" to listOf(".blue"))
 
     // when
-    val result = LabelParameterCodec("color", explode = false).decode(extractor, stringDataType())
+    val result = LabelParameterCodec("color", explode = false).decode(extractor, stringType())
 
     // then
     assert(result.assertSuccess() =="blue")
@@ -60,7 +60,7 @@ class LabelParameterCodecTest {
     val extractor = valueExtractor("color" to listOf(".blue,black,brown"))
 
     // when
-    val result = LabelParameterCodec("color", explode = false).decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = LabelParameterCodec("color", explode = false).decode(extractor, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -72,7 +72,7 @@ class LabelParameterCodecTest {
     val extractor = valueExtractor("color" to listOf(".blue.black.brown"))
 
     // when
-    val result = LabelParameterCodec("color", explode = true).decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = LabelParameterCodec("color", explode = true).decode(extractor, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -111,7 +111,7 @@ class LabelParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = LabelParameterCodec("color", explode = false).decode(valueExtractor(), stringDataType())
+    val result = LabelParameterCodec("color", explode = false).decode(valueExtractor(), stringType())
 
     // then
     assert(result.assertSuccess() ==null)
@@ -123,7 +123,7 @@ class LabelParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue"))
 
     // when
-    val result = LabelParameterCodec("color", explode = false).decode(extractor, stringDataType())
+    val result = LabelParameterCodec("color", explode = false).decode(extractor, stringType())
 
     // then
     assert(result.isFailure())

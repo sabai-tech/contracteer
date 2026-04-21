@@ -1,10 +1,10 @@
 package tech.sabai.contracteer.core.serde
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
 import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde.PropertyEncoding
@@ -68,7 +68,12 @@ class FormUrlEncodedSerdeTest {
   fun `deserialize object with primitive properties`() {
     // given
     val serde = formUrlEncodedSerde("name", "age")
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType(), "age" to integerDataType()))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "age" to integerType()
+      }
+    }
 
     // when
     val result = serde.deserialize("name=John&age=30", dataType)
@@ -83,10 +88,12 @@ class FormUrlEncodedSerdeTest {
   fun `deserialize object with array property using default encoding`() {
     // given
     val serde = formUrlEncodedSerde("name", "colors")
-    val dataType = objectDataType(properties = mapOf(
-      "name" to stringDataType(),
-      "colors" to arrayDataType(itemDataType = stringDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "colors" to arrayType(items = stringType())
+      }
+    }
 
     // when
     val result = serde.deserialize("name=John&colors=blue&colors=black", dataType)
@@ -104,10 +111,12 @@ class FormUrlEncodedSerdeTest {
       "name" to PropertyEncoding(FormParameterCodec("name", explode = true)),
       "colors" to PropertyEncoding(PipeDelimitedParameterCodec("colors"))
     ))
-    val dataType = objectDataType(properties = mapOf(
-      "name" to stringDataType(),
-      "colors" to arrayDataType(itemDataType = stringDataType())
-    ))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "colors" to arrayType(items = stringType())
+      }
+    }
 
     // when
     val result = serde.deserialize("name=John&colors=blue|black", dataType)
@@ -122,7 +131,12 @@ class FormUrlEncodedSerdeTest {
   fun `deserialize URL-decodes special characters in values`() {
     // given
     val serde = formUrlEncodedSerde("name", "city")
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType(), "city" to stringDataType()))
+    val dataType = objectType {
+      properties {
+        "name" to stringType()
+        "city" to stringType()
+      }
+    }
 
     // when
     val result = serde.deserialize("name=John+Doe&city=New+York", dataType)
@@ -167,7 +181,7 @@ class FormUrlEncodedSerdeTest {
   fun `deserialize returns null for null source`() {
     // given
     val serde = formUrlEncodedSerde("name")
-    val dataType = objectDataType(properties = mapOf("name" to stringDataType()))
+    val dataType = objectType { properties { "name" to stringType() } }
 
     // when
     val result = serde.deserialize(null, dataType)

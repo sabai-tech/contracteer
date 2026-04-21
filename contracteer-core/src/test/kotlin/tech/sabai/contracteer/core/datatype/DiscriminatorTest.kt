@@ -1,11 +1,11 @@
 package tech.sabai.contracteer.core.datatype
 
-import tech.sabai.contracteer.core.TestFixture.allOfDataType
-import tech.sabai.contracteer.core.TestFixture.anyOfDataType
-import tech.sabai.contracteer.core.TestFixture.numberDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.oneOfDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.allOfType
+import tech.sabai.contracteer.core.dsl.anyOfType
+import tech.sabai.contracteer.core.dsl.numberType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.oneOfType
+import tech.sabai.contracteer.core.dsl.stringType
 import kotlin.test.Test
 
 class DiscriminatorTest {
@@ -16,7 +16,7 @@ class DiscriminatorTest {
     val discriminator = Discriminator("type")
 
     // when
-    val result = discriminator.validate(stringDataType())
+    val result = discriminator.validate(stringType())
 
     // then
     assert(result.isFailure())
@@ -27,9 +27,9 @@ class DiscriminatorTest {
   fun `validation fails when discriminator property is not a required property`() {
     // given
     val discriminator = Discriminator("type")
-    val objectDataType = objectDataType(
-      properties = mapOf("type" to stringDataType()),
-    )
+    val objectDataType = objectType {
+      properties { "type" to stringType() }
+    }
 
     // when
     val result = discriminator.validate(objectDataType)
@@ -43,10 +43,10 @@ class DiscriminatorTest {
   fun `validation fails when object does not contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val objectDataType = objectDataType(
-      properties = mapOf("prop1" to stringDataType()),
-      requiredProperties = setOf("prop1")
-    )
+    val objectDataType = objectType {
+      properties { "prop1" to stringType() }
+      required("prop1")
+    }
 
     // when
     val result = discriminator.validate(objectDataType)
@@ -60,10 +60,10 @@ class DiscriminatorTest {
   fun `validation fails when discriminator property is not of type string`() {
     // given
     val discriminator = Discriminator("type")
-    val objectDataType = objectDataType(
-      properties = mapOf("type" to numberDataType()),
-      requiredProperties = setOf("type")
-    )
+    val objectDataType = objectType {
+      properties { "type" to numberType() }
+      required("type")
+    }
 
     // when
     val result = discriminator.validate(objectDataType)
@@ -77,10 +77,10 @@ class DiscriminatorTest {
   fun `validation succeeds when object has property matching discriminator property name and type`() {
     // given
     val discriminator = Discriminator("type")
-    val objectDataType = objectDataType(
-      properties = mapOf("type" to stringDataType()),
-      requiredProperties = setOf("type")
-    )
+    val objectDataType = objectType {
+      properties { "type" to stringType() }
+      required("type")
+    }
 
     // when
     val result = discriminator.validate(objectDataType)
@@ -93,16 +93,16 @@ class DiscriminatorTest {
   fun `validations fails when AllOfDataType has duplicated discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val allOfDataType = allOfDataType(
-      subTypes = listOf(
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        ),
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        )))
+    val allOfDataType = allOfType {
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+    }
 
     // when
     val result = discriminator.validate(allOfDataType)
@@ -116,16 +116,16 @@ class DiscriminatorTest {
   fun `validations succeeds when AllOfDataType has only one discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val allOfDataType = allOfDataType(
-      subTypes = listOf(
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        ),
-        objectDataType(
-          properties = mapOf("prop" to stringDataType()),
-          requiredProperties = setOf("prop")
-        )))
+    val allOfDataType = allOfType {
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+      subType(objectType {
+        properties { "prop" to stringType() }
+        required("prop")
+      })
+    }
 
     // when
     val result = discriminator.validate(allOfDataType)
@@ -138,16 +138,16 @@ class DiscriminatorTest {
   fun `validations fails when all sub datatype of AnyOfDataType does not contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val anyOfDataType = anyOfDataType(
-      subTypes = listOf(
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        ),
-        objectDataType(
-          properties = mapOf("prop" to stringDataType()),
-          requiredProperties = setOf("prop")
-        )))
+    val anyOfDataType = anyOfType {
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+      subType(objectType {
+        properties { "prop" to stringType() }
+        required("prop")
+      })
+    }
 
     // when
     val result = discriminator.validate(anyOfDataType)
@@ -161,16 +161,16 @@ class DiscriminatorTest {
   fun `validations succeeds when all sub datatype of AnyOfDataType contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val anyOfDataType = anyOfDataType(
-      subTypes = listOf(
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        ),
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        )))
+    val anyOfDataType = anyOfType {
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+    }
 
     // when
     val result = discriminator.validate(anyOfDataType)
@@ -183,16 +183,16 @@ class DiscriminatorTest {
   fun `validations fails when all sub datatype of OneOfDataType does not contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val oneOfDataType = oneOfDataType(
-      subTypes = listOf(
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        ),
-        objectDataType(
-          properties = mapOf("prop" to stringDataType()),
-          requiredProperties = setOf("prop")
-        )))
+    val oneOfDataType = oneOfType {
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+      subType(objectType {
+        properties { "prop" to stringType() }
+        required("prop")
+      })
+    }
 
     // when
     val result = discriminator.validate(oneOfDataType)
@@ -206,16 +206,16 @@ class DiscriminatorTest {
   fun `validations succeeds when all sub datatype of OneOfDataType contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
-    val oneOfDataType = oneOfDataType(
-      subTypes = listOf(
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        ),
-        objectDataType(
-          properties = mapOf("type" to stringDataType()),
-          requiredProperties = setOf("type")
-        )))
+    val oneOfDataType = oneOfType {
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+      subType(objectType {
+        properties { "type" to stringType() }
+        required("type")
+      })
+    }
 
     // when
     val result = discriminator.validate(oneOfDataType)

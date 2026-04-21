@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.swagger
 
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.normalize
@@ -21,7 +21,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -36,7 +36,7 @@ class ScenarioBuilderTest {
         bodies = listOf(ExtractedBodySchema(
           schema = BodySchema(
             contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType())),
+            dataType = objectType { properties { "id" to integerType(); "name" to stringType() } },
             isRequired = false,
             serde = jsonSerde
           ),
@@ -48,7 +48,7 @@ class ScenarioBuilderTest {
         bodies = listOf(ExtractedBodySchema(
           schema = BodySchema(
             contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+            dataType = objectType { properties { "error" to stringType() } },
             isRequired = false,
             serde = jsonSerde
           ),
@@ -89,7 +89,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -107,7 +107,7 @@ class ScenarioBuilderTest {
 
   @Test
   fun `creates cartesian product of request and response content types`() {
-    val productType = objectDataType(properties = mapOf("id" to integerDataType()))
+    val productType = objectType { properties { "id" to integerType() } }
     val request = ExtractedRequestSchema(
       parameters = emptyList(),
       bodies = listOf(
@@ -144,7 +144,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -159,7 +159,7 @@ class ScenarioBuilderTest {
         bodies = listOf(ExtractedBodySchema(
           schema = BodySchema(
             contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+            dataType = objectType { properties { "error" to stringType() } },
             isRequired = false,
             serde = jsonSerde
           ),
@@ -182,7 +182,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -197,7 +197,7 @@ class ScenarioBuilderTest {
         bodies = listOf(ExtractedBodySchema(
           schema = BodySchema(
             contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType())),
+            dataType = objectType { properties { "id" to integerType() } },
             isRequired = false,
             serde = jsonSerde
           ),
@@ -218,7 +218,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -234,7 +234,7 @@ class ScenarioBuilderTest {
         bodies = listOf(ExtractedBodySchema(
           schema = BodySchema(
             contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("error" to stringDataType())),
+            dataType = objectType { properties { "error" to stringType() } },
             isRequired = false,
             serde = jsonSerde
           ),
@@ -259,7 +259,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -285,7 +285,7 @@ class ScenarioBuilderTest {
         ExtractedParameterSchema(
           schema = ParameterSchema(
             element = ParameterElement.PathParam("id"),
-            dataType = integerDataType(),
+            dataType = integerType(),
             isRequired = true,
             codec = SimpleParameterCodec("id", false)
           ),
@@ -306,7 +306,7 @@ class ScenarioBuilderTest {
 
   @Test
   fun `includes request body example in scenario`() {
-    val productType = objectDataType(properties = mapOf("id" to integerDataType(), "name" to stringDataType()))
+    val productType = objectType { properties { "id" to integerType(); "name" to stringType() } }
     val request = ExtractedRequestSchema(
       parameters = emptyList(),
       bodies = listOf(ExtractedBodySchema(

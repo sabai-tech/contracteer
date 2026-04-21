@@ -3,14 +3,14 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.binaryDataType
+import tech.sabai.contracteer.core.dsl.binaryType
 
 class BinaryDataTypeTest {
 
   @Test
   fun `validates a value of type string`() {
     // given
-    val binaryDataType = binaryDataType()
+    val binaryDataType = binaryType()
 
     // when
     val result = binaryDataType.validate("aë<â¿á$(")
@@ -22,7 +22,7 @@ class BinaryDataTypeTest {
   @Test
   fun `generates HTTP-safe random values`() {
     // given
-    val binaryDataType = binaryDataType(minLength = 10, maxLength = 50)
+    val binaryDataType = binaryType(minLength = 10, maxLength = 50)
 
     // when
     val result = binaryDataType.randomValue()!!
@@ -34,7 +34,7 @@ class BinaryDataTypeTest {
   @Test
   fun `does not validate value whose type is not string`() {
     // given
-    val binaryDataType = binaryDataType()
+    val binaryDataType = binaryType()
 
     // when
     val result = binaryDataType.validate(true)
@@ -82,7 +82,7 @@ class BinaryDataTypeTest {
     @Test
     fun `validates a string with enum values`() {
       // given
-      val binaryDataType = binaryDataType(enum = listOf("aë<â¿á$(", "î¯X[äjr~H"))
+      val binaryDataType = binaryType(enum = listOf("aë<â¿á$(", "î¯X[äjr~H"))
 
       // when
       val result = binaryDataType.validate("aë<â¿á$(")
@@ -94,7 +94,7 @@ class BinaryDataTypeTest {
     @Test
     fun `does not validate a string with enum values`() {
       // given
-      val binaryDataType = binaryDataType(enum = listOf("aë<â¿á$(", "î¯X[äjr~H"))
+      val binaryDataType = binaryType(enum = listOf("aë<â¿á$(", "î¯X[äjr~H"))
 
       // when
       val result = binaryDataType.validate("âÙæÅç*,¸é")
@@ -107,7 +107,7 @@ class BinaryDataTypeTest {
     fun `generates random value with enum values`() {
       // given
       val enum = listOf("aë<â¿á$(", "î¯X[äjr~H")
-      val binaryDataType = binaryDataType(enum = enum)
+      val binaryDataType = binaryType(enum = enum)
 
       // when
       val result = binaryDataType.randomValue()!!
@@ -132,7 +132,7 @@ class BinaryDataTypeTest {
     @Test
     fun `does not validate when value length is not in the range`() {
       // given
-      val binaryDataType = binaryDataType(minLength = 1, maxLength = 5)
+      val binaryDataType = binaryType(minLength = 1, maxLength = 5)
 
       // when
       val result = binaryDataType.validate("âÙæÅç*,¸éî¯X[äjr~H")
@@ -144,7 +144,7 @@ class BinaryDataTypeTest {
     @Test
     fun `validates when value length is in the range`() {
       // given
-      val binaryDataType = binaryDataType(minLength = 1, maxLength = 30)
+      val binaryDataType = binaryType(minLength = 1, maxLength = 30)
 
       // when
       val result = binaryDataType.validate("âÙæÅç*,¸éî¯X[äjr~H")
@@ -156,7 +156,7 @@ class BinaryDataTypeTest {
     @Test
     fun `generates random value with length inside the range`() {
       // given
-      val binaryDataType = binaryDataType(minLength = 1, maxLength = 5)
+      val binaryDataType = binaryType(minLength = 1, maxLength = 5)
 
       // when
       val result = binaryDataType.randomValue()!!

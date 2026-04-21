@@ -3,15 +3,15 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.emailDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.emailType
+import tech.sabai.contracteer.core.dsl.stringType
 
 class EmailDataTypeTest {
 
   @Test
   fun `validates a value of type string representing an email address`() {
     // given
-    val emailDataType = emailDataType()
+    val emailDataType = emailType()
 
     // when
     val result = emailDataType.validate("john@example.com")
@@ -23,7 +23,7 @@ class EmailDataTypeTest {
   @Test
   fun `does not validate string value which does not represent an email address`() {
     // given
-    val emailDataType = emailDataType()
+    val emailDataType = emailType()
 
     // when
     val result = emailDataType.validate("john doe @example")
@@ -35,7 +35,7 @@ class EmailDataTypeTest {
   @Test
   fun `validates null value if it is nullable`() {
     // given
-    val emailDataType = emailDataType(isNullable = true)
+    val emailDataType = emailType(isNullable = true)
 
     // when
     val result = emailDataType.validate(null)
@@ -47,7 +47,7 @@ class EmailDataTypeTest {
   @Test
   fun `does not validate null value if it is not nullable`() {
     // given
-    val emailDataType = emailDataType(isNullable = false)
+    val emailDataType = emailType(isNullable = false)
 
     // when
     val result = emailDataType.validate(null)
@@ -59,7 +59,7 @@ class EmailDataTypeTest {
   @Test
   fun `should generate a string representing an email address`() {
       // given
-      val emailDataType = emailDataType()
+      val emailDataType = emailType()
 
       // when
       val randomEmail = emailDataType.randomValue()!!
@@ -73,7 +73,7 @@ class EmailDataTypeTest {
     @Test
     fun `validates a string representing an email with enum values`() {
       // given
-      val emailDataType = emailDataType(enum = listOf("john@example.com", "jane@example.com"))
+      val emailDataType = emailType(enum = listOf("john@example.com", "jane@example.com"))
 
       // when
       val result = emailDataType.validate("john@example.com")
@@ -85,7 +85,7 @@ class EmailDataTypeTest {
     @Test
     fun `does not validate a string representing an email with enum values`() {
       // given
-      val emailDataType = emailDataType(enum = listOf("john@example.com", "ane@example.com"))
+      val emailDataType = emailType(enum = listOf("john@example.com", "ane@example.com"))
 
       // when
       val result = emailDataType.validate("john@jane.doe")
@@ -98,7 +98,7 @@ class EmailDataTypeTest {
     fun `generates random value with enum values`() {
       // given
       val enum = listOf("john@example.com", "ane@example.com")
-      val emailDataType = emailDataType(enum = enum)
+      val emailDataType = emailType(enum = enum)
 
       // when
       val result = emailDataType.randomValue()!!
@@ -140,7 +140,7 @@ class EmailDataTypeTest {
     @Test
     fun `does not validate when value length is not in the range`() {
       // given
-      val emailDataType = emailDataType(minLength = 6, maxLength = 7)
+      val emailDataType = emailType(minLength = 6, maxLength = 7)
 
       // when
       val result = emailDataType.validate("john@example.com")
@@ -152,7 +152,7 @@ class EmailDataTypeTest {
     @Test
     fun `validates when value length is in the range`() {
       // given
-      val emailDataType = emailDataType(minLength = 6, maxLength = 150)
+      val emailDataType = emailType(minLength = 6, maxLength = 150)
 
       // when
       val result = emailDataType.validate("john@example.com")
@@ -164,7 +164,7 @@ class EmailDataTypeTest {
     @Test
     fun `generates random value with length inside the range`() {
       // given
-      val stringDataType = stringDataType(minLength = 6, maxLength = 10)
+      val stringDataType = stringType(minLength = 6, maxLength = 10)
 
       // when
       val result = stringDataType.randomValue()!!

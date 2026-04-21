@@ -1,9 +1,9 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.stringType
 
 class ProxyDataTypeTest {
 
@@ -12,13 +12,12 @@ class ProxyDataTypeTest {
   fun `randomValue produces finite value for self-referencing object`() {
     // given
     val proxy = ProxyDataType("Person")
-    val person = objectDataType(
-      name = "Person",
-      properties = mapOf(
-        "name" to stringDataType(),
+    val person = objectType(name = "Person") {
+      properties {
+        "name" to stringType()
         "friend" to proxy
-      )
-    )
+      }
+    }
     proxy.delegate = person
 
     // when
@@ -40,20 +39,18 @@ class ProxyDataTypeTest {
     val personProxy = ProxyDataType("Person")
     val addressProxy = ProxyDataType("Address")
 
-    val person = objectDataType(
-      name = "Person",
-      properties = mapOf(
-        "name" to stringDataType(),
+    val person = objectType(name = "Person") {
+      properties {
+        "name" to stringType()
         "address" to addressProxy
-      )
-    )
-    val address = objectDataType(
-      name = "Address",
-      properties = mapOf(
-        "street" to stringDataType(),
+      }
+    }
+    val address = objectType(name = "Address") {
+      properties {
+        "street" to stringType()
         "resident" to personProxy
-      )
-    )
+      }
+    }
     addressProxy.delegate = address
     personProxy.delegate = person
 
@@ -74,15 +71,14 @@ class ProxyDataTypeTest {
   fun `randomValue generates empty array for required non-nullable recursive array property`() {
     // given — models the api2cart sub-conditions pattern
     val proxy = ProxyDataType("Condition")
-    val conditionArray = arrayDataType(itemDataType = proxy)
-    val condition = objectDataType(
-      name = "Condition",
-      properties = mapOf(
-        "type" to stringDataType(),
+    val conditionArray = arrayType(items = proxy)
+    val condition = objectType(name = "Condition") {
+      properties {
+        "type" to stringType()
         "sub-conditions" to conditionArray
-      ),
-      requiredProperties = setOf("type", "sub-conditions")
-    )
+      }
+      required("type", "sub-conditions")
+    }
     proxy.delegate = condition
 
     // when
@@ -104,25 +100,22 @@ class ProxyDataTypeTest {
   fun `randomValue keeps null for nullable recursive property at cycle boundary`() {
     // given
     val proxy = ProxyDataType("Node")
-    val nullableNode = objectDataType(
-      name = "Node",
-      properties = mapOf(
-        "value" to stringDataType(),
+    val nullableNode = objectType(name = "Node", isNullable = true) {
+      properties {
+        "value" to stringType()
         "next" to proxy
-      ),
-      requiredProperties = setOf("value", "next"),
-      isNullable = true
-    )
+      }
+      required("value", "next")
+    }
     proxy.delegate = nullableNode
 
-    val node = objectDataType(
-      name = "Node",
-      properties = mapOf(
-        "value" to stringDataType(),
+    val node = objectType(name = "Node") {
+      properties {
+        "value" to stringType()
         "next" to proxy
-      ),
-      requiredProperties = setOf("value", "next")
-    )
+      }
+      required("value", "next")
+    }
 
     // when
     val value = node.randomValue().asMap()

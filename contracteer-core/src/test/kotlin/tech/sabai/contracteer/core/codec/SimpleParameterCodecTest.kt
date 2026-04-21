@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectDataType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
@@ -40,7 +40,7 @@ class SimpleParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(extractor, stringDataType())
+    val result = SimpleParameterCodec("color", explode = false).decode(extractor, stringType())
 
     // then
     assert(result.assertSuccess() =="blue")
@@ -52,7 +52,7 @@ class SimpleParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue,black,brown"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = SimpleParameterCodec("color", explode = false).decode(extractor, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -64,7 +64,7 @@ class SimpleParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue,black,brown"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = true).decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = SimpleParameterCodec("color", explode = true).decode(extractor, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -103,7 +103,7 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(valueExtractor(), stringDataType())
+    val result = SimpleParameterCodec("color", explode = false).decode(valueExtractor(), stringType())
 
     // then
     assert(result.assertSuccess() ==null)

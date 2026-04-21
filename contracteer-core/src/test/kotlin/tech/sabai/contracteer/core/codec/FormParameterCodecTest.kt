@@ -1,8 +1,8 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
-import tech.sabai.contracteer.core.TestFixture.arrayDataType
-import tech.sabai.contracteer.core.TestFixture.stringDataType
+import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectDataType
 import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
@@ -44,7 +44,7 @@ class FormParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue"))
 
     // when
-    val result = FormParameterCodec("color", explode = false).decode(extractor, stringDataType())
+    val result = FormParameterCodec("color", explode = false).decode(extractor, stringType())
 
     // then
     assert(result.assertSuccess() =="blue")
@@ -56,7 +56,7 @@ class FormParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue,black,brown"))
 
     // when
-    val result = FormParameterCodec("color", explode = false).decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = FormParameterCodec("color", explode = false).decode(extractor, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -68,7 +68,7 @@ class FormParameterCodecTest {
     val extractor = valueExtractor("color" to listOf("blue", "black", "brown"))
 
     // when
-    val result = FormParameterCodec("color", explode = true).decode(extractor, arrayDataType(itemDataType = stringDataType()))
+    val result = FormParameterCodec("color", explode = true).decode(extractor, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -107,7 +107,7 @@ class FormParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = FormParameterCodec("color", explode = false).decode(valueExtractor(), stringDataType())
+    val result = FormParameterCodec("color", explode = false).decode(valueExtractor(), stringType())
 
     // then
     assert(result.assertSuccess() ==null)

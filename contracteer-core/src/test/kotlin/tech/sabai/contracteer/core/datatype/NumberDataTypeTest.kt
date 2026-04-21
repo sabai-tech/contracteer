@@ -3,7 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.TestFixture.numberDataType
+import tech.sabai.contracteer.core.dsl.numberType
 import tech.sabai.contracteer.core.normalize
 import java.math.BigDecimal
 
@@ -12,7 +12,7 @@ class NumberDataTypeTest {
   @Test
   fun `validation succeeds for a decimal value`() {
     // given
-    val numberDataType = numberDataType()
+    val numberDataType = numberType()
 
     // when
     val result = numberDataType.validate(123.45)
@@ -24,7 +24,7 @@ class NumberDataTypeTest {
   @Test
   fun `validation succeeds for an integer value`() {
     // given
-    val numberDataType = numberDataType()
+    val numberDataType = numberType()
 
     // when
     val result = numberDataType.validate(123)
@@ -36,7 +36,7 @@ class NumberDataTypeTest {
   @Test
   fun `validation fails for a value which is not a number`() {
     // given
-    val numberDataType = numberDataType()
+    val numberDataType = numberType()
 
     // when
     val result = numberDataType.validate(true)
@@ -48,7 +48,7 @@ class NumberDataTypeTest {
   @Test
   fun `validation succeeds for a null value when nullable`() {
     // given
-    val numberDataType = numberDataType(isNullable = true)
+    val numberDataType = numberType(isNullable = true)
 
     // when
     val result = numberDataType.validate(null)
@@ -60,7 +60,7 @@ class NumberDataTypeTest {
   @Test
   fun `validation fails for a null value when not nullable`() {
     // given
-    val numberDataType = numberDataType(isNullable = false)
+    val numberDataType = numberType(isNullable = false)
 
     // when
     val result = numberDataType.validate(null)
@@ -75,7 +75,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation succeeds when the value is included in the enum`() {
       // given
-      val numberDataType = numberDataType(enum = listOf(1.1.toBigDecimal(), 2.2.toBigDecimal()))
+      val numberDataType = numberType(enum = listOf(1.1.toBigDecimal(), 2.2.toBigDecimal()))
 
       // when
       val result = numberDataType.validate(1.1)
@@ -87,7 +87,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation fails when the value is not included in the enum`() {
       // given
-      val numberDataType = numberDataType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
+      val numberDataType = numberType(enum = listOf(1.toBigDecimal(), 2.toBigDecimal()))
 
       // when
       val result = numberDataType.validate(3)
@@ -100,7 +100,7 @@ class NumberDataTypeTest {
     fun `generates valid random value with enum`() {
       // given
       val enum = listOf(1.toBigDecimal(), 2.toBigDecimal())
-      val numberDataType = numberDataType(enum = enum)
+      val numberDataType = numberType(enum = enum)
 
       // when
       val result = numberDataType.randomValue()!!
@@ -116,7 +116,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation succeeds when the value is within the range`() {
       // given
-      val numberDataType = numberDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
+      val numberDataType = numberType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
       val result = numberDataType.validate(11)
@@ -128,7 +128,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation fails when the value is outside of the range`() {
       // given
-      val numberDataType = numberDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
+      val numberDataType = numberType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
       val result = numberDataType.validate(30)
@@ -140,7 +140,7 @@ class NumberDataTypeTest {
     @Test
     fun `generates a valid random value within the range`() {
       // given
-      val numberDataType = numberDataType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
+      val numberDataType = numberType(minimum = 10.toBigDecimal(), maximum = 20.toBigDecimal())
 
       // when
       val result = numberDataType.randomValue()!!
@@ -152,7 +152,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation rejects value outside float range`() {
       // given
-      val numberDataType = numberDataType(
+      val numberDataType = numberType(
         minimum = Float.MAX_VALUE.toBigDecimal().negate(),
         maximum = Float.MAX_VALUE.toBigDecimal()
       )
@@ -167,7 +167,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation accepts value within float range`() {
       // given
-      val numberDataType = numberDataType(
+      val numberDataType = numberType(
         minimum = Float.MAX_VALUE.toBigDecimal().negate(),
         maximum = Float.MAX_VALUE.toBigDecimal()
       )
@@ -200,7 +200,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation succeeds when value is a multiple`() {
       // given
-      val numberDataType = numberDataType(multipleOf = 0.01.toBigDecimal())
+      val numberDataType = numberType(multipleOf = 0.01.toBigDecimal())
 
       // when
       val result = numberDataType.validate(1.23)
@@ -212,7 +212,7 @@ class NumberDataTypeTest {
     @Test
     fun `validation fails when value is not a multiple`() {
       // given
-      val numberDataType = numberDataType(multipleOf = 0.01.toBigDecimal())
+      val numberDataType = numberType(multipleOf = 0.01.toBigDecimal())
 
       // when
       val result = numberDataType.validate(1.234)
@@ -224,7 +224,7 @@ class NumberDataTypeTest {
     @Test
     fun `generates random value that is a multiple`() {
       // given
-      val numberDataType = numberDataType(
+      val numberDataType = numberType(
         minimum = 0.toBigDecimal(),
         maximum = 10.toBigDecimal(),
         multipleOf = 0.5.toBigDecimal()
