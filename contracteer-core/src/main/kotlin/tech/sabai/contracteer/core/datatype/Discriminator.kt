@@ -49,7 +49,7 @@ data class Discriminator(
 
   private fun validateObjectDataType(dataType: ObjectDataType) =
     when {
-      !dataType.requiredProperties.contains(propertyName)  -> failure("discriminator property '$propertyName' must be defined as required in the schema.")
+      dataType.properties[propertyName] == null            -> failure("discriminator property '$propertyName' must be defined on the schema.")
       dataType.properties[propertyName] !is StringDataType -> failure("discriminator property '$propertyName' must be of type 'string' but found '${dataType.properties[propertyName]!!.openApiType}'")
       else                                                 -> success(dataType)
     }

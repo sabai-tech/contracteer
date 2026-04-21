@@ -210,10 +210,73 @@ class AnyOfDataTypeTest {
     }
 
     @Test
+    fun `validation falls back to plain matching when discriminator property is absent`() {
+      // given
+      val anyOfDataType = anyOfType {
+        subType(objectType(name = "dog") {
+          properties {
+            "barks" to booleanType()
+            "type" to stringType()
+          }
+          required("barks")
+        })
+        subType(objectType(name = "cat") {
+          properties {
+            "hunts" to booleanType()
+            "type" to stringType()
+          }
+          required("hunts")
+        })
+        discriminator("type")
+      }
+
+      // when
+      val result = anyOfDataType.validate(mapOf("barks" to true))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation falls back to plain matching when discriminator property is not a string`() {
+      // given
+      val anyOfDataType = anyOfType {
+        subType(dog)
+        subType(cat)
+        discriminator("type")
+      }
+
+      // when — discriminator value is not a string; fallback produces no-matching-schema error
+      val result = anyOfDataType.validate(mapOf("type" to 42, "barks" to true))
+
+      // then
+      assert(result.isFailure())
+      assert(result.errors().first().contains("No matching schema"))
+    }
+
+    @Test
+    fun `validation fails with clear error when discriminator value does not match any mapping`() {
+      // given
+      val anyOfDataType = anyOfType {
+        subType(dog)
+        subType(cat)
+        discriminator("type") { mapping("DOG", "dog") }
+      }
+
+      // when
+      val result = anyOfDataType.validate(mapOf("type" to "FISH", "barks" to true))
+
+      // then
+      assert(result.isFailure())
+      assert(result.errors().first().contains("No schema found for discriminator"))
+    }
+
+    @Test
     fun `generates random valid value with discriminator`() {
       // given
       val anyOfDataType = anyOfType {
-        subType(dog); subType(cat)
+        subType(dog)
+        subType(cat)
         discriminator("type")
       }
 

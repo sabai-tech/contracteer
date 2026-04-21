@@ -81,16 +81,16 @@ class AllOfDataType private constructor(name: String,
     return discriminator?.let { randomValue + (it.propertyName to it.getMappingName(name)) } ?: randomValue
   }
 
-  private fun validateDiscriminator(value: Any): Result<Any> =
-    when {
-      value !is Map<*, *>                                                                   -> failure("Discriminator requires an object value")
-      value[discriminator!!.propertyName] == null                                           -> failure("Discriminator property '${discriminator.propertyName}' is required")
-      value[discriminator.propertyName] !is String                                          -> failure("Discriminator property '${discriminator.propertyName}' must be of type 'string'")
-      discriminator.getDataTypeNameFor(value[discriminator.propertyName] as String) != name -> failure(
+  private fun validateDiscriminator(value: Any): Result<Any> {
+    val discriminatorValue = (value as? Map<*, *>)?.get(discriminator!!.propertyName)
+    return when {
+      discriminatorValue !is String -> success(value)
+      discriminator.getDataTypeNameFor(discriminatorValue) != name -> failure(
         "Invalid value for discriminator property '${discriminator.propertyName}'. " +
-        "Expected '${discriminator.getMappingName(name)}', but found '${value[discriminator.propertyName]}'.")
-      else                                                                                  -> success(value)
+        "Expected '${discriminator.getMappingName(name)}', but found '$discriminatorValue'.")
+      else -> success(value)
     }
+  }
 
   private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Any> {
     val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()

@@ -51,14 +51,13 @@ class AnyOfDataType private constructor(name: String,
     }
   }
 
-  private fun validateWithDiscriminator(value: Any) =
-    when {
-      value !is Map<*, *>                          -> failure("Wrong type, expected 'object' type")
-      value[discriminator!!.propertyName] == null  -> failure("discriminator property '${discriminator.propertyName}' is required")
-      value[discriminator.propertyName] !is String -> failure("discriminator property '${discriminator.propertyName}' must be of type 'string'")
-      else                                         ->
-        dataTypeFrom(value[discriminator.propertyName] as String).flatMap { it.validate(value) }.map { value }
-    }
+  private fun validateWithDiscriminator(value: Any): Result<Any> {
+    val discriminatorValue = (value as? Map<*, *>)?.get(discriminator!!.propertyName)
+    return if (discriminatorValue is String)
+      dataTypeFrom(discriminatorValue).flatMap { it.validate(value) }.map { value }
+    else
+      validateWithoutDiscriminator(value)
+  }
 
   private fun dataTypeFrom(discriminatorValue: String): Result<DataType<out Any>> =
     subTypes.firstOrNull { it.name == discriminator!!.getDataTypeNameFor(discriminatorValue) }

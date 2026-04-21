@@ -24,7 +24,7 @@ class DiscriminatorTest {
   }
 
   @Test
-  fun `validation fails when discriminator property is not a required property`() {
+  fun `validation succeeds when discriminator property exists but is not declared as required`() {
     // given
     val discriminator = Discriminator("type")
     val objectDataType = objectType {
@@ -35,8 +35,7 @@ class DiscriminatorTest {
     val result = discriminator.validate(objectDataType)
 
     // then
-    assert(result.isFailure())
-    assert(result.errors().first().contains("'type' must be defined as required"))
+    assert(result.isSuccess())
   }
 
   @Test
@@ -53,7 +52,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' must be defined as required"))
+    assert(result.errors().first().contains("'type' must be defined on the schema"))
   }
 
   @Test
@@ -135,7 +134,7 @@ class DiscriminatorTest {
   }
 
   @Test
-  fun `validations fails when all sub datatype of AnyOfDataType does not contain discriminator property`() {
+  fun `validations fails when one sub datatype of AnyOfDataType does not contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
     val anyOfDataType = anyOfType {
@@ -154,7 +153,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' must be defined as required"))
+    assert(result.errors().first().contains("'type' must be defined on the schema"))
   }
 
   @Test
@@ -180,7 +179,7 @@ class DiscriminatorTest {
   }
 
   @Test
-  fun `validations fails when all sub datatype of OneOfDataType does not contain discriminator property`() {
+  fun `validations fails when one sub datatype of OneOfDataType does not contain discriminator property`() {
     // given
     val discriminator = Discriminator("type")
     val oneOfDataType = oneOfType {
@@ -199,7 +198,7 @@ class DiscriminatorTest {
 
     // then
     assert(result.isFailure())
-    assert(result.errors().first().contains("'type' must be defined as required"))
+    assert(result.errors().first().contains("'type' must be defined on the schema"))
   }
 
   @Test

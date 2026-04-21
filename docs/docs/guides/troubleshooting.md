@@ -94,6 +94,24 @@ Without `required` properties, `additionalProperties: false`, or a `discriminato
 Add `required` properties unique to each variant, set `additionalProperties: false`, or use a `discriminator`.
 Without these constraints, `oneOf` is effectively `anyOf` and strict validation cannot determine which variant matched.
 
+### "No schema found for discriminator"
+
+**Symptom:** The verifier or mock server rejects a payload with "No schema found for discriminator property 'X' with value: Y".
+
+**Cause:** The payload's discriminator value (`Y`) is not listed in the discriminator's `mapping` and does not match the name of any sub-schema.
+
+**Fix:** Either add the value to the `mapping`, or change the payload to use a value that is already mapped or matches an existing schema name.
+
+### Polymorphic payload passes validation without checking child-specific properties
+
+**Symptom:** A payload for a parent schema with a discriminator is accepted even when its child-specific properties are wrong or missing.
+
+**Cause:** The parent schema is referenced directly via `$ref` at the usage site.
+The OpenAPI 3.0.4 specification defines this form as non-validating: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases" (§4.7.25).
+
+**Fix:** Replace the direct `$ref` to the parent with a `oneOf` or `anyOf` listing the child schemas explicitly, and keep the discriminator at that usage site.
+See [Discriminator on a parent schema used via `$ref`](../concepts/openapi-coverage.md#discriminator-on-a-parent-schema-used-via-ref) for an example.
+
 ---
 
 ## Mock Server Issues

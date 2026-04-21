@@ -346,6 +346,57 @@ class AllOfDataTypeTest {
     }
 
     @Test
+    fun `validation does not hard-fail on absent discriminator when sub types accept the payload`() {
+      // given
+      val allOfDataType = allOfType("cat") {
+        subType(objectType(name = "pet") {
+          properties {
+            "name" to stringType()
+            "petType" to stringType()
+          }
+          required("name")
+        })
+        subType(objectType {
+          properties {
+            "hunts" to booleanType()
+            "age" to integerType()
+          }
+          required("hunts", "age")
+        })
+        discriminator("petType") { mapping("CAT", "cat") }
+      }
+
+      // when
+      val result = allOfDataType.validate(mapOf("name" to "Misty", "hunts" to true, "age" to 3))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation does not hard-fail on non-string discriminator and delegates to sub types`() {
+      // given
+      val allOfDataType = allOfType("cat") {
+        subType(pet)
+        subType(objectType {
+          properties {
+            "hunts" to booleanType()
+            "age" to integerType()
+          }
+          required("hunts", "age")
+        })
+        discriminator("petType") { mapping("CAT", "cat") }
+      }
+
+      // when
+      val result = allOfDataType.validate(mapOf("name" to "Misty", "petType" to 42, "hunts" to true, "age" to 3))
+
+      // then
+      assert(result.isFailure())
+      assert(result.errors().first().contains("No matching schema"))
+    }
+
+    @Test
     fun `generates valid random value that includes the correct discriminator property value`() {
       // given
       val allOfDataType = allOfType("cat") {

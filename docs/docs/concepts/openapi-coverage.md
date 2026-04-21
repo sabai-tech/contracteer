@@ -256,7 +256,7 @@ Contracteer does not process them.
 | `required` (properties)                 | Object types                                                                          |
 | `additionalProperties`                  | Both boolean and typed schema forms                                                   |
 | `readOnly` / `writeOnly`                | readOnly properties excluded from request schemas, writeOnly from response schemas    |
-| `discriminator`                         | With `propertyName` and `mapping` on allOf, oneOf, anyOf                              |
+| `discriminator`                         | `propertyName` and `mapping`. See [Discriminator validation](#discriminator-validation) |
 
 ### Schema composition
 
@@ -265,7 +265,85 @@ Contracteer does not process them.
 | `allOf`         | Single-element accepts any sub-schema type; multi-element requires structured types. Sibling `properties`, `required`, and `additionalProperties` are folded in as an implicit sub-schema |
 | `oneOf`         | Validates that exactly one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                 |
 | `anyOf`         | Validates that at least one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                |
-| `discriminator` | Supported on allOf, oneOf, anyOf with `propertyName` and `mapping`                                                                                                                        |
+| `discriminator` | `propertyName` and `mapping` on `oneOf`/`anyOf`/`allOf`. See [Discriminator validation](#discriminator-validation)                                                                        |
+
+### Discriminator validation
+
+Contracteer uses the discriminator as a hint to select which sub-schema in a `oneOf`, `anyOf`, or `allOf` composition validates the payload.
+When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI 3.0.4 rule that "discriminator MUST NOT change the validation outcome of the schema" (§4.7.25).
+
+Three runtime cases:
+
+**Property is absent.**
+When the discriminator property is missing from the payload, Contracteer validates the payload against every sub-schema as if no discriminator were declared.
+The OpenAPI 3.0.4 specification states that the discriminator property "SHOULD be required in the payload schema, as the behavior when the property is absent is undefined" (§4.7.25).
+The payload is accepted if exactly one sub-schema matches (`oneOf`) or at least one sub-schema matches (`anyOf`).
+
+**Property is not a string.**
+When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
+The OpenAPI 3.0.4 specification states that "mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison" (§4.7.25); Contracteer does not coerce non-string values.
+Sub-schemas usually declare the discriminator property as `type: string`, so a non-string value fails the string type check within each branch.
+
+**Value does not match any mapping or schema name.**
+When the discriminator property is a string that matches no entry in `mapping` and no schema name under `components/schemas`, Contracteer rejects the payload with `No schema found for discriminator property '<name>' with value: <value>`.
+The OpenAPI 3.0.4 specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail" (§4.7.25).
+
+### Discriminator on a parent schema used via `$ref`
+
+OpenAPI 3.0 supports a polymorphic pattern where a parent schema declares the discriminator and child schemas extend the parent with `allOf`:
+
+```yaml
+components:
+  schemas:
+    Pet:
+      type: object
+      required: [petType]
+      properties:
+        petType: { type: string }
+      discriminator:
+        propertyName: petType
+    Cat:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            huntingSkill: { type: string }
+    Dog:
+      allOf:
+        - $ref: '#/components/schemas/Pet'
+        - type: object
+          properties:
+            packSize: { type: integer }
+
+paths:
+  /pets:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+```
+
+When `Pet` is referenced directly via `$ref` (without wrapping it in `oneOf` or `anyOf` at the usage site), Contracteer validates the payload against `Pet` only.
+Child-specific properties (`huntingSkill`, `packSize`) are not checked.
+This matches the OpenAPI 3.0.4 rule: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases; validation with the parent schema with this form of `discriminator` _does not_ perform a search for child schemas or use them in validation in any way" (§4.7.25).
+
+To get child-specific validation, list the children at the usage site:
+
+```yaml
+requestBody:
+  content:
+    application/json:
+      schema:
+        oneOf:
+          - $ref: '#/components/schemas/Cat'
+          - $ref: '#/components/schemas/Dog'
+        discriminator:
+          propertyName: petType
+```
+
+With this form, Contracteer uses the discriminator to select the matching child schema and validates the payload against both the parent and the child.
 
 ### Parameters
 

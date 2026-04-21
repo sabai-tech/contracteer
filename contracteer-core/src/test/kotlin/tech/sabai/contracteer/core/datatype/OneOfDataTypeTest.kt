@@ -2,11 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.dsl.booleanType
-import tech.sabai.contracteer.core.dsl.integerType
-import tech.sabai.contracteer.core.dsl.objectType
-import tech.sabai.contracteer.core.dsl.oneOfType
-import tech.sabai.contracteer.core.dsl.stringType
+import tech.sabai.contracteer.core.dsl.*
 import tech.sabai.contracteer.core.normalize
 
 class OneOfDataTypeTest {
@@ -237,10 +233,73 @@ class OneOfDataTypeTest {
     }
 
     @Test
+    fun `validation falls back to plain matching when discriminator property is absent`() {
+      // given
+      val oneOfDataType = oneOfType {
+        subType(objectType(name = "dog") {
+          properties {
+            "barks" to booleanType()
+            "type" to stringType()
+          }
+          required("barks")
+        })
+        subType(objectType(name = "cat") {
+          properties {
+            "hunts" to booleanType()
+            "type" to stringType()
+          }
+          required("hunts")
+        })
+        discriminator("type")
+      }
+
+      // when
+      val result = oneOfDataType.validate(mapOf("barks" to true))
+
+      // then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation falls back to plain matching when discriminator property is not a string`() {
+      // given
+      val oneOfDataType = oneOfType {
+        subType(dog)
+        subType(cat)
+        discriminator("type")
+      }
+
+      // when
+      val result = oneOfDataType.validate(mapOf("type" to 42, "barks" to true))
+
+      // then
+      assert(result.isFailure())
+      assert(result.errors().first().contains("No matching schema"))
+    }
+
+    @Test
+    fun `validation fails with clear error when discriminator value does not match any mapping`() {
+      // given
+      val oneOfDataType = oneOfType {
+        subType(dog)
+        subType(cat)
+        discriminator("type") { mapping("DOG", "dog") }
+      }
+
+      // when
+      val result = oneOfDataType.validate(mapOf("type" to "FISH", "barks" to true))
+
+      // then
+      assert(result.isFailure())
+      assert(result.errors().first().contains("No schema found for discriminator"))
+    }
+
+    @Test
     fun `generates random valid value with discriminator`() {
       // given
       val oneOfDataType = oneOfType {
-        subType(dog); subType(cat)
+        subType(dog)
+        subType(cat)
         discriminator("type")
       }
 
