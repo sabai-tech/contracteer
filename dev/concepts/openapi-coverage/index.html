@@ -821,6 +821,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#discriminator-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discriminator-on-a-parent-schema-used-via-ref" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator on a parent schema used via $ref
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1440,6 +1462,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#discriminator-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#discriminator-on-a-parent-schema-used-via-ref" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Discriminator on a parent schema used via $ref
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1955,7 +1999,7 @@ Contracteer does not process them.</p>
 </tr>
 <tr>
 <td><code>discriminator</code></td>
-<td>With <code>propertyName</code> and <code>mapping</code> on allOf, oneOf, anyOf</td>
+<td><code>propertyName</code> and <code>mapping</code>. See <a href="#discriminator-validation">Discriminator validation</a></td>
 </tr>
 </tbody>
 </table>
@@ -1982,10 +2026,73 @@ Contracteer does not process them.</p>
 </tr>
 <tr>
 <td><code>discriminator</code></td>
-<td>Supported on allOf, oneOf, anyOf with <code>propertyName</code> and <code>mapping</code></td>
+<td><code>propertyName</code> and <code>mapping</code> on <code>oneOf</code>/<code>anyOf</code>/<code>allOf</code>. See <a href="#discriminator-validation">Discriminator validation</a></td>
 </tr>
 </tbody>
 </table>
+<h3 id="discriminator-validation">Discriminator validation<a class="headerlink" href="#discriminator-validation" title="Permanent link">&para;</a></h3>
+<p>Contracteer uses the discriminator as a hint to select which sub-schema in a <code>oneOf</code>, <code>anyOf</code>, or <code>allOf</code> composition validates the payload.
+When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI 3.0.4 rule that "discriminator MUST NOT change the validation outcome of the schema" (§4.7.25).</p>
+<p>Three runtime cases:</p>
+<p><strong>Property is absent.</strong>
+When the discriminator property is missing from the payload, Contracteer validates the payload against every sub-schema as if no discriminator were declared.
+The OpenAPI 3.0.4 specification states that the discriminator property "SHOULD be required in the payload schema, as the behavior when the property is absent is undefined" (§4.7.25).
+The payload is accepted if exactly one sub-schema matches (<code>oneOf</code>) or at least one sub-schema matches (<code>anyOf</code>).</p>
+<p><strong>Property is not a string.</strong>
+When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
+The OpenAPI 3.0.4 specification states that "mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison" (§4.7.25); Contracteer does not coerce non-string values.
+Sub-schemas usually declare the discriminator property as <code>type: string</code>, so a non-string value fails the string type check within each branch.</p>
+<p><strong>Value does not match any mapping or schema name.</strong>
+When the discriminator property is a string that matches no entry in <code>mapping</code> and no schema name under <code>components/schemas</code>, Contracteer rejects the payload with <code>No schema found for discriminator property '&lt;name&gt;' with value: &lt;value&gt;</code>.
+The OpenAPI 3.0.4 specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail" (§4.7.25).</p>
+<h3 id="discriminator-on-a-parent-schema-used-via-ref">Discriminator on a parent schema used via <code>$ref</code><a class="headerlink" href="#discriminator-on-a-parent-schema-used-via-ref" title="Permanent link">&para;</a></h3>
+<p>OpenAPI 3.0 supports a polymorphic pattern where a parent schema declares the discriminator and child schemas extend the parent with <code>allOf</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">components</span><span class="p">:</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">schemas</span><span class="p">:</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="nt">Pet</span><span class="p">:</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">      </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">petType</span><span class="p p-Indicator">]</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">      </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">        </span><span class="nt">petType</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">      </span><span class="nt">discriminator</span><span class="p">:</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">        </span><span class="nt">propertyName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">petType</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="nt">Cat</span><span class="p">:</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">      </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Pet&#39;</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">            </span><span class="nt">huntingSkill</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">string</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="w">    </span><span class="nt">Dog</span><span class="p">:</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="w">      </span><span class="nt">allOf</span><span class="p">:</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Pet&#39;</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">object</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">          </span><span class="nt">properties</span><span class="p">:</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="w">            </span><span class="nt">packSize</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">integer</span><span class="w"> </span><span class="p p-Indicator">}</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a><span class="nt">paths</span><span class="p">:</span>
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">  </span><span class="nt">/pets</span><span class="p">:</span>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">    </span><span class="nt">post</span><span class="p">:</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a><span class="w">      </span><span class="nt">requestBody</span><span class="p">:</span>
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a><span class="w">        </span><span class="nt">content</span><span class="p">:</span>
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="w">          </span><span class="nt">application/json</span><span class="p">:</span>
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a><span class="w">            </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">              </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Pet&#39;</span>
+</code></pre></div>
+<p>When <code>Pet</code> is referenced directly via <code>$ref</code> (without wrapping it in <code>oneOf</code> or <code>anyOf</code> at the usage site), Contracteer validates the payload against <code>Pet</code> only.
+Child-specific properties (<code>huntingSkill</code>, <code>packSize</code>) are not checked.
+This matches the OpenAPI 3.0.4 rule: "The <code>allOf</code> form of <code>discriminator</code> is <em>only</em> useful for non-validation use cases; validation with the parent schema with this form of <code>discriminator</code> <em>does not</em> perform a search for child schemas or use them in validation in any way" (§4.7.25).</p>
+<p>To get child-specific validation, list the children at the usage site:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">requestBody</span><span class="p">:</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">content</span><span class="p">:</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">application/json</span><span class="p">:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">      </span><span class="nt">schema</span><span class="p">:</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">        </span><span class="nt">oneOf</span><span class="p">:</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Cat&#39;</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Dog&#39;</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">        </span><span class="nt">discriminator</span><span class="p">:</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">          </span><span class="nt">propertyName</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">petType</span>
+</code></pre></div>
+<p>With this form, Contracteer uses the discriminator to select the matching child schema and validates the payload against both the parent and the child.</p>
 <h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

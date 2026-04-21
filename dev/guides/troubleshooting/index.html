@@ -1081,10 +1081,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#verifier-reports-ambiguous-match-for-oneof" class="md-nav__link">
+  <a href="#ambiguous-match-for-oneof" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Verifier reports "Ambiguous match for oneOf"
+        "Ambiguous match for oneOf"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-schema-found-for-discriminator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "No schema found for discriminator"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polymorphic-payload-passes-validation-without-checking-child-specific-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Polymorphic payload passes validation without checking child-specific properties
       
     </span>
   </a>
@@ -1460,10 +1482,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#verifier-reports-ambiguous-match-for-oneof" class="md-nav__link">
+  <a href="#ambiguous-match-for-oneof" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Verifier reports "Ambiguous match for oneOf"
+        "Ambiguous match for oneOf"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#no-schema-found-for-discriminator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        "No schema found for discriminator"
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#polymorphic-payload-passes-validation-without-checking-child-specific-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Polymorphic payload passes validation without checking child-specific properties
       
     </span>
   </a>
@@ -1790,13 +1834,22 @@ Either add the field to the schema's <code>properties</code>, or remove <code>ad
 Contracteer needs at least one shared key between request and response elements.</p>
 <p><strong>Fix:</strong> Ensure the same example key appears on both a request element (parameter or request body) and a response element (header or response body).
 See <a href="../../concepts/scenarios/#common-mistakes">Common Mistakes</a> for details.</p>
-<h3 id="verifier-reports-ambiguous-match-for-oneof">Verifier reports "Ambiguous match for oneOf"<a class="headerlink" href="#verifier-reports-ambiguous-match-for-oneof" title="Permanent link">&para;</a></h3>
-<p><strong>Symptom:</strong> The verifier rejects a response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."</p>
+<h3 id="ambiguous-match-for-oneof">"Ambiguous match for oneOf"<a class="headerlink" href="#ambiguous-match-for-oneof" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The verifier or mock server rejects a request or response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."</p>
 <p><strong>Cause:</strong> The <code>oneOf</code> variants have overlapping structures.
 Without <code>required</code> properties, <code>additionalProperties: false</code>, or a <code>discriminator</code>, a valid value for one variant inevitably matches others too.</p>
-<p><strong>Fix:</strong> Make the variants distinguishable.
-Add <code>required</code> properties unique to each variant, set <code>additionalProperties: false</code>, or use a <code>discriminator</code>.
-Without these constraints, <code>oneOf</code> is effectively <code>anyOf</code> and strict validation cannot determine which variant matched.</p>
+<p><strong>Fix:</strong> Either replace <code>oneOf</code> with <code>anyOf</code> if multiple matches are acceptable, or make the variants distinguishable.
+To distinguish variants, add <code>required</code> properties unique to each variant, set <code>additionalProperties: false</code>, use a <code>discriminator</code>, or constrain the variants with <code>pattern</code> or <code>enum</code>.</p>
+<h3 id="no-schema-found-for-discriminator">"No schema found for discriminator"<a class="headerlink" href="#no-schema-found-for-discriminator" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> The verifier or mock server rejects a payload with "No schema found for discriminator property 'X' with value: Y".</p>
+<p><strong>Cause:</strong> The payload's discriminator value (<code>Y</code>) is not listed in the discriminator's <code>mapping</code> and does not match the name of any sub-schema.</p>
+<p><strong>Fix:</strong> Either add the value to the <code>mapping</code>, or change the payload to use a value that is already mapped or matches an existing schema name.</p>
+<h3 id="polymorphic-payload-passes-validation-without-checking-child-specific-properties">Polymorphic payload passes validation without checking child-specific properties<a class="headerlink" href="#polymorphic-payload-passes-validation-without-checking-child-specific-properties" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> A payload for a parent schema with a discriminator is accepted even when its child-specific properties are wrong or missing.</p>
+<p><strong>Cause:</strong> The parent schema is referenced directly via <code>$ref</code> at the usage site.
+The OpenAPI 3.0.4 specification defines this form as non-validating: "The <code>allOf</code> form of <code>discriminator</code> is <em>only</em> useful for non-validation use cases" (§4.7.25).</p>
+<p><strong>Fix:</strong> Replace the direct <code>$ref</code> to the parent with a <code>oneOf</code> or <code>anyOf</code> listing the child schemas explicitly, and keep the discriminator at that usage site.
+See <a href="../../concepts/openapi-coverage/#discriminator-on-a-parent-schema-used-via-ref">Discriminator on a parent schema used via <code>$ref</code></a> for an example.</p>
 <hr />
 <h2 id="mock-server-issues">Mock Server Issues<a class="headerlink" href="#mock-server-issues" title="Permanent link">&para;</a></h2>
 <h3 id="getting-418-instead-of-the-expected-response">Getting 418 instead of the expected response<a class="headerlink" href="#getting-418-instead-of-the-expected-response" title="Permanent link">&para;</a></h3>
