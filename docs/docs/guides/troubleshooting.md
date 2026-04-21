@@ -83,16 +83,15 @@ Contracteer needs at least one shared key between request and response elements.
 **Fix:** Ensure the same example key appears on both a request element (parameter or request body) and a response element (header or response body).
 See [Common Mistakes](../concepts/scenarios.md#common-mistakes) for details.
 
-### Verifier reports "Ambiguous match for oneOf"
+### "Ambiguous match for oneOf"
 
-**Symptom:** The verifier rejects a response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."
+**Symptom:** The verifier or mock server rejects a request or response with "Ambiguous match for 'oneOf'. The provided value matches multiple schemas."
 
 **Cause:** The `oneOf` variants have overlapping structures.
 Without `required` properties, `additionalProperties: false`, or a `discriminator`, a valid value for one variant inevitably matches others too.
 
-**Fix:** Make the variants distinguishable.
-Add `required` properties unique to each variant, set `additionalProperties: false`, or use a `discriminator`.
-Without these constraints, `oneOf` is effectively `anyOf` and strict validation cannot determine which variant matched.
+**Fix:** Either replace `oneOf` with `anyOf` if multiple matches are acceptable, or make the variants distinguishable.
+To distinguish variants, add `required` properties unique to each variant, set `additionalProperties: false`, use a `discriminator`, or constrain the variants with `pattern` or `enum`.
 
 ### "No schema found for discriminator"
 

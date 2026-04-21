@@ -90,7 +90,7 @@ class OneOfDataType private constructor(name: String,
         dataTypeErrors
           .map { it.key.name }
           .joinWithQuotes()
-      }).")
+      }). If multiple matches are acceptable, use 'anyOf'. Otherwise, differentiate the branches with 'pattern', 'enum', required properties, or a 'discriminator'.")
 
   companion object {
     @JvmStatic

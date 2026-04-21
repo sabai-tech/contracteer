@@ -8,9 +8,6 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Failure
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.accumulate
-import tech.sabai.contracteer.core.datatype.AnyOfDataType
-import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.OneOfDataType
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.RequestSchema
 
@@ -28,7 +25,7 @@ internal fun RequestSchema.validate(request: Request): Result<Unit> =
         success()
 
       is Success                                                   ->
-        paramSchema.dataType.tolerantValidate(result.value).forKey(paramSchema.element.name)
+        paramSchema.dataType.validate(result.value).forKey(paramSchema.element.name)
     }
   } andThen { bodies.validateBody(request) }
 
@@ -48,15 +45,7 @@ private fun List<BodySchema>.validateBody(request: Request): Result<Unit> {
 
   return matchingSchema.serde
     .deserialize(request.bodyString(), matchingSchema.dataType)
-    .flatMap { matchingSchema.dataType.tolerantValidate(it) }
+    .flatMap { matchingSchema.dataType.validate(it) }
     .mapErrors { "Request body: $it" }
     .map { }
-}
-
-private fun DataType<out Any>.tolerantValidate(value: Any?): Result<Any?> {
-  val result = validate(value)
-  if (result.isSuccess()) return result
-  if (this !is OneOfDataType || discriminator != null) return result
-  val anyOfResult = AnyOfDataType.create(name, subTypes).flatMap { it.validate(value) }
-  return if (anyOfResult.isSuccess()) anyOfResult else result
 }

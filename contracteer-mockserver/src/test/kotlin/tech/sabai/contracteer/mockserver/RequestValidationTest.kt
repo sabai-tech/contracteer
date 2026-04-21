@@ -5,13 +5,11 @@ import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.notNullValue
 import org.junit.jupiter.api.AfterEach
 import tech.sabai.contracteer.core.dsl.apiOperation
-import tech.sabai.contracteer.core.dsl.content
 import tech.sabai.contracteer.core.dsl.form
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType
 import tech.sabai.contracteer.core.dsl.oneOfType
 import tech.sabai.contracteer.core.dsl.stringType
-import tech.sabai.contracteer.core.serde.JsonSerde
 import kotlin.test.Test
 
 class RequestValidationTest {
@@ -71,43 +69,6 @@ class RequestValidationTest {
   }
 
   // --- Query parameters ---
-
-  @Test
-  fun `responds successfully when query parameter matches multiple oneOf variants`() {
-    // Given
-    val variantA = objectType { properties { "name" to stringType() } }
-    val variantB = objectType {
-      properties {
-        "name" to stringType()
-        "age" to integerType()
-      }
-    }
-    val operation = apiOperation("GET", "/v1/users") {
-      request {
-        queryParam(
-          "filter",
-          oneOfType { subType(variantA); subType(variantB) },
-          isRequired = true,
-          codec = content(JsonSerde)
-        )
-      }
-      response(200) {
-        jsonBody(objectType { properties { "id" to integerType() } })
-      }
-    }
-    mockServer = MockServer(listOf(operation))
-    mockServer.start()
-    RestAssured.port = mockServer.port()
-
-    // When / Then
-    given()
-      .accept("application/json")
-      .queryParam("filter", """{"name":"john"}""")
-      .get("/v1/users")
-      .then()
-      .assertThat()
-      .statusCode(200)
-  }
 
   @Test
   fun `responds successfully when required query parameter is present and matches schema type`() {
@@ -382,39 +343,6 @@ class RequestValidationTest {
       .then()
       .assertThat()
       .statusCode(418)
-  }
-
-  @Test
-  fun `responds successfully when request body matches multiple oneOf variants`() {
-    // Given
-    val variantA = objectType { properties { "name" to stringType() } }
-    val variantB = objectType {
-      properties {
-        "name" to stringType()
-        "age" to integerType()
-      }
-    }
-    val operation = apiOperation("POST", "/v1/users") {
-      request {
-        jsonBody(oneOfType { subType(variantA); subType(variantB) })
-      }
-      response(201) {
-        jsonBody(objectType { properties { "id" to integerType() } })
-      }
-    }
-    mockServer = MockServer(listOf(operation))
-    mockServer.start()
-    RestAssured.port = mockServer.port()
-
-    // When / Then
-    given()
-      .accept("application/json")
-      .contentType("application/json")
-      .body("""{"name": "john"}""")
-      .post("/v1/users")
-      .then()
-      .assertThat()
-      .statusCode(201)
   }
 
   @Test
