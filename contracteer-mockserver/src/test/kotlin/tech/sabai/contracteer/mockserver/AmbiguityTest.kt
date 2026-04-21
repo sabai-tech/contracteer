@@ -4,17 +4,9 @@ import io.restassured.RestAssured
 import io.restassured.RestAssured.given
 import org.hamcrest.CoreMatchers.containsString
 import org.junit.jupiter.api.AfterEach
-import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
-import tech.sabai.contracteer.core.operation.ScenarioBody
-import tech.sabai.contracteer.mockserver.TestFixture.apiOperation
-import tech.sabai.contracteer.mockserver.TestFixture.bodySchema
-import tech.sabai.contracteer.core.TestFixture.integerDataType
-import tech.sabai.contracteer.core.TestFixture.objectDataType
-import tech.sabai.contracteer.mockserver.TestFixture.parameterSchema
-import tech.sabai.contracteer.mockserver.TestFixture.requestSchema
-import tech.sabai.contracteer.mockserver.TestFixture.responseSchema
-import tech.sabai.contracteer.mockserver.TestFixture.scenario
+import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
 import java.math.BigDecimal
 import kotlin.test.Test
 
@@ -30,44 +22,20 @@ class AmbiguityTest {
   @Test
   fun `responds with 418 when multiple scenarios match`() {
     // Given
-    val operation = apiOperation(
-      path = "/v1/users/{id}",
-      method = "GET",
-      requestSchema = requestSchema(
-        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
-      ),
-      responses = mapOf(
-        200 to responseSchema(
-          bodies = listOf(bodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
-        )
-      ),
-      scenarios = listOf(
-        scenario(
-          path = "/v1/users/{id}",
-          method = "GET",
-          key = "scenario1",
-          statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
-          responseBody = ScenarioBody(
-            contentType = ContentType("application/json"),
-            value = mapOf("id" to 42)
-          )
-        ),
-        scenario(
-          path = "/v1/users/{id}",
-          method = "GET",
-          key = "scenario2",
-          statusCode = 200,
-          requestParameterValues = mapOf(PathParam("id") to BigDecimal(42)),
-          responseBody = ScenarioBody(
-            contentType = ContentType("application/json"),
-            value = mapOf("id" to 42)
-          )
-        )
-      )
-    )
+    val operation = apiOperation("GET", "/v1/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      scenario("scenario1", status = 200) {
+        request { pathParam["id"] = BigDecimal(42) }
+        response { jsonBody { "id" to 42 } }
+      }
+      scenario("scenario2", status = 200) {
+        request { pathParam["id"] = BigDecimal(42) }
+        response { jsonBody { "id" to 42 } }
+      }
+    }
     mockServer = MockServer(listOf(operation))
     mockServer.start()
     RestAssured.port = mockServer.port()
@@ -87,25 +55,15 @@ class AmbiguityTest {
   @Test
   fun `responds with 418 when multiple 2xx status codes exist and no scenario matches`() {
     // Given
-    val operation = apiOperation(
-      path = "/v1/users/{id}",
-      method = "GET",
-      requestSchema = requestSchema(
-        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
-      ),
-      responses = mapOf(
-        200 to responseSchema(
-          bodies = listOf(bodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
-        ),
-        201 to responseSchema(
-          bodies = listOf(bodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
-        )
-      )
-    )
+    val operation = apiOperation("GET", "/v1/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+      response(201) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+    }
     mockServer = MockServer(listOf(operation))
     mockServer.start()
     RestAssured.port = mockServer.port()
@@ -123,20 +81,12 @@ class AmbiguityTest {
   @Test
   fun `responds with 418 and diagnostic message when request validation fails`() {
     // Given
-    val operation = apiOperation(
-      path = "/v1/users/{id}",
-      method = "GET",
-      requestSchema = requestSchema(
-        parameters = listOf(parameterSchema(PathParam("id"), integerDataType()))
-      ),
-      responses = mapOf(
-        200 to responseSchema(
-          bodies = listOf(bodySchema(
-            contentType = ContentType("application/json"),
-            dataType = objectDataType(properties = mapOf("id" to integerDataType()))))
-        )
-      )
-    )
+    val operation = apiOperation("GET", "/v1/users/{id}") {
+      request { pathParam("id", integerType()) }
+      response(200) {
+        jsonBody(objectType { properties { "id" to integerType() } })
+      }
+    }
     mockServer = MockServer(listOf(operation))
     mockServer.start()
     RestAssured.port = mockServer.port()
