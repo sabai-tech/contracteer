@@ -1,0 +1,15 @@
+openapi: 3.0.0
+info:
+  title: Blank Cookie Parameter Name
+  version: '1.0'
+paths:
+  /session:
+    get:
+      parameters:
+        - in: cookie
+          name: ""
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK

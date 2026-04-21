@@ -29,7 +29,11 @@ internal class ParameterExtractor(
   fun extractPath(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "path" }
-      .map { if (it.safeIsRequired()) success(it) else failure("Path parameter ${it.name} is required") }
+      .map {
+        it.ensureNonBlankName().flatMap { param ->
+          if (param.safeIsRequired()) success(param) else failure("Path parameter ${param.name} is required")
+        }
+      }
       .combineResults()
       .flatMap { parameters ->
         parameters
@@ -41,26 +45,43 @@ internal class ParameterExtractor(
   fun extractQuery(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "query" }
-      .map { it.toParameterSchema(QueryParam(it.name), allowReserved = it.safeAllowReserved()) }
+      .map {
+        it.ensureNonBlankName()
+          .flatMap { param ->
+            param.toParameterSchema(QueryParam(param.name), param.safeAllowReserved())
+          }
+      }
       .combineResults()
 
   fun extractRequestHeaders(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "header" && IGNORED_REQUEST_HEADERS.none { h -> h.equals(it.name, ignoreCase = true) } }
-      .map { it.toParameterSchema(Header(it.name)) }
+      .map {
+        it.ensureNonBlankName()
+          .flatMap { param -> param.toParameterSchema(Header(param.name)) }
+      }
       .combineResults()
 
   fun extractCookies(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "cookie" }
-      .map { it.toParameterSchema(Cookie(it.name)) }
+      .map {
+        it.ensureNonBlankName()
+          .flatMap { param -> param.toParameterSchema(Cookie(param.name)) }
+      }
       .combineResults()
 
   fun extractResponseHeaders(response: ApiResponse): Result<List<ExtractedParameterSchema>> =
     response.safeHeaders()
       .filterKeys { !it.equals("Content-Type", ignoreCase = true) }
-      .map { (name, header) -> toResponseHeaderSchema(header, name) }
+      .map { (name, header) ->
+        if (name.isBlank()) failure("Response header has a blank name")
+        else toResponseHeaderSchema(header, name)
+      }
       .combineResults()
+
+  private fun Parameter.ensureNonBlankName(): Result<Parameter> =
+    if (name.isNullOrBlank()) failure("Parameter has a blank name (in: $`in`)") else success(this)
 
   private fun enforceNonEmptyPathParameter(param: Parameter) {
     param.schema
@@ -93,12 +114,18 @@ internal class ParameterExtractor(
 
       if (dataType is AnyDataType)
         ExtractedParameterSchema(
-          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, PlainTextSerde, allowReserved)),
+          ParameterSchema(element,
+                          dataType,
+                          parameter.safeIsRequired(),
+                          ContentCodec(parameter.name, PlainTextSerde, allowReserved)),
           examples)
       else {
         val serde = serdeFactory.buildSerde(contentType, mediaTypeObj, dataType).bind()
         ExtractedParameterSchema(
-          ParameterSchema(element, dataType, parameter.safeIsRequired(), ContentCodec(parameter.name, serde, allowReserved)),
+          ParameterSchema(element,
+                          dataType,
+                          parameter.safeIsRequired(),
+                          ContentCodec(parameter.name, serde, allowReserved)),
           examples)
       }
     }

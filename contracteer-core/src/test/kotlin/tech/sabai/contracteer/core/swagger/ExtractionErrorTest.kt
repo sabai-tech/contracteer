@@ -87,6 +87,56 @@ class ExtractionErrorTest {
   }
 
   @Test
+  fun `fails when request header parameter has blank name`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/blank_header_parameter_name.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("blank name") && it.contains("header") })
+  }
+
+  @Test
+  fun `fails when query parameter has blank name`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/blank_query_parameter_name.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("blank name") && it.contains("query") })
+  }
+
+  @Test
+  fun `fails when path parameter has blank name`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/blank_path_parameter_name.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("blank name") && it.contains("path") })
+  }
+
+  @Test
+  fun `fails when cookie parameter has blank name`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/blank_cookie_parameter_name.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("blank name") && it.contains("cookie") })
+  }
+
+  @Test
+  fun `fails when response header has blank name`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/blank_response_header_name.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("blank name") && it.contains("Response header") })
+  }
+
+  @Test
   fun `fails when non 400 scenario example violates schema`() {
     // when
     val result = OpenApiLoader.loadOperations("src/test/resources/error/invalid_non_400_examples.yaml")
