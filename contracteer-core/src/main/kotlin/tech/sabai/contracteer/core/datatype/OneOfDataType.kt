@@ -38,15 +38,15 @@ class OneOfDataType private constructor(name: String,
     discriminator?.let { validateWithDiscriminator(value) } ?: validateWithoutDiscriminator(value)
 
   @Suppress("UNCHECKED_CAST")
-  override fun doRandomValue(): Any? {
-    val chosenType = subTypes.random()
-    return if (discriminator == null) {
-      chosenType.randomValue()
-    } else {
-      (chosenType as DataType<Map<String, Any?>>).randomValue()?.plus(
-        discriminator.propertyName to discriminator.getMappingName(chosenType.name))
-    }
-  }
+  override fun doRandomValue(): Any? =
+    subTypes
+      .shuffled()
+      .firstNotNullOfOrNull { chosenType ->
+        chosenType.randomValue()?.let { value ->
+          if (discriminator == null) value
+          else (value as Map<String, Any?>) + (discriminator.propertyName to discriminator.getMappingName(chosenType.name))
+        }
+      }
 
   private fun validateWithDiscriminator(value: Any): Result<Any> {
     val discriminatorValue = (value as? Map<*, *>)?.get(discriminator!!.propertyName)

@@ -66,10 +66,11 @@ class ObjectDataType private constructor(name: String,
   private fun cycleEmptyValue(dataType: DataType<out Any>): Any? {
     val resolved = if (dataType is ProxyDataType) dataType.delegate else dataType
     return when {
-      resolved.isNullable      -> null
-      resolved is ArrayDataType -> emptyList<Any>()
-      resolved is ObjectDataType -> emptyMap<String, Any>()
-      else                      -> error("Unexpected cycle boundary type: ${resolved.openApiType}")
+      resolved.isNullable              -> null
+      resolved is ArrayDataType        -> emptyList<Any>()
+      resolved is ObjectDataType       -> emptyMap<String, Any>()
+      resolved is CompositeDataType<*> -> emptyMap<String, Any>()
+      else                             -> error("Unexpected cycle boundary type: ${resolved.openApiType}")
     }
   }
 

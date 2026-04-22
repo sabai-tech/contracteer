@@ -1,8 +1,11 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.dsl.allOfType
+import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.oneOfType
 import tech.sabai.contracteer.core.dsl.stringType
 
 class ProxyDataTypeTest {
@@ -133,6 +136,83 @@ class ProxyDataTypeTest {
 
     // then
     assert(countNodes(value) <= 10_000) { "expected bounded tree, got ${countNodes(value)} nodes" }
+  }
+
+  @Test
+  fun `randomValue does not crash when required property is allOf with a recursive subtype`() {
+    // given — Parent.child is allOf[ProxyToParent, Other], required and non-nullable.
+    // Nested allOf inside the proxy cycle returns null and falls into ObjectDataType.cycleEmptyValue on a composite type.
+    val parentProxy = ProxyDataType("Parent")
+    val other = objectType(name = "Other") {
+      properties { "marker" to stringType() }
+    }
+    val composed = allOfType(name = "Composed") {
+      subType(parentProxy)
+      subType(other)
+    }
+    val parent = objectType(name = "Parent") {
+      properties { "child" to composed }
+      required("child")
+    }
+    parentProxy.delegate = parent
+
+    // when
+    val value = parent.randomValue().asMap()
+
+    // then
+    assert(value["child"] is Map<*, *>)
+  }
+
+  @Test
+  fun `randomValue does not crash when required property is oneOf with a recursive variant`() {
+    // given — Parent.child is oneOf[ProxyToParent, Other], required and non-nullable.
+    val parentProxy = ProxyDataType("Parent")
+    val other = objectType(name = "Other") {
+      properties { "marker" to stringType() }
+    }
+    val composed = oneOfType(name = "Composed") {
+      subType(parentProxy)
+      subType(other)
+    }
+    val parent = objectType(name = "Parent") {
+      properties { "child" to composed }
+      required("child")
+    }
+    parentProxy.delegate = parent
+
+    // when — repeat to cover both random picks at every level
+    repeat(50) {
+      val value = parent.randomValue().asMap()
+
+      // then
+      assert(value["child"] is Map<*, *>)
+    }
+  }
+
+  @Test
+  fun `randomValue does not crash when required property is anyOf with a recursive variant`() {
+    // given — Parent.child is anyOf[ProxyToParent, Other], required and non-nullable.
+    val parentProxy = ProxyDataType("Parent")
+    val other = objectType(name = "Other") {
+      properties { "marker" to stringType() }
+    }
+    val composed = anyOfType(name = "Composed") {
+      subType(parentProxy)
+      subType(other)
+    }
+    val parent = objectType(name = "Parent") {
+      properties { "child" to composed }
+      required("child")
+    }
+    parentProxy.delegate = parent
+
+    // when — repeat to cover both random picks at every level
+    repeat(50) {
+      val value = parent.randomValue().asMap()
+
+      // then
+      assert(value["child"] is Map<*, *>)
+    }
   }
 
   @Test

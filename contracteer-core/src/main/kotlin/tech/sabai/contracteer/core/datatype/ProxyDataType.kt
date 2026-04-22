@@ -27,7 +27,7 @@ class ProxyDataType internal constructor(override val name: String): DataType<An
     return try { delegate.randomValue() } finally { visited.remove(this) }
   }
 
-  override fun isFullyStructured(): Boolean = delegate.isFullyStructured()
+  override fun isFullyStructured(): Boolean = !isResolved || delegate.isFullyStructured()
 
   override fun asRequestType(): DataType<Any> = this
 
