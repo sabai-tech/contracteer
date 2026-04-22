@@ -50,15 +50,16 @@ class ArrayDataType private constructor(name: String,
     val max = maxItems ?: maxOf(minItems ?: 1, 2)
     val min = minItems ?: minOf(1, max)
     val count = (min..max).random()
+    val cappedCount = GenerationBudget.limit(count)
 
     if (!uniqueItems) {
-      val items = List(count) { itemDataType.randomValue() }
+      val items = List(cappedCount) { itemDataType.randomValue() }
       return if (!itemDataType.isNullable) items.filterNotNull() else items
     }
     return (1..MAX_GENERATION_ATTEMPTS)
       .asSequence()
-      .map { generateSequence { itemDataType.randomValue() }.distinct().take(count).toList() }
-      .firstOrNull { it.size == count }
+      .map { generateSequence { itemDataType.randomValue() }.distinct().take(cappedCount).toList() }
+      .firstOrNull { it.size == cappedCount }
       ?: error("Failed to generate an array with $count unique items after $MAX_GENERATION_ATTEMPTS attempts")
   }
 

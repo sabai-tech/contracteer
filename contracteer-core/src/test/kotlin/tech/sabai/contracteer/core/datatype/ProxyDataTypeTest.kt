@@ -97,6 +97,45 @@ class ProxyDataTypeTest {
   }
 
   @Test
+  fun `randomValue stays bounded under mutual recursion across many types with sibling arrays`() {
+    // given — 4-type cycle A -> B -> C -> D -> A, each holding an array of 10 items pointing to the next.
+    // Without a generation budget this produces ~20_000 nodes (10^4 leaf objects plus containers);
+    // the proxy guard alone does not bound this because each proxy only blocks its own re-entry.
+    val proxyA = ProxyDataType("A")
+    val proxyB = ProxyDataType("B")
+    val proxyC = ProxyDataType("C")
+    val proxyD = ProxyDataType("D")
+
+    val a = objectType(name = "A") {
+      properties { "bs" to arrayType(items = proxyB, minItems = 10, maxItems = 10) }
+      required("bs")
+    }
+    val b = objectType(name = "B") {
+      properties { "cs" to arrayType(items = proxyC, minItems = 10, maxItems = 10) }
+      required("cs")
+    }
+    val c = objectType(name = "C") {
+      properties { "ds" to arrayType(items = proxyD, minItems = 10, maxItems = 10) }
+      required("ds")
+    }
+    val d = objectType(name = "D") {
+      properties { "as_" to arrayType(items = proxyA, minItems = 10, maxItems = 10) }
+      required("as_")
+    }
+
+    proxyA.delegate = a
+    proxyB.delegate = b
+    proxyC.delegate = c
+    proxyD.delegate = d
+
+    // when
+    val value = a.randomValue()
+
+    // then
+    assert(countNodes(value) <= 10_000) { "expected bounded tree, got ${countNodes(value)} nodes" }
+  }
+
+  @Test
   fun `randomValue keeps null for nullable recursive property at cycle boundary`() {
     // given
     val proxy = ProxyDataType("Node")
@@ -129,3 +168,9 @@ class ProxyDataTypeTest {
 @Suppress("UNCHECKED_CAST")
 private fun Any?.asMap() =
   this as Map<String, Any?>
+
+private fun countNodes(value: Any?): Int = when (value) {
+  is Map<*, *> -> 1 + value.values.sumOf { countNodes(it) }
+  is List<*>   -> 1 + value.sumOf { countNodes(it) }
+  else         -> 1
+}

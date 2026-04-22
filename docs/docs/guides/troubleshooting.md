@@ -235,6 +235,16 @@ This may violate the `minItems` constraint.
 **Fix:** Remove the `minItems` constraint from the recursive array property, or make the array items nullable.
 Recursive arrays with `minItems` describe a structure that requires infinite depth to satisfy -- no finite value can conform.
 
+### Generated value is smaller than the spec declares
+
+**Symptom:** Generated request or response bodies contain fewer items, missing optional properties, or omitted sub-trees compared to what the OpenAPI schema declares.
+
+**Cause:** Contracteer bounds the size of generated values to protect against heap exhaustion on schemas with deep mutual recursion or large declared array bounds.
+When the limit is reached, Contracteer stops generating deeper values, producing the same empty-array and omitted-property fallbacks it uses for cycle boundaries.
+
+**Fix:** Reduce `minItems`/`maxItems` on large recursive arrays, or simplify deeply interconnected schemas.
+The size limit is a safety net: schemas that describe pathologically large structures produce correspondingly bounded generated values.
+
 ### Spec loading fails
 
 **Symptom:** Contracteer reports errors when loading the OpenAPI specification.

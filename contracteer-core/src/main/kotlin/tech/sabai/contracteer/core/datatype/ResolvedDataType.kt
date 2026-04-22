@@ -36,10 +36,11 @@ sealed class ResolvedDataType<T>(
   }
 
   @Suppress("UNCHECKED_CAST")
-  override fun randomValue(): T? {
-    return if (allowedValues != null) allowedValues!!.randomValue() as T?
-    else doRandomValue()
-  }
+  override fun randomValue(): T? =
+    GenerationBudget.consume {
+      val enum = allowedValues
+      if (enum != null) enum.randomValue() as T? else doRandomValue()
+    }
 
   override fun asRequestType(): DataType<T> = this
 
