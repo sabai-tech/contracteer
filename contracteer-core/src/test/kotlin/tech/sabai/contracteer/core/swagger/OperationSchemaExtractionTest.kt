@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.swagger
 
 import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.assertSingle
+import tech.sabai.contracteer.core.codec.ContentCodec
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.operation.ParameterElement
@@ -92,6 +93,20 @@ class OperationSchemaExtractionTest {
     val headers = operation.requestSchema.headers
     assert(headers.size == 1)
     assert(headers.single().element == ParameterElement.Header("x-request-custom"))
+  }
+
+  @Test
+  fun `extracts response header declared with content application json`() {
+    // when
+    val operation = loadSingleOperation("response_header_content_json.yaml")
+
+    // then
+    val header = operation.responseSchemas.responseFor(200)!!.headers.single()
+    assert(header.element == ParameterElement.Header("X-Pagination"))
+    assert(header.isRequired)
+    assert(header.dataType is ObjectDataType)
+    assert(header.codec is ContentCodec)
+    assert((header.codec as ContentCodec).serde is JsonSerde)
   }
 
   @Test

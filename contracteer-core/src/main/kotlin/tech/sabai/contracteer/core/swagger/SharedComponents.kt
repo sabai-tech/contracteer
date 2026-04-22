@@ -10,6 +10,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.normalize
 
 internal class SharedComponents(
   val schemas: Map<String, Schema<*>>,
@@ -43,6 +44,9 @@ internal class SharedComponents(
       .map { (key, example) -> resolve(example).map { key to it } }
       .combineResults()
       .map { it.toMap() }
+
+  fun resolveExampleValues(examples: Map<String, Example>): Result<Map<String, Any?>> =
+    resolve(examples).map { resolved -> resolved.mapValues { (_, example) -> example.value?.normalize() } }
 
   private fun <T> resolveRef(component: T,
                              sharedComponents: Map<String, T>,

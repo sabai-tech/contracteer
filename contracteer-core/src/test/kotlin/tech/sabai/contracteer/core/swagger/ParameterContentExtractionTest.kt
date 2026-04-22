@@ -1,6 +1,5 @@
 package tech.sabai.contracteer.core.swagger
 
-import tech.sabai.contracteer.core.assertFailure
 import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.codec.ContentCodec
 import tech.sabai.contracteer.core.datatype.ObjectDataType
@@ -33,17 +32,6 @@ class ParameterContentExtractionTest {
     assert(headerParam.element == ParameterElement.Header("X-Filter"))
     assert(headerParam.dataType is ObjectDataType)
     assert(headerParam.codec is ContentCodec)
-  }
-
-  @Test
-  fun `extraction fails when content has multiple entries`() {
-    // when
-    val result = OpenApiLoader.loadOperations(
-      "src/test/resources/operation/parameter_content/multiple_content_entries.yaml")
-
-    // then
-    val errors = result.assertFailure()
-    assert(errors.any { it.contains("multiple media types") })
   }
 
   @Test

@@ -10,7 +10,6 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.codec.ContentCodec
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.AnyDataType
-import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.ParameterElement.*
@@ -96,21 +95,19 @@ internal class ParameterExtractor(
     sharedComponents.resolve(this)
       .flatMap { resolved ->
         if (resolved.content != null && resolved.content.isNotEmpty())
-          createContentParameterSchema(resolved, element, allowReserved)
+          extractParameterFromContentForm(resolved, element, allowReserved)
         else
-          createStyleParameterSchema(resolved, element, allowReserved)
+          extractParameterFromSchemaForm(resolved, element, allowReserved)
       }
 
-  private fun createContentParameterSchema(parameter: Parameter,
-                                           element: ParameterElement,
-                                           allowReserved: Boolean): Result<ExtractedParameterSchema> {
+  private fun extractParameterFromContentForm(parameter: Parameter,
+                                              element: ParameterElement,
+                                              allowReserved: Boolean): Result<ExtractedParameterSchema> {
     val (mediaTypeString, mediaTypeObj) = parameter.content.entries.first()
     val contentType = ContentType(mediaTypeString)
     return result {
       val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj).bind()
-      val examples = sharedComponents.resolve(parameter.safeExamples())
-        .bind()
-        .mapValues { (_, example) -> example.value?.normalize() }
+      val examples = sharedComponents.resolveExampleValues(parameter.safeExamples()).bind()
 
       if (dataType is AnyDataType)
         ExtractedParameterSchema(
@@ -131,15 +128,12 @@ internal class ParameterExtractor(
     }
   }
 
-  private fun createStyleParameterSchema(parameter: Parameter,
-                                         element: ParameterElement,
-                                         allowReserved: Boolean): Result<ExtractedParameterSchema> =
+  private fun extractParameterFromSchemaForm(parameter: Parameter,
+                                             element: ParameterElement,
+                                             allowReserved: Boolean): Result<ExtractedParameterSchema> =
     result {
       val dataType = dataTypeConverter.convertToDataType(parameter.schema, "").bind()
-      val examples = sharedComponents
-        .resolve(parameter.safeExamples())
-        .bind()
-        .mapValues { (_, example) -> example.value?.normalize() }
+      val examples = sharedComponents.resolveExampleValues(parameter.safeExamples()).bind()
       val codec = codecFactory
         .createCodec(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name, allowReserved)
         .bind()
@@ -148,18 +142,44 @@ internal class ParameterExtractor(
     }
 
   private fun toResponseHeaderSchema(header: Header, name: String): Result<ExtractedParameterSchema> =
-    result {
-      val resolved = sharedComponents.resolve(header).bind()
-      val dataType = dataTypeConverter.convertToDataType(resolved.schema, "").bind()
-      val codec = codecFactory
-        .createCodec(Header(name), resolved.style?.toString(), resolved.explode, dataType, name)
-        .bind()
-      val examples = sharedComponents
-        .resolve(resolved.safeExamples())
-        .bind()
-        .mapValues { (_, example) -> example.value?.normalize() }
+    sharedComponents.resolve(header)
+      .flatMap { resolved ->
+        if (resolved.content != null && resolved.content.isNotEmpty())
+          extractResponseHeaderFromContentForm(resolved, name)
+        else
+          extractResponseHeaderFromSchemaForm(resolved, name)
+      }
 
-      ExtractedParameterSchema(ParameterSchema(Header(name), dataType, resolved.safeIsRequired(), codec), examples)
+  private fun extractResponseHeaderFromContentForm(header: Header, name: String): Result<ExtractedParameterSchema> {
+    val (mediaTypeString, mediaTypeObj) = header.content.entries.first()
+    val contentType = ContentType(mediaTypeString)
+    return result {
+      val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj).bind()
+      val examples = sharedComponents.resolveExampleValues(header.safeExamples()).bind()
+
+      val element = Header(name)
+      if (dataType is AnyDataType)
+        ExtractedParameterSchema(
+          ParameterSchema(element, dataType, header.safeIsRequired(), ContentCodec(name, PlainTextSerde)),
+          examples)
+      else {
+        val serde = serdeFactory.buildSerde(contentType, mediaTypeObj, dataType).bind()
+        ExtractedParameterSchema(
+          ParameterSchema(element, dataType, header.safeIsRequired(), ContentCodec(name, serde)),
+          examples)
+      }
+    }
+  }
+
+  private fun extractResponseHeaderFromSchemaForm(header: Header, name: String): Result<ExtractedParameterSchema> =
+    result {
+      val dataType = dataTypeConverter.convertToDataType(header.schema, "").bind()
+      val codec = codecFactory
+        .createCodec(Header(name), header.style?.toString(), header.explode, dataType, name)
+        .bind()
+      val examples = sharedComponents.resolveExampleValues(header.safeExamples()).bind()
+
+      ExtractedParameterSchema(ParameterSchema(Header(name), dataType, header.safeIsRequired(), codec), examples)
     }
 
   companion object {
