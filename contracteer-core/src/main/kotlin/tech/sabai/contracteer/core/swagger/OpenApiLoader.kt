@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.swagger
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
+import io.swagger.v3.parser.util.DeserializationUtils
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
@@ -17,6 +18,10 @@ import java.net.*
  * Accepts a file path, an HTTP(S) URL, or a `classpath:` resource pointing to an OpenAPI document.
  */
 object OpenApiLoader {
+
+  init {
+    DeserializationUtils.getOptions().maxYamlCodePoints = 10 * 1024 * 1024
+  }
 
   /**
    * Parses the OpenAPI document at the given [path] and extracts all API operations.
