@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  title: Request Header Example Invalid Charset Test
+  version: '1.0'
+paths:
+  /items:
+    get:
+      parameters:
+        - in: header
+          name: X-Custom-Attributes
+          schema:
+            type: string
+          examples:
+            greeting:
+              value: "foo\nbar"
+      responses:
+        '200':
+          description: Success

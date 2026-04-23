@@ -332,6 +332,31 @@ Contracteer uses Scenario values instead of generating random ones, bypassing th
 See [Creating Scenarios](../concepts/scenarios.md) for how to provide examples.
 Alternatively, simplify the pattern to use standard character classes and quantifiers without lookaround assertions.
 
+### Header pattern, enum, or example admits invalid HTTP characters
+
+**Symptom:** Loading the specification fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:
+
+```
+Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
+header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
+correct example values to exclude control and non-ASCII characters.
+```
+
+**Cause:** The header schema declares a `pattern`, `enum`, or `example` that admits characters disallowed in HTTP header values.
+RFC 7230 §3.2.6 restricts header field-values to visible ASCII (`0x21-0x7E`), space (`0x20`), and horizontal tab (`0x09`).
+Patterns like `\p{ASCII}*` or `\p{Print}*` legally admit NUL, CR, LF, DEL, and non-ASCII characters that no HTTP client will accept on the wire.
+
+Contracteer samples generated values at load time to catch the problem before verification or mock-server startup, rather than at runtime when the transport layer rejects the value.
+
+**Fix:** Tighten the schema so that no generated value can contain a disallowed character.
+Common replacements:
+
+- `\p{ASCII}*` → `[\x20-\x7E\t]*` (printable ASCII + tab)
+- `\p{Print}*` → `[\x20-\x7E]*` (printable ASCII without tab)
+- For enum or example values, remove or escape control and non-ASCII characters in the declared literal strings.
+
+If the header legitimately conveys opaque binary or Unicode data, Base64-encode the value in the schema declaration (for example `pattern: '[A-Za-z0-9+/=]*'`) rather than declaring the raw bytes as the header value.
+
 ### Unexpected behavior from unsupported schema keywords
 
 **Symptom:** Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.

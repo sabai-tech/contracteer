@@ -16,6 +16,8 @@ class AllowedValues private constructor(values: List<Any?>) {
 
   val size: Int get() = allowedValues.size
 
+  internal fun asSequence(): Sequence<Any?> = allowedValues.asSequence()
+
   fun contains(value: Any?) =
     if (allowedValues.contains(value.normalize())) success(value)
     else failure("Invalid value '${value.formatValue()}'. Allowed values are ${allowedValues.formatValue()}.")

@@ -145,4 +145,55 @@ class ExtractionErrorTest {
     val errors = result.assertFailure()
     assert(errors.size == 5) { "Expected 5 validation errors but got ${errors.size}: $errors" }
   }
+
+  @Test
+  fun `fails when request header pattern admits HTTP-invalid chars`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/request_header_pattern_with_invalid_chars.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
+      "Expected error about header RFC 7230 but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when response header pattern admits HTTP-invalid chars`() {
+    // when
+    val result = OpenApiLoader.loadOperations(
+      "src/test/resources/error/response_header_pattern_with_invalid_chars.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
+      "Expected error about header RFC 7230 but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when header example contains HTTP-invalid chars`() {
+    // when
+    val result = OpenApiLoader.loadOperations(
+      "src/test/resources/error/request_header_example_with_invalid_chars.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
+      "Expected error about header RFC 7230 but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when header enum value contains HTTP-invalid chars`() {
+    // when
+    val result = OpenApiLoader.loadOperations(
+      "src/test/resources/error/request_header_enum_with_invalid_chars.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
+      "Expected error about header RFC 7230 but got: $errors"
+    }
+  }
 }

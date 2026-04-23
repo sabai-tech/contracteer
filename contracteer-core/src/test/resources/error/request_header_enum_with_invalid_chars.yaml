@@ -1,0 +1,18 @@
+openapi: 3.0.0
+info:
+  title: Request Header Enum Invalid Charset Test
+  version: '1.0'
+paths:
+  /items:
+    get:
+      parameters:
+        - in: header
+          name: X-Custom-Attributes
+          schema:
+            type: string
+            enum:
+              - "ok"
+              - "bad\nvalue"
+      responses:
+        '200':
+          description: Success

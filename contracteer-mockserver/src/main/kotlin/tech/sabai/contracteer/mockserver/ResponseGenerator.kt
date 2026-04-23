@@ -38,6 +38,8 @@ internal object ResponseGenerator {
     headerSchemas.fold(this) { response, schema ->
       val header = schema.element as ParameterElement.Header
       val value = scenarioHeaders[header] ?: schema.dataType.randomValue()
-      schema.codec.encode(value).fold(response) { resp, (_, headerValue) -> resp.header(header.name, headerValue) }
+      schema.codec.encode(value).fold(response) { resp, (_, headerValue) ->
+        resp.header(header.name, HttpHeaderValue.requireValid(header.name, headerValue))
+      }
     }
 }

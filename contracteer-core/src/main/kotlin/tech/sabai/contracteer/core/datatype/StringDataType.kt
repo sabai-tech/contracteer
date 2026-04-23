@@ -11,7 +11,7 @@ class StringDataType private constructor(name: String,
                                          openApiType: String,
                                          isNullable: Boolean,
                                          val lengthRange: Range,
-                                         private val pattern: StringPattern? = null,
+                                         internal val pattern: StringPattern? = null,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, openApiType, isNullable, String::class.java, allowedValues) {
 

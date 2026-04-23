@@ -152,7 +152,7 @@ internal class VerificationHttpClient(serverUrl: String) {
       when (param.element) {
         is QueryParam if (param.codec.allowReserved) -> request.appendRawQueryEntry(key, value)
         is QueryParam                                -> request.query(key, value)
-        is Header                                    -> request.header(key, value)
+        is Header                                    -> request.header(key, HttpHeaderValue.requireValid(key, value))
         is Cookie                                    -> request.cookie(key, value)
         else                                         -> request
       }
@@ -162,7 +162,7 @@ internal class VerificationHttpClient(serverUrl: String) {
     when (param.element) {
       is QueryParam if (param.codec.allowReserved) -> appendRawQueryEntry(param.element.name, value)
       is QueryParam                                -> query(param.element.name, value)
-      is Header                                    -> header(param.element.name, value)
+      is Header                                    -> header(param.element.name, HttpHeaderValue.requireValid(param.element.name, value))
       is Cookie                                    -> cookie(param.element.name, value)
       else                                         -> this
     }

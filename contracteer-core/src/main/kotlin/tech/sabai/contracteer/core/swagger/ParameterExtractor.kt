@@ -10,7 +10,10 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.codec.ContentCodec
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.AnyDataType
+import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.ContentType
+import tech.sabai.contracteer.core.operation.HttpHeaderValue
 import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.ParameterElement.*
 import tech.sabai.contracteer.core.operation.ParameterSchema
@@ -55,9 +58,10 @@ internal class ParameterExtractor(
   fun extractRequestHeaders(operation: Operation): Result<List<ExtractedParameterSchema>> =
     operation.safeParameters()
       .filter { it.`in` == "header" && IGNORED_REQUEST_HEADERS.none { h -> h.equals(it.name, ignoreCase = true) } }
-      .map {
-        it.ensureNonBlankName()
+      .map { param ->
+        param.ensureNonBlankName()
           .flatMap { param -> param.toParameterSchema(Header(param.name)) }
+          .flatMap { ensureHeaderValuesAreHttpSafe(it) }
       }
       .combineResults()
 
@@ -75,7 +79,7 @@ internal class ParameterExtractor(
       .filterKeys { !it.equals("Content-Type", ignoreCase = true) }
       .map { (name, header) ->
         if (name.isBlank()) failure("Response header has a blank name")
-        else toResponseHeaderSchema(header, name)
+        else toResponseHeaderSchema(header, name).flatMap { ensureHeaderValuesAreHttpSafe(it) }
       }
       .combineResults()
 
@@ -182,7 +186,42 @@ internal class ParameterExtractor(
       ExtractedParameterSchema(ParameterSchema(Header(name), dataType, header.safeIsRequired(), codec), examples)
     }
 
+  private fun ensureHeaderValuesAreHttpSafe(extracted: ExtractedParameterSchema): Result<ExtractedParameterSchema> {
+    val schema = extracted.schema
+    val name = (schema.element as? ParameterElement.Header)?.name ?: return success(extracted)
+    val invalid = candidateHeaderValues(extracted)
+      .firstNotNullOfOrNull { candidate -> firstInvalidHeaderChar(schema, candidate) }
+    return if (invalid != null) failure(headerCharsetError(name, invalid)) else success(extracted)
+  }
+
+  private fun firstInvalidHeaderChar(schema: ParameterSchema, candidate: Any?): Char? =
+    schema.codec.encode(candidate).firstNotNullOfOrNull { (_, encoded) ->
+      HttpHeaderValue.firstInvalidChar(encoded)
+    }
+
+  private fun candidateHeaderValues(extracted: ExtractedParameterSchema): Sequence<Any?> {
+    val examples = extracted.examples.values.filterNotNull().asSequence()
+    val schemaCandidates = schemaCandidates(extracted.schema.dataType)
+    return examples + schemaCandidates
+  }
+
+  private fun schemaCandidates(dataType: DataType<out Any>): Sequence<Any?> = when {
+    dataType.allowedValues != null       -> dataType.allowedValues!!.asSequence()
+    isHeaderSafeByConstruction(dataType) -> emptySequence()
+    else                                 -> generateSequence { dataType.randomValue() }.take(HEADER_SAMPLE_COUNT)
+  }
+
+  private fun isHeaderSafeByConstruction(dataType: DataType<out Any>): Boolean =
+    dataType is StringDataType && dataType.pattern == null && dataType.allowedValues == null
+
+  private fun headerCharsetError(name: String, invalid: Char): String {
+    val codePoint = "U+%04X".format(invalid.code)
+    return "Header '$name' may carry character $codePoint not valid in HTTP header values per RFC 7230 §3.2.6. " +
+           "Tighten the schema (pattern, enum) or correct example values to exclude control and non-ASCII characters."
+  }
+
   companion object {
     private val IGNORED_REQUEST_HEADERS = setOf("Accept", "Content-Type", "Authorization")
+    private const val HEADER_SAMPLE_COUNT = 50
   }
 }
