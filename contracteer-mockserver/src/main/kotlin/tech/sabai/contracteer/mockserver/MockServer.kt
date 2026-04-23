@@ -6,6 +6,7 @@ import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status.Companion.I_M_A_TEAPOT
+import org.http4k.core.Status.Companion.NOT_FOUND
 import org.http4k.routing.RoutingHttpHandler
 import org.http4k.routing.bind
 import org.http4k.routing.routes
@@ -20,9 +21,7 @@ import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.core.operation.Scenario
-import tech.sabai.contracteer.mockserver.ScenarioMatchResult.Ambiguous
-import tech.sabai.contracteer.mockserver.ScenarioMatchResult.NoMatch
-import tech.sabai.contracteer.mockserver.ScenarioMatchResult.SingleMatch
+import tech.sabai.contracteer.mockserver.ScenarioMatchResult.*
 
 /**
  * An HTTP mock server that serves responses derived from OpenAPI [ApiOperation] definitions.
@@ -71,8 +70,11 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   private fun httpHandlerFrom(routeHandlers: List<RoutingHttpHandler>) =
     routes(*routeHandlers.toTypedArray())
 
-  private fun createRouteHandler(operation: ApiOperation) =
-    operation.path bind Method.valueOf(operation.method.uppercase()) to { request -> handleRequest(request, operation) }
+  private fun createRouteHandler(operation: ApiOperation): RoutingHttpHandler {
+    return StrictPathRouter(operation.path, Method.valueOf(operation.method.uppercase())) { request ->
+      handleRequest(request, operation)
+    } bind { _ -> Response(NOT_FOUND) }
+  }
 
   private fun handleRequest(request: Request, operation: ApiOperation): Response {
     httpLogger.debug { formatRequest(request) }
