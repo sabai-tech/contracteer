@@ -27,28 +27,26 @@ internal object ResponseValidator {
     }
   }
 
-  private fun validateResponse(
-    expectedStatusCode: Int,
-    responseSchema: ResponseSchema,
-    response: Response
-  ): Result<Unit> {
-    return validateStatusCode(expectedStatusCode, response.status.code)
-      .andThen { validateHeaders(responseSchema.headers, response.headers) }
-      .andThen { validateBody(responseSchema.bodies, response) }
-  }
-
-  private fun validateStatusCode(expected: Int, actual: Int): Result<Unit> {
-    return if (expected == actual) {
-      success()
-    } else {
-      failure("Status code does not match. Expected: $expected, Actual: $actual")
+  private fun validateResponse(expectedStatusCode: Int,
+                               responseSchema: ResponseSchema,
+                               response: Response): Result<Unit> {
+    val statusCodeResult = validateStatusCode(expectedStatusCode, response.status.code)
+    return when {
+      statusCodeResult.isFailure() -> statusCodeResult
+      else                         ->
+        validateHeaders(responseSchema.headers, response.headers)
+          .andThen { validateBody(responseSchema.bodies, response) }
     }
   }
 
-  private fun validateHeaders(
-    headerSchemas: List<ParameterSchema>,
-    responseHeaders: Headers
-  ): Result<Unit> {
+  private fun validateStatusCode(expected: Int, actual: Int): Result<Unit> {
+    return when (expected) {
+      actual -> success()
+      else   -> failure("Status code does not match. Expected: $expected, Actual: $actual")
+    }
+  }
+
+  private fun validateHeaders(headerSchemas: List<ParameterSchema>, responseHeaders: Headers): Result<Unit> {
     return headerSchemas.accumulate { paramSchema ->
       val element = paramSchema.element as Header
       when {
@@ -67,10 +65,8 @@ internal object ResponseValidator {
     }
   }
 
-  private fun validateBody(
-    bodySchemas: List<BodySchema>,
-    response: Response
-  ): Result<Unit> {
+  private fun validateBody(bodySchemas: List<BodySchema>,
+                           response: Response): Result<Unit> {
     val responseContentType = response.contentType()
 
     return when {

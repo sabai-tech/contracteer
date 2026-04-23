@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.http4k.core.Response
 import org.http4k.core.Status
+import tech.sabai.contracteer.core.assertFailure
 import tech.sabai.contracteer.core.dsl.*
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ResponseSchema
@@ -260,6 +261,34 @@ class ResponseValidatorTest {
 
     // Then
     assert(result.isSuccess())
+  }
+
+  @Test
+  fun `does not validate body and headers against expected schema when status code does not match`() {
+    // Given
+    val target = schemaBasedCase(
+      statusCode = 200,
+      responseContentType = ContentType("application/json")
+    ) {
+      response(200) {
+        header("X-Count", integerType(), isRequired = true)
+        jsonBody(arrayType(stringType()))
+      }
+    }
+    val response = mockResponse(
+      status = Status.BAD_REQUEST,
+      headers = listOf("Content-Type" to "application/json"),
+      contentType = "application/json",
+      body = """{"code": 400, "error": "bad"}"""
+    )
+
+    // When
+    val result = ResponseValidator.validate(target, response)
+
+    // Then
+    val errors = result.assertFailure()
+    assert(errors.size == 1)
+    assert(errors.single().contains("Status code does not match"))
   }
 
   @Test
