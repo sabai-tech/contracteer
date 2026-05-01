@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.result
 
 /** OpenAPI `string` type, with optional length constraints and format variants (date, email, uuid, etc.). */
@@ -27,16 +28,21 @@ class StringDataType private constructor(name: String,
           .map { value }
     }
 
-  override fun doRandomValue(): String =
-    if (pattern != null) pattern.randomValue()
-    else
-      (1..lengthRange.randomIntegerValue().toLong().coerceIn(0, maxOf(10, lengthRange.minimum?.toLong() ?: 0)))
-        .map { CANDIDATE_CHARS.random() }
-        .joinToString("")
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> =
+    Value(pattern?.randomValue() ?: randomString())
+
+  private fun randomString(): String =
+    (1..randomLength()).map { CANDIDATE_CHARS.random() }.joinToString("")
+
+  private fun randomLength(): Long {
+    val cap = maxOf(DEFAULT_MAX_LENGTH, lengthRange.minimum?.toLong() ?: 0L)
+    return lengthRange.randomIntegerValue().toLong().coerceIn(0L, cap)
+  }
 
   companion object {
     private val logger = KotlinLogging.logger {}
     private const val CANDIDATE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 "
+    private const val DEFAULT_MAX_LENGTH = 10L
 
     @JvmStatic
     @JvmOverloads

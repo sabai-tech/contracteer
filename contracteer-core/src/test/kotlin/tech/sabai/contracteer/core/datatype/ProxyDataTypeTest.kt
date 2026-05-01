@@ -1,6 +1,8 @@
 package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.dsl.allOfType
 import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.arrayType
@@ -100,10 +102,9 @@ class ProxyDataTypeTest {
   }
 
   @Test
-  fun `randomValue stays bounded under mutual recursion across many types with sibling arrays`() {
-    // given — 4-type cycle A -> B -> C -> D -> A, each holding an array of 10 items pointing to the next.
-    // Without a generation budget this produces ~20_000 nodes (10^4 leaf objects plus containers);
-    // the proxy guard alone does not bound this because each proxy only blocks its own re-entry.
+  fun `randomValue produces Boundary under mutual recursion across many types when required arrays cannot be empty`() {
+    // given — 4-type cycle A -> B -> C -> D -> A, each holding a required array of 10 items pointing to the next.
+    // The cycle has no escape: every step is required and non-nullable, and minItems=10 forbids an empty array.
     val proxyA = ProxyDataType("A")
     val proxyB = ProxyDataType("B")
     val proxyC = ProxyDataType("C")
@@ -132,35 +133,10 @@ class ProxyDataTypeTest {
     proxyD.delegate = d
 
     // when
-    val value = a.randomValue()
+    val result = a.randomValue(GenerationContext.default())
 
     // then
-    assert(countNodes(value) <= 10_000) { "expected bounded tree, got ${countNodes(value)} nodes" }
-  }
-
-  @Test
-  fun `randomValue does not crash when required property is allOf with a recursive subtype`() {
-    // given — Parent.child is allOf[ProxyToParent, Other], required and non-nullable.
-    // Nested allOf inside the proxy cycle returns null and falls into ObjectDataType.cycleEmptyValue on a composite type.
-    val parentProxy = ProxyDataType("Parent")
-    val other = objectType(name = "Other") {
-      properties { "marker" to stringType() }
-    }
-    val composed = allOfType(name = "Composed") {
-      subType(parentProxy)
-      subType(other)
-    }
-    val parent = objectType(name = "Parent") {
-      properties { "child" to composed }
-      required("child")
-    }
-    parentProxy.delegate = parent
-
-    // when
-    val value = parent.randomValue().asMap()
-
-    // then
-    assert(value["child"] is Map<*, *>)
+    assert(result is Boundary)
   }
 
   @Test
@@ -216,6 +192,27 @@ class ProxyDataTypeTest {
   }
 
   @Test
+  fun `randomValue returns Boundary for required non-nullable string at cycle boundary`() {
+    // given
+    val proxy = ProxyDataType("Person")
+    val person = objectType(name = "Person") {
+      properties {
+        "name" to stringType()
+        "friend" to proxy
+      }
+      required("name", "friend")
+    }
+    proxy.delegate = person
+    val ctx = GenerationContext.withBudget(maxDepth = 2, maxNodes = 100)
+
+    // when
+    val result = person.randomValue(ctx)
+
+    // then
+    assert(result is Boundary)
+  }
+
+  @Test
   fun `randomValue keeps null for nullable recursive property at cycle boundary`() {
     // given
     val proxy = ProxyDataType("Node")
@@ -243,14 +240,170 @@ class ProxyDataTypeTest {
     assert(value.containsKey("next"))
     assert(value["next"].asMap()["next"] == null)
   }
+
+  @Test
+  fun `randomValue omits optional non-nullable property when child boundaries`() {
+    // given
+    val proxy = ProxyDataType("Person")
+    val person = objectType(name = "Person") {
+      properties {
+        "name" to stringType()
+        "friend" to proxy
+      }
+      required("name")
+    }
+    proxy.delegate = person
+    val ctx = GenerationContext.withBudget(maxDepth = 2, maxNodes = 100)
+
+    // when
+    val result = person.randomValue(ctx)
+
+    // then
+    assert(result is Value)
+    val entries = (result as Value).value as Map<*, *>
+    assert("name" in entries.keys)
+    assert("friend" !in entries.keys)
+  }
+
+  @Test
+  fun `Boundary path tracks descent through nested object properties`() {
+    // given
+    val proxy = ProxyDataType("Cycler")
+    val cycler = objectType(name = "Cycler") {
+      properties {
+        "self" to proxy
+      }
+      required("self")
+    }
+    proxy.delegate = cycler
+
+    val middle = objectType(name = "Middle") {
+      properties {
+        "cycler" to cycler
+      }
+      required("cycler")
+    }
+    val outer = objectType(name = "Outer") {
+      properties {
+        "middle" to middle
+      }
+      required("middle")
+    }
+
+    // when
+    val result = outer.randomValue(GenerationContext.default())
+
+    // then
+    assert(result is Boundary)
+    val boundary = result as Boundary
+    assert(boundary.path == "middle.cycler.self.self") {
+      "expected path 'middle.cycler.self.self', got '${boundary.path}'"
+    }
+  }
+
+  @Test
+  fun `Boundary path tracks descent through array items`() {
+    // given
+    val proxy = ProxyDataType("Cycler")
+    val cycler = objectType(name = "Cycler") {
+      properties {
+        "self" to proxy
+      }
+      required("self")
+    }
+    proxy.delegate = cycler
+
+    val outer = objectType(name = "Outer") {
+      properties {
+        "items" to arrayType(items = cycler, minItems = 1, maxItems = 1)
+      }
+      required("items")
+    }
+
+    // when
+    val result = outer.randomValue(GenerationContext.default())
+
+    // then
+    assert(result is Boundary)
+    val boundary = result as Boundary
+    assert(boundary.path == "items[0].self.self")
+  }
+
+  @Test
+  fun `Boundary path tracks descent through oneOf subtype`() {
+    // given
+    val proxy = ProxyDataType("Cycler")
+    val cycler = objectType(name = "Cycler") {
+      properties {
+        "self" to proxy
+      }
+      required("self")
+    }
+    proxy.delegate = cycler
+
+    val choice = oneOfType(name = "Choice") {
+      subType(cycler)
+    }
+
+    // when
+    val result = choice.randomValue(GenerationContext.default())
+
+    // then
+    assert(result is Boundary)
+    val boundary = result as Boundary
+    assert(boundary.path == "Cycler.self.self")
+  }
+
+  @Test
+  fun `Boundary path tracks descent through allOf subtype`() {
+    // given
+    val proxy = ProxyDataType("Cycler")
+    val cycler = objectType(name = "Cycler") {
+      properties {
+        "self" to proxy
+      }
+      required("self")
+    }
+    proxy.delegate = cycler
+
+    val composed = allOfType(name = "Composed") {
+      subType(cycler)
+    }
+
+    // when
+    val result = composed.randomValue(GenerationContext.default())
+
+    // then
+    assert(result is Boundary)
+    val boundary = result as Boundary
+    assert(boundary.path == "Cycler.self.self")
+  }
+
+  @Test
+  fun `randomValue keeps null for required nullable property when child boundaries`() {
+    // given
+    val proxy = ProxyDataType("Node")
+    val node = objectType(name = "Node", isNullable = true) {
+      properties {
+        "value" to stringType()
+        "next" to proxy
+      }
+      required("value", "next")
+    }
+    proxy.delegate = node
+    val ctx = GenerationContext.withBudget(maxDepth = 2, maxNodes = 100)
+
+    // when
+    val result = node.randomValue(ctx)
+
+    // then
+    assert(result is Value)
+    val entries = (result as Value).value as Map<*, *>
+    assert("next" in entries.keys)
+    assert(entries["next"] == null)
+  }
 }
 
 @Suppress("UNCHECKED_CAST")
 private fun Any?.asMap() =
   this as Map<String, Any?>
-
-private fun countNodes(value: Any?): Int = when (value) {
-  is Map<*, *> -> 1 + value.values.sumOf { countNodes(it) }
-  is List<*>   -> 1 + value.sumOf { countNodes(it) }
-  else         -> 1
-}

@@ -10,7 +10,7 @@ import java.lang.System.lineSeparator
 /** OpenAPI `anyOf` composition. The value must match at least one sub-schema. */
 class AnyOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
-                                        val discriminator: Discriminator? = null,
+                                        override val discriminator: Discriminator? = null,
                                         isNullable: Boolean = false,
                                         allowedValues: AllowedValues? = null):
     CompositeDataType<Any>(name, "anyOf", isNullable, subTypes, Any::class.java, allowedValues) {
@@ -40,16 +40,7 @@ class AnyOfDataType private constructor(name: String,
     else
       validateWithoutDiscriminator(value)
 
-  @Suppress("UNCHECKED_CAST")
-  override fun doRandomValue(): Any? =
-    subTypes
-      .shuffled()
-      .firstNotNullOfOrNull { chosenType ->
-        chosenType.randomValue()?.let { value ->
-          if (discriminator == null) value
-          else (value as Map<String, Any?>) + (discriminator.propertyName to discriminator.getMappingName(chosenType.name))
-        }
-      }
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Any> = generateFromAnySubType(ctx)
 
   private fun validateWithDiscriminator(value: Any): Result<Any> {
     val discriminatorValue = (value as? Map<*, *>)?.get(discriminator!!.propertyName)

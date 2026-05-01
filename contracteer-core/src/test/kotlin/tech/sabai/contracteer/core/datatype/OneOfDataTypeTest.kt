@@ -2,6 +2,9 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.dsl.*
 import tech.sabai.contracteer.core.normalize
 
@@ -89,6 +92,107 @@ class OneOfDataTypeTest {
 
     // then
     assert(oneOfDataType.validate(randomValue).isSuccess())
+  }
+
+  @Test
+  fun `randomValue picks non-cycling subtype of oneOf when one subtype cycles`() {
+    // given
+    val proxy = ProxyDataType("Recursive")
+    val recursive = objectType(name = "Recursive") {
+      properties { "self" to proxy }
+      required("self")
+    }
+    proxy.delegate = recursive
+    val other = objectType(name = "Other") {
+      properties { "marker" to stringType() }
+    }
+    val oneOfDataType = oneOfType(name = "OneOfTypes") {
+      subType(proxy)
+      subType(other)
+    }
+
+    // when
+    val results = (1..50).map { oneOfDataType.randomValue(GenerationContext.default()) }
+
+    // then
+    assert(results.all { it is Value && (it.value as Map<*, *>).containsKey("marker") })
+  }
+
+  @Test
+  fun `randomValue injects discriminator on the picked oneOf subtype`() {
+    // given
+    val wrapperProxy = ProxyDataType("Wrapper")
+    val wrapper = objectType(name = "Wrapper") {
+      properties {
+        "type" to stringType()
+        "recursive" to wrapperProxy
+      }
+      required("type", "recursive")
+    }
+    wrapperProxy.delegate = wrapper
+    val other = objectType(name = "Other") {
+      properties {
+        "type" to stringType()
+        "marker" to stringType()
+      }
+    }
+    val oneOfDataType = oneOfType(name = "OneOfTypes") {
+      subType(wrapper)
+      subType(other)
+      discriminator("type") {
+        mapping("wrap", "Wrapper")
+        mapping("other", "Other")
+      }
+    }
+
+    // when
+    val results = (1..50).map { oneOfDataType.randomValue(GenerationContext.default()) }
+
+    // then
+    assert(results.all { it is Value && (it.value as Map<*, *>)["type"] == "other" })
+  }
+
+  @Test
+  fun `randomValue returns Boundary when all oneOf subtypes cycle`() {
+    // given
+    val proxyA = ProxyDataType("A")
+    val a = objectType(name = "A") {
+      properties { "child" to proxyA }
+      required("child")
+    }
+    proxyA.delegate = a
+    val proxyB = ProxyDataType("B")
+    val b = objectType(name = "B") {
+      properties { "child" to proxyB }
+      required("child")
+    }
+    proxyB.delegate = b
+    val oneOfDataType = oneOfType(name = "OneOfBoth") {
+      subType(a)
+      subType(b)
+    }
+
+    // when
+    val result = oneOfDataType.randomValue(GenerationContext.default())
+
+    // then
+    assert(result is Boundary && result.reason == Reason.CYCLE)
+  }
+
+  @Test
+  fun `randomValue propagates the subtype boundary reason when budget exhausts every oneOf subtype`() {
+    // given
+    val oneOfDataType = oneOfType(name = "OneOfTypes") {
+      subType(stringType())
+      subType(integerType())
+    }
+    val ctx = GenerationContext.withBudget(maxDepth = 10, maxNodes = 1)
+
+    // when
+    val result = oneOfDataType.randomValue(ctx)
+
+    // then
+    assert(result is Boundary && result.reason == Reason.NODES)
   }
 
   @Nested

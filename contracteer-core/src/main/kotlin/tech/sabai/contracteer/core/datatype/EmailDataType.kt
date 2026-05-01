@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 
 /** OpenAPI `string` type with `format: email`. Values must be valid email addresses. */
 class EmailDataType private constructor(name: String,
@@ -31,16 +32,20 @@ class EmailDataType private constructor(name: String,
         if (emailRegex.matches(value)) success(value) else failure("Invalid email. The provided string is not a valid email address.")
       }
 
-  override fun doRandomValue(): String {
-    val length = lengthRange.randomIntegerValue().toLong().coerceAtMost(50)
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
+    val length = lengthRange.randomIntegerValue().toLong().coerceIn(MIN_LENGTH, MAX_LENGTH)
     val randomString = (1..length).map { candidateChars.random() }.joinToString("")
-    return randomString.toCharArray().also {
-      it[randomString.length - 3] = '.'
-      it[(randomString.length - 3) / 2] = '@'
-    }.joinToString("")
+    return Value(
+      randomString.toCharArray().also {
+        it[randomString.length - 3] = '.'
+        it[(randomString.length - 3) / 2] = '@'
+      }.joinToString("")
+    )
   }
 
   companion object {
+    private const val MIN_LENGTH = 6L
+    private const val MAX_LENGTH = 50L
     @JvmStatic
     @JvmOverloads
     fun create(

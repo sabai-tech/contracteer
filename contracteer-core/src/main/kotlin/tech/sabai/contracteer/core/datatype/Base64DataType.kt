@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import io.github.oshai.kotlinlogging.KotlinLogging
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import java.util.*
 import kotlin.random.Random
 
@@ -30,33 +31,30 @@ class Base64DataType private constructor(name: String,
         }
       }
 
-  override fun doRandomValue(): String {
-    val minEncodedLength = closestMultipleOf4(lengthRange.randomIntegerValue().toInt()).coerceAtMost(100)
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
+    val randomBytes = ByteArray(randomByteCount()).also { Random.nextBytes(it) }
+    return Value(Base64.getEncoder().encodeToString(randomBytes))
+  }
 
-    // In standard Base64 encoding, every 3 bytes of binary data turn into 4 Base64 characters
-    val n = minEncodedLength / 4
-    val minBytes = (n - 1) * 3 + 1
-    val maxBytes = n * 3
-
-    val byteCount = if (maxBytes > minBytes) {
-      minBytes + Random.nextInt(maxBytes - minBytes + 1)
-    } else {
-      minBytes
-    }
-    val randomBytes = ByteArray(byteCount).also { Random.nextBytes(it) }
-    return Base64.getEncoder().encodeToString(randomBytes)
+  // Standard Base64 encoding: every 3 input bytes produce 4 Base64 characters.
+  // Pick an encoded length aligned to a multiple of 4, then derive a byte count whose
+  // encoded form lands on that length.
+  private fun randomByteCount(): Int {
+    val encodedLength = closestMultipleOf4(lengthRange.randomIntegerValue().toInt()).coerceAtMost(MAX_ENCODED_LENGTH)
+    val groups = encodedLength / 4
+    val minBytes = (groups - 1) * 3 + 1
+    val maxBytes = groups * 3
+    return if (maxBytes > minBytes) minBytes + Random.nextInt(maxBytes - minBytes + 1) else minBytes
   }
 
   private fun closestMultipleOf4(value: Int): Int {
     val remainder = value % 4
-    return if (remainder < 2) {
-      value - remainder
-    } else {
-      value + (4 - remainder)
-    }
+    return if (remainder < 2) value - remainder else value + (4 - remainder)
   }
 
   companion object {
+    private const val MAX_ENCODED_LENGTH = 100
+
     @JvmStatic
     @JvmOverloads
     fun create(

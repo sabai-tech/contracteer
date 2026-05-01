@@ -4,6 +4,8 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.joinWithQuotes
 import java.lang.System.lineSeparator
 
@@ -11,7 +13,7 @@ import java.lang.System.lineSeparator
 class AllOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
                                         isNullable: Boolean,
-                                        val discriminator: Discriminator?,
+                                        override val discriminator: Discriminator?,
                                         allowedValues: AllowedValues? = null):
     CompositeDataType<Any>(name,
                            "allOf",
@@ -73,12 +75,37 @@ class AllOfDataType private constructor(name: String,
     else                    -> emptySet()
   }
 
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Any> =
+    if (subTypes.size == 1) generateFromSingleSubType(ctx)
+    else                    generateFromMergedSubTypes(ctx)
+
+  private fun generateFromSingleSubType(ctx: GenerationContext): GenerationOutcome<Any> {
+    val singleSubType = subTypes.single()
+    return when (val result = singleSubType.randomValue(ctx).forProperty(singleSubType.name)) {
+      is Boundary -> result
+      is Value    -> Value(injectDiscriminator(result.value, name))
+    }
+  }
+
+  private fun generateFromMergedSubTypes(ctx: GenerationContext): GenerationOutcome<Any> {
+    val mergedProperties = mutableMapOf<String, Any?>()
+    for (subType in subTypes) {
+      when (val subTypeResult = subType.randomValue(ctx).forProperty(subType.name)) {
+        is Boundary -> return subTypeResult
+        is Value    -> mergeMapInto(subTypeResult.value, mergedProperties)
+      }
+    }
+    return Value(injectDiscriminator(mergedProperties, name))
+  }
+
+  // Create-time validation rejects multi-subtype allOf containing non-structured subtypes, so
+  // every Value produced here must be a Map. Failing that invariant at runtime is a programmer error.
   @Suppress("UNCHECKED_CAST")
-  override fun doRandomValue(): Any? {
-    val values = subTypes.map { it.randomValue() }
-    if (values.any { it !is Map<*, *> }) return values.first()
-    val randomValue = (values as List<Map<String, Any?>>).reduce { acc, properties -> acc + properties }
-    return discriminator?.let { randomValue + (it.propertyName to it.getMappingName(name)) } ?: randomValue
+  private fun mergeMapInto(value: Any?, target: MutableMap<String, Any?>) {
+    require(value is Map<*, *>) {
+      "allOf '$name' produced a non-map value from a structured sub-schema; this violates the create-time validation invariant."
+    }
+    target.putAll(value as Map<String, Any?>)
   }
 
   private fun validateDiscriminator(value: Any): Result<Any> {

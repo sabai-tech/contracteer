@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import java.util.UUID.fromString
 import java.util.UUID.randomUUID
 
@@ -21,7 +22,7 @@ class UuidDataType private constructor(name: String,
       failure("the provided string is not a valid UUID")
     }
 
-  override fun doRandomValue() = randomUUID().toString()
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> = Value(randomUUID().toString())
 
   companion object {
     @JvmStatic

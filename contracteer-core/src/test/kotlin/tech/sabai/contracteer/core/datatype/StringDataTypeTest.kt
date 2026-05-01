@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.assertSuccess
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.dsl.stringType
 
 class StringDataTypeTest {
@@ -106,6 +107,19 @@ class StringDataTypeTest {
 
       // then
       assert(enum.contains(result))
+    }
+
+    @Test
+    fun `randomValue returns Value of null for enum of only null on nullable type`() {
+      // given
+      val stringDataType = stringType(isNullable = true, enum = listOf(null))
+      val ctx = GenerationContext.default()
+
+      // when
+      val result = stringDataType.randomValue(ctx)
+
+      // then
+      assert(result is Value && result.value == null)
     }
   }
 

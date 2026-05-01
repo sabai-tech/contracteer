@@ -17,6 +17,7 @@ import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.core.datatype.NumberDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.datatype.OneOfDataType
+import tech.sabai.contracteer.core.datatype.ProxyDataType
 import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.datatype.UuidDataType
 
@@ -142,6 +143,24 @@ fun objectType(
     minProperties = minProperties,
     maxProperties = maxProperties
   ).assertSuccess()
+}
+
+fun cyclicObjectType(
+  name: String,
+  isNullable: Boolean = false,
+  allowAdditionalProperties: Boolean = true,
+  block: ObjectTypeBuilder.(ProxyDataType) -> Unit): ObjectDataType {
+  val proxy = ProxyDataType(name)
+  val builder = ObjectTypeBuilder().apply { block(proxy) }
+  val obj = ObjectDataType.create(
+    name = name,
+    properties = builder.properties,
+    requiredProperties = builder.required,
+    allowAdditionalProperties = allowAdditionalProperties,
+    isNullable = isNullable
+  ).assertSuccess()
+  proxy.delegate = obj
+  return obj
 }
 
 fun allOfType(

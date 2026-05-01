@@ -2,11 +2,8 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.dsl.arrayType
-import tech.sabai.contracteer.core.dsl.booleanType
-import tech.sabai.contracteer.core.dsl.integerType
-import tech.sabai.contracteer.core.dsl.numberType
-import tech.sabai.contracteer.core.dsl.stringType
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.*
+import tech.sabai.contracteer.core.dsl.*
 import tech.sabai.contracteer.core.normalize
 import java.math.BigDecimal
 
@@ -170,6 +167,19 @@ class ArrayDataTypeTest {
       // then
       assert(result.size >= 3)
     }
+
+    @Test
+    fun `randomValue returns Boundary when array cannot satisfy minItems`() {
+      // given
+      val arrayDataType = arrayType(items = stringType(), minItems = 5)
+      val ctx = GenerationContext.withBudget(maxDepth = 10, maxNodes = 3)
+
+      // when
+      val result = arrayDataType.randomValue(ctx)
+
+      // then
+      assert(result is Boundary && result.reason == Reason.NODES)
+    }
   }
 
   @Nested
@@ -329,7 +339,7 @@ class ArrayDataTypeTest {
       val result = ArrayDataType.create(
         "array",
         integerType(minimum = BigDecimal.ZERO,
-                        maximum = BigDecimal.TWO),
+                    maximum = BigDecimal.TWO),
         uniqueItems = true,
         minItems = 4
       )
@@ -344,8 +354,8 @@ class ArrayDataTypeTest {
       val result = ArrayDataType.create(
         "array",
         integerType(minimum = BigDecimal.ZERO,
-                        maximum = BigDecimal.TEN,
-                        multipleOf = BigDecimal(5)),
+                    maximum = BigDecimal.TEN,
+                    multipleOf = BigDecimal(5)),
         uniqueItems = true,
         minItems = 4
       )
@@ -360,8 +370,8 @@ class ArrayDataTypeTest {
       val result = ArrayDataType.create(
         "array",
         numberType(minimum = BigDecimal.ZERO,
-                       maximum = BigDecimal.TEN,
-                       multipleOf = BigDecimal(5)),
+                   maximum = BigDecimal.TEN,
+                   multipleOf = BigDecimal(5)),
         uniqueItems = true,
         minItems = 4
       )
@@ -376,9 +386,9 @@ class ArrayDataTypeTest {
       val result = ArrayDataType.create(
         "array",
         numberType(minimum = BigDecimal.ZERO,
-                       maximum = BigDecimal.TEN,
-                       exclusiveMinimum = true,
-                       multipleOf = BigDecimal(5)),
+                   maximum = BigDecimal.TEN,
+                   exclusiveMinimum = true,
+                   multipleOf = BigDecimal(5)),
         uniqueItems = true,
         minItems = 3
       )
@@ -402,6 +412,112 @@ class ArrayDataTypeTest {
 
       // then
       assert(values.all { it.size == it.distinct().size })
+    }
+
+    @Test
+    fun `randomValue returns unique items when uniqueItems is true`() {
+      // given
+      val arrayDataType = arrayType(
+        items = stringType(enum = listOf("a", "b", "c", "d", "e")),
+        uniqueItems = true,
+        minItems = 3,
+        maxItems = 5
+      )
+
+      // when
+      val values = (1..20).map {
+        (arrayDataType.randomValue(GenerationContext.default()) as Value<*>).value as List<*>
+      }
+
+      // then
+      assert(values.all { it.size == it.distinct().size })
+    }
+
+    @Test
+    fun `randomValue returns Boundary when uniqueItems and minItems cannot be satisfied due to cycling items`() {
+      // given
+      val proxy = ProxyDataType("Node")
+      val node = objectType(name = "Node") {
+        properties { "child" to proxy }
+        required("child")
+      }
+      proxy.delegate = node
+      val arrayDataType = arrayType(items = proxy, uniqueItems = true, minItems = 5)
+
+      // when
+      val result = arrayDataType.randomValue(GenerationContext.default())
+
+      // then
+      assert(result is Boundary)
+      assert((result as Boundary).reason == Reason.CYCLE)
+    }
+
+    @Test
+    fun `randomValue with uniqueItems returns Boundary instead of hanging when items deterministically absorb to the same value`() {
+      // given a recursive nullable schema whose cycle is absorbed as null at every call,
+      // making each randomValue produce the same Value({child: null}). Without an
+      // iteration cap this would hang because distinct cannot reach minItems.
+      val proxy = ProxyDataType("Node")
+      val node = objectType(name = "Node", isNullable = true) {
+        properties { "child" to proxy }
+        required("child")
+      }
+      proxy.delegate = node
+      val arrayDataType = arrayType(items = proxy, uniqueItems = true, minItems = 5)
+
+      // when
+      val result = arrayDataType.randomValue(GenerationContext.default())
+
+      // then — the test guards termination; the specific Reason is implementation-detail.
+      assert(result is Boundary)
+    }
+  }
+
+  @Nested
+  inner class WithNullableItems {
+
+    @Test
+    fun `randomValue keeps null in list when nullable item hits boundary`() {
+      // given
+      val item = objectType(name = "Item", isNullable = true) {
+        properties {
+          "value" to stringType()
+        }
+        required("value")
+      }
+      val arrayDataType = arrayType(items = item, minItems = 5)
+      val ctx = GenerationContext.withBudget(maxDepth = 10, maxNodes = 9)
+
+      // when
+      val result = arrayDataType.randomValue(ctx)
+
+      // then
+      assert(result is Value && (result.value as List<*>).any { it == null })
+    }
+  }
+
+  @Nested
+  inner class WithNonNullableItems {
+
+    @Test
+    fun `randomValue propagates first item boundary reason when items are filtered`() {
+      // given
+      val proxy = ProxyDataType("Node")
+      val node = objectType(name = "Node") {
+        properties {
+          "child" to proxy
+        }
+        required("child")
+      }
+      proxy.delegate = node
+      val arrayDataType = arrayType(items = proxy, minItems = 3)
+      val ctx = GenerationContext.withBudget(maxDepth = 10, maxNodes = 100)
+
+      // when
+      val result = arrayDataType.randomValue(ctx)
+
+      // then
+      assert(result is Boundary && result.reason == Reason.CYCLE)
     }
   }
 }

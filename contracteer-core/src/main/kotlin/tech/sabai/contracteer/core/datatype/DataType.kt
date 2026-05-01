@@ -33,8 +33,8 @@ sealed interface DataType<T> {
    */
   fun validate(value: Any?): Result<T?>
 
-  /** Generates a random value conforming to this data type's constraints. */
-  fun randomValue(): T?
+  /** Generates a random value under [ctx], returning a typed [GenerationOutcome] outcome. */
+  fun randomValue(ctx: GenerationContext): GenerationOutcome<T>
 
   /** Returns `true` if this type has a fully defined structure (object, allOf, oneOf, anyOf). */
   fun isFullyStructured(): Boolean

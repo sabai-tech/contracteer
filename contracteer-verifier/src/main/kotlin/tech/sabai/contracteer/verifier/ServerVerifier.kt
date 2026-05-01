@@ -3,7 +3,10 @@ package tech.sabai.contracteer.verifier
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.http4k.core.Request
 import org.http4k.core.Response
+import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Failure
+import tech.sabai.contracteer.core.Result.Success
 
 /**
  * Verifies a real server implementation against OpenAPI contract expectations.
@@ -22,11 +25,25 @@ class ServerVerifier(configuration: ServerConfiguration) {
    */
   fun verify(case: VerificationCase): VerificationOutcome =
     runCatching { client.execute(case) }.fold(
-      onSuccess = validateRequestResponse(case),
-      onFailure = handleFailure(case)
+      onSuccess = { handleExecutionResult(case, it) },
+      onFailure = { e ->
+        VerificationOutcome(
+          case,
+          failure("Request failed: ${e::class.simpleName}: ${e.message ?: "<no message>"}")
+        )
+      }
     )
 
-  private fun validateRequestResponse(case: VerificationCase): (Pair<Request, Response>) -> VerificationOutcome = { (request, response) ->
+  private fun handleExecutionResult(case: VerificationCase,
+                                    executionResult: Result<Pair<Request, Response>>): VerificationOutcome =
+    when (executionResult) {
+      is Success -> validateRequestResponse(case, executionResult.value)
+      is Failure -> VerificationOutcome(case, executionResult.retypeError())
+    }
+
+  private fun validateRequestResponse(case: VerificationCase,
+                                      requestResponse: Pair<Request, Response>): VerificationOutcome {
+    val (request, response) = requestResponse
     httpLogger.debug { formatRequest(request) }
     httpLogger.debug { formatResponse(response) }
     val validationResult = ResponseValidator.validate(case, response)
@@ -38,13 +55,8 @@ class ServerVerifier(configuration: ServerConfiguration) {
       }
       httpLogger.warn { "Enable DEBUG logging for 'tech.sabai.contracteer.http' to see all HTTP traffic" }
     }
-    VerificationOutcome(case, validationResult)
+    return VerificationOutcome(case, validationResult)
   }
-  
-  private fun handleFailure(case: VerificationCase): (Throwable) -> VerificationOutcome = { e ->
-    VerificationOutcome(case, failure("Request failed: ${e::class.simpleName}: ${e.message}"))
-  }
-
 
   private fun formatRequest(request: Request): String {
     val headers = request.headers.joinToString("\n") { (name, value) -> ">> $name: $value" }

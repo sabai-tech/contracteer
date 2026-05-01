@@ -4,10 +4,11 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.joinWithQuotes
 
 /** OpenAPI `object` type, with named properties, required property constraints, and optional additional properties. */
-@Suppress("UNCHECKED_CAST")
 class ObjectDataType private constructor(name: String,
                                          val properties: Map<String, DataType<out Any>>,
                                          val requiredProperties: Set<String> = emptySet(),
@@ -22,7 +23,7 @@ class ObjectDataType private constructor(name: String,
     ResolvedDataType<Map<String, Any?>>(name,
                                         "object",
                                         isNullable,
-                                        Map::class.java as Class<Map<String, Any?>>,
+                                        MAP_CLASS,
                                         allowedValues) {
 
   override fun isFullyStructured() = true
@@ -38,17 +39,33 @@ class ObjectDataType private constructor(name: String,
     else                                                -> success(value)
   }
 
-  override fun doRandomValue(): Map<String, Any?> {
-    val selected = selectProperties()
-    val result = selected
-      .mapValues { it.value.randomValue() }
-      .filterNot { (key, value) -> value == null && !selected[key]!!.isNullable && key !in requiredProperties }
-      .mapValues { (key, value) -> value ?: cycleEmptyValue(selected[key]!!) }
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Map<String, Any?>> {
+    val entries = mutableMapOf<String, Any?>()
+    for ((key, type) in selectProperties()) {
+      when (val result = type.randomValue(ctx).forProperty(key)) {
+        is Value                                  -> entries[key] = result.value
+        is Boundary if type.isNullable            -> entries[key] = null
+        is Boundary if key !in requiredProperties -> Unit
+        is Boundary                               -> return result
+      }
+    }
+    return synthesizeAdditional(entries, ctx)
+  }
 
-    return if (minProperties != null && result.size < minProperties && additionalPropertiesDataType != null)
-      result + generateAdditionalEntries(minProperties - result.size, result.keys)
-    else
-      result
+  private fun synthesizeAdditional(entries: MutableMap<String, Any?>, ctx: GenerationContext): GenerationOutcome<Map<String, Any?>> {
+    val additional = additionalPropertiesDataType
+    val needed = (minProperties ?: 0) - entries.size
+    if (additional == null || needed <= 0) return Value(entries)
+
+    repeat(needed) {
+      val syntheticKey = generateUniqueKey(entries.keys)
+      when (val result = additional.randomValue(ctx).forProperty(syntheticKey)) {
+        is Value                             -> entries[syntheticKey] = result.value
+        is Boundary if additional.isNullable -> entries[syntheticKey] = null
+        is Boundary                          -> return result
+      }
+    }
+    return Value(entries)
   }
 
   private fun selectProperties(): Map<String, DataType<out Any>> {
@@ -61,26 +78,6 @@ class ObjectDataType private constructor(name: String,
       .take(maxProperties - required.size)
       .associate { it.key to it.value }
     return required + optional
-  }
-
-  private fun cycleEmptyValue(dataType: DataType<out Any>): Any? {
-    val resolved = if (dataType is ProxyDataType) dataType.delegate else dataType
-    return when {
-      resolved.isNullable              -> null
-      resolved is ArrayDataType        -> emptyList<Any>()
-      resolved is ObjectDataType       -> emptyMap<String, Any>()
-      resolved is CompositeDataType<*> -> emptyMap<String, Any>()
-      else                             -> error("Unexpected cycle boundary type: ${resolved.openApiType}")
-    }
-  }
-
-  private fun generateAdditionalEntries(count: Int, existingKeys: Set<String>): Map<String, Any?> {
-    val usedKeys = existingKeys.toMutableSet()
-    return (1..count).associate {
-      val key = generateUniqueKey(usedKeys)
-      usedKeys.add(key)
-      key to additionalPropertiesDataType!!.randomValue()
-    }
   }
 
   private fun generateUniqueKey(existingKeys: Set<String>): String {
@@ -138,6 +135,10 @@ class ObjectDataType private constructor(name: String,
   }
 
   companion object {
+    // Generic erasure forces an unchecked cast to express the value-type parameter.
+    @Suppress("UNCHECKED_CAST")
+    private val MAP_CLASS: Class<Map<String, Any?>> = Map::class.java as Class<Map<String, Any?>>
+
     @JvmStatic
     @JvmOverloads
     fun create(

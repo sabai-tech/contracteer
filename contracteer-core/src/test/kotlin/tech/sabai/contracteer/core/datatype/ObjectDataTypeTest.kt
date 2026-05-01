@@ -3,6 +3,8 @@ package tech.sabai.contracteer.core.datatype
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.booleanType
 import tech.sabai.contracteer.core.dsl.integerType
@@ -400,6 +402,52 @@ class ObjectDataTypeTest {
     assert(itemRequestType.properties.containsKey("name"))
   }
 
+  @Test
+  fun `randomValue returns Boundary with Reason DEPTH when nested objects exceed maxDepth`() {
+    // given — two required-non-nullable nesting levels; budget allows depth 1 only
+    val inner = objectType(name = "Inner") {
+      properties { "value" to stringType() }
+      required("value")
+    }
+    val outer = objectType(name = "Outer") {
+      properties { "inner" to inner }
+      required("inner")
+    }
+    val ctx = GenerationContext.withBudget(maxDepth = 1, maxNodes = 1000)
+
+    // when
+    val result = outer.randomValue(ctx)
+
+    // then
+    assert(result is Boundary)
+    assert((result as Boundary).reason == Reason.DEPTH)
+  }
+
+  @Test
+  fun `randomValue succeeds for required enum-typed properties under tight budget`() {
+    // given
+    val enumValues = listOf("a", "b", "c")
+    val container = objectType(name = "Container") {
+      properties {
+        "p1" to stringType(enum = enumValues)
+        "p2" to stringType(enum = enumValues)
+        "p3" to stringType(enum = enumValues)
+        "p4" to stringType(enum = enumValues)
+        "p5" to stringType(enum = enumValues)
+      }
+      required("p1", "p2", "p3", "p4", "p5")
+    }
+    val ctx = GenerationContext.withBudget(maxDepth = 10, maxNodes = 1)
+
+    // when
+    val result = container.randomValue(ctx)
+
+    // then
+    assert(result is GenerationOutcome.Value)
+    val entries = (result as GenerationOutcome.Value).value as Map<*, *>
+    assert(entries.size == 5)
+  }
+
   @Nested
   inner class WithEnum {
 
@@ -543,6 +591,34 @@ class ObjectDataTypeTest {
 
       // then
       assert(result.isSuccess())
+    }
+
+    @Test
+    fun `randomValue returns Boundary when minProperties cannot be met via additionalProperties synthesis`() {
+      // given
+      val proxy = ProxyDataType("Recursive")
+      val recursive = objectType(name = "Recursive") {
+        properties { "self" to proxy }
+        required("self")
+      }
+      proxy.delegate = recursive
+      val container = objectType(
+        name = "Container",
+        additionalPropertiesDataType = proxy,
+        minProperties = 5
+      ) {
+        properties {
+          "name" to stringType()
+          "age" to integerType()
+        }
+      }
+      val ctx = GenerationContext.default()
+
+      // when
+      val result = container.randomValue(ctx)
+
+      // then
+      assert(result is Boundary && result.reason == Reason.CYCLE)
     }
   }
 

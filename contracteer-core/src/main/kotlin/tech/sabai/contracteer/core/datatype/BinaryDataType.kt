@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import kotlin.math.absoluteValue
 
 /** OpenAPI `string` type with `format: binary`. Values are raw binary strings. */
@@ -19,9 +20,9 @@ class BinaryDataType private constructor(name: String,
       .mapErrors { "Invalid length. Expected a value within $lengthRange, but got ${value.length}." }
       .map { value }
 
-  override fun doRandomValue(): String {
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
     val length = lengthRange.randomIntegerValue().toInt().absoluteValue.coerceAtMost(100)
-    return String(CharArray(length) { PRINTABLE_ASCII.random() })
+    return Value(String(CharArray(length) { PRINTABLE_ASCII.random() }))
   }
 
   companion object {

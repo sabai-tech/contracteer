@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.datatype
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import java.math.BigDecimal
 
 /** OpenAPI `integer` type, with optional range constraints. Values are represented as [BigDecimal]. */
@@ -28,8 +29,11 @@ class IntegerDataType private constructor(name: String,
     }
   }
 
-  override fun doRandomValue(): BigDecimal =
-    if (multipleOf != null) range.randomMultipleOf(multipleOf) else range.randomIntegerValue()
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<BigDecimal> =
+    Value(
+      if (multipleOf != null) range.randomMultipleOf(multipleOf) 
+      else range.randomIntegerValue()
+    )
 
   companion object {
     @JvmStatic

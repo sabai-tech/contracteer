@@ -5,9 +5,14 @@ import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.cookie.cookie
+import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.UrlEncoding
+import tech.sabai.contracteer.core.datatype.GenerationContext
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.core.operation.ParameterElement.*
+import tech.sabai.contracteer.core.result
 import tech.sabai.contracteer.core.serde.MultipartSerde
 import tech.sabai.contracteer.core.serde.Serde
 import tech.sabai.contracteer.verifier.VerificationCase.*
@@ -16,114 +21,114 @@ internal class VerificationHttpClient(serverUrl: String) {
   private val serverUrl = serverUrl.trimEnd('/')
   private val baseClient = JavaHttpClient()
 
-  fun execute(case: VerificationCase): Pair<Request, Response> {
-    return when (case) {
-      is ScenarioBased -> executeScenario(case)
-      is SchemaBased   -> executeSchemaBased(case)
-      is TypeMismatch  -> executeTypeMismatch(case)
-    }
-  }
+  fun execute(case: VerificationCase): Result<Pair<Request, Response>> =
+    buildRequest(case).map { request -> request to baseClient(request) }
 
-  private fun executeScenario(case: ScenarioBased): Pair<Request, Response> {
-    val scenario = case.scenario
-    validateScenarioParameterElements(scenario.request.parameterValues, case.requestSchema)
-
-    val pathParams = buildPathParameters(scenario.request.parameterValues, case.requestSchema)
-    val bodySchema = case.requestContentType?.let { ct -> case.requestSchema.bodies.find { it.contentType == ct } }
-    val request = Request(
-      method = Method.valueOf(scenario.method.uppercase()),
-      uri = resolvePathUri(scenario.path, pathParams))
-      .withScenarioParameters(scenario.request.parameterValues, case.requestSchema)
-      .withScenarioRequestBody(scenario.request.body, bodySchema)
-      .withAcceptHeader(scenario.response.body?.contentType)
-
-    return request to baseClient(request)
-  }
-
-  private fun Request.withScenarioRequestBody(body: ScenarioBody?, bodySchema: BodySchema?): Request =
-    when {
-      body != null       -> withScenarioBody(body, bodySchema?.serde)
-      bodySchema != null -> withGeneratedBody(bodySchema)
-      else               -> this
+  private fun buildRequest(case: VerificationCase): Result<Request> =
+    when (case) {
+      is ScenarioBased -> buildScenarioRequest(case)
+      is SchemaBased   -> buildSchemaBasedRequest(case)
+      is TypeMismatch  -> buildTypeMismatchRequest(case)
     }
 
-  private fun executeSchemaBased(case: SchemaBased): Pair<Request, Response> {
-    val pathParams = case.requestSchema.pathParameters
-      .flatMap { it.codec.encode(it.dataType.randomValue()) }
-      .toMap()
+  private fun buildScenarioRequest(case: ScenarioBased): Result<Request> =
+    result {
+      val scenario = case.scenario
+      validateScenarioParameterElements(scenario.request.parameterValues, case.requestSchema).bind()
 
-    val request = Request(
-      method = Method.valueOf(case.method.uppercase()),
-      uri = resolvePathUri(case.path, pathParams))
-      .withGeneratedParameters(case.requestSchema)
-      .withGeneratedBody(
-        case.requestSchema.bodies.find { it.contentType == case.requestContentType })
-      .withAcceptHeader(case.responseContentType)
+      val pathParams = buildPathParameters(scenario.request.parameterValues, case.requestSchema).bind()
+      val bodySchema = case.requestContentType?.let { ct -> case.requestSchema.bodies.find { it.contentType == ct } }
+      Request(
+        method = Method.valueOf(scenario.method.uppercase()),
+        uri = resolvePathUri(scenario.path, pathParams))
+        .withScenarioParameters(scenario.request.parameterValues, case.requestSchema).bind()
+        .withScenarioRequestBody(scenario.request.body, bodySchema).bind()
+        .withAcceptHeader(scenario.response.body?.contentType)
+    }
 
-    return request to baseClient(request)
-  }
+  private fun buildSchemaBasedRequest(case: SchemaBased): Result<Request> =
+    result {
+      val pathParams = generatePathParameters(case.requestSchema.pathParameters).bind()
+      Request(
+        method = Method.valueOf(case.method.uppercase()),
+        uri = resolvePathUri(case.path, pathParams))
+        .withGeneratedParameters(case.requestSchema).bind()
+        .withGeneratedBody(case.requestSchema.bodies.find { it.contentType == case.requestContentType }).bind()
+        .withAcceptHeader(case.responseContentType)
+    }
 
-  private fun executeTypeMismatch(case: TypeMismatch): Pair<Request, Response> {
-    val mutatedElement = case.mutatedElement
-
-    val pathParams = case.requestSchema.pathParameters.associate { param ->
-      val value = when (mutatedElement) {
-        is MutatedElement.Parameter if mutatedElement.element == param.element ->
-          case.mutatedValue
-        else                                                                   ->
-          param.codec
-            .encode(param.dataType.randomValue())
-            .single().second
+  private fun buildTypeMismatchRequest(case: TypeMismatch): Result<Request> =
+    result {
+      val mutatedElement = case.mutatedElement
+      val pathParams = case.requestSchema.pathParameters.associate { param ->
+        val value = when {
+          mutatedElement is MutatedElement.Parameter && mutatedElement.element == param.element ->
+            case.mutatedValue
+          else                                                                                  ->
+            param.codec.encode(param.generate().bind()).single().second
+        }
+        param.element.name to value
       }
-      param.element.name to value
+
+      Request(
+        method = Method.valueOf(case.method.uppercase()),
+        uri = resolvePathUri(case.path, pathParams))
+        .withTypeMismatchParameters(case).bind()
+        .withTypeMismatchBody(case).bind()
+        .withAcceptHeader(case.responseContentType)
     }
 
-    val request = Request(
-      method = Method.valueOf(case.method.uppercase()),
-      uri = resolvePathUri(case.path, pathParams))
-      .withTypeMismatchParameters(case)
-      .withTypeMismatchBody(case)
-      .withAcceptHeader(case.responseContentType)
+  private fun Request.withScenarioRequestBody(body: ScenarioBody?, bodySchema: BodySchema?): Result<Request> =
+    when {
+      body != null       -> success(withScenarioBody(body, bodySchema?.serde))
+      bodySchema != null -> withGeneratedBody(bodySchema)
+      else               -> success(this)
+    }
 
-    return request to baseClient(request)
-  }
-
-  private fun Request.withTypeMismatchParameters(case: TypeMismatch): Request {
+  private fun Request.withTypeMismatchParameters(case: TypeMismatch): Result<Request> = result {
     val mutatedElement = case.mutatedElement
-    return case.requestSchema.parameters.fold(this) { req, param ->
+    case.requestSchema.parameters.fold(this@withTypeMismatchParameters) { req, param ->
       when {
         param.element is PathParam                                                            ->
           req
         mutatedElement is MutatedElement.Parameter && mutatedElement.element == param.element ->
           req.placeRawValue(param, case.mutatedValue)
         else                                                                                  ->
-          req.placeEncodedEntries(param, param.codec.encode(param.dataType.randomValue()))
+          req.placeEncodedEntries(param, param.codec.encode(param.generate().bind()))
       }
     }
   }
 
-  private fun Request.withTypeMismatchBody(case: TypeMismatch): Request {
-    return if (case.mutatedElement is MutatedElement.Body) {
-      case.requestContentType?.let { header("Content-Type", it.value).body(case.mutatedValue) } ?: this
-    } else {
+  private fun Request.withTypeMismatchBody(case: TypeMismatch): Result<Request> =
+    if (case.mutatedElement is MutatedElement.Body)
+      success(case.requestContentType?.let { header("Content-Type", it.value).body(case.mutatedValue) } ?: this)
+    else
       withGeneratedBody(case.requestSchema.bodies.find { it.contentType == case.requestContentType })
-    }
-  }
 
   private fun buildPathParameters(parameterValues: Map<ParameterElement, Any?>,
-                                  requestSchema: RequestSchema): Map<String, String> {
-    return requestSchema.pathParameters.flatMap { param ->
-      val value = parameterValues.getOrGenerate(param.element) { param.dataType.randomValue() }
+                                  requestSchema: RequestSchema): Result<Map<String, String>> = result {
+    requestSchema.pathParameters.flatMap { param ->
+      val value = if (parameterValues.containsKey(param.element)) parameterValues[param.element]
+      else param.generate().bind()
       param.codec.encode(value)
     }.toMap()
   }
 
-  private fun Request.withScenarioParameters(parameterValues: Map<ParameterElement, Any?>,
-                                             requestSchema: RequestSchema): Request =
-    withParameters(requestSchema) { parameterValues.getOrGenerate(it.element) { it.dataType.randomValue() } }
+  private fun generatePathParameters(pathParameters: List<ParameterSchema>): Result<Map<String, String>> = result {
+    pathParameters.flatMap { param -> param.codec.encode(param.generate().bind()) }.toMap()
+  }
 
-  private fun Request.withGeneratedParameters(requestSchema: RequestSchema): Request =
-    withParameters(requestSchema) { it.dataType.randomValue() }
+  private fun Request.withScenarioParameters(parameterValues: Map<ParameterElement, Any?>,
+                                             requestSchema: RequestSchema): Result<Request> = result {
+    withParameters(requestSchema) { schema ->
+      if (parameterValues.containsKey(schema.element)) parameterValues[schema.element]
+      else schema.generate().bind()
+    }
+  }
+
+  private fun Request.withGeneratedParameters(requestSchema: RequestSchema): Result<Request> = result {
+    withParameters(requestSchema) { it.generate().bind() }
+  }
 
   private fun Request.withParameters(requestSchema: RequestSchema, valueProvider: (ParameterSchema) -> Any?): Request =
     requestSchema.parameters.fold(this) { req, param ->
@@ -134,12 +139,13 @@ internal class VerificationHttpClient(serverUrl: String) {
     }
 
   private fun validateScenarioParameterElements(parameterValues: Map<ParameterElement, Any?>,
-                                                requestSchema: RequestSchema) {
+                                                requestSchema: RequestSchema): Result<Unit> {
     val allowedElements = requestSchema.parameters.map { it.element }.toSet()
     val unknownElements = parameterValues.keys.filterNot { it in allowedElements }
-    if (unknownElements.isNotEmpty()) {
-      error("No parameter schema found for elements: ${unknownElements.joinToString(", ")}")
-    }
+    return if (unknownElements.isNotEmpty())
+      failure("No parameter schema found for elements: ${unknownElements.joinToString(", ")}")
+    else
+      success()
   }
 
   private fun Request.withScenarioBody(body: ScenarioBody?, serde: Serde?): Request {
@@ -174,12 +180,33 @@ internal class VerificationHttpClient(serverUrl: String) {
     return uri(uri.query(newQuery))
   }
 
-  private fun Request.withGeneratedBody(bodySchema: BodySchema?): Request {
-    return bodySchema?.let {
-      header("Content-Type",
-             contentTypeHeaderValue(it.contentType, it.serde)).body(it.serde.serialize(it.dataType.randomValue()))
-    } ?: this
+  private fun Request.withGeneratedBody(bodySchema: BodySchema?): Result<Request> {
+    if (bodySchema == null) return success(this)
+    return bodySchema.generate().map { value ->
+      header("Content-Type", contentTypeHeaderValue(bodySchema.contentType, bodySchema.serde))
+        .body(bodySchema.serde.serialize(value))
+    }
   }
+
+  private fun ParameterSchema.generate(): Result<Any?> {
+    val kind = when (element) {
+      is PathParam  -> "path"
+      is QueryParam -> "query"
+      is Header     -> "header"
+      is Cookie     -> "cookie"
+    }
+    return dataType.randomValue(GenerationContext.default())
+      .toResult()
+      .forKey(element.name)
+      .forProperty(kind)
+      .forProperty("request")
+  }
+
+  private fun BodySchema.generate(): Result<Any?> =
+    dataType.randomValue(GenerationContext.default())
+      .toResult()
+      .forProperty("body")
+      .forProperty("request")
 
   private fun contentTypeHeaderValue(contentType: ContentType, serde: Serde): String =
     if (serde is MultipartSerde) "${contentType.value}; boundary=${serde.boundary}" else contentType.value
@@ -193,10 +220,7 @@ internal class VerificationHttpClient(serverUrl: String) {
       uri.replace("{$name}", encodePathSegment(value))
     }
 
+  // Path segments must use %20 for spaces; the underlying encoder produces `+` (form-encoding).
   private fun encodePathSegment(value: String): String =
     UrlEncoding.encode(value, false).replace("+", "%20")
-
-  private fun <V> Map<ParameterElement, V>.getOrGenerate(key: ParameterElement, generator: () -> V): V {
-    return if (containsKey(key)) getValue(key) else generator()
-  }
 }

@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
 import tech.sabai.contracteer.core.dsl.allOfType
 import tech.sabai.contracteer.core.dsl.booleanType
 import tech.sabai.contracteer.core.dsl.integerType
@@ -66,6 +67,35 @@ class AllOfDataTypeTest {
 
     // then
     assert(allOfDataType.validate(randomValue).isSuccess())
+  }
+
+  @Test
+  fun `randomValue returns Boundary when an allOf subtype cycles`() {
+    // given
+    val proxy = ProxyDataType("Recursive")
+    val recursive = objectType(name = "Recursive") {
+      properties {
+        "self" to proxy
+      }
+      required("self")
+    }
+    proxy.delegate = recursive
+    val other = objectType(name = "Other") {
+      properties {
+        "marker" to stringType()
+      }
+    }
+    val combined = allOfType(name = "Combined") {
+      subType(proxy)
+      subType(other)
+    }
+    val ctx = GenerationContext.default()
+
+    // when
+    val result = combined.randomValue(ctx)
+
+    // then
+    assert(result is Boundary)
   }
 
   @Nested

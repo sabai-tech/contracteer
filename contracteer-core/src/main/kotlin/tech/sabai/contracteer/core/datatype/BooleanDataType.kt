@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import kotlin.random.Random
 
 /** OpenAPI `boolean` type. */
@@ -11,7 +12,7 @@ class BooleanDataType private constructor(name: String, isNullable: Boolean, all
 
   override fun doValidate(value: Boolean) = success(value)
 
-  override fun doRandomValue() = Random.nextBoolean()
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Boolean> = Value(Random.nextBoolean())
 
   companion object {
     @JvmStatic

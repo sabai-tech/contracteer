@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -22,7 +23,7 @@ class DateTimeDataType private constructor(name: String, isNullable: Boolean, al
       failure("Invalid date-time. The provided string is not in the ISO DATE TIME WITH OFFSET format (e.g., 2023-06-01T15:30:00+01:00).")
     }
 
-  override fun doRandomValue(): String {
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
     val year = Random.nextInt(2000, 2100)
     val month = Random.nextInt(1, 13)
     val day = Random.nextInt(1, LocalDate.of(year, month, 1).lengthOfMonth() + 1)
@@ -33,7 +34,7 @@ class DateTimeDataType private constructor(name: String, isNullable: Boolean, al
     val offset = ZoneOffset.ofHours(Random.nextInt(-12, 15))
     val dateTime = OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset)
 
-    return dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+    return Value(dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
   }
 
   companion object {

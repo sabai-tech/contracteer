@@ -11,6 +11,8 @@ import tech.sabai.contracteer.core.codec.ContentCodec
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.datatype.GenerationOutcome
+import tech.sabai.contracteer.core.datatype.GenerationContext
 import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.HttpHeaderValue
@@ -208,7 +210,12 @@ internal class ParameterExtractor(
   private fun schemaCandidates(dataType: DataType<out Any>): Sequence<Any?> = when {
     dataType.allowedValues != null       -> dataType.allowedValues!!.asSequence()
     isHeaderSafeByConstruction(dataType) -> emptySequence()
-    else                                 -> generateSequence { dataType.randomValue() }.take(HEADER_SAMPLE_COUNT)
+    else                                 -> generateSequence {
+      when (val result = dataType.randomValue(GenerationContext.default())) {
+        is GenerationOutcome.Value    -> result.value
+        is GenerationOutcome.Boundary -> null
+      }
+    }.take(HEADER_SAMPLE_COUNT)
   }
 
   private fun isHeaderSafeByConstruction(dataType: DataType<out Any>): Boolean =

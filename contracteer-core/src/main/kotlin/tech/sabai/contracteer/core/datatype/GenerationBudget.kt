@@ -1,14 +1,19 @@
 package tech.sabai.contracteer.core.datatype
 
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
+
 /**
- * Caps a single random value generation by a maximum recursion depth and a
- * maximum total number of values produced.
+ * Bounds the work performed during one top-level random value synthesis.
  *
- * A budget is an accounting object: it tracks how many levels of recursion
- * and how many values are still available, and reports exhaustion through
- * [tryConsume]. It does not decide what to do when exhausted — callers do.
+ * Tracks recursion [depth] (capped by [maxDepth]) and a remaining [nodes] counter that is
+ * decremented for each unit of work. When either cap is reached, [step] short-circuits with
+ * a [Boundary] carrying the appropriate [Reason]. Used by [ResolvedDataType] around every
+ * call to its `doRandomValue` to guarantee termination on recursive or oversized schemas.
+ *
+ * Single-threaded by design: one budget per top-level call, then discarded.
  */
-internal class GenerationBudget private constructor(
+class GenerationBudget internal constructor(
   private val maxDepth: Int,
   initialNodes: Int
 ) {
@@ -16,47 +21,27 @@ internal class GenerationBudget private constructor(
   private var depth: Int = 0
   private var nodes: Int = initialNodes
 
-  /** Accounts for one more generated value. Returns `false` when depth or node limits are reached. */
-  fun tryConsume(): Boolean {
-    if (depth >= maxDepth || nodes == 0) return false
+  /**
+   * Runs [body] within the budget, charging one node and one depth level for the call.
+   * Returns [Boundary] of [Reason.DEPTH] or [Reason.NODES] when the corresponding cap is
+   * reached, without invoking [body].
+   */
+  internal fun <T> step(body: () -> GenerationOutcome<T>): GenerationOutcome<T> = when {
+    depth >= maxDepth -> Boundary(Reason.DEPTH)
+    nodes == 0        -> Boundary(Reason.NODES)
+    else              -> charged(body)
+  }
+
+  /** Caps [count] by the remaining node budget so callers do not request more than can be produced. */
+  internal fun limit(count: Int): Int = minOf(count, nodes)
+
+  private fun <R> charged(body: () -> R): R {
     depth++
     nodes--
-    return true
-  }
-
-  /** Releases one level of recursion after a successful [tryConsume]. */
-  fun release() {
-    depth--
-  }
-
-  companion object {
-    const val DEFAULT_MAX_DEPTH = 10
-    const val DEFAULT_MAX_NODES = 10_000
-
-    private val threadLocal = ThreadLocal<GenerationBudget?>()
-
-    /** Returns [requested] capped by the active budget's remaining capacity, or [requested] unchanged when no budget is active. */
-    fun limit(requested: Int): Int =
-      threadLocal.get()?.let { minOf(requested, it.nodes) } ?: requested
-
-    /**
-     * Runs [block] under an active budget, consuming one recursion level.
-     * Installs a fresh budget for the outermost call, reuses the existing one for nested calls.
-     * Returns `null` when the budget is exhausted before [block] could run.
-     */
-    inline fun <T> consume(block: () -> T): T? {
-      val existing = threadLocal.get()
-      val budget = existing ?: GenerationBudget(DEFAULT_MAX_DEPTH, DEFAULT_MAX_NODES).also { threadLocal.set(it) }
-      try {
-        if (!budget.tryConsume()) return null
-        return try {
-          block()
-        } finally {
-          budget.release()
-        }
-      } finally {
-        if (existing == null) threadLocal.remove()
-      }
+    try {
+      return body()
+    } finally {
+      depth--
     }
   }
 }

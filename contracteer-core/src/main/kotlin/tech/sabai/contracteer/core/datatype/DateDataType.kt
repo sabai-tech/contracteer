@@ -2,8 +2,10 @@ package tech.sabai.contracteer.core.datatype
 
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatter.*
 import kotlin.random.Random
 
 /** OpenAPI `string` type with `format: date`. Values must conform to `YYYY-MM-DD`. */
@@ -14,18 +16,18 @@ class DateDataType private constructor(name: String, isNullable: Boolean, allowe
 
   override fun doValidate(value: String) =
     try {
-      LocalDate.parse(value, DateTimeFormatter.ISO_LOCAL_DATE)
+      LocalDate.parse(value, ISO_LOCAL_DATE)
       success(value)
     } catch (_: Exception) {
       failure("Invalid date. The provided string is not in the 'format YYYY-MM-DD'")
     }
 
-  override fun doRandomValue(): String {
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
     val year = Random.nextInt(2000, 2100)
     val month = Random.nextInt(1, 13)
     val day = Random.nextInt(1, LocalDate.of(year, month, 1).lengthOfMonth() + 1)
 
-    return LocalDate.of(year, month, day).format(DateTimeFormatter.ISO_LOCAL_DATE)
+    return Value(LocalDate.of(year, month, day).format(ISO_LOCAL_DATE))
   }
 
   companion object {

@@ -4,6 +4,9 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulateWithIndex
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import java.math.BigDecimal
 import java.math.RoundingMode.CEILING
 import java.math.RoundingMode.FLOOR
@@ -46,25 +49,53 @@ class ArrayDataType private constructor(name: String,
     else                                               -> success(value)
   }
 
-  override fun doRandomValue(): List<Any?> {
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<List<Any?>> {
+    val cappedCount = ctx.budget.limit(randomCount())
+    return if (uniqueItems) generateUnique(ctx, cappedCount)
+           else generateAllowingDuplicates(ctx, cappedCount)
+  }
+
+  private fun generateAllowingDuplicates(ctx: GenerationContext, cappedCount: Int): GenerationOutcome<List<Any?>> {
+    val itemResults = (0 until cappedCount).map { i -> itemDataType.randomValue(ctx).forIndex(i) }
+    val items = itemResults.flatMap(::absorbedSlot)
+    return when {
+      items.size >= (minItems ?: 0) -> Value(items)
+      else -> itemResults.firstBoundary() ?: Boundary(Reason.NODES)
+    }
+  }
+
+  private fun generateUnique(ctx: GenerationContext, cappedCount: Int): GenerationOutcome<List<Any?>> {
+    val items = mutableSetOf<Any?>()
+    val maxPulls = cappedCount * MAX_UNIQUE_PULLS_FACTOR
+    var pulls = 0
+    while (items.size < cappedCount && pulls < maxPulls) {
+      pulls++
+      when (val result = itemDataType.randomValue(ctx).forIndex(items.size)) {
+        is Value    -> items.add(result.value)
+        is Boundary -> return result
+      }
+    }
+    return if (items.size == cappedCount) Value(items.toList())
+           else Boundary(Reason.NODES)
+  }
+
+  private fun absorbedSlot(itemResult: GenerationOutcome<Any>): List<Any?> =
+    when (itemResult) {
+      is Value    -> listOf(itemResult.value)
+      is Boundary -> if (itemDataType.isNullable) listOf(null) else emptyList()
+    }
+
+  private fun List<GenerationOutcome<Any>>.firstBoundary(): Boundary? =
+    filterIsInstance<Boundary>().firstOrNull()
+
+  private fun randomCount(): Int {
     val max = maxItems ?: maxOf(minItems ?: 1, 2)
     val min = minItems ?: minOf(1, max)
-    val count = (min..max).random()
-    val cappedCount = GenerationBudget.limit(count)
-
-    if (!uniqueItems) {
-      val items = List(cappedCount) { itemDataType.randomValue() }
-      return if (!itemDataType.isNullable) items.filterNotNull() else items
-    }
-    return (1..MAX_GENERATION_ATTEMPTS)
-      .asSequence()
-      .map { generateSequence { itemDataType.randomValue() }.distinct().take(cappedCount).toList() }
-      .firstOrNull { it.size == cappedCount }
-      ?: error("Failed to generate an array with $count unique items after $MAX_GENERATION_ATTEMPTS attempts")
+    return (min..max).random()
   }
 
   companion object {
-    private const val MAX_GENERATION_ATTEMPTS = 10
+    private const val MAX_UNIQUE_PULLS_FACTOR = 40
 
     @JvmStatic
     @JvmOverloads
@@ -96,8 +127,8 @@ class ArrayDataType private constructor(name: String,
     private fun itemCardinality(itemDataType: DataType<out Any>): Long? {
       val enum = itemDataType.allowedValues
       return when {
-        enum != null                                                   -> enum.size.toLong()
-        itemDataType is BooleanDataType                                -> 2L
+        enum != null                                                    -> enum.size.toLong()
+        itemDataType is BooleanDataType                                 -> 2L
         itemDataType is IntegerDataType && itemDataType.range.isBounded -> integerCardinality(itemDataType)
         itemDataType is NumberDataType && itemDataType.range.isBounded  -> numberCardinality(itemDataType)
         else                                                            -> null

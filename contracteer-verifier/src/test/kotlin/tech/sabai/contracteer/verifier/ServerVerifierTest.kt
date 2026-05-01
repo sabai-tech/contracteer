@@ -11,7 +11,9 @@ import org.http4k.routing.path
 import org.http4k.routing.routes
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
+import tech.sabai.contracteer.core.datatype.GenerationOutcome
 import tech.sabai.contracteer.core.dsl.apiOperation
+import tech.sabai.contracteer.core.dsl.cyclicObjectType
 import tech.sabai.contracteer.core.dsl.form
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType
@@ -282,6 +284,74 @@ class ServerVerifierTest {
     assert(results.all { it.result.isSuccess() }) { "Expected success but got: ${results.map { it.result.errors() }}" }
     assert(capturedContentType == "application/json") { "Expected application/json but got: $capturedContentType" }
     assert(!capturedBody.isNullOrEmpty()) { "Expected non-empty body but got: $capturedBody" }
+  }
+
+  @Test
+  fun `succeeds when the request body cycle is absorbed via a nullable property`() {
+    // given — Person is nullable, so the inner cycle re-entry produces Boundary which
+    // the outer object absorbs as null instead of propagating; generation succeeds.
+    val person = cyclicObjectType("Person", isNullable = true) { proxy ->
+      properties {
+        "name" to stringType()
+        "friend" to proxy
+      }
+      required("name", "friend")
+    }
+    val apiOperation = apiOperation("POST", "/persons") {
+      request { jsonBody(person) }
+      response(200) { jsonBody(objectType { properties { "id" to integerType() } }) }
+    }
+    val app = routes(
+      "/persons" bind POST to {
+        Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
+      }
+    )
+
+    // when
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
+
+    // then
+    val schemaBased = results.single { it.case is VerificationCase.SchemaBased }
+    assert(schemaBased.result.isSuccess()) { "Expected success but got: ${schemaBased.result.errors()}" }
+  }
+
+  @Test
+  fun `reports diagnostic when request body cannot be generated due to a cyclic schema`() {
+    // given
+    val person = cyclicObjectType("Person") { proxy ->
+      properties {
+        "name" to stringType()
+        "friend" to proxy
+      }
+      required("name", "friend")
+    }
+    val apiOperation = apiOperation("POST", "/persons") {
+      request { jsonBody(person) }
+      response(200) { jsonBody(objectType { properties { "id" to integerType() } }) }
+    }
+    val app = routes(
+      "/persons" bind POST to {
+        Response(OK).header("Content-Type", "application/json").body("""{"id": 1}""")
+      }
+    )
+
+    // when
+    val results = withHttpServer(app) { port ->
+      val cases = VerificationCaseFactory.create(apiOperation)
+      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      cases.map { verifier.verify(it) }
+    }
+
+    // then
+    val schemaBased = results.single { it.case is VerificationCase.SchemaBased }
+    assert(schemaBased.result.isFailure())
+    val errorMessage = schemaBased.result.errors().single()
+    assert(errorMessage.contains("request.body.friend.friend"))
+    assert(errorMessage.contains(GenerationOutcome.Reason.CYCLE.explanation()))
   }
 
   // --- helpers ---

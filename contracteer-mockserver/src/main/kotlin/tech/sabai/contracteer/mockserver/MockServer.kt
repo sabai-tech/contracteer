@@ -16,6 +16,7 @@ import org.http4k.server.asServer
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.Result.Failure
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.BodySchema
@@ -43,14 +44,18 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
   /** Starts the mock server. */
   fun start() {
     val routeHandlers = operations
-      .sortedByDescending { it.path.replace(Regex("\\{[^}]+}"), "").length }
+      .sortedByDescending { literalSegmentLength(it.path) }
       .onEach { logger.info { "Registering route: [${it.method.uppercase()}] ${it.path}" } }
       .map { createRouteHandler(it) }
 
     logger.info { "Starting Contracteer mock server" }
-    http4kServer = httpHandlerFrom(routeHandlers).asServer(SunHttp(port)).start()
+    http4kServer = routes(*routeHandlers.toTypedArray()).asServer(SunHttp(port)).start()
     logger.info { "Contracteer mock server started on port ${this.port()}" }
   }
+
+  // Sort routes by literal-segment length so concrete paths win over template paths sharing
+  // a common prefix (e.g. `/products/special` registers before `/products/{id}`).
+  private fun literalSegmentLength(path: String): Int = path.replace(PATH_PARAM_PATTERN, "").length
 
   /** Stops the mock server. */
   fun stop() {
@@ -66,9 +71,6 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
     check(::http4kServer.isInitialized) { "Contracteer mock server is not started yet." }
     return http4kServer.port()
   }
-
-  private fun httpHandlerFrom(routeHandlers: List<RoutingHttpHandler>) =
-    routes(*routeHandlers.toTypedArray())
 
   private fun createRouteHandler(operation: ApiOperation): RoutingHttpHandler {
     return StrictPathRouter(operation.path, Method.valueOf(operation.method.uppercase())) { request ->
@@ -103,6 +105,7 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
         ResponseGenerator.fromSchema(400,
                                      badRequestResponseSchema.headers,
                                      badRequestResponseSchema.bodies.firstOrNull())
+          .orTeapot()
       else
         validationErrorResponse(operation, validationResult.errors())
     }
@@ -123,7 +126,7 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
 
     val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
     if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
-    return ResponseGenerator.fromScenario(scenario, responseSchema)
+    return ResponseGenerator.fromScenario(scenario, responseSchema).orTeapot()
   }
 
   private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
@@ -137,7 +140,12 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
     val bodyResult = selectResponseBody(request.header("Accept"), responseSchema, operation)
     if (bodyResult !is Success) return teapotResponse(bodyResult.errors().first())
 
-    return ResponseGenerator.fromSchema(statusCode, responseSchema.headers, bodyResult.value)
+    return ResponseGenerator.fromSchema(statusCode, responseSchema.headers, bodyResult.value).orTeapot()
+  }
+
+  private fun Result<Response>.orTeapot(): Response = when (this) {
+    is Success -> value
+    is Failure -> teapotResponse(errors().joinToString(System.lineSeparator()))
   }
 
   private fun findUnique2xxResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> {
@@ -216,5 +224,9 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
       if (headers.isNotEmpty()) append("\n$headers")
       append("\n<< Body: $body")
     }
+  }
+
+  companion object {
+    private val PATH_PARAM_PATTERN = Regex("\\{[^}]+}")
   }
 }
