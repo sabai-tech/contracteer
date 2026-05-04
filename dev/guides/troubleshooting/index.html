@@ -1247,6 +1247,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#generated-value-is-smaller-than-the-spec-declares" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated value is smaller than the spec declares
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#spec-loading-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1306,6 +1317,17 @@
     <span class="md-ellipsis">
       
         Pattern not supported for value generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#header-pattern-enum-or-example-admits-invalid-http-characters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Header pattern, enum, or example admits invalid HTTP characters
       
     </span>
   </a>
@@ -1648,6 +1670,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#generated-value-is-smaller-than-the-spec-declares" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generated value is smaller than the spec declares
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#spec-loading-fails" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1707,6 +1740,17 @@
     <span class="md-ellipsis">
       
         Pattern not supported for value generation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#header-pattern-enum-or-example-admits-invalid-http-characters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Header pattern, enum, or example admits invalid HTTP characters
       
     </span>
   </a>
@@ -1932,6 +1976,12 @@ At the recursion depth limit, Contracteer generates an empty array to avoid prod
 This may violate the <code>minItems</code> constraint.</p>
 <p><strong>Fix:</strong> Remove the <code>minItems</code> constraint from the recursive array property, or make the array items nullable.
 Recursive arrays with <code>minItems</code> describe a structure that requires infinite depth to satisfy -- no finite value can conform.</p>
+<h3 id="generated-value-is-smaller-than-the-spec-declares">Generated value is smaller than the spec declares<a class="headerlink" href="#generated-value-is-smaller-than-the-spec-declares" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Generated request or response bodies contain fewer items, missing optional properties, or omitted sub-trees compared to what the OpenAPI schema declares.</p>
+<p><strong>Cause:</strong> Contracteer bounds the size of generated values to protect against heap exhaustion on schemas with deep mutual recursion or large declared array bounds.
+When the limit is reached, Contracteer stops generating deeper values, producing the same empty-array and omitted-property fallbacks it uses for cycle boundaries.</p>
+<p><strong>Fix:</strong> Reduce <code>minItems</code>/<code>maxItems</code> on large recursive arrays, or simplify deeply interconnected schemas.
+The size limit is a safety net: schemas that describe pathologically large structures produce correspondingly bounded generated values.</p>
 <h3 id="spec-loading-fails">Spec loading fails<a class="headerlink" href="#spec-loading-fails" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Contracteer reports errors when loading the OpenAPI specification.</p>
 <p><strong>Common causes:</strong></p>
@@ -1995,6 +2045,24 @@ Patterns that cannot be rewritten are rejected at load time.</p>
 Contracteer uses Scenario values instead of generating random ones, bypassing the pattern limitation entirely.
 See <a href="../../concepts/scenarios/">Creating Scenarios</a> for how to provide examples.
 Alternatively, simplify the pattern to use standard character classes and quantifiers without lookaround assertions.</p>
+<h3 id="header-pattern-enum-or-example-admits-invalid-http-characters">Header pattern, enum, or example admits invalid HTTP characters<a class="headerlink" href="#header-pattern-enum-or-example-admits-invalid-http-characters" title="Permanent link">&para;</a></h3>
+<p><strong>Symptom:</strong> Loading the specification fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Header &#39;X-Custom-Attributes&#39; may carry character U+0000 not valid in HTTP
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>header values per RFC 7230 §3.2.6. Tighten the schema (pattern, enum) or
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>correct example values to exclude control and non-ASCII characters.
+</code></pre></div>
+<p><strong>Cause:</strong> The header schema declares a <code>pattern</code>, <code>enum</code>, or <code>example</code> that admits characters disallowed in HTTP header values.
+RFC 7230 §3.2.6 restricts header field-values to visible ASCII (<code>0x21-0x7E</code>), space (<code>0x20</code>), and horizontal tab (<code>0x09</code>).
+Patterns like <code>\p{ASCII}*</code> or <code>\p{Print}*</code> legally admit NUL, CR, LF, DEL, and non-ASCII characters that no HTTP client will accept on the wire.</p>
+<p>Contracteer samples generated values at load time to catch the problem before verification or mock-server startup, rather than at runtime when the transport layer rejects the value.</p>
+<p><strong>Fix:</strong> Tighten the schema so that no generated value can contain a disallowed character.
+Common replacements:</p>
+<ul>
+<li><code>\p{ASCII}*</code> → <code>[\x20-\x7E\t]*</code> (printable ASCII + tab)</li>
+<li><code>\p{Print}*</code> → <code>[\x20-\x7E]*</code> (printable ASCII without tab)</li>
+<li>For enum or example values, remove or escape control and non-ASCII characters in the declared literal strings.</li>
+</ul>
+<p>If the header legitimately conveys opaque binary or Unicode data, Base64-encode the value in the schema declaration (for example <code>pattern: '[A-Za-z0-9+/=]*'</code>) rather than declaring the raw bytes as the header value.</p>
 <h3 id="unexpected-behavior-from-unsupported-schema-keywords">Unexpected behavior from unsupported schema keywords<a class="headerlink" href="#unexpected-behavior-from-unsupported-schema-keywords" title="Permanent link">&para;</a></h3>
 <p><strong>Symptom:</strong> Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.</p>
 <p><strong>Cause:</strong> Your specification uses an OpenAPI schema keyword that Contracteer does not yet support.
@@ -2022,15 +2090,15 @@ Check the <a href="../../concepts/openapi-coverage/">OpenAPI 3.0 Coverage</a> pa
 <h3 id="confusing-example-and-examples">Confusing <code>example</code> and <code>examples</code><a class="headerlink" href="#confusing-example-and-examples" title="Permanent link">&para;</a></h3>
 <p><code>example</code> provides a single value.
 <code>examples</code> is a named map where each entry has a <code>value</code> field:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Single value</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Named map -- each name is an example key</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="nt">examples</span><span class="p">:</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Single value</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">example</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Named map -- each name is an example key</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nt">examples</span><span class="p">:</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span><span class="nt">ATHOS</span><span class="p">:</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">PORTHOS</span><span class="p">:</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">    </span><span class="nt">value</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">43</span>
 </code></pre></div>
 <p>Both are valid.
 Contracteer uses both for scenario creation.
