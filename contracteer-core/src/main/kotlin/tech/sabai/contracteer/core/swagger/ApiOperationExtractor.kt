@@ -21,11 +21,12 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
   private val schemaExtractor = SchemaExtractor(sharedComponents, dataTypeConverter)
 
   fun extract(openAPI: OpenAPI): Result<List<ApiOperation>> {
-    val equivalentPathErrors = findEquivalentPaths(openAPI)
+    val paths = openAPI.paths ?: emptyMap()
+    val equivalentPathErrors = findEquivalentPaths(paths.keys)
     return when {
       equivalentPathErrors.isNotEmpty() -> failure(*equivalentPathErrors.toTypedArray())
       else                              ->
-        openAPI.paths
+        paths
           .flatMap { it.toApiOperations() }
           .combineResults()
           .map {
@@ -103,12 +104,12 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
       ?.let { schemaExtractor.extractResponseSchema(it) }
     ?: success(null)
 
-  private fun findEquivalentPaths(openAPI: OpenAPI): List<String> =
-    openAPI.paths.keys
+  private fun findEquivalentPaths(paths: Set<String>): List<String> =
+    paths
       .groupBy { it.replace(PATH_PARAMETER_PATTERN, "{}") }
       .filterValues { it.size > 1 }
-      .map { (_, paths) ->
-        "Equivalent paths found: ${paths.joinToString(" and ") { "'$it'" }}. " +
+      .map { (_, equivalentPaths) ->
+        "Equivalent paths found: ${equivalentPaths.joinToString(" and ") { "'$it'" }}. " +
         "These paths are identical after ignoring parameter names and are considered invalid by the OpenAPI specification (OAS 3.0 §4.7.9)."
       }
 

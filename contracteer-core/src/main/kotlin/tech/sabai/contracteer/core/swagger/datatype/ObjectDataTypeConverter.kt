@@ -10,7 +10,7 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.result
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 import tech.sabai.contracteer.core.swagger.safeProperties
 
 internal object ObjectDataTypeConverter {
@@ -44,7 +44,7 @@ internal object ObjectDataTypeConverter {
         writeOnlyProperties = writeOnlyProps,
         allowAdditionalProperties = allowAdditionalProperties,
         additionalPropertiesDataType = additionalPropertiesDataType,
-        isNullable = schema.safeNullable(),
+        isNullable = schema.isNullable(),
         enum = schema.safeEnum().map { it.normalize() },
         minProperties = schema.minProperties,
         maxProperties = schema.maxProperties

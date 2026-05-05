@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.Result
 import io.swagger.v3.oas.models.media.EmailSchema
 import tech.sabai.contracteer.core.datatype.EmailDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object EmailDataTypeConverter {
   private val logger = KotlinLogging.logger {}
@@ -15,7 +15,7 @@ internal object EmailDataTypeConverter {
     
     return EmailDataType.create(
       name = schema.name,
-      isNullable = schema.safeNullable(),
+      isNullable = schema.isNullable(),
       minLength = schema.minLength,
       maxLength = schema.maxLength,
       enum = schema.safeEnum(),

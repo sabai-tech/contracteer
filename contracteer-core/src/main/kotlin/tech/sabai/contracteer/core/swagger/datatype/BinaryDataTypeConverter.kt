@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.Result
 import io.swagger.v3.oas.models.media.BinarySchema
 import tech.sabai.contracteer.core.datatype.BinaryDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object BinaryDataTypeConverter {
   private val logger = KotlinLogging.logger {}
@@ -15,7 +15,7 @@ internal object BinaryDataTypeConverter {
     
     return BinaryDataType.create(
       name = schema.name,
-      isNullable = schema.safeNullable(),
+      isNullable = schema.isNullable(),
       minLength = schema.minLength,
       maxLength = schema.maxLength,
       enum = schema.safeEnum().map { String(it) }

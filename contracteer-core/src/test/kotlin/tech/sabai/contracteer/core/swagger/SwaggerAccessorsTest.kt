@@ -1,0 +1,357 @@
+package tech.sabai.contracteer.core.swagger
+
+import io.swagger.v3.oas.models.SpecVersion
+import io.swagger.v3.oas.models.media.JsonSchema
+import io.swagger.v3.oas.models.media.Schema
+import io.swagger.v3.oas.models.media.StringSchema
+import java.math.BigDecimal
+import kotlin.test.Test
+
+class SwaggerAccessorsTest {
+
+  @Test
+  fun `effectiveType returns the single non-null type from a 3 0 schema`() {
+    // Given a 3.0 string schema
+    val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
+
+    // When
+    val type = schema.effectiveType()
+
+    // Then
+    assert(type == "string") { "Expected 'string' but got '$type'" }
+  }
+
+  @Test
+  fun `effectiveType returns the single non-null type from a 3 1 nullable schema`() {
+    // Given a 3.1 schema declared as type [string, null]
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string", "null")
+    }
+
+    // When
+    val type = schema.effectiveType()
+
+    // Then
+    assert(type == "string") { "Expected 'string' but got '$type'" }
+  }
+
+  @Test
+  fun `effectiveType returns null for a 3 1 multi-type schema with no null branch`() {
+    // Given a non-nullable multi-type 3.1 schema (Card 09 hard-error case)
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string", "integer")
+    }
+
+    // When
+    val type = schema.effectiveType()
+
+    // Then
+    assert(type == null) { "Expected null but got '$type'" }
+  }
+
+  @Test
+  fun `effectiveType returns null when types is missing`() {
+    // Given a schema with no type information (typically a composition schema)
+    val schema = JsonSchema().apply { specVersion = SpecVersion.V31 }
+
+    // When
+    val type = schema.effectiveType()
+
+    // Then
+    assert(type == null) { "Expected null but got '$type'" }
+  }
+
+  @Test
+  fun `isNullable reads nullable in 3 0`() {
+    // Given a 3.0 nullable string schema
+    val schema = StringSchema().apply {
+      specVersion = SpecVersion.V30
+      nullable = true
+    }
+
+    // When
+    val nullable = schema.isNullable()
+
+    // Then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable defaults to false in 3 0 when nullable is not set`() {
+    // Given a 3.0 schema with nullable not declared
+    val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
+
+    // When
+    val nullable = schema.isNullable()
+
+    // Then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `isNullable detects the null branch in a 3 1 type array`() {
+    // Given a 3.1 schema declared as type [string, null]
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string", "null")
+    }
+
+    // When
+    val nullable = schema.isNullable()
+
+    // Then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable returns false for a single-type 3 1 schema`() {
+    // Given a 3.1 schema declared as type [string]
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string")
+    }
+
+    // When
+    val nullable = schema.isNullable()
+
+    // Then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `effectiveExclusiveMinimum reads the boolean flag in 3 0`() {
+    // Given a 3.0 integer schema with minimum 5 and exclusiveMinimum true
+    val schema = Schema<Any>().apply {
+      specVersion = SpecVersion.V30
+      minimum = BigDecimal(5)
+      exclusiveMinimum = true
+    }
+
+    // When
+    val exclusive = schema.effectiveExclusiveMinimum()
+
+    // Then
+    assert(exclusive)
+  }
+
+  @Test
+  fun `effectiveExclusiveMinimum returns true for 3 1 when exclusiveMinimumValue is set`() {
+    // Given a 3.1 integer schema with numeric exclusiveMinimum 5
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("integer")
+      exclusiveMinimumValue = BigDecimal(5)
+    }
+
+    // When
+    val exclusive = schema.effectiveExclusiveMinimum()
+
+    // Then
+    assert(exclusive)
+  }
+
+  @Test
+  fun `effectiveExclusiveMinimum returns false for 3 1 when only minimum is set`() {
+    // Given a 3.1 integer schema with only inclusive minimum
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("integer")
+      minimum = BigDecimal(5)
+    }
+
+    // When
+    val exclusive = schema.effectiveExclusiveMinimum()
+
+    // Then
+    assert(!exclusive)
+  }
+
+  @Test
+  fun `effectiveExclusiveMaximum reads the boolean flag in 3 0`() {
+    // Given a 3.0 integer schema with maximum 100 and exclusiveMaximum true
+    val schema = Schema<Any>().apply {
+      specVersion = SpecVersion.V30
+      maximum = BigDecimal(100)
+      exclusiveMaximum = true
+    }
+
+    // When
+    val exclusive = schema.effectiveExclusiveMaximum()
+
+    // Then
+    assert(exclusive)
+  }
+
+  @Test
+  fun `effectiveExclusiveMaximum returns true for 3 1 when exclusiveMaximumValue is set`() {
+    // Given a 3.1 integer schema with numeric exclusiveMaximum 100
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("integer")
+      exclusiveMaximumValue = BigDecimal(100)
+    }
+
+    // When
+    val exclusive = schema.effectiveExclusiveMaximum()
+
+    // Then
+    assert(exclusive)
+  }
+
+  @Test
+  fun `effectiveMinimum returns the inclusive minimum in 3 0`() {
+    // Given a 3.0 integer schema with inclusive minimum 5
+    val schema = Schema<Any>().apply {
+      specVersion = SpecVersion.V30
+      minimum = BigDecimal(5)
+    }
+
+    // When
+    val min = schema.effectiveMinimum()
+
+    // Then
+    assert(min == BigDecimal(5))
+  }
+
+  @Test
+  fun `effectiveMinimum picks the more restrictive bound when both are set in 3 1`() {
+    // Given a 3.1 integer schema with minimum 5 and exclusiveMinimum 7
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("integer")
+      minimum = BigDecimal(5)
+      exclusiveMinimumValue = BigDecimal(7)
+    }
+
+    // When
+    val min = schema.effectiveMinimum()
+    val exclusive = schema.effectiveExclusiveMinimum()
+
+    // Then the exclusive 7 wins as the more restrictive bound
+    assert(min == BigDecimal(7)) { "Expected 7 but got $min" }
+    assert(exclusive) { "Expected exclusive but got inclusive" }
+  }
+
+  @Test
+  fun `effectiveMinimum keeps the inclusive bound when it is more restrictive in 3 1`() {
+    // Given a 3.1 integer schema with minimum 7 and exclusiveMinimum 5
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("integer")
+      minimum = BigDecimal(7)
+      exclusiveMinimumValue = BigDecimal(5)
+    }
+
+    // When
+    val min = schema.effectiveMinimum()
+    val exclusive = schema.effectiveExclusiveMinimum()
+
+    // Then the inclusive 7 wins
+    assert(min == BigDecimal(7)) { "Expected 7 but got $min" }
+    assert(!exclusive) { "Expected inclusive but got exclusive" }
+  }
+
+  @Test
+  fun `effectiveMaximum picks the more restrictive bound when both are set in 3 1`() {
+    // Given a 3.1 integer schema with maximum 100 and exclusiveMaximum 50
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("integer")
+      maximum = BigDecimal(100)
+      exclusiveMaximumValue = BigDecimal(50)
+    }
+
+    // When
+    val max = schema.effectiveMaximum()
+    val exclusive = schema.effectiveExclusiveMaximum()
+
+    // Then the exclusive 50 wins as the more restrictive bound
+    assert(max == BigDecimal(50)) { "Expected 50 but got $max" }
+    assert(exclusive)
+  }
+
+  @Test
+  fun `effectiveConst returns null for a 3 0 schema`() {
+    // Given a 3.0 schema (3.0 has no const keyword)
+    val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
+
+    // When
+    val const = schema.effectiveConst()
+
+    // Then
+    assert(const == null)
+  }
+
+  @Test
+  fun `effectiveConst returns the const value for a 3 1 schema`() {
+    // Given a 3.1 schema with const "fixed"
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      const = "fixed"
+    }
+
+    // When
+    val const = schema.effectiveConst()
+
+    // Then
+    assert(const == "fixed") { "Expected 'fixed' but got '$const'" }
+  }
+
+  @Test
+  fun `effectiveContentEncoding returns null for a 3 0 schema`() {
+    // Given a 3.0 schema (contentEncoding has no role in 3.0)
+    val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
+
+    // When
+    val encoding = schema.effectiveContentEncoding()
+
+    // Then
+    assert(encoding == null)
+  }
+
+  @Test
+  fun `effectiveContentEncoding returns the contentEncoding value for a 3 1 schema`() {
+    // Given a 3.1 schema with contentEncoding base64
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string")
+      contentEncoding = "base64"
+    }
+
+    // When
+    val encoding = schema.effectiveContentEncoding()
+
+    // Then
+    assert(encoding == "base64")
+  }
+
+  @Test
+  fun `effectiveContentMediaType returns null for a 3 0 schema`() {
+    // Given a 3.0 schema (contentMediaType has no role in 3.0)
+    val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
+
+    // When
+    val mediaType = schema.effectiveContentMediaType()
+
+    // Then
+    assert(mediaType == null)
+  }
+
+  @Test
+  fun `effectiveContentMediaType returns the contentMediaType value for a 3 1 schema`() {
+    // Given a 3.1 schema with contentMediaType application octet-stream
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string")
+      contentMediaType = "application/octet-stream"
+    }
+
+    // When
+    val mediaType = schema.effectiveContentMediaType()
+
+    // Then
+    assert(mediaType == "application/octet-stream")
+  }
+}

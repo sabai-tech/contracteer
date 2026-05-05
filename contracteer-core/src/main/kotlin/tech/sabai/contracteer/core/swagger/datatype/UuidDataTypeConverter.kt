@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.Result
 import io.swagger.v3.oas.models.media.UUIDSchema
 import tech.sabai.contracteer.core.datatype.UuidDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object UuidDataTypeConverter {
   private val logger = KotlinLogging.logger {}
@@ -15,7 +15,7 @@ internal object UuidDataTypeConverter {
     if (schema.minLength != null || schema.maxLength != null) logger.warn { "Schema '${schema.name}': 'minLength'/'maxLength' ignored because 'format: uuid' takes precedence." }
     return UuidDataType.create(
       name = schema.name,
-      isNullable = schema.safeNullable(),
+      isNullable = schema.isNullable(),
       enum = schema.safeEnum().map { it.toString() }
     )
   }

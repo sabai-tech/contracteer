@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.Result
 import io.swagger.v3.oas.models.media.DateTimeSchema
 import tech.sabai.contracteer.core.datatype.DateTimeDataType
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 import java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
 internal object DateTimeDataTypeConverter {
@@ -17,7 +17,7 @@ internal object DateTimeDataTypeConverter {
     
     return DateTimeDataType.create(
       name = schema.name,
-      isNullable = schema.safeNullable(),
+      isNullable = schema.isNullable(),
       enum = schema.safeEnum().map { it?.format(ISO_OFFSET_DATE_TIME) }
     )
   }

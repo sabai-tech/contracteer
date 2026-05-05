@@ -7,7 +7,7 @@ import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object ArrayDataTypeConverter {
   fun convert(
@@ -19,7 +19,7 @@ internal object ArrayDataTypeConverter {
         ArrayDataType.create(
           name = schema.name,
           itemDataType = itemDataType,
-          isNullable = schema.safeNullable(),
+          isNullable = schema.isNullable(),
           enum = schema.safeEnum().map { it.normalize() },
           minItems = schema.minItems,
           maxItems = schema.maxItems,

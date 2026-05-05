@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.swagger
 
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.parser.OpenAPIV3Parser
 import io.swagger.v3.parser.core.models.ParseOptions
@@ -34,6 +35,7 @@ object OpenApiLoader {
   fun loadOperations(path: String): Result<List<ApiOperation>> =
     result {
       val content = path.loadOpenApiDocument().bind()
+      checkSupportedVersion(content).bind()
       val openAPI = parse(content).bind()
       val sharedComponents = SharedComponents(
         schemas = openAPI.components.safeSchemas(),
@@ -44,6 +46,26 @@ object OpenApiLoader {
         responses = openAPI.components.safeResponses()
       )
       ApiOperationExtractor(sharedComponents).extract(openAPI).bind()
+    }
+
+  private fun checkSupportedVersion(content: String): Result<Unit> =
+    when (val declared = readDeclaredVersion(content)) {
+      Missing                                                 -> failure("OpenAPI document does not declare a version. $SUPPORTED_HINT")
+      is Declared if SUPPORTED_VERSION matches declared.value -> success()
+      is Declared if UNSUPPORTED_3_1 matches declared.value   -> failure("OpenAPI 3.1 is not yet supported. $SUPPORTED_HINT")
+      is Declared                                             -> failure("OpenAPI version '${declared.value}' is not supported. $SUPPORTED_HINT")
+      Unparseable                                             -> success()
+    }
+
+  private fun readDeclaredVersion(content: String): VersionRead =
+    try {
+      val versionNode = YAML_MAPPER.readTree(content)?.get("openapi")
+      when {
+        versionNode == null || versionNode.isNull -> Missing
+        else                                      -> Declared(versionNode.asText())
+      }
+    } catch (_: Throwable) {
+      Unparseable
     }
 
   private fun String.loadOpenApiDocument() =
@@ -126,3 +148,13 @@ object OpenApiLoader {
   }
 
 }
+
+private const val SUPPORTED_HINT = "Contracteer currently supports OpenAPI 3.0.x."
+private val YAML_MAPPER = YAMLMapper()
+private val SUPPORTED_VERSION = Regex("^3\\.0\\.\\d+$")
+private val UNSUPPORTED_3_1 = Regex("^3\\.1(\\..*)?$")
+
+private sealed interface VersionRead
+private data object Missing : VersionRead
+private data object Unparseable : VersionRead
+private data class Declared(val value: String) : VersionRead

@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.swagger
 import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF
 import io.swagger.v3.oas.models.Operation
+import io.swagger.v3.oas.models.SpecVersion.V31
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.Discriminator
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
+import java.math.BigDecimal
 
 internal fun MediaType.safeExamples() =
   examples ?: example?.let(::singleExampleMap) ?: emptyMap()
@@ -39,17 +41,48 @@ internal fun ApiResponse.safeHeaders() =
 internal fun Operation.safeParameters() =
   parameters ?: emptyList()
 
-internal fun Schema<*>.safeNullable() =
-  nullable ?: false
-
 internal fun <T> Schema<T>.safeEnum() =
   enum ?: emptyList()
 
-internal fun Schema<*>.safeExclusiveMinimum() =
-  exclusiveMinimum ?: false
+internal fun Schema<*>.effectiveType(): String? =
+  types?.singleOrNull { it != "null" }
 
-internal fun Schema<*>.safeExclusiveMaximum() =
-  exclusiveMaximum ?: false
+internal fun Schema<*>.isNullable(): Boolean =
+  if (specVersion == V31) "null" in types.orEmpty()
+  else nullable ?: false
+
+internal fun Schema<*>.effectiveLowerBound(): NumericBound =
+  if (specVersion == V31) pickMostRestrictive(minimum, exclusiveMinimumValue) { excl, incl -> excl >= incl }
+  else NumericBound(minimum, exclusiveMinimum ?: false)
+
+internal fun Schema<*>.effectiveUpperBound(): NumericBound =
+  if (specVersion == V31) pickMostRestrictive(maximum, exclusiveMaximumValue) { excl, incl -> excl <= incl }
+  else NumericBound(maximum, exclusiveMaximum ?: false)
+
+internal fun Schema<*>.effectiveMinimum(): BigDecimal? = effectiveLowerBound().value
+internal fun Schema<*>.effectiveMaximum(): BigDecimal? = effectiveUpperBound().value
+internal fun Schema<*>.effectiveExclusiveMinimum(): Boolean = effectiveLowerBound().isExclusive
+internal fun Schema<*>.effectiveExclusiveMaximum(): Boolean = effectiveUpperBound().isExclusive
+
+private fun pickMostRestrictive(inclusive: BigDecimal?,
+                                exclusive: BigDecimal?,
+                                exclusiveWinsOver: (excl: BigDecimal, incl: BigDecimal) -> Boolean): NumericBound =
+  when {
+    inclusive == null && exclusive == null  -> NumericBound(null, false)
+    inclusive == null                       -> NumericBound(exclusive, true)
+    exclusive == null                       -> NumericBound(inclusive, false)
+    exclusiveWinsOver(exclusive, inclusive) -> NumericBound(exclusive, true)
+    else                                    -> NumericBound(inclusive, false)
+  }
+
+internal fun Schema<*>.effectiveConst(): Any? =
+  if (specVersion == V31) const else null
+
+internal fun Schema<*>.effectiveContentEncoding(): String? =
+  if (specVersion == V31) contentEncoding else null
+
+internal fun Schema<*>.effectiveContentMediaType(): String? =
+  if (specVersion == V31) contentMediaType else null
 
 internal fun Schema<*>.shortRef() =
   this.`$ref`?.replace(COMPONENTS_SCHEMAS_REF, "")
@@ -104,3 +137,5 @@ internal fun isClassCode(code: String): Boolean =
 
 internal fun isBodylessStatusCode(statusCode: Int): Boolean =
   statusCode in 100..199 || statusCode == 204 || statusCode == 205 || statusCode == 304
+
+internal data class NumericBound(val value: BigDecimal?, val isExclusive: Boolean)

@@ -7,9 +7,9 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.datatype.NumberDataType
 import tech.sabai.contracteer.core.datatype.Range
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeExclusiveMaximum
-import tech.sabai.contracteer.core.swagger.safeExclusiveMinimum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.effectiveExclusiveMaximum
+import tech.sabai.contracteer.core.swagger.effectiveExclusiveMinimum
+import tech.sabai.contracteer.core.swagger.isNullable
 import java.math.BigDecimal
 
 internal object NumberDataTypeConverter {
@@ -27,11 +27,11 @@ internal object NumberDataTypeConverter {
         else                                                                       ->
           NumberDataType.create(
             name = schema.name,
-            isNullable = schema.safeNullable(),
+            isNullable = schema.isNullable(),
             minimum = schema.minimum ?: formatRange.minimum,
             maximum = schema.maximum ?: formatRange.maximum,
-            exclusiveMinimum = schema.safeExclusiveMinimum(),
-            exclusiveMaximum = schema.safeExclusiveMaximum(),
+            exclusiveMinimum = schema.effectiveExclusiveMinimum(),
+            exclusiveMaximum = schema.effectiveExclusiveMaximum(),
             enum = schema.safeEnum(),
             multipleOf = schema.multipleOf
           )

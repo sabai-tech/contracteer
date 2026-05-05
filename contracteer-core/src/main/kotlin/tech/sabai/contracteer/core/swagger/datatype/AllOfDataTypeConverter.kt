@@ -10,7 +10,7 @@ import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.swagger.safeEnum
-import tech.sabai.contracteer.core.swagger.safeNullable
+import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object AllOfDataTypeConverter {
 
@@ -35,7 +35,7 @@ internal object AllOfDataTypeConverter {
             AllOfDataType.create(
               name = schema.name,
               subTypes = subDataTypes,
-              isNullable = schema.safeNullable(),
+              isNullable = schema.isNullable(),
               discriminator = discriminators.firstOrNull(),
               enum = schema.safeEnum())
         }
