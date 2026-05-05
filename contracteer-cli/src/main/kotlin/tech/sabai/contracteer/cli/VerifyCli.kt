@@ -4,11 +4,11 @@ import ch.qos.logback.classic.Level.DEBUG
 import picocli.CommandLine.Command
 import picocli.CommandLine.Help.Ansi.AUTO
 import picocli.CommandLine.Option
-import tech.sabai.contracteer.verifier.ServerVerifier
-import tech.sabai.contracteer.verifier.ServerConfiguration
+import tech.sabai.contracteer.verifier.OpenApiVerifier
 import tech.sabai.contracteer.verifier.VerificationCase
 import tech.sabai.contracteer.verifier.VerificationCaseFactory
 import tech.sabai.contracteer.verifier.VerificationOutcome
+import tech.sabai.contracteer.verifier.VerifierConfiguration
 import kotlin.system.exitProcess
 
 @Command(
@@ -26,18 +26,11 @@ import kotlin.system.exitProcess
 )
 class VerifyCli: BaseCliCommand() {
   @Option(
-    names = ["-u", "--server-url"],
+    names = ["-u", "--base-url"],
     required = false,
-    description = ["Server's base URL to verify against. Default: @|bold \${DEFAULT-VALUE}|@."],
+    description = [$$"Base URL of the server to verify (must include scheme, host, and port). Default: @|bold ${DEFAULT-VALUE}|@."],
   )
-  private var serverUrl = "http://localhost"
-
-  @Option(
-    names = ["-p", "--server-port"],
-    required = false,
-    description = ["Port number for the server to verify. Default: @|bold \${DEFAULT-VALUE}|@."]
-  )
-  private var serverPort = 8080
+  private var baseUrl = "http://localhost:8080"
 
   override fun runCommand() {
     val operations = loadOperations(path)
@@ -46,10 +39,10 @@ class VerifyCli: BaseCliCommand() {
   }
 
   private fun runVerification(cases: List<VerificationCase>): Int {
-    val verifier = ServerVerifier(ServerConfiguration(serverUrl, serverPort))
+    val verifier = OpenApiVerifier(VerifierConfiguration(baseUrl))
     println()
     println(AUTO.string("🚀 Starting contract verification..."))
-    println(AUTO.string("Target Server: @|bold,green $serverUrl:$serverPort|@"))
+    println(AUTO.string("Target Server: @|bold,green $baseUrl|@"))
     println(AUTO.string("Specification: @|bold,green ${path}|@"))
     println()
 

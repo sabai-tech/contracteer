@@ -55,7 +55,7 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
     val outcome = verifier.verify(typeMismatchCase)
@@ -98,7 +98,7 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
     val outcome = verifier.verify(typeMismatchCase)
@@ -143,9 +143,10 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     // The factory generates 2 cases: one for path, one for query. Get the path one.
-    val pathCase = cases.filterIsInstance<TypeMismatch>()
+    val pathCase = cases
+      .filterIsInstance<TypeMismatch>()
       .first { it.mutatedElement == MutatedElement.Parameter(PathParam("id")) }
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
     val outcome = verifier.verify(pathCase)
@@ -189,7 +190,7 @@ class TypeMismatchVerificationTest {
 
     val cases = VerificationCaseFactory.create(apiOperation)
     val typeMismatchCase = cases.filterIsInstance<TypeMismatch>().first()
-    val verifier = ServerVerifier(ServerConfiguration(port = server.port()))
+    val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:${server.port()}"))
 
     // When
     val outcome = verifier.verify(typeMismatchCase)

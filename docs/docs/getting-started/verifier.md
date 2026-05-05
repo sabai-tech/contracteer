@@ -57,9 +57,8 @@ Three steps: load the specification, generate verification cases, run them again
     val cases = result.value!!.flatMap { VerificationCaseFactory.create(it) }
 
     // 3. Verify each case against the server
-    val verifier = ServerVerifier(ServerConfiguration(
-        baseUrl = "http://localhost",
-        port = 8080
+    val verifier = OpenApiVerifier(VerifierConfiguration(
+        baseUrl = "http://localhost:8080"
     ))
 
     val failures = cases
@@ -90,9 +89,8 @@ Three steps: load the specification, generate verification cases, run them again
         .toList();
 
     // 3. Verify each case against the server
-    var verifier = new ServerVerifier(new ServerConfiguration(
-        "http://localhost",
-        8080
+    var verifier = new OpenApiVerifier(new VerifierConfiguration(
+        "http://localhost:8080"
     ));
 
     var failures = cases.stream()
@@ -110,10 +108,11 @@ Three steps: load the specification, generate verification cases, run them again
 
 `OpenApiLoader.loadOperations()` accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:openapi.yaml`).
 
-`ServerConfiguration` fields:
+`VerifierConfiguration` fields:
 
-- **`baseUrl`** *(default: `http://localhost`)* -- Base URL of the server under test.
-- **`port`** *(default: `8080`)* -- Port of the server under test.
+- **`baseUrl`** *(default: `http://localhost:8080`)* -- Absolute base URL of the server under test.
+  Must include scheme (`http` or `https`), host, and port.
+  May include a path prefix (e.g., `https://api.example.com/v1`); query strings and fragments are rejected.
 
 !!! tip "Treat the specification as a shared artifact"
     Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-specification-as-source-of-truth): the OpenAPI specification exists independently of both server and client.

@@ -20,7 +20,7 @@ import tech.sabai.contracteer.core.dsl.objectType
 import tech.sabai.contracteer.core.dsl.stringType
 import kotlin.test.Test
 
-class ServerVerifierTest {
+class OpenApiVerifierTest {
 
   @Test
   fun `verifies scenario based case successfully`() {
@@ -61,7 +61,7 @@ class ServerVerifierTest {
     // When
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 
@@ -107,7 +107,7 @@ class ServerVerifierTest {
     // When
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 
@@ -148,7 +148,7 @@ class ServerVerifierTest {
     // When
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 
@@ -190,7 +190,7 @@ class ServerVerifierTest {
     // When
     withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.forEach { verifier.verify(it) }
     }
 
@@ -230,7 +230,7 @@ class ServerVerifierTest {
     // When
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 
@@ -275,7 +275,7 @@ class ServerVerifierTest {
     // When
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 
@@ -310,7 +310,7 @@ class ServerVerifierTest {
     // when
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 
@@ -342,7 +342,7 @@ class ServerVerifierTest {
     // when
     val results = withHttpServer(app) { port ->
       val cases = VerificationCaseFactory.create(apiOperation)
-      val verifier = ServerVerifier(ServerConfiguration(port = port))
+      val verifier = OpenApiVerifier(VerifierConfiguration("http://localhost:$port"))
       cases.map { verifier.verify(it) }
     }
 

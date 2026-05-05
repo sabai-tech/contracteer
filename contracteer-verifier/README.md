@@ -36,9 +36,8 @@ if (result.isFailure()) {
 
 val cases = result.value!!.flatMap { VerificationCaseFactory.create(it) }
 
-val verifier = ServerVerifier(ServerConfiguration(
-    baseUrl = "http://localhost",
-    port = 8080
+val verifier = OpenApiVerifier(VerifierConfiguration(
+    baseUrl = "http://localhost:8080"
 ))
 
 val failures = cases

@@ -5,9 +5,9 @@ import org.junit.jupiter.api.extension.TestTemplateInvocationContext
 import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.swagger.OpenApiLoader
-import tech.sabai.contracteer.verifier.ServerConfiguration
-import tech.sabai.contracteer.verifier.ServerVerifier
+import tech.sabai.contracteer.verifier.OpenApiVerifier
 import tech.sabai.contracteer.verifier.VerificationCaseFactory
+import tech.sabai.contracteer.verifier.VerifierConfiguration
 import java.lang.System.lineSeparator
 import java.lang.reflect.Modifier
 import java.util.stream.Stream
@@ -38,12 +38,12 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
     return cases.stream()
   }
 
-  private fun createVerifierProvider(annotation: ContracteerTest): (ExtensionContext) -> ServerVerifier {
-    var cached: ServerVerifier? = null
+  private fun createVerifierProvider(annotation: ContracteerTest): (ExtensionContext) -> OpenApiVerifier {
+    var cached: OpenApiVerifier? = null
     return { extensionContext ->
       cached ?: run {
         val port = resolveServerPort(extensionContext, annotation)
-        ServerVerifier(ServerConfiguration(annotation.serverUrl, port)).also { cached = it }
+        OpenApiVerifier(VerifierConfiguration("${annotation.serverUrl}:$port")).also { cached = it }
       }
     }
   }

@@ -14,8 +14,8 @@ import tech.sabai.contracteer.core.Result.Success
  * Sends requests derived from [VerificationCase] instances and validates
  * the server's responses against the expected response schema.
  */
-class ServerVerifier(configuration: ServerConfiguration) {
-  private val client = VerificationHttpClient("${configuration.baseUrl}:${configuration.port}")
+class OpenApiVerifier(configuration: VerifierConfiguration) {
+  private val client = VerificationHttpClient(configuration.baseUrl)
   private val httpLogger = KotlinLogging.logger("tech.sabai.contracteer.http")
 
   /**

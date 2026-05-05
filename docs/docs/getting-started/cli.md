@@ -53,15 +53,14 @@ The command exits with code `0` if all verification cases pass, `1` if any case 
 
 **Options:**
 
-- **`-u`, `--server-url`** *(default: `http://localhost`)* -- Base URL of the server.
-- **`-p`, `--server-port`** *(default: `8080`)* -- Server port.
+- **`-u`, `--base-url`** *(default: `http://localhost:8080`)* -- Absolute base URL of the server (scheme, host, and port).
 - **`-l`, `--log-level`** *(default: `INFO`)* -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.
 - **`-t`, `--http-traffic`** -- Enable HTTP request/response logging.
 
-Example with a custom URL and port:
+Example with a custom base URL:
 
 ```bash
-contracteer verify openapi.yaml -u http://localhost -p 3000
+contracteer verify openapi.yaml -u http://localhost:3000
 ```
 
 To see every HTTP request and response:

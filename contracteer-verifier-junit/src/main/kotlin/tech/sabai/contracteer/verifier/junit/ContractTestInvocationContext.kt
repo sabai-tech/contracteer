@@ -2,14 +2,14 @@ package tech.sabai.contracteer.verifier.junit
 
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.extension.*
-import tech.sabai.contracteer.verifier.ServerVerifier
+import tech.sabai.contracteer.verifier.OpenApiVerifier
 import tech.sabai.contracteer.verifier.VerificationCase
 import java.lang.System.lineSeparator
 import java.lang.reflect.Method
 
 internal class ContractTestInvocationContext(
   private val verificationCase: VerificationCase,
-  private val verifierProvider: (ExtensionContext) -> ServerVerifier
+  private val verifierProvider: (ExtensionContext) -> OpenApiVerifier
 ): TestTemplateInvocationContext {
 
   override fun getDisplayName(invocationIndex: Int) =
