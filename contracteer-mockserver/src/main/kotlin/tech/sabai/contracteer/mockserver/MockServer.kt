@@ -1,7 +1,6 @@
 package tech.sabai.contracteer.mockserver
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.http4k.core.ContentType.Companion.TEXT_PLAIN
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
@@ -13,16 +12,7 @@ import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
-import tech.sabai.contracteer.core.Result
-import tech.sabai.contracteer.core.Result.Companion.failure
-import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.Result.Failure
-import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.operation.ApiOperation
-import tech.sabai.contracteer.core.operation.BodySchema
-import tech.sabai.contracteer.core.operation.ResponseSchema
-import tech.sabai.contracteer.core.operation.Scenario
-import tech.sabai.contracteer.mockserver.ScenarioMatchResult.*
 
 /**
  * An HTTP mock server that serves responses derived from OpenAPI [ApiOperation] definitions.
@@ -74,15 +64,14 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
 
   private fun createRouteHandler(operation: ApiOperation): RoutingHttpHandler {
     return StrictPathRouter(operation.path, Method.valueOf(operation.method.uppercase())) { request ->
-      handleRequest(request, operation)
+      handle(request, operation)
     } bind { _ -> Response(NOT_FOUND) }
   }
 
-  private fun handleRequest(request: Request, operation: ApiOperation): Response {
+  private fun handle(request: Request, operation: ApiOperation): Response {
     httpLogger.debug { formatRequest(request) }
 
-    val response = processRequest(request, operation)
-
+    val response = RequestHandler.handle(request, operation)
     httpLogger.debug { formatResponse(response) }
 
     if (response.status == I_M_A_TEAPOT) {
@@ -96,113 +85,6 @@ class MockServer @JvmOverloads constructor(private val operations: List<ApiOpera
 
     return response
   }
-
-  private fun processRequest(request: Request, operation: ApiOperation): Response {
-    val validationResult = operation.requestSchema.validate(request)
-    if (validationResult.isFailure()) {
-      val badRequestResponseSchema = operation.responseSchemas.badRequestResponse()
-      return if (badRequestResponseSchema != null)
-        ResponseGenerator.fromSchema(400,
-                                     badRequestResponseSchema.headers,
-                                     badRequestResponseSchema.bodies.firstOrNull())
-          .orTeapot()
-      else
-        validationErrorResponse(operation, validationResult.errors())
-    }
-
-    return when (val matchResult = ScenarioMatcher.match(request, operation.scenarios, operation.requestSchema)) {
-      is SingleMatch -> handleScenarioResponse(request, matchResult.scenario, operation)
-      is NoMatch     -> handleSchemaOnlyResponse(request, operation)
-      is Ambiguous   ->
-        teapotResponse(
-          "Ambiguous: multiple scenarios (${matchResult.scenarios.joinToString(", ") { it.key }}) " +
-          "matched the request for ${operation.method.uppercase()} ${operation.path}")
-    }
-  }
-
-  private fun handleScenarioResponse(request: Request, scenario: Scenario, operation: ApiOperation): Response {
-    val responseSchema = operation.responseSchemas.responseFor(scenario.statusCode)
-                         ?: return teapotResponse("No response schema for status ${scenario.statusCode}")
-
-    val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
-    if (acceptResult.isFailure()) return teapotResponse(acceptResult.errors().first())
-    return ResponseGenerator.fromScenario(scenario, responseSchema).orTeapot()
-  }
-
-  private fun handleSchemaOnlyResponse(request: Request, operation: ApiOperation): Response {
-    val unique2xxResult = findUnique2xxResponse(operation)
-    if (unique2xxResult !is Success) return teapotResponse(unique2xxResult.errors().first())
-
-    val (statusCode, responseSchema) = unique2xxResult.value
-    val acceptResult = verifyAcceptHeader(request.header("Accept"), responseSchema)
-    if (acceptResult !is Success) return teapotResponse(acceptResult.errors().first())
-
-    val bodyResult = selectResponseBody(request.header("Accept"), responseSchema, operation)
-    if (bodyResult !is Success) return teapotResponse(bodyResult.errors().first())
-
-    return ResponseGenerator.fromSchema(statusCode, responseSchema.headers, bodyResult.value).orTeapot()
-  }
-
-  private fun Result<Response>.orTeapot(): Response = when (this) {
-    is Success -> value
-    is Failure -> teapotResponse(errors().joinToString(System.lineSeparator()))
-  }
-
-  private fun findUnique2xxResponse(operation: ApiOperation): Result<Pair<Int, ResponseSchema>> {
-    val successResponses = operation.responseSchemas.successResponses()
-    return when {
-      successResponses.isEmpty() ->
-        failure("No 2xx response schema defined for ${operation.method.uppercase()} ${operation.path}")
-      successResponses.size > 1  ->
-        failure(
-          "Ambiguous: multiple 2xx response codes (${successResponses.keys.sorted().joinToString(", ")}) " +
-          "for ${operation.method.uppercase()} ${operation.path}. Use scenarios to disambiguate.")
-      else                       -> success(successResponses.entries.first().toPair())
-    }
-  }
-
-  private fun verifyAcceptHeader(acceptHeader: String?, responseSchema: ResponseSchema): Result<Unit> {
-    val accept = AcceptHeader.parse(acceptHeader)
-    if (accept.acceptsAny()) return success()
-    if (responseSchema.bodies.isEmpty()) return success()
-
-    if (accept.bestMatch(responseSchema.bodies.map { it.contentType }) == null)
-      return failure(
-        "Accept header '$acceptHeader' does not match any response content type: " +
-        responseSchema.bodies.joinToString(", ") { it.contentType.value })
-
-    return success()
-  }
-
-  private fun selectResponseBody(acceptHeader: String?,
-                                 responseSchema: ResponseSchema,
-                                 operation: ApiOperation): Result<BodySchema?> {
-    if (responseSchema.bodies.isEmpty()) return success(null)
-    if (responseSchema.bodies.size == 1) return success(responseSchema.bodies.first())
-
-    val accept = AcceptHeader.parse(acceptHeader)
-    if (accept.acceptsAny())
-      return failure("Multiple response content types for ${operation.method.uppercase()} ${operation.path}. " +
-                     "Use Accept header to disambiguate: ${responseSchema.bodies.joinToString(", ") { it.contentType.value }}")
-
-    val bestMatch = accept.bestMatch(responseSchema.bodies.map { it.contentType })
-    return if (bestMatch == null)
-      failure("Accept header '$acceptHeader' does not match any response content type: " +
-              responseSchema.bodies.joinToString(", ") { it.contentType.value })
-    else
-      success(responseSchema.bodies.find { it.contentType == bestMatch })
-  }
-
-  private fun validationErrorResponse(operation: ApiOperation, errors: List<String>): Response =
-    Response(I_M_A_TEAPOT)
-      .header("Content-Type", TEXT_PLAIN.value)
-      .body("Request validation failed for ${operation.method.uppercase()} ${operation.path}:${System.lineSeparator()}" +
-            errors.joinToString(System.lineSeparator()) { "  * $it" })
-
-  private fun teapotResponse(message: String): Response =
-    Response(I_M_A_TEAPOT)
-      .header("Content-Type", TEXT_PLAIN.value)
-      .body(message)
 
   private fun formatRequest(request: Request): String {
     val headers = request.headers.joinToString("\n") { (name, value) -> ">> $name: $value" }
