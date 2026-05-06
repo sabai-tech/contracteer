@@ -146,4 +146,32 @@ class StringPatternTest {
       assert(compiled.containsMatchIn(value)) { "Generated value '$value' does not match pattern" }
     }
   }
+
+  @Test
+  fun `randomValue caps generated length when pattern declares an absurd upper bound`() {
+    // given — protobuf-derived specs declare patterns like ^.{1,2097152} (2 MiB strings)
+    val pattern = StringPattern.create("^.{1,2097152}").assertSuccess()
+    val compiled = Regex("^.{1,2097152}")
+
+    // when / then — generation is capped at 1024 chars while still matching the original
+    repeat(20) {
+      val value = pattern.randomValue()
+      assert(value.length <= 1024) { "Generated value has length ${value.length}, expected <= 1024" }
+      assert(compiled.containsMatchIn(value)) { "Generated value does not match original pattern" }
+    }
+  }
+
+  @Test
+  fun `validate accepts values longer than the generation cap`() {
+    // given — capping applies to generation only; validation must still accept the full
+    // range the spec author declared
+    val pattern = StringPattern.create("^.{1,2097152}").assertSuccess()
+    val longValue = "x".repeat(50_000)
+
+    // when
+    val result = pattern.validate(longValue)
+
+    // then
+    assert(result.assertSuccess() == longValue)
+  }
 }

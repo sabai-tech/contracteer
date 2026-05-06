@@ -91,6 +91,40 @@ class PatternRewriterTest {
     assertRewrite(input, expected)
   }
 
+  @Test
+  fun `caps the upper bound of a {n,m} quantifier when m exceeds the cap`() {
+    assertRewrite("^.{1,2097152}", "^.{1,1024}")
+    assertRewrite("[a-z]{1,9999}", "[a-z]{1,1024}")
+  }
+
+  @Test
+  fun `leaves a {n,m} quantifier unchanged when m is at or below the cap`() {
+    assertRewrite(".{1,1024}", ".{1,1024}")
+    assertRewrite("[a-z]{0,1024}", "[a-z]{0,1024}")
+  }
+
+  @Test
+  fun `leaves a {n,m} quantifier unchanged when n exceeds the cap`() {
+    assertRewrite(".{2000,3000}", ".{2000,3000}")
+  }
+
+  @Test
+  fun `caps each quantifier independently when multiple are present`() {
+    assertRewrite("^[a-z]{1,9999}-[0-9]{1,9999}\$", "^[a-z]{1,1024}-[0-9]{1,1024}\$")
+  }
+
+  @Test
+  fun `leaves exact and open-ended quantifiers unchanged`() {
+    // `{n}` (exact) and `{n,}` (unbounded) are not in the form rewritten by the cap
+    assertRewrite(".{9999}", ".{9999}")
+    assertRewrite(".{500,}", ".{500,}")
+  }
+
+  @Test
+  fun `combines the quantifier cap with other rewrites in one pattern`() {
+    assertRewrite("\\p{IsLetter}{1,9999}[0-9-\\s]+", "\\p{L}{1,1024}[0-9\\s-]+")
+  }
+
   private fun assertRewrite(input: String, expected: String) {
     val actual = PatternRewriter.rewrite(input)
     assert(actual == expected) { "rewrite('$input') == '$actual', expected '$expected'" }
