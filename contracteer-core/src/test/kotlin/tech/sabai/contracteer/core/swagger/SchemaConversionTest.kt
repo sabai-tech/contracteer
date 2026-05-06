@@ -632,7 +632,7 @@ class SchemaConversionTest {
       .properties[propName]!!
 
   private fun loadOperations(yamlFile: String) =
-    OpenApiLoader.loadOperations("src/test/resources/datatype/$yamlFile")
+    OpenApiLoader.loadOperations("src/test/resources/datatype/3.0/$yamlFile")
 
   private fun DataType<*>.asObjectDataType() = this as ObjectDataType
 }
