@@ -46,9 +46,10 @@ jobs:
         run: ./gradlew :contracteer-cli:nativeCompile
 
       - name: Assemble archive
-        uses: jreleaser/release-action@v2
+        uses: jreleaser/release-action@v2.5.0
         with:
           arguments: assemble
+          version: '1.24.0'
 
       - name: Upload assembled archive
         uses: actions/upload-artifact@v7
@@ -92,9 +93,10 @@ jobs:
         run: ./gradlew publish
 
       - name: Release
-        uses: jreleaser/release-action@v2
+        uses: jreleaser/release-action@v2.5.0
         with:
           arguments: full-release
+          version: '1.24.0'
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GH_PAT }}
           JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
@@ -115,7 +117,7 @@ jobs:
             out/jreleaser/trace.log
 
   deploy-docs:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.JRELEASER_DRY_RUN != 'true'
     name: Deploy Documentation
     needs: release
     runs-on: ubuntu-latest

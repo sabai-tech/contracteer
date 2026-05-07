@@ -29,14 +29,16 @@ deploy:
       contracteer:
         active: ALWAYS
         url: https://central.sonatype.com/api/v1/publisher
+        deploymentId: '{{projectVersion}}'
         stagingRepositories:
           - build/staging-deploy
         applyMavenCentralRules: true
 
 signing:
   active: ALWAYS
-  armored: true
-  artifacts: true
+  pgp:
+    armored: true
+    artifacts: true
 
 release:
   github:
