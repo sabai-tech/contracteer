@@ -1,42 +1,54 @@
 package tech.sabai.contracteer.core.swagger.datatype
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.swagger.v3.oas.models.media.IntegerSchema
+import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.core.datatype.Range
 import tech.sabai.contracteer.core.normalize
-import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.effectiveExclusiveMaximum
 import tech.sabai.contracteer.core.swagger.effectiveExclusiveMinimum
+import tech.sabai.contracteer.core.swagger.effectiveMaximum
+import tech.sabai.contracteer.core.swagger.effectiveMinimum
 import tech.sabai.contracteer.core.swagger.isNullable
+import tech.sabai.contracteer.core.swagger.mapEnum
 import java.math.BigDecimal
 
 internal object IntegerDataTypeConverter {
   private val logger = KotlinLogging.logger {}
 
-  fun convert(schema: IntegerSchema): Result<IntegerDataType> =
+  fun convert(schema: Schema<*>): Result<IntegerDataType> =
     formatRange(schema.name, schema.format)
       .flatMap { formatRange ->
+        val minimum = schema.effectiveMinimum()
+        val maximum = schema.effectiveMaximum()
         when {
-          schema.minimum != null && formatRange.contains(schema.minimum).isFailure() ->
-            failure("minimum (${schema.minimum}) is out of range for format '${schema.format}'")
+          minimum != null && formatRange.contains(minimum).isFailure() ->
+            failure("minimum ($minimum) is out of range for format '${schema.format}'")
 
-          schema.maximum != null && formatRange.contains(schema.maximum).isFailure() ->
-            failure("maximum (${schema.maximum}) is out of range for format '${schema.format}'")
+          maximum != null && formatRange.contains(maximum).isFailure() ->
+            failure("maximum ($maximum) is out of range for format '${schema.format}'")
 
-          else                                                                       ->
-            IntegerDataType.create(
-              name = schema.name,
-              isNullable = schema.isNullable(),
-              minimum = schema.minimum ?: formatRange.minimum,
-              maximum = schema.maximum ?: formatRange.maximum,
-              exclusiveMinimum = schema.effectiveExclusiveMinimum(),
-              exclusiveMaximum = schema.effectiveExclusiveMaximum(),
-              enum = schema.safeEnum().map { it.normalize() as BigDecimal? },
-              multipleOf = schema.multipleOf
-            )
+          else                                                          ->
+            schema.mapEnum {
+              when (val normalized = it.normalize()) {
+                is BigDecimal -> success(normalized)
+                else          -> failure("Schema '${schema.name}': enum value '$it' is not a valid integer")
+              }
+            }.flatMap { enum ->
+              IntegerDataType.create(
+                name = schema.name,
+                isNullable = schema.isNullable(),
+                minimum = minimum ?: formatRange.minimum,
+                maximum = maximum ?: formatRange.maximum,
+                exclusiveMinimum = schema.effectiveExclusiveMinimum(),
+                exclusiveMaximum = schema.effectiveExclusiveMaximum(),
+                enum = enum,
+                multipleOf = schema.multipleOf
+              )
+            }
         }
       }
 

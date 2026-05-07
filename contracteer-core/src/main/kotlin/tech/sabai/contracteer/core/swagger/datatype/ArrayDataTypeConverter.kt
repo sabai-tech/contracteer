@@ -1,6 +1,5 @@
 package tech.sabai.contracteer.core.swagger.datatype
 
-import io.swagger.v3.oas.models.media.ArraySchema
 import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.datatype.ArrayDataType
@@ -11,7 +10,7 @@ import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object ArrayDataTypeConverter {
   fun convert(
-    schema: ArraySchema,
+    schema: Schema<*>,
     convert: (Schema<*>, String) -> Result<DataType<out Any>>
   ) =
     convert(schema.items, schema.name)

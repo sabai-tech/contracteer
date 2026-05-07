@@ -1,16 +1,19 @@
 package tech.sabai.contracteer.core.swagger
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import tech.sabai.contracteer.core.assertFailure
 import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.datatype.*
 
 class SchemaConversionTest {
 
-  @Test
-  fun `extract IntegerDataType`() {
+  @ParameterizedTest(name = "extract IntegerDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract IntegerDataType`(version: String) {
     // when
-    val integerDataType = getDataType("integer.yaml") as IntegerDataType
+    val integerDataType = getDataType(version, "integer.yaml") as IntegerDataType
 
     // then
     assert(integerDataType.allowedValues != null)
@@ -22,10 +25,11 @@ class SchemaConversionTest {
     assert(integerDataType.range.exclusiveMaximum.not())
   }
 
-  @Test
-  fun `extract NumberDataType`() {
+  @ParameterizedTest(name = "extract NumberDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract NumberDataType`(version: String) {
     // when
-    val numberDataType = getDataType("number.yaml") as NumberDataType
+    val numberDataType = getDataType(version, "number.yaml") as NumberDataType
 
     // then
     assert(numberDataType.allowedValues != null)
@@ -40,7 +44,7 @@ class SchemaConversionTest {
   @Test
   fun `extract NumberDataType without type property`() {
     // when
-    val numberDataType = getDataType("number_without_type.yaml") as NumberDataType
+    val numberDataType = getDataType("3.0", "number_without_type.yaml") as NumberDataType
 
     // then
     assert(numberDataType.allowedValues != null)
@@ -52,10 +56,11 @@ class SchemaConversionTest {
     assert(numberDataType.range.exclusiveMaximum.not())
   }
 
-  @Test
-  fun `extract StringDataType`() {
+  @ParameterizedTest(name = "extract StringDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract StringDataType`(version: String) {
     // when
-    val stringDataType = getDataType("string.yaml") as StringDataType
+    val stringDataType = getDataType(version, "string.yaml") as StringDataType
 
     // then
     assert(stringDataType.allowedValues != null)
@@ -70,7 +75,7 @@ class SchemaConversionTest {
   @Test
   fun `extract StringDataType without type property`() {
     // when
-    val stringDataType = getDataType("string_without_type.yaml") as StringDataType
+    val stringDataType = getDataType("3.0", "string_without_type.yaml") as StringDataType
 
     // then
     assert(stringDataType.allowedValues != null)
@@ -82,10 +87,11 @@ class SchemaConversionTest {
     assert(stringDataType.lengthRange.exclusiveMaximum.not())
   }
 
-  @Test
-  fun `extract Base64DataType`() {
+  @ParameterizedTest(name = "extract Base64DataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract Base64DataType`(version: String) {
     // when
-    val base64DataType = getDataType("string_base64.yaml") as Base64DataType
+    val base64DataType = getDataType(version, "string_base64.yaml") as Base64DataType
 
     // then
     assert(base64DataType.allowedValues != null)
@@ -97,10 +103,11 @@ class SchemaConversionTest {
     assert(base64DataType.lengthRange.exclusiveMaximum.not())
   }
 
-  @Test
-  fun `extract BinaryDataType`() {
+  @ParameterizedTest(name = "extract BinaryDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract BinaryDataType`(version: String) {
     // when
-    val binaryDataType = getDataType("string_binary.yaml") as BinaryDataType
+    val binaryDataType = getDataType(version, "string_binary.yaml") as BinaryDataType
 
     // then
     assert(binaryDataType.allowedValues != null)
@@ -112,10 +119,11 @@ class SchemaConversionTest {
     assert(binaryDataType.lengthRange.exclusiveMaximum.not())
   }
 
-  @Test
-  fun `extract UuidDataType`() {
+  @ParameterizedTest(name = "extract UuidDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract UuidDataType`(version: String) {
     // when
-    val uuidDataType = getDataType("string_uuid.yaml") as UuidDataType
+    val uuidDataType = getDataType(version, "string_uuid.yaml") as UuidDataType
 
     // then
     assert(uuidDataType.allowedValues != null)
@@ -124,9 +132,20 @@ class SchemaConversionTest {
   }
 
   @Test
-  fun `extract EmailDataType`() {
+  fun `rejects UUID schema when enum contains a non-string value`() {
+    // When
+    val result = loadOperations("3.1", "string_uuid_invalid_enum_error.yaml")
+
+    // Then
+    val errors = result.assertFailure()
+    assert(errors.any { "42" in it }) { "Expected an error mentioning the invalid value '42' but got: $errors" }
+  }
+
+  @ParameterizedTest(name = "extract EmailDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract EmailDataType`(version: String) {
     // when
-    val emailDataType = getDataType("string_email.yaml") as EmailDataType
+    val emailDataType = getDataType(version, "string_email.yaml") as EmailDataType
 
     // then
     assert(emailDataType.allowedValues != null)
@@ -138,10 +157,11 @@ class SchemaConversionTest {
     assert(emailDataType.lengthRange.exclusiveMaximum.not())
   }
 
-  @Test
-  fun `extract DateDataType`() {
+  @ParameterizedTest(name = "extract DateDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract DateDataType`(version: String) {
     // when
-    val dateDataType = getDataType("string_date.yaml") as DateDataType
+    val dateDataType = getDataType(version, "string_date.yaml") as DateDataType
 
     // then
     assert(dateDataType.allowedValues != null)
@@ -149,10 +169,11 @@ class SchemaConversionTest {
     assert(dateDataType.allowedValues.contains("2024-01-01").isSuccess())
   }
 
-  @Test
-  fun `extract DateTimeDataType`() {
+  @ParameterizedTest(name = "extract DateTimeDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract DateTimeDataType`(version: String) {
     // when
-    val dateTimeDataType = getDataType("string_datetime.yaml") as DateTimeDataType
+    val dateTimeDataType = getDataType(version, "string_datetime.yaml") as DateTimeDataType
 
     // then
     assert(dateTimeDataType.allowedValues != null)
@@ -160,10 +181,11 @@ class SchemaConversionTest {
     assert(dateTimeDataType.allowedValues.contains("2024-12-20T15:30:45+02:00").isSuccess())
   }
 
-  @Test
-  fun `extract BooleanDataType`() {
+  @ParameterizedTest(name = "extract BooleanDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract BooleanDataType`(version: String) {
     // when
-    val booleanDataType = getDataType("boolean.yaml") as BooleanDataType
+    val booleanDataType = getDataType(version, "boolean.yaml") as BooleanDataType
 
     // then
     assert(booleanDataType.allowedValues != null)
@@ -173,17 +195,18 @@ class SchemaConversionTest {
   @Test
   fun `extract BooleanDataType without type property`() {
     // when
-    val booleanDataType = getDataType("boolean_without_type.yaml") as BooleanDataType
+    val booleanDataType = getDataType("3.0", "boolean_without_type.yaml") as BooleanDataType
 
     // then
     assert(booleanDataType.allowedValues != null)
     assert(booleanDataType.allowedValues!!.contains(false).isSuccess())
   }
 
-  @Test
-  fun `extract ArrayDataType`() {
+  @ParameterizedTest(name = "extract ArrayDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract ArrayDataType`(version: String) {
     // when
-    val arrayDataType = getDataType("array.yaml") as ArrayDataType
+    val arrayDataType = getDataType(version, "array.yaml") as ArrayDataType
 
     // then
     assert(arrayDataType.itemDataType is StringDataType)
@@ -192,10 +215,11 @@ class SchemaConversionTest {
     assert(arrayDataType.allowedValues.contains(listOf("john", "jane")).isSuccess())
   }
 
-  @Test
-  fun `extract ObjectDataType`() {
+  @ParameterizedTest(name = "extract ObjectDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract ObjectDataType`(version: String) {
     // when
-    val objectDataType = getDataType("object.yaml") as ObjectDataType
+    val objectDataType = getDataType(version, "object.yaml") as ObjectDataType
 
     // then
     assert(objectDataType.properties.keys == setOf("name", "age"))
@@ -212,7 +236,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ObjectDataType without type property`() {
     // when
-    val objectDataType = getDataType("object_without_type.yaml") as ObjectDataType
+    val objectDataType = getDataType("3.0", "object_without_type.yaml") as ObjectDataType
 
     // then
     assert(objectDataType.properties.keys == setOf("name", "age"))
@@ -227,7 +251,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ObjectDataType with additional properties`() {
     // when
-    val objectDataType = getDataType("object_additional_properties.yaml") as ObjectDataType
+    val objectDataType = getDataType("3.0", "object_additional_properties.yaml") as ObjectDataType
 
     // then
     assert(objectDataType.properties.keys == setOf("name", "age"))
@@ -237,10 +261,11 @@ class SchemaConversionTest {
     assert(objectDataType.additionalPropertiesDataType is StringDataType)
   }
 
-  @Test
-  fun `extract AnyOfDataType`() {
+  @ParameterizedTest(name = "extract AnyOfDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract AnyOfDataType`(version: String) {
     // when
-    val anyOfDataType = getDataType("anyOf.yaml") as AnyOfDataType
+    val anyOfDataType = getDataType(version, "anyOf.yaml") as AnyOfDataType
 
     // then
     assert(anyOfDataType.subTypes.all { it is StringDataType || it is IntegerDataType || it is ObjectDataType })
@@ -253,7 +278,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AnyOfDataType with discriminator`() {
     // when
-    val anyOfDataType = getDataType("anyOf_discriminator.yaml") as AnyOfDataType
+    val anyOfDataType = getDataType("3.0", "anyOf_discriminator.yaml") as AnyOfDataType
 
     // then
     assert(anyOfDataType.subTypes.size == 2)
@@ -261,10 +286,11 @@ class SchemaConversionTest {
     assert(anyOfDataType.discriminator == Discriminator("type", mapOf("DOG" to "dog")))
   }
 
-  @Test
-  fun `extract OneOfDataType`() {
+  @ParameterizedTest(name = "extract OneOfDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract OneOfDataType`(version: String) {
     // when
-    val oneOfDataType = getDataType("oneOf.yaml") as OneOfDataType
+    val oneOfDataType = getDataType(version, "oneOf.yaml") as OneOfDataType
 
     // then
     assert(oneOfDataType.subTypes.all { it is StringDataType || it is IntegerDataType || it is ObjectDataType })
@@ -277,7 +303,7 @@ class SchemaConversionTest {
   @Test
   fun `extract OneOfDataType with discriminator`() {
     // when
-    val oneOfDataType = getDataType("oneOf_discriminator.yaml") as OneOfDataType
+    val oneOfDataType = getDataType("3.0", "oneOf_discriminator.yaml") as OneOfDataType
 
     // then
     assert(oneOfDataType.subTypes.size == 2)
@@ -285,10 +311,11 @@ class SchemaConversionTest {
     assert(oneOfDataType.discriminator == Discriminator("type", mapOf("DOG" to "dog")))
   }
 
-  @Test
-  fun `extract AllOfDataType`() {
+  @ParameterizedTest(name = "extract AllOfDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract AllOfDataType`(version: String) {
     // when
-    val allOfDataType = getDataType("allOf.yaml") as AllOfDataType
+    val allOfDataType = getDataType(version, "allOf.yaml") as AllOfDataType
 
     // then
     assert(allOfDataType.subTypes.size == 2)
@@ -300,7 +327,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AllOfDataType with discriminator`() {
     // when
-    val allOfDataType = getDataType("allOf_discriminator.yaml") as AllOfDataType
+    val allOfDataType = getDataType("3.0", "allOf_discriminator.yaml") as AllOfDataType
 
     // then
     assert(allOfDataType.subTypes.size == 2)
@@ -308,10 +335,11 @@ class SchemaConversionTest {
     assert(allOfDataType.discriminator == Discriminator("petType", mapOf("dog" to "Dog")))
   }
 
-  @Test
-  fun `extract AnyDataType`() {
+  @ParameterizedTest(name = "extract AnyDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract AnyDataType`(version: String) {
     // when
-    val anyDataType = getDataType("any.yaml")
+    val anyDataType = getDataType(version, "any.yaml")
 
     // then
     assert(anyDataType is AnyDataType)
@@ -320,7 +348,7 @@ class SchemaConversionTest {
   @Test
   fun `does not extract AllOfDataType when there are multiple discriminators`() {
     // when
-    val result = loadOperations("allOf_multiple_discriminators_error.yaml")
+    val result = loadOperations("3.0", "allOf_multiple_discriminators_error.yaml")
 
     // then
     result.assertFailure()
@@ -329,7 +357,7 @@ class SchemaConversionTest {
   @Test
   fun `does not extract schema when multiple composition keywords are present`() {
     // when
-    val result = loadOperations("multiple_composition_keywords_error.yaml")
+    val result = loadOperations("3.0", "multiple_composition_keywords_error.yaml")
 
     // then
     result.assertFailure()
@@ -338,7 +366,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AllOfDataType with sibling properties folded into sub-types`() {
     // when
-    val allOfDataType = getDataType("allOf_sibling_properties.yaml") as AllOfDataType
+    val allOfDataType = getDataType("3.0", "allOf_sibling_properties.yaml") as AllOfDataType
 
     // then
     assert(allOfDataType.subTypes.size == 2)
@@ -353,7 +381,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AllOfDataType wrapping oneOf when oneOf has sibling properties`() {
     // when
-    val dataType = getDataType("oneOf_sibling_properties.yaml")
+    val dataType = getDataType("3.0", "oneOf_sibling_properties.yaml")
 
     // then
     assert(dataType is AllOfDataType)
@@ -368,7 +396,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AllOfDataType wrapping anyOf when anyOf has sibling properties`() {
     // when
-    val dataType = getDataType("anyOf_sibling_properties.yaml")
+    val dataType = getDataType("3.0", "anyOf_sibling_properties.yaml")
 
     // then
     assert(dataType is AllOfDataType)
@@ -382,7 +410,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AllOfDataType with single primitive sub-type`() {
     // when
-    val allOfDataType = getDataType("allOf_single_primitive.yaml") as AllOfDataType
+    val allOfDataType = getDataType("3.0", "allOf_single_primitive.yaml") as AllOfDataType
 
     // then
     assert(allOfDataType.subTypes.size == 1)
@@ -395,7 +423,7 @@ class SchemaConversionTest {
   @Test
   fun `extract AllOfDataType with inheritance`() {
     // when
-    val operations = loadOperations("allOf_inheritance.yaml").assertSuccess()
+    val operations = loadOperations("3.0", "allOf_inheritance.yaml").assertSuccess()
 
     // then
     val bodyDataType = operations.first().requestSchema.bodies.first().dataType
@@ -409,7 +437,7 @@ class SchemaConversionTest {
   @Test
   fun `extract IntegerDataType with int32 format applies 32-bit range`() {
     // when
-    val dataType = getDataType("integer_format.yaml", "int32_prop") as IntegerDataType
+    val dataType = getDataType("3.0", "integer_format.yaml", "int32_prop") as IntegerDataType
 
     // then
     assert(dataType.range.minimum == Int.MIN_VALUE.toBigDecimal())
@@ -419,7 +447,7 @@ class SchemaConversionTest {
   @Test
   fun `extract IntegerDataType with int64 format applies 64-bit range`() {
     // when
-    val dataType = getDataType("integer_format.yaml", "int64_prop") as IntegerDataType
+    val dataType = getDataType("3.0", "integer_format.yaml", "int64_prop") as IntegerDataType
 
     // then
     assert(dataType.range.minimum == Long.MIN_VALUE.toBigDecimal())
@@ -429,7 +457,7 @@ class SchemaConversionTest {
   @Test
   fun `extract IntegerDataType with int32 format narrows to explicit range when explicit is narrower`() {
     // when
-    val dataType = getDataType("integer_int32_with_range.yaml") as IntegerDataType
+    val dataType = getDataType("3.0", "integer_int32_with_range.yaml") as IntegerDataType
 
     // then — explicit range [-100, 100] is narrower than int32, so it wins
     assert(dataType.range.minimum == (-100).toBigDecimal())
@@ -439,7 +467,7 @@ class SchemaConversionTest {
   @Test
   fun `rejects IntegerDataType with int32 format when explicit range exceeds format`() {
     // when
-    val result = loadOperations("integer_int32_with_wider_range.yaml")
+    val result = loadOperations("3.0", "integer_int32_with_wider_range.yaml")
 
     // then
     assert(result.isFailure())
@@ -449,7 +477,7 @@ class SchemaConversionTest {
   @Test
   fun `extract IntegerDataType without format has no implicit range`() {
     // when
-    val dataType = getDataType("integer.yaml") as IntegerDataType
+    val dataType = getDataType("3.0", "integer.yaml") as IntegerDataType
 
     // then — range comes from explicit min/max in the YAML, not from format
     assert(dataType.range.minimum == 9.toBigDecimal())
@@ -459,7 +487,7 @@ class SchemaConversionTest {
   @Test
   fun `extract NumberDataType with float format applies float range`() {
     // when
-    val dataType = getDataType("number_format.yaml", "float_prop") as NumberDataType
+    val dataType = getDataType("3.0", "number_format.yaml", "float_prop") as NumberDataType
 
     // then
     assert(dataType.range.minimum == Float.MAX_VALUE.toBigDecimal().negate())
@@ -469,7 +497,7 @@ class SchemaConversionTest {
   @Test
   fun `extract NumberDataType with float format narrows to explicit range when explicit is narrower`() {
     // when
-    val dataType = getDataType("number_float_with_range.yaml") as NumberDataType
+    val dataType = getDataType("3.0", "number_float_with_range.yaml") as NumberDataType
 
     // then
     assert(dataType.range.minimum == (-100).toBigDecimal())
@@ -479,7 +507,7 @@ class SchemaConversionTest {
   @Test
   fun `rejects NumberDataType with float format when explicit range exceeds format`() {
     // when
-    val result = loadOperations("number_float_with_wider_range.yaml")
+    val result = loadOperations("3.0", "number_float_with_wider_range.yaml")
 
     // then
     assert(result.isFailure())
@@ -489,7 +517,7 @@ class SchemaConversionTest {
   @Test
   fun `extract NumberDataType with double format applies double range`() {
     // when
-    val dataType = getDataType("number_format.yaml", "double_prop") as NumberDataType
+    val dataType = getDataType("3.0", "number_format.yaml", "double_prop") as NumberDataType
 
     // then
     assert(dataType.range.minimum == Double.MAX_VALUE.toBigDecimal().negate())
@@ -499,7 +527,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ArrayDataType with minItems`() {
     // when
-    val dataType = getDataType("array_constraints.yaml", "with_min") as ArrayDataType
+    val dataType = getDataType("3.0", "array_constraints.yaml", "with_min") as ArrayDataType
 
     // then
     assert(dataType.minItems == 1)
@@ -508,7 +536,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ArrayDataType with maxItems`() {
     // when
-    val dataType = getDataType("array_constraints.yaml", "with_max") as ArrayDataType
+    val dataType = getDataType("3.0", "array_constraints.yaml", "with_max") as ArrayDataType
 
     // then
     assert(dataType.maxItems == 10)
@@ -517,7 +545,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ArrayDataType with minItems and maxItems`() {
     // when
-    val dataType = getDataType("array_constraints.yaml", "with_min_and_max") as ArrayDataType
+    val dataType = getDataType("3.0", "array_constraints.yaml", "with_min_and_max") as ArrayDataType
 
     // then
     assert(dataType.minItems == 2)
@@ -527,7 +555,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ArrayDataType with uniqueItems`() {
     // when
-    val dataType = getDataType("array_constraints.yaml", "with_unique") as ArrayDataType
+    val dataType = getDataType("3.0", "array_constraints.yaml", "with_unique") as ArrayDataType
 
     // then
     assert(dataType.uniqueItems)
@@ -536,7 +564,7 @@ class SchemaConversionTest {
   @Test
   fun `extract IntegerDataType with multipleOf`() {
     // when
-    val dataType = getDataType("multiple_of.yaml", "integer_prop") as IntegerDataType
+    val dataType = getDataType("3.0", "multiple_of.yaml", "integer_prop") as IntegerDataType
 
     // then
     assert(dataType.multipleOf == 5.toBigDecimal())
@@ -545,7 +573,7 @@ class SchemaConversionTest {
   @Test
   fun `extract NumberDataType with multipleOf`() {
     // when
-    val dataType = getDataType("multiple_of.yaml", "number_prop") as NumberDataType
+    val dataType = getDataType("3.0", "multiple_of.yaml", "number_prop") as NumberDataType
 
     // then
     assert(dataType.multipleOf == 0.01.toBigDecimal())
@@ -554,7 +582,7 @@ class SchemaConversionTest {
   @Test
   fun `extract ObjectDataType with minProperties and maxProperties`() {
     // when
-    val dataType = getDataType("object_property_count.yaml") as ObjectDataType
+    val dataType = getDataType("3.0", "object_property_count.yaml") as ObjectDataType
 
     // then
     assert(dataType.minProperties == 1)
@@ -566,7 +594,7 @@ class SchemaConversionTest {
   @Test
   fun `extract circular reference with 3 member cycle`() {
     // when
-    val result = loadOperations("circular_reference.yaml")
+    val result = loadOperations("3.0", "circular_reference.yaml")
 
     // then
     val operations = result.assertSuccess()
@@ -586,7 +614,7 @@ class SchemaConversionTest {
   @Test
   fun `extract circular reference with required nullable property`() {
     // when
-    val result = loadOperations("circular_reference_nullable.yaml")
+    val result = loadOperations("3.0", "circular_reference_nullable.yaml")
 
     // then
     result.assertSuccess()
@@ -595,7 +623,7 @@ class SchemaConversionTest {
   @Test
   fun `extract circular reference through array items`() {
     // when
-    val result = loadOperations("circular_reference_array.yaml")
+    val result = loadOperations("3.0", "circular_reference_array.yaml")
 
     // then
     result.assertSuccess()
@@ -604,7 +632,7 @@ class SchemaConversionTest {
   @Test
   fun `fail to load spec with infinite circular reference`() {
     // when
-    val result = loadOperations("circular_reference_infinite.yaml")
+    val result = loadOperations("3.0", "circular_reference_infinite.yaml")
 
     // then
     val errors = result.assertFailure()
@@ -614,7 +642,7 @@ class SchemaConversionTest {
   @Test
   fun `fail to load spec with infinite circular reference through allOf`() {
     // when
-    val result = loadOperations("circular_reference_infinite_allof.yaml")
+    val result = loadOperations("3.0", "circular_reference_infinite_allof.yaml")
 
     // then
     val errors = result.assertFailure()
@@ -623,16 +651,16 @@ class SchemaConversionTest {
 
   // --- Helpers ---
 
-  private fun getDataType(yamlFile: String, propName: String = "prop1"): DataType<out Any> =
-    loadOperations(yamlFile)
+  private fun getDataType(version: String, yamlFile: String, propName: String = "prop1"): DataType<out Any> =
+    loadOperations(version, yamlFile)
       .assertSuccess()
       .first()
       .requestSchema.bodies.first().dataType
       .asObjectDataType()
       .properties[propName]!!
 
-  private fun loadOperations(yamlFile: String) =
-    OpenApiLoader.loadOperations("src/test/resources/datatype/3.0/$yamlFile")
+  private fun loadOperations(version: String, yamlFile: String) =
+    OpenApiLoader.loadOperations("src/test/resources/datatype/$version/$yamlFile")
 
   private fun DataType<*>.asObjectDataType() = this as ObjectDataType
 }

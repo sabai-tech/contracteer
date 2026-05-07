@@ -4,10 +4,14 @@ import io.swagger.v3.oas.models.SpecVersion
 import io.swagger.v3.oas.models.media.JsonSchema
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.media.StringSchema
+import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.assertFailure
+import tech.sabai.contracteer.core.assertSuccess
 import java.math.BigDecimal
 import kotlin.test.Test
 
-class SwaggerAccessorsTest {
+class SwaggerHelpersTest {
 
   @Test
   fun `effectiveType returns the single non-null type from a 3 0 schema`() {
@@ -61,6 +65,22 @@ class SwaggerAccessorsTest {
 
     // Then
     assert(type == null) { "Expected null but got '$type'" }
+  }
+
+  @Test
+  fun `effectiveType ignores the legacy type field on a 3 1 schema`() {
+    // Given
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string", "integer")
+      type = "string"
+    }
+
+    // When
+    val type = schema.effectiveType()
+
+    // Then
+    assert(type == null) { "Expected null but got '$type' — 3.1 must not read the 3.0 'type' field" }
   }
 
   @Test
@@ -353,5 +373,43 @@ class SwaggerAccessorsTest {
 
     // Then
     assert(mediaType == "application/octet-stream")
+  }
+
+  @Test
+  fun `mapEnum applies transform to each non-null enum element`() {
+    // Given
+    val schema = JsonSchema().apply { enum = mutableListOf<Any?>(1, 2) }
+
+    // When
+    val result = schema.mapEnum { value -> success((value as Int) * 2) }
+
+    // Then
+    assert(result.assertSuccess() == listOf(2, 4))
+  }
+
+  @Test
+  fun `mapEnum passes null enum elements through without invoking transform`() {
+    // Given
+    val schema = JsonSchema().apply { enum = mutableListOf<Any?>(null, null) }
+
+    // When
+    val result = schema.mapEnum<Int> { _ -> failure("transform should not run on null") }
+
+    // Then
+    assert(result.assertSuccess() == listOf(null, null))
+  }
+
+  @Test
+  fun `mapEnum aggregates failures from multiple invalid elements`() {
+    // Given
+    val schema = JsonSchema().apply { enum = mutableListOf<Any?>("first", "second") }
+
+    // When
+    val result = schema.mapEnum<String> { value -> failure("invalid: $value") }
+
+    // Then
+    val errors = result.assertFailure()
+    assert(errors.contains("invalid: first"))
+    assert(errors.contains("invalid: second"))
   }
 }

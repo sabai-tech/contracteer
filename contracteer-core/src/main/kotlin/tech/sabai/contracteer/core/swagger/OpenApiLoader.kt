@@ -14,7 +14,7 @@ import java.io.File
 import java.net.*
 
 /**
- * Loads and parses an OpenAPI 3.0 specification into a list of [ApiOperation] instances.
+ * Loads and parses an OpenAPI 3.0.x or 3.1.x specification into a list of [ApiOperation] instances.
  *
  * Accepts a file path, an HTTP(S) URL, or a `classpath:` resource pointing to an OpenAPI document.
  */
@@ -27,7 +27,7 @@ object OpenApiLoader {
   /**
    * Parses the OpenAPI document at the given [path] and extracts all API operations.
    *
-   * @param path a local file path, an HTTP(S) URL, or a `classpath:` resource path to an OpenAPI 3.0 document
+   * @param path a local file path, an HTTP(S) URL, or a `classpath:` resource path to an OpenAPI 3.0.x or 3.1.x document
    * @return a [Result] containing the list of extracted [ApiOperation] instances,
    *         or errors if the document is invalid or cannot be loaded
    */
@@ -52,7 +52,6 @@ object OpenApiLoader {
     when (val declared = readDeclaredVersion(content)) {
       Missing                                                 -> failure("OpenAPI document does not declare a version. $SUPPORTED_HINT")
       is Declared if SUPPORTED_VERSION matches declared.value -> success()
-      is Declared if UNSUPPORTED_3_1 matches declared.value   -> failure("OpenAPI 3.1 is not yet supported. $SUPPORTED_HINT")
       is Declared                                             -> failure("OpenAPI version '${declared.value}' is not supported. $SUPPORTED_HINT")
       Unparseable                                             -> success()
     }
@@ -149,10 +148,9 @@ object OpenApiLoader {
 
 }
 
-private const val SUPPORTED_HINT = "Contracteer currently supports OpenAPI 3.0.x."
+private const val SUPPORTED_HINT = "Contracteer currently supports OpenAPI 3.0.x and 3.1.x."
 private val YAML_MAPPER = YAMLMapper()
-private val SUPPORTED_VERSION = Regex("^3\\.0\\.\\d+$")
-private val UNSUPPORTED_3_1 = Regex("^3\\.1(\\..*)?$")
+private val SUPPORTED_VERSION = Regex("^3\\.[01]\\.\\d+$")
 
 private sealed interface VersionRead
 private data object Missing : VersionRead
