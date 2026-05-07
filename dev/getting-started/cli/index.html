@@ -1287,13 +1287,12 @@ The CLI exits with code <code>0</code> when all cases pass and <code>1</code> wh
 <p>The command exits with code <code>0</code> if all verification cases pass, <code>1</code> if any case fails.</p>
 <p><strong>Options:</strong></p>
 <ul>
-<li><strong><code>-u</code>, <code>--server-url</code></strong> <em>(default: <code>http://localhost</code>)</em> -- Base URL of the server.</li>
-<li><strong><code>-p</code>, <code>--server-port</code></strong> <em>(default: <code>8080</code>)</em> -- Server port.</li>
+<li><strong><code>-u</code>, <code>--base-url</code></strong> <em>(default: <code>http://localhost:8080</code>)</em> -- Absolute base URL of the server (scheme, host, and port).</li>
 <li><strong><code>-l</code>, <code>--log-level</code></strong> <em>(default: <code>INFO</code>)</em> -- Log verbosity: TRACE, DEBUG, INFO, WARN, ERROR, OFF.</li>
 <li><strong><code>-t</code>, <code>--http-traffic</code></strong> -- Enable HTTP request/response logging.</li>
 </ul>
-<p>Example with a custom URL and port:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-u<span class="w"> </span>http://localhost<span class="w"> </span>-p<span class="w"> </span><span class="m">3000</span>
+<p>Example with a custom base URL:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-u<span class="w"> </span>http://localhost:3000
 </code></pre></div>
 <p>To see every HTTP request and response:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-t
