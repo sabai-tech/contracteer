@@ -35,9 +35,8 @@ deploy:
 
 signing:
   active: ALWAYS
-  pgp:
-    armored: true
-    artifacts: true
+  armored: true
+  artifacts: true
 
 release:
   github:
