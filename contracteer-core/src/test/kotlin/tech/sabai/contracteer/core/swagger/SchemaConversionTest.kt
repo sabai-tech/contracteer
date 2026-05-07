@@ -2,6 +2,8 @@ package tech.sabai.contracteer.core.swagger
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
 import org.junit.jupiter.params.provider.ValueSource
 import tech.sabai.contracteer.core.assertFailure
 import tech.sabai.contracteer.core.assertSuccess
@@ -589,6 +591,42 @@ class SchemaConversionTest {
     assert(dataType.maxProperties == 5)
   }
 
+  // --- const keyword (OAS 3.1) ---
+
+  @ParameterizedTest(name = "extract DataType with const ({0})")
+  @MethodSource("constFixtures")
+  fun `extract DataType with const`(fixture: String, allowedValue: Any, disallowedValue: Any) {
+    // when
+    val dataType = getDataType("3.1", fixture)
+
+    // then
+    assert(dataType.allowedValues != null)
+    assert(dataType.allowedValues!!.contains(allowedValue).isSuccess())
+    assert(dataType.allowedValues!!.contains(disallowedValue).isFailure())
+  }
+
+  @Test
+  fun `extract DataType when const is consistent with enum`() {
+    // when
+    val stringDataType = getDataType("3.1", "const_consistent_with_enum.yaml") as StringDataType
+
+    // then
+    assert(stringDataType.allowedValues != null)
+    assert(stringDataType.allowedValues!!.contains("active").isSuccess())
+  }
+
+  @Test
+  fun `rejects schema when const conflicts with enum`() {
+    // when
+    val result = loadOperations("3.1", "const_conflicts_with_enum_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("const") && it.contains("enum") }) {
+      "Expected an error mentioning conflict between const and enum but got: $errors"
+    }
+  }
+
   // --- Circular references ---
 
   @Test
@@ -663,4 +701,14 @@ class SchemaConversionTest {
     OpenApiLoader.loadOperations("src/test/resources/datatype/$version/$yamlFile")
 
   private fun DataType<*>.asObjectDataType() = this as ObjectDataType
+
+  companion object {
+    @JvmStatic
+    fun constFixtures() = listOf(
+      Arguments.of("string_const.yaml", "active", "inactive"),
+      Arguments.of("integer_const.yaml", 42, 43),
+      Arguments.of("number_const.yaml", 3.14, 2.71),
+      Arguments.of("boolean_const.yaml", true, false),
+    )
+  }
 }

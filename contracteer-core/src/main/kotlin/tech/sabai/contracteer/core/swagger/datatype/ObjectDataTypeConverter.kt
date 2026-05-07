@@ -7,10 +7,9 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
-import tech.sabai.contracteer.core.normalize
 import tech.sabai.contracteer.core.result
+import tech.sabai.contracteer.core.swagger.effectiveEnum
 import tech.sabai.contracteer.core.swagger.isNullable
-import tech.sabai.contracteer.core.swagger.safeEnum
 import tech.sabai.contracteer.core.swagger.safeProperties
 
 internal object ObjectDataTypeConverter {
@@ -35,6 +34,7 @@ internal object ObjectDataTypeConverter {
         .accumulate { (name, subSchema) -> convert(subSchema, name).forProperty(name) }
         .bind()
       val additionalPropertiesDataType = additionalPropertiesDataTypeResult.bind()
+      val enum = schema.effectiveEnum().bind()
       val readOnlyProps = schema.safeProperties().filter { (_, propSchema) -> propSchema.readOnly == true }.keys
       val writeOnlyProps = schema.safeProperties().filter { (_, propSchema) -> propSchema.writeOnly == true }.keys
 
@@ -47,7 +47,7 @@ internal object ObjectDataTypeConverter {
         allowAdditionalProperties = allowAdditionalProperties,
         additionalPropertiesDataType = additionalPropertiesDataType,
         isNullable = schema.isNullable(),
-        enum = schema.safeEnum().map { it.normalize() },
+        enum = enum,
         minProperties = schema.minProperties,
         maxProperties = schema.maxProperties
       ).bind()

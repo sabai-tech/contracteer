@@ -8,7 +8,8 @@ import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.AnyOfDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
-import tech.sabai.contracteer.core.swagger.safeEnum
+import tech.sabai.contracteer.core.result
+import tech.sabai.contracteer.core.swagger.effectiveEnum
 import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object AnyOfDataTypeConverter {
@@ -19,19 +20,19 @@ internal object AnyOfDataTypeConverter {
     discriminator: (Schema<*>) -> Discriminator?
   ) =
     if (schema.anyOf == null) failure("'anyOf' must be defined")
-    else schema.anyOf
-      .mapIndexed { index, sub ->
-        convert(sub, "anyOf #$index")
-      }
-      .combineResults()
-      .map { subTypes -> subTypes.filter { it !is AnyDataType } }
-      .flatMap { subTypes ->
-        AnyOfDataType.create(
-          name = schema.name,
-          subTypes = subTypes,
-          discriminator = discriminator(schema),
-          isNullable = schema.isNullable(),
-          enum = schema.safeEnum()
-        )
-      }
+    else result {
+      val subTypes = schema.anyOf
+        .mapIndexed { index, sub -> convert(sub, "anyOf #$index") }
+        .combineResults()
+        .bind()
+        .filter { it !is AnyDataType }
+      val enum = schema.effectiveEnum().bind()
+      AnyOfDataType.create(
+        name = schema.name,
+        subTypes = subTypes,
+        discriminator = discriminator(schema),
+        isNullable = schema.isNullable(),
+        enum = enum
+      ).bind()
+    }
 }

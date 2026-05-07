@@ -8,7 +8,8 @@ import tech.sabai.contracteer.core.datatype.AllOfDataType
 import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.Discriminator
-import tech.sabai.contracteer.core.swagger.safeEnum
+import tech.sabai.contracteer.core.result
+import tech.sabai.contracteer.core.swagger.effectiveEnum
 import tech.sabai.contracteer.core.swagger.isNullable
 
 internal object AllOfDataTypeConverter {
@@ -23,21 +24,24 @@ internal object AllOfDataTypeConverter {
 
     val siblingResult = ObjectDataTypeConverter.convertSiblingObject(schema, convert)
 
-    return (subTypeResults + listOfNotNull(siblingResult))
-      .combineResults()
-      .map { subDataTypes -> subDataTypes.filter { it !is AnyDataType } }
-      .flatMap { subDataTypes ->
-        val discriminators = schema.allOf.mapNotNull { discriminator(it) }
-        when {
-          discriminators.size > 1 -> failure("Only 1 discriminator is allowed in 'allOf'.")
-          else                    ->
-            AllOfDataType.create(
-              name = schema.name,
-              subTypes = subDataTypes,
-              isNullable = schema.isNullable(),
-              discriminator = discriminators.firstOrNull(),
-              enum = schema.safeEnum())
-        }
+    return result {
+      val subDataTypes = (subTypeResults + listOfNotNull(siblingResult))
+        .combineResults()
+        .bind()
+        .filter { it !is AnyDataType }
+      val enum = schema.effectiveEnum().bind()
+      val discriminators = schema.allOf.mapNotNull { discriminator(it) }
+      when {
+        discriminators.size > 1 -> failure<AllOfDataType>("Only 1 discriminator is allowed in 'allOf'.").bind()
+        else                    ->
+          AllOfDataType.create(
+            name = schema.name,
+            subTypes = subDataTypes,
+            isNullable = schema.isNullable(),
+            discriminator = discriminators.firstOrNull(),
+            enum = enum
+          ).bind()
       }
+    }
   }
 }

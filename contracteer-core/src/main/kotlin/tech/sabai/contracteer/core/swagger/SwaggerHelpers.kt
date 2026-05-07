@@ -13,8 +13,10 @@ import io.swagger.v3.oas.models.parameters.Parameter
 import io.swagger.v3.oas.models.parameters.RequestBody
 import io.swagger.v3.oas.models.responses.ApiResponse
 import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.joinWithQuotes
 import java.math.BigDecimal
 
 internal fun MediaType.safeExamples() =
@@ -47,10 +49,19 @@ internal fun Operation.safeParameters() =
 internal fun Schema<*>.safeEnum(): List<Any?> =
   enum ?: emptyList()
 
+internal fun Schema<*>.effectiveEnum(): Result<List<Any?>> {
+  val enum = safeEnum()
+  val const = effectiveConst() ?: return success(enum)
+  return if (enum.all { it == const }) success(listOf(const))
+  else failure("Schema '$name': const value '$const' conflicts with enum [${enum.joinWithQuotes()}]")
+}
+
 internal fun <T> Schema<*>.mapEnum(transform: (Any) -> Result<T?>): Result<List<T?>> =
-  safeEnum()
-    .map { value -> if (value == null) success(null) else transform(value) }
-    .combineResults()
+  effectiveEnum().flatMap { values ->
+    values
+      .map { value -> if (value == null) success(null) else transform(value) }
+      .combineResults()
+  }
 
 internal fun Schema<*>.effectiveType(): String? =
   if (specVersion == V31) types?.singleOrNull { it != "null" }

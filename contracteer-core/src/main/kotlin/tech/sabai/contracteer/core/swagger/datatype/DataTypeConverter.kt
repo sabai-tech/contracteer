@@ -11,6 +11,7 @@ import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.swagger.SharedComponents
+import tech.sabai.contracteer.core.swagger.effectiveConst
 import tech.sabai.contracteer.core.swagger.effectiveType
 import tech.sabai.contracteer.core.swagger.safeMapping
 import tech.sabai.contracteer.core.swagger.shortRef
@@ -202,7 +203,8 @@ internal fun Schema<*>.isAnyType() =
   multipleOf == null &&
   default == null &&
   example == null &&
-  `enum`.isNullOrEmpty()
+  `enum`.isNullOrEmpty() &&
+  effectiveConst() == null
 
 private fun Schema<*>.hasComposition(): Boolean =
   allOf != null || anyOf != null || oneOf != null
