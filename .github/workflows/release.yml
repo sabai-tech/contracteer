@@ -46,7 +46,7 @@ jobs:
         run: ./gradlew :contracteer-cli:nativeCompile
 
       - name: Assemble archive
-        uses: jreleaser/release-action@v2.5.0
+        uses: jreleaser/release-action@2.5.0
         with:
           arguments: assemble
           version: '1.24.0'
@@ -93,7 +93,7 @@ jobs:
         run: ./gradlew publish
 
       - name: Release
-        uses: jreleaser/release-action@v2.5.0
+        uses: jreleaser/release-action@2.5.0
         with:
           arguments: full-release
           version: '1.24.0'
