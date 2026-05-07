@@ -106,6 +106,7 @@ jobs:
           JRELEASER_MAVENCENTRAL_PASSWORD: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
           JRELEASER_MAVENCENTRAL_STAGE: ${{ vars.JRELEASER_MAVENCENTRAL_STAGE }}
           JRELEASER_DRY_RUN: ${{ vars.JRELEASER_DRY_RUN }}
+          JRELEASER_DEPLOY_MAVEN_MAVENCENTRAL_CONTRACTEER_DEPLOYMENT_ID: ${{ inputs.version }}
 
       - name: Upload JReleaser logs
         if: always()
