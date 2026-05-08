@@ -120,29 +120,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && vars.JRELEASER_DRY_RUN != 'true'
     name: Deploy Documentation
     needs: release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: pip install mkdocs-material==9.7 mike
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Deploy versioned docs
-        working-directory: docs
-        run: |
-          mike deploy --push --update-aliases ${{ inputs.version }} latest
-          mike set-default --push latest
+    uses: ./.github/workflows/release-docs.yml
+    with:
+      version: ${{ inputs.version }}
+    secrets: inherit
