@@ -3,12 +3,16 @@ package tech.sabai.contracteer.core.swagger.datatype
 import io.swagger.v3.oas.models.media.JsonSchema
 import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.result
 import tech.sabai.contracteer.core.swagger.effectiveEnum
+import tech.sabai.contracteer.core.swagger.effectivePropertyNames
+import tech.sabai.contracteer.core.swagger.effectiveType
 import tech.sabai.contracteer.core.swagger.isNullable
 import tech.sabai.contracteer.core.swagger.safeProperties
 
@@ -37,6 +41,7 @@ internal object ObjectDataTypeConverter {
       val enum = schema.effectiveEnum().bind()
       val readOnlyProps = schema.safeProperties().filter { (_, propSchema) -> propSchema.readOnly == true }.keys
       val writeOnlyProps = schema.safeProperties().filter { (_, propSchema) -> propSchema.writeOnly == true }.keys
+      val propertyNamesDataType = convertPropertyNames(schema, convert).bind()
 
       ObjectDataType.create(
         name = schema.name,
@@ -49,8 +54,30 @@ internal object ObjectDataTypeConverter {
         isNullable = schema.isNullable(),
         enum = enum,
         minProperties = schema.minProperties,
-        maxProperties = schema.maxProperties
+        maxProperties = schema.maxProperties,
+        propertyNamesDataType = propertyNamesDataType
       ).bind()
+    }
+  }
+
+  private fun convertPropertyNames(
+    schema: Schema<*>,
+    convert: (Schema<*>, String) -> Result<DataType<out Any>>
+  ): Result<StringDataType?> {
+    val propertyNamesSchema = schema.effectivePropertyNames() ?: return success(null)
+    propertyNamesSchema.name = "${schema.name}.propertyNames"
+    // JSON Schema 2020-12: property names are always strings; type-less schemas default to string.
+    val asDataType = if (propertyNamesSchema.`$ref` != null || propertyNamesSchema.effectiveType() != null)
+      convert(propertyNamesSchema, propertyNamesSchema.name)
+    else
+      StringDataTypeConverter.convert(propertyNamesSchema, "string")
+    return asDataType.flatMap { dataType ->
+      when (dataType) {
+        is StringDataType -> success(dataType)
+        else              -> failure(
+          "Schema '${schema.name}': propertyNames must be a string schema, but resolved to '${dataType.openApiType}'"
+        )
+      }
     }
   }
 

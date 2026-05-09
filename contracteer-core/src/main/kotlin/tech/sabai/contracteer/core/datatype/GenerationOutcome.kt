@@ -39,7 +39,8 @@ sealed interface GenerationOutcome<out T> {
   enum class Reason {
     CYCLE,
     DEPTH,
-    NODES;
+    NODES,
+    NAMES;
 
     /** Human-readable guidance describing why the boundary fired and how to relax the schema. */
     fun explanation(): String = when (this) {
@@ -48,6 +49,8 @@ sealed interface GenerationOutcome<out T> {
       DEPTH -> "schema is too deeply nested for generation; flatten the structure or relax required nested properties"
       NODES -> "schema requires more values than the generation budget allows; " +
                "reduce minItems or minProperties along this path"
+      NAMES -> "could not synthesize enough property names that satisfy the propertyNames schema; " +
+               "relax the pattern, length, or enum on propertyNames, or reduce minProperties on this path"
     }
   }
 

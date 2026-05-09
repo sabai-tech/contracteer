@@ -1,0 +1,29 @@
+openapi: "3.1.0"
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: object
+                  additionalProperties:
+                    type: integer
+                  propertyNames:
+                    $ref: "#/components/schemas/SnakeCaseName"
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    SnakeCaseName:
+      type: string
+      pattern: "^[a-z_]+$"

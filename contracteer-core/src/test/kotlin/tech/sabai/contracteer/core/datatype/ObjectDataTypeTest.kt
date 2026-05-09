@@ -712,6 +712,110 @@ class ObjectDataTypeTest {
   }
 
   @Nested
+  inner class WithPropertyNames {
+
+    @Test
+    fun `validation fails when a property name does not match the propertyNames pattern`() {
+      // Given
+      val objectDataType = objectType(propertyNames = stringType(pattern = "^[a-z]+$")) {
+        properties { "foo" to integerType() }
+      }
+
+      // When
+      val result = objectDataType.validate(mapOf("foo" to 1, "Bar" to 2))
+
+      // Then
+      assert(result.isFailure())
+      assert(result.errors().any { it.contains("Bar") })
+    }
+
+    @Test
+    fun `validation succeeds when every property name matches the propertyNames pattern`() {
+      // Given
+      val objectDataType = objectType(propertyNames = stringType(pattern = "^[a-z]+$")) {
+        properties { "foo" to integerType() }
+      }
+
+      // When
+      val result = objectDataType.validate(mapOf("foo" to 1, "bar" to 2))
+
+      // Then
+      assert(result.isSuccess())
+    }
+
+    @Test
+    fun `validation fails when an additional property name violates the propertyNames length constraint`() {
+      // Given
+      val objectDataType = objectType(
+        allowAdditionalProperties = true,
+        additionalPropertiesDataType = integerType(),
+        propertyNames = stringType(maxLength = 3)
+      ) { properties { "foo" to integerType() } }
+
+      // When
+      val result = objectDataType.validate(mapOf("foo" to 1, "barbaz" to 2))
+
+      // Then
+      assert(result.isFailure())
+      assert(result.errors().any { it.contains("barbaz") })
+    }
+
+    @Test
+    fun `creation fails when a declared property name does not satisfy the propertyNames schema`() {
+      // Given
+      val propertyNames = stringType(pattern = "^[a-z]+$")
+
+      // When
+      val result = ObjectDataType.create(
+        name = "object",
+        properties = mapOf("Foo" to integerType()),
+        allowAdditionalProperties = true,
+        isNullable = false,
+        propertyNamesDataType = propertyNames
+      )
+
+      // Then
+      assert(result.isFailure())
+      assert(result.errors().any { it.contains("Foo") && it.contains("propertyNames") })
+    }
+
+    @Test
+    fun `random generation synthesizes additional property names that satisfy the propertyNames pattern`() {
+      // Given a constraint admitting only lowercase keys, with minProperties forcing synthesis
+      val objectDataType = objectType(
+        additionalPropertiesDataType = integerType(),
+        minProperties = 3,
+        propertyNames = stringType(pattern = "^[a-z]{3,8}$")
+      )
+
+      // When
+      val generated = objectDataType.randomValue()!!
+
+      // Then
+      assert(generated.size >= 3)
+      assert(generated.keys.all { it.matches(Regex("^[a-z]{3,8}$")) }) {
+        "Generated keys ${generated.keys} do not all match the pattern"
+      }
+    }
+
+    @Test
+    fun `random generation reports a NAMES boundary when propertyNames admits too few unique keys`() {
+      // Given a propertyNames schema admitting only one value, with minProperties forcing two synthesized keys
+      val objectDataType = objectType(
+        additionalPropertiesDataType = integerType(),
+        minProperties = 2,
+        propertyNames = stringType(pattern = "^a$")
+      )
+
+      // When
+      val outcome = objectDataType.randomValue(GenerationContext.default())
+
+      // Then
+      assert(outcome is Boundary && outcome.reason == Reason.NAMES)
+    }
+  }
+
+  @Nested
   inner class WithMinAndMaxProperties {
 
     @Test

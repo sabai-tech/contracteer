@@ -104,6 +104,9 @@ internal fun Schema<*>.effectiveContentEncoding(): String? =
 internal fun Schema<*>.effectiveContentMediaType(): String? =
   if (specVersion == V31) contentMediaType else null
 
+internal fun Schema<*>.effectivePropertyNames(): Schema<*>? =
+  if (specVersion == V31) propertyNames else null
+
 internal fun Schema<*>.isAnyType() =
   effectiveType() == null &&
   properties.isNullOrEmpty() &&

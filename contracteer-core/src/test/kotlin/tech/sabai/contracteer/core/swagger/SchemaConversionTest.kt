@@ -706,6 +706,52 @@ class SchemaConversionTest {
     }
   }
 
+  // --- propertyNames keyword (OAS 3.1) ---
+
+  @Test
+  fun `extract ObjectDataType with propertyNames pattern`() {
+    // when
+    val objectDataType = getDataType("3.1", "object_property_names.yaml") as ObjectDataType
+
+    // then
+    val propertyNames = objectDataType.propertyNamesDataType!!
+    assert(propertyNames.validate("snake_case").isSuccess())
+    assert(propertyNames.validate("CamelCase").isFailure())
+  }
+
+  @Test
+  fun `rejects 3-1 schema when a declared property name violates propertyNames`() {
+    // when
+    val result = loadOperations("3.1", "object_property_names_violation_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("propertyNames") }) {
+      "Expected an error mentioning propertyNames violation but got: $errors"
+    }
+  }
+
+  @Test
+  fun `extract ObjectDataType when propertyNames is a ref to a string schema`() {
+    // when
+    val objectDataType = getDataType("3.1", "object_property_names_ref.yaml") as ObjectDataType
+
+    // then
+    val propertyNames = objectDataType.propertyNamesDataType!!
+    assert(propertyNames.validate("snake_case").isSuccess())
+    assert(propertyNames.validate("CamelCase").isFailure())
+  }
+
+  @Test
+  fun `rejects 3-1 schema when propertyNames is not a string schema`() {
+    // when
+    val result = loadOperations("3.1", "object_property_names_non_string_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("propertyNames") && it.contains("string") }) 
+  }
+
   // --- Circular references ---
 
   @Test

@@ -5,6 +5,7 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
 import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
 import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.joinWithQuotes
 
@@ -19,6 +20,7 @@ class ObjectDataType private constructor(name: String,
                                          isNullable: Boolean,
                                          val minProperties: Int?,
                                          val maxProperties: Int?,
+                                         val propertyNamesDataType: StringDataType? = null,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<Map<String, Any?>>(name,
                                         "object",
@@ -30,8 +32,13 @@ class ObjectDataType private constructor(name: String,
 
   override fun doValidate(value: Map<String, Any?>): Result<Map<String, Any?>> =
     validatePropertyCount(value) andThen
+        { validatePropertyNames(value) } andThen
         { validateProperties(value) } andThen
         { validateAdditionalProperties(value) }
+
+  private fun validatePropertyNames(value: Map<String, Any?>): Result<Map<String, Any?>> =
+    if (propertyNamesDataType == null) success(value)
+    else value.keys.accumulate { key -> propertyNamesDataType.validate(key).forProperty(key) }.map { value }
 
   private fun validatePropertyCount(value: Map<String, Any?>): Result<Map<String, Any?>> = when {
     minProperties != null && value.size < minProperties -> failure("Object has ${value.size} properties but minProperties is $minProperties")
@@ -58,7 +65,7 @@ class ObjectDataType private constructor(name: String,
     if (additional == null || needed <= 0) return Value(entries)
 
     repeat(needed) {
-      val syntheticKey = generateUniqueKey(entries.keys)
+      val syntheticKey = generateUniqueKey(entries.keys, ctx) ?: return Boundary(Reason.NAMES)
       when (val result = additional.randomValue(ctx).forProperty(syntheticKey)) {
         is Value                             -> entries[syntheticKey] = result.value
         is Boundary if additional.isNullable -> entries[syntheticKey] = null
@@ -80,11 +87,22 @@ class ObjectDataType private constructor(name: String,
     return required + optional
   }
 
-  private fun generateUniqueKey(existingKeys: Set<String>): String {
-    var suffix = existingKeys.size + 1
-    while ("contracteer_key_$suffix" in existingKeys) suffix++
-    return "contracteer_key_$suffix"
-  }
+  private fun generateUniqueKey(existingKeys: Set<String>, ctx: GenerationContext): String? =
+    if (propertyNamesDataType == null) defaultUniqueKey(existingKeys)
+    else generateUniqueKeyFromDataType(propertyNamesDataType, existingKeys, ctx)
+
+  private fun defaultUniqueKey(existingKeys: Set<String>): String =
+    generateSequence(existingKeys.size + 1) { it + 1 }
+      .map { "contracteer_key_$it" }
+      .first { it !in existingKeys }
+
+  private fun generateUniqueKeyFromDataType(dataType: StringDataType,
+                                            existingKeys: Set<String>,
+                                            ctx: GenerationContext): String? =
+    (1..MAX_KEY_GENERATION_ATTEMPTS)
+      .asSequence()
+      .mapNotNull { (dataType.randomValue(ctx) as? Value)?.value }
+      .firstOrNull { it !in existingKeys }
 
   override fun asRequestType(): DataType<Map<String, Any?>> {
     val transformedProperties = properties.minus(readOnlyProperties).mapValues { (_, v) -> v.asRequestType() }
@@ -97,6 +115,7 @@ class ObjectDataType private constructor(name: String,
                         isNullable = isNullable,
                         minProperties = minProperties,
                         maxProperties = maxProperties,
+                        propertyNamesDataType = propertyNamesDataType,
                         allowedValues = allowedValues)
   }
 
@@ -111,6 +130,7 @@ class ObjectDataType private constructor(name: String,
                         isNullable = isNullable,
                         minProperties = minProperties,
                         maxProperties = maxProperties,
+                        propertyNamesDataType = propertyNamesDataType,
                         allowedValues = allowedValues)
   }
 
@@ -135,6 +155,8 @@ class ObjectDataType private constructor(name: String,
   }
 
   companion object {
+    private const val MAX_KEY_GENERATION_ATTEMPTS = 50
+
     // Generic erasure forces an unchecked cast to express the value-type parameter.
     @Suppress("UNCHECKED_CAST")
     private val MAP_CLASS: Class<Map<String, Any?>> = Map::class.java as Class<Map<String, Any?>>
@@ -152,7 +174,8 @@ class ObjectDataType private constructor(name: String,
       isNullable: Boolean,
       enum: List<Any?> = emptyList(),
       minProperties: Int? = null,
-      maxProperties: Int? = null
+      maxProperties: Int? = null,
+      propertyNamesDataType: StringDataType? = null
     ): Result<ObjectDataType> {
       val undefinedProperties = requiredProperties - properties.keys
 
@@ -173,6 +196,12 @@ class ObjectDataType private constructor(name: String,
       if ((minProperties != null || maxProperties != null) && writeOnlyProperties.isNotEmpty())
         return failure("minProperties/maxProperties cannot be combined with writeOnly properties")
 
+      propertyNamesDataType?.let { dataType ->
+        val invalidNames = properties.keys.filter { dataType.validate(it).isFailure() }
+        if (invalidNames.isNotEmpty())
+          return failure("Declared property names violate propertyNames schema: " + invalidNames.joinWithQuotes())
+      }
+
       val default = ObjectDataType(
         name = name,
         properties = properties,
@@ -183,7 +212,8 @@ class ObjectDataType private constructor(name: String,
         additionalPropertiesDataType = additionalPropertiesDataType,
         isNullable = isNullable,
         minProperties = minProperties,
-        maxProperties = maxProperties
+        maxProperties = maxProperties,
+        propertyNamesDataType = propertyNamesDataType
       )
       return if (enum.isEmpty())
         success(default)
@@ -201,6 +231,7 @@ class ObjectDataType private constructor(name: String,
                            isNullable = isNullable,
                            minProperties = minProperties,
                            maxProperties = maxProperties,
+                           propertyNamesDataType = propertyNamesDataType,
                            allowedValues = it)
           }
     }

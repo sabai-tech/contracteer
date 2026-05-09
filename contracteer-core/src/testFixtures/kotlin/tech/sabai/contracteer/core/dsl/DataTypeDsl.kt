@@ -127,6 +127,7 @@ fun objectType(
   enum: List<Any?> = emptyList(),
   minProperties: Int? = null,
   maxProperties: Int? = null,
+  propertyNames: StringDataType? = null,
   block: ObjectTypeBuilder.() -> Unit = {}
 ): ObjectDataType {
   val builder = ObjectTypeBuilder().apply(block)
@@ -141,7 +142,8 @@ fun objectType(
     isNullable = isNullable,
     enum = enum,
     minProperties = minProperties,
-    maxProperties = maxProperties
+    maxProperties = maxProperties,
+    propertyNamesDataType = propertyNames
   ).assertSuccess()
 }
 
