@@ -15,7 +15,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveType returns the single non-null type from a 3 0 schema`() {
-    // Given a 3.0 string schema
+    // Given
     val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
 
     // When
@@ -27,7 +27,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveType returns the single non-null type from a 3 1 nullable schema`() {
-    // Given a 3.1 schema declared as type [string, null]
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("string", "null")
@@ -42,7 +42,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveType returns null for a 3 1 multi-type schema with no null branch`() {
-    // Given a non-nullable multi-type 3.1 schema (Card 09 hard-error case)
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("string", "integer")
@@ -57,7 +57,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveType returns null when types is missing`() {
-    // Given a schema with no type information (typically a composition schema)
+    // Given
     val schema = JsonSchema().apply { specVersion = SpecVersion.V31 }
 
     // When
@@ -85,7 +85,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `isNullable reads nullable in 3 0`() {
-    // Given a 3.0 nullable string schema
+    // Given
     val schema = StringSchema().apply {
       specVersion = SpecVersion.V30
       nullable = true
@@ -100,7 +100,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `isNullable defaults to false in 3 0 when nullable is not set`() {
-    // Given a 3.0 schema with nullable not declared
+    // Given
     val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
 
     // When
@@ -112,7 +112,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `isNullable detects the null branch in a 3 1 type array`() {
-    // Given a 3.1 schema declared as type [string, null]
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("string", "null")
@@ -127,7 +127,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `isNullable returns false for a single-type 3 1 schema`() {
-    // Given a 3.1 schema declared as type [string]
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("string")
@@ -142,7 +142,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveExclusiveMinimum reads the boolean flag in 3 0`() {
-    // Given a 3.0 integer schema with minimum 5 and exclusiveMinimum true
+    // Given
     val schema = Schema<Any>().apply {
       specVersion = SpecVersion.V30
       minimum = BigDecimal(5)
@@ -158,7 +158,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveExclusiveMinimum returns true for 3 1 when exclusiveMinimumValue is set`() {
-    // Given a 3.1 integer schema with numeric exclusiveMinimum 5
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("integer")
@@ -174,7 +174,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveExclusiveMinimum returns false for 3 1 when only minimum is set`() {
-    // Given a 3.1 integer schema with only inclusive minimum
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("integer")
@@ -190,7 +190,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveExclusiveMaximum reads the boolean flag in 3 0`() {
-    // Given a 3.0 integer schema with maximum 100 and exclusiveMaximum true
+    // Given
     val schema = Schema<Any>().apply {
       specVersion = SpecVersion.V30
       maximum = BigDecimal(100)
@@ -206,7 +206,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveExclusiveMaximum returns true for 3 1 when exclusiveMaximumValue is set`() {
-    // Given a 3.1 integer schema with numeric exclusiveMaximum 100
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("integer")
@@ -222,7 +222,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveMinimum returns the inclusive minimum in 3 0`() {
-    // Given a 3.0 integer schema with inclusive minimum 5
+    // Given
     val schema = Schema<Any>().apply {
       specVersion = SpecVersion.V30
       minimum = BigDecimal(5)
@@ -237,7 +237,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveMinimum picks the more restrictive bound when both are set in 3 1`() {
-    // Given a 3.1 integer schema with minimum 5 and exclusiveMinimum 7
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("integer")
@@ -256,7 +256,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveMinimum keeps the inclusive bound when it is more restrictive in 3 1`() {
-    // Given a 3.1 integer schema with minimum 7 and exclusiveMinimum 5
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("integer")
@@ -275,7 +275,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveMaximum picks the more restrictive bound when both are set in 3 1`() {
-    // Given a 3.1 integer schema with maximum 100 and exclusiveMaximum 50
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("integer")
@@ -294,7 +294,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveConst returns null for a 3 0 schema`() {
-    // Given a 3.0 schema (3.0 has no const keyword)
+    // Given
     val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
 
     // When
@@ -306,7 +306,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveConst returns the const value for a 3 1 schema`() {
-    // Given a 3.1 schema with const "fixed"
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       const = "fixed"
@@ -321,7 +321,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveContentEncoding returns null for a 3 0 schema`() {
-    // Given a 3.0 schema (contentEncoding has no role in 3.0)
+    // Given
     val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
 
     // When
@@ -333,7 +333,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveContentEncoding returns the contentEncoding value for a 3 1 schema`() {
-    // Given a 3.1 schema with contentEncoding base64
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("string")
@@ -348,8 +348,24 @@ class SwaggerHelpersTest {
   }
 
   @Test
+  fun `effectiveContentEncoding normalizes mixed-case values to lowercase`() {
+    // Given
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("string")
+      contentEncoding = "Base64"
+    }
+
+    // When
+    val encoding = schema.effectiveContentEncoding()
+
+    // Then
+    assert(encoding == "base64") { "Expected 'base64' but got '$encoding'" }
+  }
+
+  @Test
   fun `effectiveContentMediaType returns null for a 3 0 schema`() {
-    // Given a 3.0 schema (contentMediaType has no role in 3.0)
+    // Given
     val schema = StringSchema().apply { specVersion = SpecVersion.V30 }
 
     // When
@@ -361,7 +377,7 @@ class SwaggerHelpersTest {
 
   @Test
   fun `effectiveContentMediaType returns the contentMediaType value for a 3 1 schema`() {
-    // Given a 3.1 schema with contentMediaType application octet-stream
+    // Given
     val schema = JsonSchema().apply {
       specVersion = SpecVersion.V31
       types = linkedSetOf("string")

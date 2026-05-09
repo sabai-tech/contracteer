@@ -1,0 +1,14 @@
+openapi: "3.1.0"
+info:
+  title: Order API
+  version: '1.0'
+paths:
+  /upload:
+    post:
+      requestBody:
+        content:
+          image/png:
+            schema: {}
+      responses:
+        200:
+          description: OK

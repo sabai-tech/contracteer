@@ -12,23 +12,39 @@ import tech.sabai.contracteer.core.Result.Companion.success
  */
 data class ContentType(val value: String) {
 
-  fun isJson() = "json" in value.lowercase()
+  private val normalized = value.lowercase().substringBefore(";").trim()
 
-  fun isFormUrlEncoded() = value.lowercase() == "application/x-www-form-urlencoded"
+  fun isJson() = "json" in normalized
 
-  fun isMultipart() = value.lowercase().startsWith("multipart/")
+  fun isFormUrlEncoded() = normalized == "application/x-www-form-urlencoded"
 
-  fun isXml() = "xml" in value.lowercase()
+  fun isMultipart() = normalized.startsWith("multipart/")
+
+  fun isXml() = "xml" in normalized
+
+  fun isStructuredText() =
+    !normalized.startsWith("text/") && STRUCTURED_TEXT_MARKERS.any { it in normalized }
+
+  fun isBinary() =
+    !normalized.startsWith("text/") &&
+      !normalized.startsWith("multipart/") &&
+      normalized != "application/x-www-form-urlencoded" &&
+      !isStructuredText()
 
   /** Checks if [actual] matches this content type. This content type may use wildcards. */
   fun validate(actual: String): Result<String> {
-    val expected = value.lowercase().trim().substringBefore(";").trim()
-    val received = actual.lowercase().trim().substringBefore(";").trim()
+    val received = actual.lowercase().substringBefore(";").trim()
     return when {
-      expected == "*/*"                                                                    -> success(actual)
-      expected.endsWith("/*") && received.startsWith(expected.substringBefore("/*") + "/") -> success(actual)
-      expected == received                                                                 -> success(actual)
-      else                                                                                 -> failure("'Content-type' does not match: Expected: $value, actual: $actual")
+      normalized == "*/*"                                                                       -> success(actual)
+      normalized.endsWith("/*") && received.startsWith(normalized.substringBefore("/*") + "/") -> success(actual)
+      normalized == received                                                                    -> success(actual)
+      else                                                                                      -> failure("'Content-type' does not match: Expected: $value, actual: $actual")
     }
+  }
+
+  companion object {
+    // Substring heuristic. 
+    // Upgrade to RFC 6839 structured-syntax-suffix parsing if a misclassified spec appears.
+    private val STRUCTURED_TEXT_MARKERS = listOf("json", "xml", "yaml", "yml", "javascript")
   }
 }

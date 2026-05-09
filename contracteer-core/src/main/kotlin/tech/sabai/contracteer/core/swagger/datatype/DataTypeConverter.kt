@@ -10,9 +10,13 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.datatype.Discriminator
+import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.swagger.SharedComponents
 import tech.sabai.contracteer.core.swagger.effectiveConst
+import tech.sabai.contracteer.core.swagger.effectiveContentEncoding
+import tech.sabai.contracteer.core.swagger.effectiveContentMediaType
 import tech.sabai.contracteer.core.swagger.effectiveType
+import tech.sabai.contracteer.core.swagger.isAnyType
 import tech.sabai.contracteer.core.swagger.safeMapping
 import tech.sabai.contracteer.core.swagger.shortRef
 
@@ -70,16 +74,23 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     val convert = { s: Schema<*>, name: String -> convertToDataType(s, name) }
     val discriminator = { s: Schema<*> -> convertToDiscriminator(s) }
     val type = schema.effectiveType()
+    val contentEncoding = schema.effectiveContentEncoding()
+    val contentMediaType = schema.effectiveContentMediaType()?.let(::ContentType)
     return when {
-      schema.hasComposition()   -> convertComposedSchema(schema, convert, discriminator)
-      schema.properties != null -> ObjectDataTypeConverter.convert(schema, convert)
-      type == "array"           -> ArrayDataTypeConverter.convert(schema, convert)
-      type == "boolean"         -> BooleanDataTypeConverter.convert(schema)
-      type == "integer"         -> IntegerDataTypeConverter.convert(schema)
-      type == "number"          -> NumberDataTypeConverter.convert(schema)
-      type == "object"          -> ObjectDataTypeConverter.convert(schema, convert)
-      type == "string"          -> convertStringSchema(schema)
-      else                      -> tryToInferSchemaType(schema)
+      schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator)
+      contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema)
+      contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
+      contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema)
+      schema.properties != null                                     -> ObjectDataTypeConverter.convert(schema, convert)
+      type == "array"                                               -> ArrayDataTypeConverter.convert(schema, convert)
+      type == "boolean"                                             -> BooleanDataTypeConverter.convert(schema)
+      type == "integer"                                             -> IntegerDataTypeConverter.convert(schema)
+      type == "number"                                              -> NumberDataTypeConverter.convert(schema)
+      type == "object"                                              -> ObjectDataTypeConverter.convert(schema, convert)
+      type == "string" && contentMediaType?.isStructuredText() == true
+                                                                    -> unsupportedStructuredTextContentMediaType(schema, contentMediaType.value)
+      type == "string"                                              -> convertStringSchema(schema)
+      else                                                          -> tryToInferSchemaType(schema)
     }
   }
 
@@ -125,6 +136,12 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       name = schema.name,
       subTypes = listOf(compositionResult.value, siblingResult.value))
   }
+
+  private fun unsupportedContentEncoding(schema: Schema<*>, value: String): Result<DataType<out Any>> =
+    failure("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.")
+
+  private fun unsupportedStructuredTextContentMediaType(schema: Schema<*>, mediaType: String): Result<DataType<out Any>> =
+    failure("Schema '${schema.name}': contentMediaType='$mediaType' is not yet supported in Contracteer.")
 
   private fun tryToInferSchemaType(schema: Schema<*>): Result<DataType<out Any>> =
     if (schema.isAnyType())
@@ -187,24 +204,6 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     )
   }
 }
-
-internal fun Schema<*>.isAnyType() =
-  effectiveType() == null &&
-  properties.isNullOrEmpty() &&
-  additionalProperties == null &&
-  format == null &&
-  maximum == null &&
-  minimum == null &&
-  exclusiveMaximum == null &&
-  exclusiveMinimum == null &&
-  pattern == null &&
-  minLength == null &&
-  maxLength == null &&
-  multipleOf == null &&
-  default == null &&
-  example == null &&
-  `enum`.isNullOrEmpty() &&
-  effectiveConst() == null
 
 private fun Schema<*>.hasComposition(): Boolean =
   allOf != null || anyOf != null || oneOf != null

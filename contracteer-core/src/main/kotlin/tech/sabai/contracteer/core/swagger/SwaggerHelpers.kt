@@ -99,10 +99,28 @@ internal fun Schema<*>.effectiveConst(): Any? =
   if (specVersion == V31) const else null
 
 internal fun Schema<*>.effectiveContentEncoding(): String? =
-  if (specVersion == V31) contentEncoding else null
+  if (specVersion == V31) contentEncoding?.lowercase() else null
 
 internal fun Schema<*>.effectiveContentMediaType(): String? =
   if (specVersion == V31) contentMediaType else null
+
+internal fun Schema<*>.isAnyType() =
+  effectiveType() == null &&
+  properties.isNullOrEmpty() &&
+  additionalProperties == null &&
+  format == null &&
+  maximum == null &&
+  minimum == null &&
+  exclusiveMaximum == null &&
+  exclusiveMinimum == null &&
+  pattern == null &&
+  minLength == null &&
+  maxLength == null &&
+  multipleOf == null &&
+  default == null &&
+  example == null &&
+  `enum`.isNullOrEmpty() &&
+  effectiveConst() == null
 
 internal fun Schema<*>.shortRef() =
   this.`$ref`?.replace(COMPONENTS_SCHEMAS_REF, "")

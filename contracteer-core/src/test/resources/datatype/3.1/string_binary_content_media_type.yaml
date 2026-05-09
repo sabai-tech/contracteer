@@ -1,0 +1,21 @@
+openapi: "3.1.0"
+info:
+  title: Order API
+  version: '1.0'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  contentMediaType: application/octet-stream
+                  enum: ["bytes1", "bytes2"]
+                  minLength: 4
+                  maxLength: 12
+      responses:
+        200:
+          description: OK

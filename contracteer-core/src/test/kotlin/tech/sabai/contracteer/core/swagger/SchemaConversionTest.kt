@@ -105,6 +105,30 @@ class SchemaConversionTest {
     assert(base64DataType.lengthRange.exclusiveMaximum.not())
   }
 
+  @Test
+  fun `extract Base64DataType from contentEncoding`() {
+    // when
+    val base64DataType = getDataType("3.1", "string_base64_content_encoding.yaml") as Base64DataType
+
+    // then
+    assert(base64DataType.allowedValues != null)
+    assert(base64DataType.allowedValues!!.contains("Y2F0").isSuccess())
+    assert(base64DataType.allowedValues.contains("ZG9n").isSuccess())
+    assert(base64DataType.lengthRange.minimum == 4.toBigDecimal())
+    assert(base64DataType.lengthRange.maximum == 12.toBigDecimal())
+  }
+
+  @Test
+  fun `rejects schema with non-base64 contentEncoding`() {
+    // when
+    val result = loadOperations("3.1", "non_base64_content_encoding_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("contentEncoding") && it.contains("base16") })
+    assert(errors.any { it.contains("Only 'base64' is supported") })
+  }
+
   @ParameterizedTest(name = "extract BinaryDataType (OAS {0})")
   @ValueSource(strings = ["3.0", "3.1"])
   fun `extract BinaryDataType`(version: String) {
@@ -119,6 +143,61 @@ class SchemaConversionTest {
     assert(binaryDataType.lengthRange.maximum == 10.toBigDecimal())
     assert(binaryDataType.lengthRange.exclusiveMinimum.not())
     assert(binaryDataType.lengthRange.exclusiveMaximum.not())
+  }
+
+  @Test
+  fun `extract BinaryDataType from contentMediaType`() {
+    // when
+    val binaryDataType = getDataType("3.1", "string_binary_content_media_type.yaml") as BinaryDataType
+
+    // then
+    assert(binaryDataType.allowedValues != null)
+    assert(binaryDataType.allowedValues!!.contains("bytes1").isSuccess())
+    assert(binaryDataType.allowedValues.contains("bytes2").isSuccess())
+    assert(binaryDataType.lengthRange.minimum == 4.toBigDecimal())
+    assert(binaryDataType.lengthRange.maximum == 12.toBigDecimal())
+  }
+
+  @Test
+  fun `rejects 3 1 string schema with structured-text contentMediaType`() {
+    // when
+    val result = loadOperations("3.1", "structured_text_content_media_type_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("contentMediaType") && it.contains("application/json") })
+    assert(errors.any { it.contains("not yet supported") })
+  }
+
+  @Test
+  fun `ignores contentMediaType annotation on a non-string schema`() {
+    // when
+    val operations = loadOperations("3.1", "object_with_content_media_type_annotation.yaml").assertSuccess()
+
+    // then
+    val dataType = operations.first().requestSchema.bodies.first().dataType
+    assert(dataType is ObjectDataType)
+  }
+
+  @ParameterizedTest(name = "extract BinaryDataType from empty schema under octet-stream content type (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract BinaryDataType from empty schema under octet-stream content type`(version: String) {
+    // when
+    val operations = loadOperations(version, "binary_empty_schema_under_octet_stream.yaml").assertSuccess()
+
+    // then
+    val dataType = operations.first().requestSchema.bodies.first().dataType
+    assert(dataType is BinaryDataType)
+  }
+
+  @Test
+  fun `extract BinaryDataType from empty schema under image content type`() {
+    // when
+    val operations = loadOperations("3.1", "binary_empty_schema_under_image_png.yaml").assertSuccess()
+
+    // then
+    val dataType = operations.first().requestSchema.bodies.first().dataType
+    assert(dataType is BinaryDataType)
   }
 
   @ParameterizedTest(name = "extract UuidDataType (OAS {0})")

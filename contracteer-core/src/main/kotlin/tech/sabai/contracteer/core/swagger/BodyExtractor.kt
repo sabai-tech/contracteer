@@ -8,6 +8,7 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.AnyDataType
+import tech.sabai.contracteer.core.datatype.BinaryDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.operation.BodySchema
 import tech.sabai.contracteer.core.operation.ContentType
@@ -52,7 +53,11 @@ internal class BodyExtractor(
                                 isRequired: Boolean,
                                 asType: (DataType<out Any>) -> DataType<out Any>): Result<ExtractedBodySchema> =
     result {
-      val dataType = dataTypeConverter.convertMediaTypeSchema(mediaType).bind()
+      val dataType =
+        if (contentType.isBinary() && (mediaType.schema == null || mediaType.schema.isAnyType()))
+          BinaryDataType.create(name = "binary").bind()
+        else
+          dataTypeConverter.convertMediaTypeSchema(mediaType).bind()
       val examples = sharedComponents.resolveExampleValues(mediaType.safeExamples()).bind()
       val (bodyType, serde) =
         if (dataType is AnyDataType) dataType to PlainTextSerde
