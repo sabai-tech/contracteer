@@ -24,6 +24,8 @@ object PlainTextSerde: Serde() {
         is AnyDataType, is StringDataType,
         is UuidDataType, is Base64DataType,
         is BinaryDataType, is EmailDataType,
+        is HostnameDataType, is UriDataType,
+        is UriReferenceDataType,
         is DateTimeDataType, is DateDataType    -> success(source)
       }
 

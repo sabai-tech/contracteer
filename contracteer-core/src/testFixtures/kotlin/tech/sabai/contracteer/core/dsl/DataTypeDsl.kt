@@ -13,12 +13,15 @@ import tech.sabai.contracteer.core.datatype.DateDataType
 import tech.sabai.contracteer.core.datatype.DateTimeDataType
 import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.datatype.EmailDataType
+import tech.sabai.contracteer.core.datatype.HostnameDataType
 import tech.sabai.contracteer.core.datatype.IntegerDataType
 import tech.sabai.contracteer.core.datatype.NumberDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.datatype.OneOfDataType
 import tech.sabai.contracteer.core.datatype.ProxyDataType
 import tech.sabai.contracteer.core.datatype.StringDataType
+import tech.sabai.contracteer.core.datatype.UriDataType
+import tech.sabai.contracteer.core.datatype.UriReferenceDataType
 import tech.sabai.contracteer.core.datatype.UuidDataType
 
 // === Scalar factories ===
@@ -88,6 +91,24 @@ fun emailType(
   maxLength: Int? = null
 ): EmailDataType =
   EmailDataType.create("email", isNullable, minLength, maxLength, enum).assertSuccess()
+
+fun hostnameType(
+  isNullable: Boolean = false,
+  enum: List<String?> = emptyList()
+): HostnameDataType =
+  HostnameDataType.create("hostname", isNullable, enum).assertSuccess()
+
+fun uriType(
+  isNullable: Boolean = false,
+  enum: List<String?> = emptyList()
+): UriDataType =
+  UriDataType.create("uri", isNullable, enum).assertSuccess()
+
+fun uriReferenceType(
+  isNullable: Boolean = false,
+  enum: List<String?> = emptyList()
+): UriReferenceDataType =
+  UriReferenceDataType.create("uriReference", isNullable, enum).assertSuccess()
 
 fun base64Type(
   isNullable: Boolean = false,

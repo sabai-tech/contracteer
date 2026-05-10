@@ -96,14 +96,17 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
 
   private fun convertStringSchema(schema: Schema<*>): Result<DataType<out Any>> =
     when (schema.format) {
-      "date"      -> DateDataTypeConverter.convert(schema)
-      "date-time" -> DateTimeDataTypeConverter.convert(schema)
-      "email"     -> EmailDataTypeConverter.convert(schema)
-      "uuid"      -> UuidDataTypeConverter.convert(schema)
-      "binary"    -> BinaryDataTypeConverter.convert(schema)
-      "byte"      -> Base64DataTypeConverter.convert(schema)
-      "password"  -> StringDataTypeConverter.convert(schema, "string/password")
-      else        -> StringDataTypeConverter.convert(schema, "string")
+      "date"          -> DateDataTypeConverter.convert(schema)
+      "date-time"     -> DateTimeDataTypeConverter.convert(schema)
+      "email"         -> EmailDataTypeConverter.convert(schema)
+      "uuid"          -> UuidDataTypeConverter.convert(schema)
+      "binary"        -> BinaryDataTypeConverter.convert(schema)
+      "byte"          -> Base64DataTypeConverter.convert(schema)
+      "password"      -> StringDataTypeConverter.convert(schema, "string/password")
+      "hostname"      -> HostnameDataTypeConverter.convert(schema)
+      "uri"           -> UriDataTypeConverter.convert(schema)
+      "uri-reference" -> UriReferenceDataTypeConverter.convert(schema)
+      else            -> StringDataTypeConverter.convert(schema, "string")
     }
 
   private fun convertComposedSchema(schema: Schema<*>,

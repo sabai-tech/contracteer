@@ -1,0 +1,22 @@
+openapi: "3.0.3"
+info:
+  title: Order API
+  version: '1.0'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  type: string
+                  format: uri
+                  enum: ["https://api.example.com", "https://service.example.com"]
+      responses:
+        200:
+          description: OK

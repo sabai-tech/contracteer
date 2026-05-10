@@ -238,6 +238,42 @@ class SchemaConversionTest {
     assert(emailDataType.lengthRange.exclusiveMaximum.not())
   }
 
+  @ParameterizedTest(name = "extract HostnameDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract HostnameDataType`(version: String) {
+    // when
+    val hostnameDataType = getDataType(version, "string_hostname.yaml") as HostnameDataType
+
+    // then
+    assert(hostnameDataType.allowedValues != null)
+    assert(hostnameDataType.allowedValues!!.contains("api.example.com").isSuccess())
+    assert(hostnameDataType.allowedValues.contains("service.example.com").isSuccess())
+  }
+
+  @ParameterizedTest(name = "extract UriDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract UriDataType`(version: String) {
+    // when
+    val uriDataType = getDataType(version, "string_uri.yaml") as UriDataType
+
+    // then
+    assert(uriDataType.allowedValues != null)
+    assert(uriDataType.allowedValues!!.contains("https://api.example.com").isSuccess())
+    assert(uriDataType.allowedValues.contains("https://service.example.com").isSuccess())
+  }
+
+  @ParameterizedTest(name = "extract UriReferenceDataType (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract UriReferenceDataType`(version: String) {
+    // when
+    val uriReferenceDataType = getDataType(version, "string_uri_reference.yaml") as UriReferenceDataType
+
+    // then
+    assert(uriReferenceDataType.allowedValues != null)
+    assert(uriReferenceDataType.allowedValues!!.contains("/api/v1").isSuccess())
+    assert(uriReferenceDataType.allowedValues.contains("/api/v2").isSuccess())
+  }
+
   @ParameterizedTest(name = "extract DateDataType (OAS {0})")
   @ValueSource(strings = ["3.0", "3.1"])
   fun `extract DateDataType`(version: String) {
