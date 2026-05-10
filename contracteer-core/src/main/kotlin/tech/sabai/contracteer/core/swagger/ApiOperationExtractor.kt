@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.PathItem
+import io.swagger.v3.oas.models.parameters.Parameter
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
@@ -14,7 +15,7 @@ import tech.sabai.contracteer.core.operation.ApiOperation
 import tech.sabai.contracteer.core.operation.ResponseSchemas
 import tech.sabai.contracteer.core.swagger.datatype.DataTypeConverter
 
-internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
+internal class ApiOperationExtractor(private val sharedComponents: SharedComponents) {
 
   private val logger = KotlinLogging.logger {}
   private val dataTypeConverter = DataTypeConverter(sharedComponents)
@@ -36,10 +37,30 @@ internal class ApiOperationExtractor(sharedComponents: SharedComponents) {
     }
   }
 
-  private fun Map.Entry<String, PathItem>.toApiOperations() =
-    value
-      .readOperationsMap()
-      .map { (method, operation) -> extractApiOperation(method.name, key, operation) }
+  private fun Map.Entry<String, PathItem>.toApiOperations(): List<Result<ApiOperation>> {
+    val resolvedPathParams = value.parameters.orEmpty()
+      .map { sharedComponents.resolve(it) }
+      .combineResults()
+    return value.readOperationsMap().map { (method, operation) ->
+      resolvedPathParams
+        .mapErrors { "${method.name.uppercase()} $key: $it" }
+        .flatMap { pathParams ->
+          applyPathLevelParameters(operation, pathParams)
+          extractApiOperation(method.name, key, operation)
+        }
+    }
+  }
+
+  // OAS 3.0/3.1: path-level parameters apply to every operation on the path; operation-level
+  // parameters with the same (name, in) override them. swagger-parser performs this merge for
+  // 3.0 docs but not for 3.1 (issue #1950), so Contracteer owns it. Mutates operation.parameters
+  // in place to mirror swagger-parser's 3.0 behavior.
+  private fun applyPathLevelParameters(operation: Operation, resolvedPathParams: List<Parameter>) {
+    if (resolvedPathParams.isEmpty()) return
+    val operationLevelParams = operation.safeParameters()
+    val operationKeys = operationLevelParams.map { it.name to it.`in` }.toSet()
+    operation.parameters = resolvedPathParams.filterNot { (it.name to it.`in`) in operationKeys } + operationLevelParams
+  }
 
   private fun extractApiOperation(method: String, path: String, operation: Operation): Result<ApiOperation> {
     val extractedRequest = schemaExtractor.extractRequestSchema(operation)

@@ -155,7 +155,37 @@ class OperationSchemaExtractionTest {
   @Test
   fun `resolves references for parameters request bodies response headers and response bodies`() {
     // when
-    val operation = loadSingleOperation("references.yaml")
+    val operation = loadSingleOperation("references_30.yaml")
+
+    // then
+    assert(operation.path == "/products/{id}")
+    assert(operation.method == "GET")
+
+    val pathParam = operation.requestSchema.pathParameters.single()
+    assert(pathParam.element == ParameterElement.PathParam("id"))
+    assert(pathParam.isRequired)
+    assert(pathParam.dataType is IntegerDataType)
+
+    val requestBody = operation.requestSchema.bodies.single()
+    assert(requestBody.contentType == ContentType("application/json"))
+    assert(requestBody.dataType is ObjectDataType)
+    assert((requestBody.dataType as ObjectDataType).properties["prop1"] is StringDataType)
+
+    val responseHeaders = operation.responseSchemas.responseFor(200)!!.headers.associateBy { it.element }
+    assert(!responseHeaders[ParameterElement.Header("x-optional")]!!.isRequired)
+    assert(responseHeaders[ParameterElement.Header("x-optional")]!!.dataType is IntegerDataType)
+
+    val responseBody = operation.responseSchemas.responseFor(200)!!.bodies.single()
+    assert(responseBody.contentType == ContentType("application/json"))
+    assert(responseBody.dataType is ObjectDataType)
+    val responseProperties = (responseBody.dataType as ObjectDataType).properties
+    assert(responseProperties.keys == setOf("id", "name", "quantity"))
+  }
+
+  @Test
+  fun `resolves references in 3 1 spec for parameters request bodies response headers and response bodies`() {
+    // when
+    val operation = loadSingleOperation("references_31.yaml")
 
     // then
     assert(operation.path == "/products/{id}")
