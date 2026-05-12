@@ -185,6 +185,26 @@ class OperationSchemaExtractionTest {
   }
 
   @Test
+  fun `resolves 3 1 operation-level parameter refs for all parameter kinds`() {
+    // when
+    val operation = loadSingleOperation("operation_level_refs_31.yaml")
+
+    // then
+    val pathParam = operation.requestSchema.pathParameters.single()
+    assert(pathParam.element == ParameterElement.PathParam("id"))
+    assert(pathParam.dataType is IntegerDataType)
+
+    val queryParam = operation.requestSchema.queryParameters.single()
+    assert(queryParam.element == ParameterElement.QueryParam("filter"))
+
+    val headerParam = operation.requestSchema.headers.single()
+    assert(headerParam.element == ParameterElement.Header("x-trace"))
+
+    val cookieParam = operation.requestSchema.cookies.single()
+    assert(cookieParam.element == ParameterElement.Cookie("session"))
+  }
+
+  @Test
   fun `resolves references in 3 1 spec for parameters request bodies response headers and response bodies`() {
     // when
     val operation = loadSingleOperation("references_31.yaml")

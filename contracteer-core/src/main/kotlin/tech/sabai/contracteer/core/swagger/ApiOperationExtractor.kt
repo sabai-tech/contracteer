@@ -43,24 +43,26 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
       .combineResults()
     return value.readOperationsMap().map { (method, operation) ->
       resolvedPathParams
+        .flatMap { pathParams -> normalizeOperationParameters(operation, pathParams) }
         .mapErrors { "${method.name.uppercase()} $key: $it" }
-        .flatMap { pathParams ->
-          applyPathLevelParameters(operation, pathParams)
-          extractApiOperation(method.name, key, operation)
-        }
+        .flatMap { extractApiOperation(method.name, key, operation) }
     }
   }
 
   // OAS 3.0/3.1: path-level parameters apply to every operation on the path; operation-level
   // parameters with the same (name, in) override them. swagger-parser performs this merge for
-  // 3.0 docs but not for 3.1 (issue #1950), so Contracteer owns it. Mutates operation.parameters
-  // in place to mirror swagger-parser's 3.0 behavior.
-  private fun applyPathLevelParameters(operation: Operation, resolvedPathParams: List<Parameter>) {
-    if (resolvedPathParams.isEmpty()) return
-    val operationLevelParams = operation.safeParameters()
-    val operationKeys = operationLevelParams.map { it.name to it.`in` }.toSet()
-    operation.parameters = resolvedPathParams.filterNot { (it.name to it.`in`) in operationKeys } + operationLevelParams
-  }
+  // 3.0 docs but not for 3.1 (issue #1950), and its isResolve setting also leaves operation-level
+  // $ref parameters un-inlined for 3.1. We resolve operation-level refs, then merge in path-level
+  // parameters, mutating operation.parameters in place so downstream extractors never see $refs.
+  private fun normalizeOperationParameters(operation: Operation, resolvedPathParams: List<Parameter>): Result<Unit> =
+    operation.safeParameters()
+      .map { sharedComponents.resolve(it) }
+      .combineResults()
+      .map { resolvedOperationParams ->
+        val operationKeys = resolvedOperationParams.map { it.name to it.`in` }.toSet()
+        operation.parameters =
+          resolvedPathParams.filterNot { (it.name to it.`in`) in operationKeys } + resolvedOperationParams
+      }
 
   private fun extractApiOperation(method: String, path: String, operation: Operation): Result<ApiOperation> {
     val extractedRequest = schemaExtractor.extractRequestSchema(operation)
