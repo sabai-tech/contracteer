@@ -430,6 +430,15 @@ class SchemaConversionTest {
     assert(arrayDataType.itemDataType is StringDataType)
   }
 
+  @Test
+  fun `extract ArrayDataType without items (OAS 3 1)`() {
+    // when
+    val arrayDataType = getDataType("3.1", "array_without_items.yaml") as ArrayDataType
+
+    // then
+    assert(arrayDataType.itemDataType === AnyDataType)
+  }
+
   @ParameterizedTest(name = "extract AnyOfDataType (OAS {0})")
   @ValueSource(strings = ["3.0", "3.1"])
   fun `extract AnyOfDataType`(version: String) {

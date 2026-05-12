@@ -2,6 +2,7 @@ package tech.sabai.contracteer.core.swagger.datatype
 
 import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.result
@@ -14,7 +15,9 @@ internal object ArrayDataTypeConverter {
     convert: (Schema<*>, String) -> Result<DataType<out Any>>
   ) =
     result {
-      val itemDataType = convert(schema.items, schema.name).bind()
+      val itemDataType =
+        if (schema.items != null) convert(schema.items, schema.name).bind()
+        else AnyDataType
       val enum = schema.effectiveEnum().bind()
       ArrayDataType.create(
         name = schema.name,
