@@ -118,6 +118,38 @@ class SchemaConversionTest {
     assert(base64DataType.lengthRange.maximum == 12.toBigDecimal())
   }
 
+  @ParameterizedTest(name = "rejects 3 1 schema with {0}")
+  @MethodSource("unsupportedKeywordFixtures")
+  fun `rejects 3 1 schema with unsupported keyword`(keyword: String, fixture: String) {
+    // when
+    val result = loadOperations("3.1", fixture)
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains(keyword) }) {
+      "Expected an error mentioning the unsupported '$keyword' keyword but got: $errors"
+    }
+  }
+
+  @Test
+  fun `rejects 3 1 schema with ref-and-sibling and names the offending sibling`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_validation_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains($$"$ref") && it.contains("minLength") })
+  }
+
+  @Test
+  fun `accepts 3 0 schema with ref and sibling validation keywords`() {
+    // when
+    val result = loadOperations("3.0", "ref_with_sibling_keywords_tolerated.yaml")
+
+    // then
+    result.assertSuccess()
+  }
+
   @Test
   fun `rejects schema with non-base64 contentEncoding`() {
     // when
@@ -376,6 +408,26 @@ class SchemaConversionTest {
     assert(objectDataType.properties["age"]!! is IntegerDataType)
     assert(objectDataType.allowAdditionalProperties)
     assert(objectDataType.additionalPropertiesDataType is StringDataType)
+  }
+
+  @ParameterizedTest(name = "extract ObjectDataType from additionalProperties without type (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract ObjectDataType from additionalProperties without type`(version: String) {
+    // when
+    val objectDataType = getDataType(version, "object_additional_properties_without_type.yaml") as ObjectDataType
+
+    // then
+    assert(objectDataType.additionalPropertiesDataType is StringDataType)
+  }
+
+  @ParameterizedTest(name = "extract ArrayDataType from items without type (OAS {0})")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `extract ArrayDataType from items without type`(version: String) {
+    // when
+    val arrayDataType = getDataType(version, "array_items_without_type.yaml") as ArrayDataType
+
+    // then
+    assert(arrayDataType.itemDataType is StringDataType)
   }
 
   @ParameterizedTest(name = "extract AnyOfDataType (OAS {0})")
@@ -870,6 +922,22 @@ class SchemaConversionTest {
       Arguments.of("integer_const.yaml", 42, 43),
       Arguments.of("number_const.yaml", 3.14, 2.71),
       Arguments.of("boolean_const.yaml", true, false),
+    )
+
+    @JvmStatic
+    fun unsupportedKeywordFixtures() = listOf(
+      Arguments.of("multi-type",            "multi_type_non_nullable_error.yaml"),
+      Arguments.of("boolean schema",        "boolean_true_schema_error.yaml"),
+      Arguments.of("prefixItems",           "prefix_items_error.yaml"),
+      Arguments.of("contains",              "contains_error.yaml"),
+      Arguments.of("if/then/else",          "if_then_else_error.yaml"),
+      Arguments.of("unevaluatedProperties", "unevaluated_properties_error.yaml"),
+      Arguments.of("unevaluatedItems",      "unevaluated_items_error.yaml"),
+      Arguments.of("patternProperties",     "pattern_properties_error.yaml"),
+      Arguments.of("dependentRequired",     "dependent_required_error.yaml"),
+      Arguments.of("dependentSchemas",      "dependent_schemas_error.yaml"),
+      Arguments.of("contentSchema",         "content_schema_error.yaml"),
+      Arguments.of($$"$ref", "ref_with_sibling_validation_error.yaml"),
     )
   }
 }

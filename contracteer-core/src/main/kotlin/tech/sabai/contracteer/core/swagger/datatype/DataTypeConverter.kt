@@ -10,13 +10,30 @@ import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.datatype.Discriminator
+import tech.sabai.contracteer.core.joinWithQuotes
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.swagger.SharedComponents
+import tech.sabai.contracteer.core.swagger.booleanSchemaValue
 import tech.sabai.contracteer.core.swagger.effectiveConst
 import tech.sabai.contracteer.core.swagger.effectiveContentEncoding
 import tech.sabai.contracteer.core.swagger.effectiveContentMediaType
+import tech.sabai.contracteer.core.swagger.effectiveNonAnnotationSiblings
 import tech.sabai.contracteer.core.swagger.effectiveType
+import tech.sabai.contracteer.core.swagger.hasComposition
+import tech.sabai.contracteer.core.swagger.hasConditional
+import tech.sabai.contracteer.core.swagger.hasContains
+import tech.sabai.contracteer.core.swagger.hasContentSchema
+import tech.sabai.contracteer.core.swagger.hasDependentRequired
+import tech.sabai.contracteer.core.swagger.hasDependentSchemas
+import tech.sabai.contracteer.core.swagger.hasNonNullableMultiType
+import tech.sabai.contracteer.core.swagger.hasPatternProperties
+import tech.sabai.contracteer.core.swagger.hasPrefixItems
+import tech.sabai.contracteer.core.swagger.hasStructuredTextContent
+import tech.sabai.contracteer.core.swagger.hasUnevaluatedItems
+import tech.sabai.contracteer.core.swagger.hasUnevaluatedProperties
 import tech.sabai.contracteer.core.swagger.isAnyType
+import tech.sabai.contracteer.core.swagger.isArrayLike
+import tech.sabai.contracteer.core.swagger.isObjectLike
 import tech.sabai.contracteer.core.swagger.safeMapping
 import tech.sabai.contracteer.core.swagger.shortRef
 
@@ -32,13 +49,19 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
   }
 
   fun convertToDataType(schema: Schema<*>, defaultName: String): Result<DataType<out Any>> {
-    val ref = schema.shortRef()
+    val ref = schema.shortRef() ?: return convertSchema(schema, defaultName)
+    val refSiblings = schema.effectiveNonAnnotationSiblings()
     return when {
-      ref == null                    -> convertSchema(schema, defaultName)
+      refSiblings.isNotEmpty()       -> refWithSiblingsError(ref, refSiblings)
       dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
       inProgress.containsKey(ref)    -> success(inProgress[ref]!!).also { logger.debug { "Circular reference detected for Schema '$ref', returning proxy" } }
       else                           -> resolveReferencedSchema(schema, ref)
     }
+  }
+
+  private fun refWithSiblingsError(ref: String, siblings: List<String>): Result<DataType<out Any>> {
+    val noun = if (siblings.size == 1) "sibling keyword" else "sibling keywords"
+    return failure("Schema '$ref': '\$ref' with $noun ${siblings.joinWithQuotes()} is not supported in Contracteer.")
   }
 
   fun convertMediaTypeSchema(mediaType: MediaType): Result<DataType<out Any>> =
@@ -78,17 +101,26 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     val contentMediaType = schema.effectiveContentMediaType()?.let(::ContentType)
     return when {
       schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator)
+      schema.booleanSchemaValue() != null                           -> unsupported(schema, "boolean schema '${schema.booleanSchemaValue()}'", "Use a schema object instead.")
+      schema.hasNonNullableMultiType()                              -> unsupported(schema, "non-nullable multi-type 'types: ${schema.types}'", "Use 'oneOf' or 'anyOf' to express a union of types.")
+      schema.hasPrefixItems()                                       -> unsupported(schema, "'prefixItems'", "Use 'items' if all positions share a single type.")
+      schema.hasContains()                                          -> unsupported(schema, "'contains/minContains/maxContains'")
+      schema.hasConditional()                                       -> unsupported(schema, "'if/then/else'")
+      schema.hasUnevaluatedProperties()                             -> unsupported(schema, "'unevaluatedProperties'")
+      schema.hasUnevaluatedItems()                                  -> unsupported(schema, "'unevaluatedItems'")
+      schema.hasPatternProperties()                                 -> unsupported(schema, "'patternProperties'")
+      schema.hasDependentRequired()                                 -> unsupported(schema, "'dependentRequired'")
+      schema.hasDependentSchemas()                                  -> unsupported(schema, "'dependentSchemas'")
+      schema.hasContentSchema()                                     -> unsupported(schema, "'contentSchema'")
       contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
       contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema)
-      schema.properties != null                                     -> ObjectDataTypeConverter.convert(schema, convert)
-      type == "array"                                               -> ArrayDataTypeConverter.convert(schema, convert)
+      schema.isObjectLike()                                         -> ObjectDataTypeConverter.convert(schema, convert)
+      schema.isArrayLike()                                          -> ArrayDataTypeConverter.convert(schema, convert)
       type == "boolean"                                             -> BooleanDataTypeConverter.convert(schema)
       type == "integer"                                             -> IntegerDataTypeConverter.convert(schema)
       type == "number"                                              -> NumberDataTypeConverter.convert(schema)
-      type == "object"                                              -> ObjectDataTypeConverter.convert(schema, convert)
-      type == "string" && contentMediaType?.isStructuredText() == true
-                                                                    -> unsupportedStructuredTextContentMediaType(schema, contentMediaType.value)
+      schema.hasStructuredTextContent()                             -> unsupportedStructuredTextContentMediaType(schema)
       type == "string"                                              -> convertStringSchema(schema)
       else                                                          -> tryToInferSchemaType(schema)
     }
@@ -143,8 +175,13 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
   private fun unsupportedContentEncoding(schema: Schema<*>, value: String): Result<DataType<out Any>> =
     failure("Schema '${schema.name}': contentEncoding='$value' is not supported. Only 'base64' is supported in OAS 3.1.")
 
-  private fun unsupportedStructuredTextContentMediaType(schema: Schema<*>, mediaType: String): Result<DataType<out Any>> =
-    failure("Schema '${schema.name}': contentMediaType='$mediaType' is not yet supported in Contracteer.")
+  private fun unsupported(schema: Schema<*>, what: String, suggestion: String? = null): Result<DataType<out Any>> {
+    val base = "Schema '${schema.name}': $what is not supported in Contracteer."
+    return failure(if (suggestion != null) "$base $suggestion" else base)
+  }
+
+  private fun unsupportedStructuredTextContentMediaType(schema: Schema<*>): Result<DataType<out Any>> =
+    failure("Schema '${schema.name}': contentMediaType='${schema.effectiveContentMediaType()}' is not yet supported in Contracteer.")
 
   private fun tryToInferSchemaType(schema: Schema<*>): Result<DataType<out Any>> =
     if (schema.isAnyType())
@@ -207,6 +244,3 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     )
   }
 }
-
-private fun Schema<*>.hasComposition(): Boolean =
-  allOf != null || anyOf != null || oneOf != null

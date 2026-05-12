@@ -1,6 +1,5 @@
 package tech.sabai.contracteer.core.swagger.datatype
 
-import io.swagger.v3.oas.models.media.JsonSchema
 import io.swagger.v3.oas.models.media.Schema
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
@@ -10,6 +9,7 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.datatype.StringDataType
 import tech.sabai.contracteer.core.result
+import tech.sabai.contracteer.core.swagger.booleanSchemaValue
 import tech.sabai.contracteer.core.swagger.effectiveEnum
 import tech.sabai.contracteer.core.swagger.effectivePropertyNames
 import tech.sabai.contracteer.core.swagger.effectiveType
@@ -91,8 +91,8 @@ internal object ObjectDataTypeConverter {
 
   private fun additionalPropertiesAsBoolean(value: Any?): Boolean? =
     when (value) {
-      is Boolean    -> value
-      is JsonSchema -> value.booleanSchemaValue
-      else          -> null
+      is Boolean   -> value
+      is Schema<*> -> value.booleanSchemaValue()
+      else         -> null
     }
 }

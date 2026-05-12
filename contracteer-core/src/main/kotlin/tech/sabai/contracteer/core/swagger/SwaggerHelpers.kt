@@ -7,6 +7,7 @@ import io.swagger.v3.oas.models.SpecVersion.V31
 import io.swagger.v3.oas.models.examples.Example
 import io.swagger.v3.oas.models.headers.Header
 import io.swagger.v3.oas.models.media.Discriminator
+import io.swagger.v3.oas.models.media.JsonSchema
 import io.swagger.v3.oas.models.media.MediaType
 import io.swagger.v3.oas.models.media.Schema
 import io.swagger.v3.oas.models.parameters.Parameter
@@ -17,6 +18,7 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.joinWithQuotes
+import tech.sabai.contracteer.core.operation.ContentType
 import java.math.BigDecimal
 
 internal fun MediaType.safeExamples() =
@@ -106,6 +108,93 @@ internal fun Schema<*>.effectiveContentMediaType(): String? =
 
 internal fun Schema<*>.effectivePropertyNames(): Schema<*>? =
   if (specVersion == V31) propertyNames else null
+
+internal fun Schema<*>.hasComposition(): Boolean =
+  allOf != null || anyOf != null || oneOf != null
+
+internal fun Schema<*>.hasNonNullableMultiType(): Boolean =
+  (types?.count { it != "null" } ?: 0) > 1
+
+internal fun Schema<*>.booleanSchemaValue(): Boolean? =
+  (this as? JsonSchema)?.booleanSchemaValue
+
+internal fun Schema<*>.hasPrefixItems(): Boolean =
+  !prefixItems.isNullOrEmpty()
+
+internal fun Schema<*>.hasContains(): Boolean =
+  contains != null || minContains != null || maxContains != null
+
+internal fun Schema<*>.hasConditional(): Boolean =
+  `if` != null || then != null || `else` != null
+
+internal fun Schema<*>.hasUnevaluatedProperties(): Boolean =
+  unevaluatedProperties != null
+
+internal fun Schema<*>.hasUnevaluatedItems(): Boolean =
+  unevaluatedItems != null
+
+internal fun Schema<*>.hasPatternProperties(): Boolean =
+  !patternProperties.isNullOrEmpty()
+
+internal fun Schema<*>.hasDependentRequired(): Boolean =
+  !dependentRequired.isNullOrEmpty()
+
+internal fun Schema<*>.hasDependentSchemas(): Boolean =
+  !dependentSchemas.isNullOrEmpty()
+
+internal fun Schema<*>.hasContentSchema(): Boolean =
+  contentSchema != null
+
+internal fun Schema<*>.effectiveNonAnnotationSiblings(): List<String> =
+  if (specVersion == V31) presentSchemaKeywords() else emptyList()
+
+private fun Schema<*>.presentSchemaKeywords(): List<String> =
+  buildList {
+    if (type != null) add("type")
+    if (!types.isNullOrEmpty()) add("types")
+    if (properties != null) add("properties")
+    if (additionalProperties != null) add("additionalProperties")
+    if (required != null) add("required")
+    if (minProperties != null) add("minProperties")
+    if (maxProperties != null) add("maxProperties")
+    if (items != null) add("items")
+    if (minItems != null) add("minItems")
+    if (maxItems != null) add("maxItems")
+    if (uniqueItems != null) add("uniqueItems")
+    if (pattern != null) add("pattern")
+    if (minLength != null) add("minLength")
+    if (maxLength != null) add("maxLength")
+    if (minimum != null) add("minimum")
+    if (maximum != null) add("maximum")
+    if (exclusiveMinimum != null) add("exclusiveMinimum")
+    if (exclusiveMaximum != null) add("exclusiveMaximum")
+    if (multipleOf != null) add("multipleOf")
+    if (!enum.isNullOrEmpty()) add("enum")
+    if (const != null) add("const")
+    if (format != null) add("format")
+    if (contentEncoding != null) add("contentEncoding")
+    if (contentMediaType != null) add("contentMediaType")
+    if (propertyNames != null) add("propertyNames")
+    if (not != null) add("not")
+    if (hasPrefixItems()) add("prefixItems")
+    if (hasContains()) add("contains")
+    if (hasConditional()) add("if/then/else")
+    if (hasUnevaluatedProperties()) add("unevaluatedProperties")
+    if (hasUnevaluatedItems()) add("unevaluatedItems")
+    if (hasPatternProperties()) add("patternProperties")
+    if (hasDependentRequired()) add("dependentRequired")
+    if (hasDependentSchemas()) add("dependentSchemas")
+    if (hasContentSchema()) add("contentSchema")
+  }
+
+internal fun Schema<*>.isObjectLike(): Boolean =
+  effectiveType() == "object" || properties != null || additionalProperties != null
+
+internal fun Schema<*>.isArrayLike(): Boolean =
+  effectiveType() == "array" || items != null
+
+internal fun Schema<*>.hasStructuredTextContent(): Boolean =
+  effectiveType() == "string" && effectiveContentMediaType()?.let(::ContentType)?.isStructuredText() == true
 
 internal fun Schema<*>.isAnyType() =
   effectiveType() == null &&

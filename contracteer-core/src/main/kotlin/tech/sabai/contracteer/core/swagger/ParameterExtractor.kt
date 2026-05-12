@@ -90,7 +90,7 @@ internal class ParameterExtractor(
 
   private fun enforceNonEmptyPathParameter(param: Parameter) {
     param.schema
-      ?.takeIf { it.type == "string" && (it.minLength == null || it.minLength < 1) }
+      ?.takeIf { it.effectiveType() == "string" && (it.minLength == null || it.minLength < 1) }
       ?.apply { minLength = 1 }
   }
 

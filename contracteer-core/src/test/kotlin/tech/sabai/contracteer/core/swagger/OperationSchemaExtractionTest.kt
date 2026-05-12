@@ -7,6 +7,8 @@ import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.datatype.*
 import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.serde.JsonSerde
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import java.math.BigDecimal
 import kotlin.test.Test
 
@@ -328,12 +330,13 @@ class OperationSchemaExtractionTest {
     assert(codeType.validate("no-match").isFailure())
   }
 
-  @Test
-  fun `string path parameter enforces minimum length of 1`() {
+  @ParameterizedTest(name = "string path parameter (OAS {0}) enforces minimum length of 1")
+  @ValueSource(strings = ["3.0", "3.1"])
+  fun `string path parameter enforces minimum length of 1`(version: String) {
     // when
-    val operation = loadSingleOperation("string_path_parameter.yaml")
+    val operation = loadSingleOperation("string_path_parameter_${version.replace(".", "")}.yaml")
 
-    // then — the length range excludes 0, so empty strings cannot be generated
+    // then
     val dataType = operation.requestSchema.pathParameters.single().dataType as StringDataType
     assert(dataType.lengthRange.contains(BigDecimal.ZERO).isFailure())
     assert(dataType.lengthRange.contains(BigDecimal.ONE).isSuccess())
