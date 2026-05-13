@@ -1,7 +1,6 @@
 package tech.sabai.contracteer.core.swagger
 
 import io.swagger.v3.oas.models.Components
-import io.swagger.v3.oas.models.Components.COMPONENTS_SCHEMAS_REF
 import io.swagger.v3.oas.models.Operation
 import io.swagger.v3.oas.models.SpecVersion.V31
 import io.swagger.v3.oas.models.examples.Example
@@ -213,9 +212,6 @@ internal fun Schema<*>.isAnyType() =
   example == null &&
   `enum`.isNullOrEmpty() &&
   effectiveConst() == null
-
-internal fun Schema<*>.shortRef() =
-  this.`$ref`?.replace(COMPONENTS_SCHEMAS_REF, "")
 
 internal fun Schema<*>.safeProperties() =
   properties ?: emptyMap()

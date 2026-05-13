@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /accounts:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  $ref: '#/components/schemas/AccountBalance/allOf/0'
+      responses:
+        '200':
+          description: ok
+components:
+  schemas:
+    AccountBalance:
+      allOf:
+        - type: integer
+        - type: object
+          properties:
+            currency:
+              type: string

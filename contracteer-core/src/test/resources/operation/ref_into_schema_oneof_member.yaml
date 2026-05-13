@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /x:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag:
+                  $ref: '#/components/schemas/Tag/oneOf/0'
+      responses:
+        '200':
+          description: ok
+components:
+  schemas:
+    Tag:
+      oneOf:
+        - type: string
+        - type: integer

@@ -205,6 +205,148 @@ class OperationSchemaExtractionTest {
   }
 
   @Test
+  fun `resolves $ref into a parameter's schema sub-element`() {
+    // when
+    val operation = loadSingleOperation("ref_into_parameter_schema.yaml")
+
+    // then
+    val requestBody = operation.requestSchema.bodies.single()
+    val accountId = (requestBody.dataType as ObjectDataType).properties["accountId"]
+    assert(accountId is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into an allOf member of a schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_allof_member.yaml")
+
+    // then
+    val requestBody = operation.requestSchema.bodies.single()
+    val amount = (requestBody.dataType as ObjectDataType).properties["amount"]
+    assert(amount is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a schema property`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_property.yaml")
+
+    // then
+    val age = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["age"]
+    assert(age is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a schema items`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_items.yaml")
+
+    // then
+    val count = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["count"]
+    assert(count is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a schema additionalProperties`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_additional_properties.yaml")
+
+    // then
+    val value = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["value"]
+    assert(value is StringDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a oneOf member of a schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_oneof_member.yaml")
+
+    // then
+    val tag = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["tag"]
+    assert(tag is StringDataType)
+  }
+
+  @Test
+  fun `resolves $ref into an anyOf member of a schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_anyof_member.yaml")
+
+    // then
+    val code = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["code"]
+    assert(code is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a parameter content media-type schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_parameter_content_schema.yaml")
+
+    // then
+    val filter = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["filter"]
+    assert(filter is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a response content media-type schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_response_content_schema.yaml")
+
+    // then
+    val forbiddenCode = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["forbiddenCode"]
+    assert(forbiddenCode is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a response header schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_response_header_schema.yaml")
+
+    // then
+    val traceId = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["traceId"]
+    assert(traceId is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into a header schema`() {
+    // when
+    val operation = loadSingleOperation("ref_into_header_schema.yaml")
+
+    // then
+    val trace = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["trace"]
+    assert(trace is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves chained JSON Pointer segments through schema fields`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_composed_pointer.yaml")
+
+    // then
+    val tag = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["tag"]
+    assert(tag is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves $ref into an allOf member of a schema in 3 1 spec`() {
+    // when
+    val operation = loadSingleOperation("ref_into_schema_allof_member_31.yaml")
+
+    // then
+    val amount = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["amount"]
+    assert(amount is IntegerDataType)
+  }
+
+  @Test
+  fun `resolves a $ref whose nested-pointer target is itself a $ref`() {
+    // when
+    val operation = loadSingleOperation("ref_chain_through_nested_pointer.yaml")
+
+    // then
+    val nested = ((operation.requestSchema.bodies.single().dataType) as ObjectDataType).properties["nested"]
+    assert(nested is IntegerDataType)
+  }
+
+  @Test
   fun `resolves references in 3 1 spec for parameters request bodies response headers and response bodies`() {
     // when
     val operation = loadSingleOperation("references_31.yaml")

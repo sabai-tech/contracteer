@@ -88,15 +88,24 @@ object OpenApiLoader {
   private fun parse(content: String): Result<OpenAPI> {
     return try {
       val parseResult = OpenAPIV3Parser().readContents(content, emptyList(), ParseOptions().apply { isResolve = true })
+      val fatalMessages = parseResult?.messages.orEmpty().filterNot(::isNonFatalRefWarning)
       when {
-        parseResult == null               -> failure("Failed to parse OpenAPI 3 Document")
-        parseResult.messages.isNotEmpty() -> failure(*parseResult.messages.toTypedArray())
-        else                              -> success(parseResult.openAPI)
+        parseResult == null        -> failure("Failed to parse OpenAPI 3 Document")
+        fatalMessages.isNotEmpty() -> failure(*fatalMessages.toTypedArray())
+        else                       -> success(parseResult.openAPI)
       }
     } catch (t: Throwable) {
       failure("Failed to parse OpenAPI 3 Document: ${t::class.simpleName}: ${t.message}")
     }
   }
+
+  // swagger-parser (OpenAPIDeserializer.java:2838 and :3968) emits this warning for $refs that target
+  // a JSON Pointer outside #/components/schemas/. Contracteer's resolver handles those refs, so the
+  // warning is non-fatal. The suffix match below is canaried by OperationSchemaExtractionTest's
+  // `ref_into_*` fixtures — if swagger-parser changes the wording, those tests fail at load and the
+  // suffix here needs to be updated.
+  private fun isNonFatalRefWarning(message: String): Boolean =
+    message.endsWith("is not of expected type Schema")
 
   private fun String.isClasspath() = lowercase().startsWith("classpath:")
 

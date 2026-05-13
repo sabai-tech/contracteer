@@ -1,0 +1,27 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /x:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                traceId:
+                  $ref: '#/components/responses/Ok/headers/x-trace/schema'
+      responses:
+        '200':
+          description: ok
+components:
+  responses:
+    Ok:
+      description: ok
+      headers:
+        x-trace:
+          schema:
+            type: integer

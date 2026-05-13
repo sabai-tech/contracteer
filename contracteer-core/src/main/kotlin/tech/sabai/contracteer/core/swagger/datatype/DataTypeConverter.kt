@@ -9,33 +9,9 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.datatype.Discriminator
 import tech.sabai.contracteer.core.joinWithQuotes
 import tech.sabai.contracteer.core.operation.ContentType
-import tech.sabai.contracteer.core.swagger.SharedComponents
-import tech.sabai.contracteer.core.swagger.booleanSchemaValue
-import tech.sabai.contracteer.core.swagger.effectiveConst
-import tech.sabai.contracteer.core.swagger.effectiveContentEncoding
-import tech.sabai.contracteer.core.swagger.effectiveContentMediaType
-import tech.sabai.contracteer.core.swagger.effectiveNonAnnotationSiblings
-import tech.sabai.contracteer.core.swagger.effectiveType
-import tech.sabai.contracteer.core.swagger.hasComposition
-import tech.sabai.contracteer.core.swagger.hasConditional
-import tech.sabai.contracteer.core.swagger.hasContains
-import tech.sabai.contracteer.core.swagger.hasContentSchema
-import tech.sabai.contracteer.core.swagger.hasDependentRequired
-import tech.sabai.contracteer.core.swagger.hasDependentSchemas
-import tech.sabai.contracteer.core.swagger.hasNonNullableMultiType
-import tech.sabai.contracteer.core.swagger.hasPatternProperties
-import tech.sabai.contracteer.core.swagger.hasPrefixItems
-import tech.sabai.contracteer.core.swagger.hasStructuredTextContent
-import tech.sabai.contracteer.core.swagger.hasUnevaluatedItems
-import tech.sabai.contracteer.core.swagger.hasUnevaluatedProperties
-import tech.sabai.contracteer.core.swagger.isAnyType
-import tech.sabai.contracteer.core.swagger.isArrayLike
-import tech.sabai.contracteer.core.swagger.isObjectLike
-import tech.sabai.contracteer.core.swagger.safeMapping
-import tech.sabai.contracteer.core.swagger.shortRef
+import tech.sabai.contracteer.core.swagger.*
 
 internal class DataTypeConverter(private val sharedComponents: SharedComponents) {
 
@@ -49,19 +25,19 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
   }
 
   fun convertToDataType(schema: Schema<*>, defaultName: String): Result<DataType<out Any>> {
-    val ref = schema.shortRef() ?: return convertSchema(schema, defaultName)
+    val ref = schema.`$ref` ?: return convertSchema(schema, defaultName)
     val refSiblings = schema.effectiveNonAnnotationSiblings()
     return when {
-      refSiblings.isNotEmpty()       -> refWithSiblingsError(ref, refSiblings)
-      dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '${schema.`$ref`}'" } }
+      refSiblings.isNotEmpty()       -> refWithSiblingsError(displayName(ref), refSiblings)
+      dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '$ref'" } }
       inProgress.containsKey(ref)    -> success(inProgress[ref]!!).also { logger.debug { "Circular reference detected for Schema '$ref', returning proxy" } }
       else                           -> resolveReferencedSchema(schema, ref)
     }
   }
 
-  private fun refWithSiblingsError(ref: String, siblings: List<String>): Result<DataType<out Any>> {
+  private fun refWithSiblingsError(name: String, siblings: List<String>): Result<DataType<out Any>> {
     val noun = if (siblings.size == 1) "sibling keyword" else "sibling keywords"
-    return failure("Schema '$ref': '\$ref' with $noun ${siblings.joinWithQuotes()} is not supported in Contracteer.")
+    return failure("Schema '$name': '\$ref' with $noun ${siblings.joinWithQuotes()} is not supported in Contracteer.")
   }
 
   fun convertMediaTypeSchema(mediaType: MediaType): Result<DataType<out Any>> =
@@ -69,7 +45,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     else convertToDataType(mediaType.schema, "")
 
   fun convertToDiscriminator(schema: Schema<*>) =
-    if (schema.shortRef() != null) discriminatorCache[schema.shortRef()]
+    if (schema.`$ref` != null) discriminatorCache[schema.`$ref`]
     else schema.discriminator?.let {
       Discriminator(
         it.propertyName,
@@ -78,18 +54,22 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     }
 
   private fun resolveReferencedSchema(schema: Schema<*>, ref: String): Result<DataType<out Any>> {
-    val proxy = ProxyDataType(ref)
+    val name = displayName(ref)
+    val proxy = ProxyDataType(name)
     inProgress[ref] = proxy
 
     return sharedComponents
       .resolve(schema)
-      .flatMap { resolved -> convertSchema(resolved, ref) }
+      .flatMap { resolved -> convertSchema(resolved, name) }
       .also { inProgress.remove(ref) }
       .flatMap { dataType ->
         proxy.delegate = dataType
-        validateNoInfiniteCycle(proxy, dataType)
+        validateNoInfiniteCycle(proxy, ref, dataType)
       }
   }
+
+  private fun displayName(ref: String): String =
+    ref.removePrefix(Components.COMPONENTS_SCHEMAS_REF)
 
   private fun convertSchema(schema: Schema<*>, schemaName: String): Result<DataType<out Any>> {
     schema.name = schemaName
@@ -189,14 +169,14 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     else
       failure("Error while interpreting schema '${schema.name}'. The schema might be misconfigured or incomplete.")
 
-  private fun validateNoInfiniteCycle(proxy: ProxyDataType, dataType: DataType<out Any>): Result<DataType<out Any>> {
+  private fun validateNoInfiniteCycle(proxy: ProxyDataType, ref: String, dataType: DataType<out Any>): Result<DataType<out Any>> {
     val cyclePath = findNonBreakablePath(proxy.delegate, proxy, listOf(proxy.name))
     return when {
       cyclePath != null ->
         failure("Circular reference with no optional, nullable, or collection exit point: ${cyclePath.joinToString(" → ")}")
 
       else              -> {
-        dataTypeCache[proxy.name] = dataType
+        dataTypeCache[ref] = dataType
         success(dataType)
       }
     }
@@ -238,7 +218,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
   private fun addDiscriminators(schemas: Map<String, Schema<*>>) {
     discriminatorCache.putAll(
       schemas
-        .map { (name, schema) -> name to convertToDiscriminator(schema) }
+        .map { (name, schema) -> "${Components.COMPONENTS_SCHEMAS_REF}$name" to convertToDiscriminator(schema) }
         .filter { it.second != null }
         .toMap() as Map<String, Discriminator>
     )

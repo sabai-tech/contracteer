@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /x:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                foo:
+                  $ref: '#/components/schemas/Container/definitions/Inner'
+      responses:
+        '200':
+          description: ok
+components:
+  schemas:
+    Container:
+      type: object

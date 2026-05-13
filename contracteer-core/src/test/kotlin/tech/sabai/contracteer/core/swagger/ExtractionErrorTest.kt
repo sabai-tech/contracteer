@@ -153,9 +153,7 @@ class ExtractionErrorTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
-      "Expected error about header RFC 7230 but got: $errors"
-    }
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") })
   }
 
   @Test
@@ -166,9 +164,7 @@ class ExtractionErrorTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
-      "Expected error about header RFC 7230 but got: $errors"
-    }
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") })
   }
 
   @Test
@@ -179,9 +175,7 @@ class ExtractionErrorTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
-      "Expected error about header RFC 7230 but got: $errors"
-    }
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") })
   }
 
   @Test
@@ -192,8 +186,84 @@ class ExtractionErrorTest {
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") }) {
-      "Expected error about header RFC 7230 but got: $errors"
-    }
+    assert(errors.any { it.contains("X-Custom-Attributes") && it.contains("RFC 7230") })
+  }
+
+  @Test
+  fun `fails with a clear message when a JSON Pointer segment names an unknown Schema field`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_unknown_segment.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("\$ref '#/components/schemas/Person/foo': cannot resolve JSON Pointer") &&
+      it.contains("Schema has no field 'foo'")
+    })
+  }
+
+  @Test
+  fun `fails with a clear message when a JSON Pointer targets a missing property`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_missing_property_target.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("\$ref '#/components/schemas/Person/properties/missing': cannot resolve JSON Pointer") &&
+      it.contains("no 'properties' entry 'missing'")
+    })
+  }
+
+  @Test
+  fun `fails with a clear message when a JSON Pointer targets a non-Schema location`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_target_not_a_schema.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("\$ref '#/components/parameters/queryFilter': cannot resolve JSON Pointer") &&
+      it.contains("target is not a Schema")
+    })
+  }
+
+  @Test
+  fun `fails with a clear message when a JSON Pointer targets a boolean additionalProperties`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_into_boolean_additional_properties.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("\$ref '#/components/schemas/OpenBag/additionalProperties': cannot resolve JSON Pointer") &&
+      it.contains("'additionalProperties' is a boolean, not a sub-schema")
+    })
+  }
+
+  @Test
+  fun `fails with a clear message when a JSON Pointer descends into 'definitions'`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_into_definitions.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("\$ref '#/components/schemas/Container/definitions/Inner': cannot resolve JSON Pointer") &&
+      it.contains("segment 'definitions' is not supported in Contracteer")
+    })
+  }
+
+  @Test
+  fun `fails with a clear message when a JSON Pointer targets an unsupported components section`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_into_unsupported_section.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains($$"$ref '#/components/requestBodies/Foo/content/application~1json/schema': cannot resolve JSON Pointer") &&
+      it.contains("section 'requestBodies' is not supported in Contracteer")
+    })
   }
 }
