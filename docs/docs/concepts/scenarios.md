@@ -9,7 +9,7 @@ All examples come from the [Musketeer API](https://github.com/sabai-tech/contrac
 
 ## OpenAPI Examples: `examples` and `example`
 
-The OpenAPI 3.0 specification defines two ways to provide example values: the `examples` keyword and the `example` keyword.
+The OpenAPI specification defines two ways to provide example values: the `examples` keyword and the `example` keyword.
 
 ### The `examples` keyword
 
@@ -345,9 +345,15 @@ examples:
 
 ## Further Reading
 
-- [Adding Examples](https://swagger.io/docs/specification/v3_0/adding-examples/) -- Swagger's guide to `examples` and `example` in OpenAPI 3.0.
-- [OpenAPI 3.0 — Parameter Object](https://spec.openapis.org/oas/v3.0.3#parameter-object) -- where `examples` and `example` are defined for parameters.
-- [OpenAPI 3.0 — Media Type Object](https://spec.openapis.org/oas/v3.0.3#media-type-object) -- where `examples` and `example` are defined for request and response bodies.
+- Swagger's guide to `examples` and `example`:
+    - [OpenAPI 3.0](https://swagger.io/docs/specification/v3_0/adding-examples/)
+    - [OpenAPI 3.1](https://swagger.io/docs/specification/v3_1/adding-examples/)
+- Parameter Object, where `examples` and `example` are defined for parameters:
+    - [OpenAPI 3.0.4](https://spec.openapis.org/oas/v3.0.4#parameter-object)
+    - [OpenAPI 3.1.2](https://spec.openapis.org/oas/v3.1.2#parameter-object)
+- Media Type Object, where `examples` and `example` are defined for request and response bodies:
+    - [OpenAPI 3.0.4](https://spec.openapis.org/oas/v3.0.4#media-type-object)
+    - [OpenAPI 3.1.2](https://spec.openapis.org/oas/v3.1.2#media-type-object)
 
 ---
 

@@ -13,7 +13,7 @@ The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) r
 
 - JDK 21 or later
 - Gradle or Maven
-- An OpenAPI 3.0 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
 
 ---
 

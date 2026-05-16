@@ -13,7 +13,7 @@ The [musketeer-spring-boot-client](https://github.com/sabai-tech/contracteer-exa
 - JDK 21 or later
 - Gradle or Maven
 - Spring Boot test on the classpath
-- An OpenAPI 3.0 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
 
 ---
 

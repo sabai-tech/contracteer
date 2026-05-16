@@ -1,9 +1,11 @@
-# OpenAPI 3.0 Coverage
+# OpenAPI Coverage
 
-This page describes which parts of the OpenAPI 3.0 specification Contracteer supports, where it deviates, and which
-features are not applicable to contract testing.
+Contracteer supports OpenAPI 3.0 and 3.1.
+Behavior is the same across both versions except where noted below.
 
-Contracteer supports OpenAPI 3.0.x.
+- Using OpenAPI 3.0? Jump to [OpenAPI 3.0-specific behavior](#openapi-30-specific-behavior).
+- Using OpenAPI 3.1? Jump to [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
+- Migrating an OpenAPI 3.0 spec to 3.1? See [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) for what becomes available and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords) for what Contracteer rejects. For syntax rewrites required by 3.1 itself, consult the [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2).
 
 ---
 
@@ -14,16 +16,15 @@ Unsupported content types cause the operation to be skipped with a warning.
 Unsupported schema keywords are ignored.
 Your specification still loads.
 
-| Feature                                     | Impact                                                                                                                                                                                                                                                                 |
-|---------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `application/xml`                           | Operations with XML-only content types are skipped with a warning.                                                                                                                                                                                                     |
-| Missing schema on body or parameter content | Operations with request/response bodies or parameter `content` entries that have no schema are skipped with a warning.                                                                                                                                                 |
-| Empty schema (`schema: {}`)                 | Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.                                                                                                   |
-| `not` (schema negation)                     | The keyword is ignored. Values are validated and generated without it.                                                                                                                                                                                                 |
-| `allowEmptyValue` (parameters)              | The keyword is ignored. Deprecated by the OAS 3.0 specification itself.                                                                                                                                                                                                |
-| `externalValue` (Example Objects)           | Only inline `value` is read. External references are not fetched.                                                                                                                                                                                                      |
-| Pattern generation (regex)                  | Common Java-specific constructs (POSIX classes, `\p{Is...}` aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See [Troubleshooting](../guides/troubleshooting.md#pattern-value-generation-fails) for details. |
-| Unknown integer/number formats              | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                                                                                                                              |
+| Feature                                     | Impact                                                                                                                                                                                                                                                                                                                                                |
+|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `application/xml`                           | Operations with XML-only content types are skipped with a warning.                                                                                                                                                                                                                                                                                    |
+| Missing schema on body or parameter content | Operations with request/response bodies or parameter `content` entries that have no schema are skipped with a warning. Exception: bodies declared with a binary content type (`application/octet-stream`, `image/*`, etc.) default to binary content.                                                                                                |
+| Empty schema (`schema: {}`)                 | Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.                                                                                                                                                                                  |
+| `not` (schema negation)                     | The keyword is ignored. Values are validated and generated without it.                                                                                                                                                                                                                                                                                |
+| `externalValue` (Example Objects)           | Only inline `value` is read. External references are not fetched.                                                                                                                                                                                                                                                                                     |
+| Pattern generation (regex)                  | Common Java-specific constructs (POSIX classes, `\p{Is...}` aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See [Troubleshooting](../guides/troubleshooting.md#pattern-not-supported-for-value-generation) for details.                                                                                |
+| Unknown integer/number formats              | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                                                                                                                                                                                                             |
 
 If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the specification.
 
@@ -31,7 +32,7 @@ If Contracteer skips an operation or ignores a keyword, it logs a warning when l
 
 ## Deviations from the Specification
 
-The OpenAPI 3.0 specification is sometimes ambiguous or impractical for contract testing.
+The OpenAPI specification is sometimes ambiguous or impractical for contract testing.
 In these cases, Contracteer makes explicit choices.
 
 ### String constraint precedence
@@ -56,12 +57,11 @@ If any enum value violates it, the specification is rejected.
 
 Random value generation for patterns uses the [RgxGen](https://github.com/curious-odd-man/rgxgen) library.
 RgxGen supports most common regex features, but lookaheads and lookbehinds do not generate correctly.
-If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in
-your specification.
+If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in your specification.
 
 ### Multipart default content types
 
-The OAS 3.0 specification defaults arrays of primitives to `text/plain` in multipart parts.
+The OpenAPI specification defaults arrays of primitives to `text/plain` in multipart parts.
 Contracteer uses `application/json` for all arrays.
 The specification does not define how to serialize an array as plain text in a multipart part.
 
@@ -111,12 +111,10 @@ allOf:
     maxLength: 10
 ```
 
-The OAS 3.0 specification allows `allOf` sub-schemas of any type, but Contracteer generates random values for each
-sub-schema and merges the results.
+The OpenAPI specification allows `allOf` sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
 For objects, this works -- different sub-schemas contribute different properties that combine cleanly.
 For primitives, constraints overlap on the same value.
-A `minLength: 5` from one sub-schema and a `maxLength: 10` from another would require computing the constraint
-intersection, which Contracteer does not do.
+A `minLength: 5` from one sub-schema and a `maxLength: 10` from another would require computing the constraint intersection, which Contracteer does not do.
 
 If your specification uses multi-element `allOf` with primitives, combine the constraints into a single schema:
 
@@ -142,8 +140,7 @@ ProductOrService:
 ```
 
 Contracteer rejects schemas that combine multiple composition keywords.
-Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one
-must match).
+Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one must match).
 Combining them would require a compound validation that Contracteer does not implement.
 
 This pattern is extremely rare in real-world specifications and is almost always a mistake.
@@ -159,32 +156,11 @@ ProductOrService:
         - $ref: '#/components/schemas/Service'
 ```
 
-### `nullable` on composition schemas
-
-The OAS 3.0.4 specification states that `nullable` only takes effect when `type` is explicitly defined on the same
-schema.
-Composition schemas (`oneOf`, `anyOf`, `allOf`) typically do not declare `type`, which means `nullable: true` should
-technically have no effect:
-
-```yaml
-MySchema:
-  nullable: true
-  oneOf:
-    - $ref: '#/components/schemas/Cat'
-    - $ref: '#/components/schemas/Dog'
-```
-
-Contracteer honours `nullable: true` on composition schemas regardless of whether `type` is present.
-This matches the behavior of most OpenAPI tools (swagger-codegen, OpenAPI Generator, Redoc) and what users expect.
-The OAS 3.0 `nullable` rule is widely considered a specification design flaw, which OAS 3.1 resolved by replacing
-`nullable` with `type` arrays (e.g., `type: ["object", "null"]`).
-
 ---
 
 ## Not Applicable to Contract Testing
 
-These features are defined in the OAS 3.0 specification but do not affect the structural contract between client and
-server.
+These features are defined in the OpenAPI specification but do not affect the structural contract between client and server.
 Contracteer does not process them.
 
 | Feature                          | Reason                                                                                                                                 |
@@ -227,6 +203,9 @@ Contracteer does not process them.
 | `byte` (base64) | Supported                           |
 | `binary`        | Supported                           |
 | `password`      | Supported (treated as plain string) |
+| `uri`           | Supported (RFC 3986)                |
+| `uri-reference` | Supported (RFC 3986)                |
+| `hostname`      | Supported (RFC 1034)                |
 | Custom formats  | Ignored                             |
 
 ### Integer and number formats
@@ -241,22 +220,26 @@ Contracteer does not process them.
 
 ### Schema keywords
 
-| Keyword                                 | Notes                                                                                 |
-|-----------------------------------------|---------------------------------------------------------------------------------------|
-| `nullable`                              | All data types                                                                        |
-| `enum`                                  | All data types                                                                        |
-| `minimum` / `maximum`                   | Integer and number types                                                              |
-| `exclusiveMinimum` / `exclusiveMaximum` | Integer and number types (OAS 3.0 boolean semantics)                                  |
-| `minLength` / `maxLength`               | String, email, base64, binary types                                                   |
-| `pattern`                               | Plain strings only. See [string constraint precedence](#string-constraint-precedence) |
-| `multipleOf`                            | Integer and number types                                                              |
-| `minItems` / `maxItems`                 | Array types                                                                           |
-| `uniqueItems`                           | Array types                                                                           |
-| `minProperties` / `maxProperties`       | Object types                                                                          |
-| `required` (properties)                 | Object types                                                                          |
-| `additionalProperties`                  | Both boolean and typed schema forms                                                   |
-| `readOnly` / `writeOnly`                | readOnly properties excluded from request schemas, writeOnly from response schemas    |
-| `discriminator`                         | `propertyName` and `mapping`. See [Discriminator validation](#discriminator-validation) |
+| Keyword                                 | Notes                                                                                                       |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `nullable`                              | All data types. Both `nullable: true` (OpenAPI 3.0) and `type: [..., "null"]` (OpenAPI 3.1) are recognized. |
+| `enum`                                  | All data types                                                                                              |
+| `minimum` / `maximum`                   | Integer and number types                                                                                    |
+| `exclusiveMinimum` / `exclusiveMaximum` | Integer and number types. Accepts the boolean form (OpenAPI 3.0) and the numeric form (OpenAPI 3.1).        |
+| `minLength` / `maxLength`               | String, email, base64, binary types                                                                         |
+| `pattern`                               | Plain strings only. See [string constraint precedence](#string-constraint-precedence)                       |
+| `multipleOf`                            | Integer and number types                                                                                    |
+| `minItems` / `maxItems`                 | Array types                                                                                                 |
+| `uniqueItems`                           | Array types                                                                                                 |
+| `minProperties` / `maxProperties`       | Object types                                                                                                |
+| `required` (properties)                 | Object types                                                                                                |
+| `additionalProperties`                  | Both boolean and typed schema forms                                                                         |
+| `readOnly` / `writeOnly`                | readOnly properties excluded from request schemas, writeOnly from response schemas                          |
+| `discriminator`                         | `propertyName` and `mapping`. See [Discriminator validation](#discriminator-validation)                     |
+
+**Type inference.**
+When a schema declares no `type` but uses `properties`, `additionalProperties`, or `items`, Contracteer treats it as an object or array schema accordingly.
+This is consistent with the specification, which permits typeless schemas while defining these keywords only for objects or arrays.
 
 ### Schema composition
 
@@ -270,27 +253,28 @@ Contracteer does not process them.
 ### Discriminator validation
 
 Contracteer uses the discriminator as a hint to select which sub-schema in a `oneOf`, `anyOf`, or `allOf` composition validates the payload.
-When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI 3.0.4 rule that "discriminator MUST NOT change the validation outcome of the schema" (§4.7.25).
+When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI rule that "discriminator MUST NOT change the validation outcome of the schema".
 
 Three runtime cases:
 
 **Property is absent.**
 When the discriminator property is missing from the payload, Contracteer validates the payload against every sub-schema as if no discriminator were declared.
-The OpenAPI 3.0.4 specification states that the discriminator property "SHOULD be required in the payload schema, as the behavior when the property is absent is undefined" (§4.7.25).
+The OpenAPI specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
 The payload is accepted if exactly one sub-schema matches (`oneOf`) or at least one sub-schema matches (`anyOf`).
 
 **Property is not a string.**
 When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
-The OpenAPI 3.0.4 specification states that "mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison" (§4.7.25); Contracteer does not coerce non-string values.
+The OpenAPI specification states: "Mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison."
+Contracteer does not coerce non-string values.
 Sub-schemas usually declare the discriminator property as `type: string`, so a non-string value fails the string type check within each branch.
 
 **Value does not match any mapping or schema name.**
 When the discriminator property is a string that matches no entry in `mapping` and no schema name under `components/schemas`, Contracteer rejects the payload with `No schema found for discriminator property '<name>' with value: <value>`.
-The OpenAPI 3.0.4 specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail" (§4.7.25).
+The OpenAPI specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".
 
 ### Discriminator on a parent schema used via `$ref`
 
-OpenAPI 3.0 supports a polymorphic pattern where a parent schema declares the discriminator and child schemas extend the parent with `allOf`:
+A common polymorphic pattern uses a parent schema that declares the discriminator and child schemas that extend the parent with `allOf`:
 
 ```yaml
 components:
@@ -327,7 +311,7 @@ paths:
 
 When `Pet` is referenced directly via `$ref` (without wrapping it in `oneOf` or `anyOf` at the usage site), Contracteer validates the payload against `Pet` only.
 Child-specific properties (`huntingSkill`, `packSize`) are not checked.
-This matches the OpenAPI 3.0.4 rule: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases; validation with the parent schema with this form of `discriminator` _does not_ perform a search for child schemas or use them in validation in any way" (§4.7.25).
+This matches the OpenAPI rule: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases; validation with the parent schema with this form of `discriminator` _does not_ perform a search for child schemas or use them in validation in any way".
 
 To get child-specific validation, list the children at the usage site:
 
@@ -353,7 +337,7 @@ With this form, Contracteer uses the discriminator to select the matching child 
 | `in: query`                     | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject`. `deepObject` only supports flat objects with primitive properties. |
 | `in: header`                    | Primitive, array, and object types. Style: `simple`                                                                                                                     |
 | `in: cookie`                    | Primitive, array, and object types. Style: `form`                                                                                                                       |
-| `style` / `explode`             | All OAS 3.0 style/explode combinations with correct defaults per location                                                                                               |
+| `style` / `explode`             | All style/explode combinations with correct defaults per location                                                                                                       |
 | `content` (instead of `schema`) | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                                                                                        |
 | `allowReserved`                 | Query parameters and `application/x-www-form-urlencoded` encoding properties                                                                                            |
 
@@ -380,16 +364,17 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 
 ### References ($ref)
 
-| Feature                                | Notes                                                                                                                                           |
-|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| `$ref` to `#/components/schemas`       | Supported                                                                                                                                       |
-| `$ref` to `#/components/parameters`    | Supported                                                                                                                                       |
-| `$ref` to `#/components/requestBodies` | Supported                                                                                                                                       |
-| `$ref` to `#/components/responses`     | Supported                                                                                                                                       |
-| `$ref` to `#/components/headers`       | Supported                                                                                                                                       |
-| `$ref` to `#/components/examples`      | Supported                                                                                                                                       |
-| Recursive / chained `$ref`             | Supported, including circular references. Infinite cycles (all properties in the cycle are required and non-nullable) are rejected at load time |
-| External `$ref` (other files)          | Resolved by the OpenAPI parser before Contracteer processes the model                                                                           |
+| Feature                                            | Notes                                                                                                                                                                                                                                            |
+|----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `$ref` to `#/components/schemas`                   | Supported                                                                                                                                                                                                                                        |
+| `$ref` to `#/components/parameters`                | Supported                                                                                                                                                                                                                                        |
+| `$ref` to `#/components/requestBodies`             | Supported                                                                                                                                                                                                                                        |
+| `$ref` to `#/components/responses`                 | Supported                                                                                                                                                                                                                                        |
+| `$ref` to `#/components/headers`                   | Supported                                                                                                                                                                                                                                        |
+| `$ref` to `#/components/examples`                  | Supported                                                                                                                                                                                                                                        |
+| `$ref` via JSON Pointer to nested Schema locations | Resolves pointers into `properties`, `items`, `additionalProperties`, `allOf`/`oneOf`/`anyOf`, and `not`. Example: `#/components/schemas/User/properties/address`. Pointers into non-Schema sections (`examples`, `requestBodies`) are rejected. |
+| Recursive / chained `$ref`                         | Supported, including circular references. Infinite cycles (all properties in the cycle are required and non-nullable) are rejected at load time                                                                                                  |
+| External `$ref` (other files)                      | Resolved by the OpenAPI parser before Contracteer processes the model                                                                                                                                                                            |
 
 ### Responses
 
@@ -403,10 +388,174 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 
 ---
 
+## OpenAPI 3.0-specific behavior
+
+These behaviors apply only when your specification is OpenAPI 3.0.
+
+### `nullable` on composition schemas
+
+The OpenAPI specification states that `nullable` only takes effect when `type` is explicitly defined on the same schema.
+Composition schemas (`oneOf`, `anyOf`, `allOf`) typically do not declare `type`, which means `nullable: true` should technically have no effect:
+
+```yaml
+MySchema:
+  nullable: true
+  oneOf:
+    - $ref: '#/components/schemas/Cat'
+    - $ref: '#/components/schemas/Dog'
+```
+
+Contracteer honours `nullable: true` on composition schemas regardless of whether `type` is present.
+This matches the behavior of most OpenAPI tooling and what users expect.
+The `nullable` rule is widely considered a specification design flaw, which OpenAPI 3.1 resolved by replacing `nullable` with `type` arrays (e.g., `type: ["object", "null"]`).
+
+### `allowEmptyValue`
+
+The `allowEmptyValue` parameter flag indicates that a query parameter may be present with an empty value.
+Contracteer ignores the flag.
+The keyword was deprecated in OpenAPI 3.0 and dropped from OpenAPI 3.1.
+
+---
+
+## OpenAPI 3.1-specific behavior
+
+These behaviors apply only when your specification is OpenAPI 3.1.
+
+### Type arrays
+
+OpenAPI 3.1 allows `type` to be an array of type strings.
+Contracteer supports two forms:
+
+- **Single-type array** (e.g., `type: ["string"]`) -- equivalent to `type: string`.
+- **Nullable form** (one type plus `"null"`, e.g., `type: ["string", "null"]`) -- equivalent to a nullable string.
+
+Multi-type arrays with multiple non-null types (e.g., `type: ["string", "integer"]`) are rejected at load time.
+See [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
+
+To express a union of types, use `anyOf`:
+
+```yaml
+# Not supported -- multi-type with non-null types
+ProductId:
+  type: ["string", "integer"]
+
+# Supported equivalent
+ProductId:
+  anyOf:
+    - type: string
+    - type: integer
+```
+
+### `const`
+
+OpenAPI 3.1 introduces `const` for schemas with a single allowed value.
+Contracteer supports `const` on `string`, `integer`, `number`, and `boolean` schemas.
+The schema's `type` must be declared explicitly -- Contracteer does not infer the type from the `const` value.
+
+```yaml
+components:
+  schemas:
+    OrderStatus:
+      type: string
+      const: ACTIVE
+```
+
+A schema with `const: null` is not currently representable.
+
+### `propertyNames`
+
+OpenAPI 3.1 introduces `propertyNames` to constrain the names of properties in an object schema.
+`propertyNames` takes a schema that must resolve to a string type.
+
+Contracteer applies the constraint at three points:
+
+- **Validation.** Every property name in the payload -- both declared properties and additional properties -- must satisfy the constraint.
+- **Generation.** When generating values for `additionalProperties`, Contracteer draws candidate names that satisfy the constraint.
+- **Load time.** Contracteer rejects a schema whose declared property names violate the constraint.
+
+```yaml
+components:
+  schemas:
+    Metadata:
+      type: object
+      propertyNames:
+        type: string
+        pattern: "^[a-z][a-z0-9_]*$"
+      additionalProperties:
+        type: string
+```
+
+### `contentEncoding` and `contentMediaType` for binary bodies
+
+Contracteer recognizes two OpenAPI 3.1 keywords for declaring binary content in string schemas:
+
+- `contentEncoding: base64` -- the payload is base64-encoded binary data (replacing OpenAPI 3.0's `format: byte`).
+- `contentMediaType: <media type>` -- the payload is raw binary content of the named media type (replacing OpenAPI 3.0's `format: binary`).
+
+```yaml
+# Base64-encoded binary content
+components:
+  schemas:
+    Avatar:
+      type: string
+      contentEncoding: base64
+```
+
+```yaml
+# Raw binary content
+components:
+  schemas:
+    UploadedImage:
+      type: string
+      contentMediaType: image/png
+```
+
+Other `contentEncoding` values (`base16`, `base32`, `quoted-printable`, etc.) and structured-text `contentMediaType` values (`application/json`, `application/xml`, etc.) are rejected at load time.
+See [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
+
+For request and response bodies declared with a binary content type (`application/octet-stream`, `image/*`, etc.) but no schema or an empty schema, Contracteer infers binary content automatically.
+This applies to OpenAPI 3.0 specifications as well.
+
+---
+
+## Unsupported OpenAPI 3.1 keywords
+
+Contracteer does not support the following JSON Schema 2020-12 keywords.
+Most are rejected at load time with an explanatory message.
+A few do not produce an error -- they are simply not honored, and references that rely on them will not resolve.
+
+| Keyword                                      | Behavior                            | Reason / alternative                                                                                    |
+|----------------------------------------------|-------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `prefixItems`                                | Rejected at load time               | Tuple validation requires per-position type dispatch. Use `items` if all positions share a type.        |
+| `contains` / `minContains` / `maxContains`   | Rejected at load time               | Element-existence semantics not implemented.                                                            |
+| `patternProperties`                          | Rejected at load time               | Regex-keyed property validation not implemented.                                                        |
+| `dependentRequired`                          | Rejected at load time               | Conditional-required behavior not implemented.                                                          |
+| `dependentSchemas`                           | Rejected at load time               | Conditional-schema behavior not implemented.                                                            |
+| `unevaluatedItems` / `unevaluatedProperties` | Rejected at load time               | Adjacent-keyword evaluation not implemented.                                                            |
+| `if` / `then` / `else`                       | Rejected at load time               | Conditional validation not implemented.                                                                 |
+| `contentSchema`                              | Rejected at load time               | Nested-content validation not implemented.                                                              |
+| Non-base64 `contentEncoding`                 | Rejected at load time               | Only `base64` is supported today.                                                                       |
+| Structured-text `contentMediaType`           | Rejected at load time               | Inline content validation for `application/json`, `application/xml`, etc. is not implemented.           |
+| Multi-type schemas (multiple non-null types) | Rejected at load time               | Union disambiguation requires runtime type dispatch. Use `anyOf`.                                       |
+| `$ref` with sibling keywords                 | Rejected at load time               | `$ref` is resolved strictly; siblings are ignored per OpenAPI semantics. Declare overrides via `allOf`. |
+| `$defs`                                      | Rejected when referenced via `$ref` | Use `#/components/schemas` instead.                                                                     |
+| `$anchor` / `$id`                            | Not honored                         | Use `$ref` to `#/components/schemas` paths instead.                                                     |
+| `$dynamicRef` / `$dynamicAnchor`             | Not honored                         | Use `$ref`.                                                                                             |
+
+---
+
+## Specification references
+
+Quotes throughout this page come from the OpenAPI specification:
+
+- [OpenAPI Specification 3.0.4](https://spec.openapis.org/oas/v3.0.4)
+- [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2)
+
+---
+
 ## Next Steps
 
-- [Troubleshooting](../guides/troubleshooting.md) -- common issues caused by unsupported features and how to work around
-  them.
+- [Troubleshooting](../guides/troubleshooting.md) -- common issues caused by unsupported features and how to work around them.
 - [Creating Scenarios](scenarios.md) -- how OpenAPI examples become scenarios and verification cases.
 - [Testing Your Server](testing-your-server.md) -- what the verifier checks.
 - [Testing Your Client](testing-your-client.md) -- how the mock server validates requests and generates responses.

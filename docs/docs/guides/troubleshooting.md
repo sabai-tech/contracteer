@@ -106,7 +106,7 @@ To distinguish variants, add `required` properties unique to each variant, set `
 **Symptom:** A payload for a parent schema with a discriminator is accepted even when its child-specific properties are wrong or missing.
 
 **Cause:** The parent schema is referenced directly via `$ref` at the usage site.
-The OpenAPI 3.0.4 specification defines this form as non-validating: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases" (§4.7.25).
+The OpenAPI specification defines this form as non-validating: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases."
 
 **Fix:** Replace the direct `$ref` to the parent with a `oneOf` or `anyOf` listing the child schemas explicitly, and keep the discriminator at that usage site.
 See [Discriminator on a parent schema used via `$ref`](../concepts/openapi-coverage.md#discriminator-on-a-parent-schema-used-via-ref) for an example.
@@ -205,7 +205,7 @@ See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
 **Symptom:** Loading the specification fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."
 
 **Cause:** The specification defines two paths that differ only in parameter names.
-The OpenAPI specification considers these identical and invalid (OAS 3.0 §4.7.9) because both match the same set of URLs.
+The OpenAPI specification considers these identical and invalid because both match the same set of URLs.
 Parameter types and constraints do not matter -- equivalence is purely structural.
 
 **Fix:** Rename one of the paths so that the static segments differ, or merge both operations under a single path.
@@ -223,6 +223,18 @@ For example, `Node.next → Link.target → Node` where both `next` and `target`
 
 **Fix:** Break the cycle by making at least one property in the chain optional (remove it from `required`), nullable (`nullable: true` on the referenced schema), or a collection (`type: array`).
 Any of these gives Contracteer a finite stopping point.
+
+### `$ref` cannot resolve JSON Pointer
+
+**Symptom:** Loading the specification fails with a message such as `$ref '#/$defs/Order': cannot resolve JSON Pointer -- segment '$defs' is not supported in Contracteer` or `$ref '#/components/schemas/Order/properties/total': cannot resolve JSON Pointer -- Schema has no field 'total'`.
+
+**Cause:** A `$ref` points into a part of the document Contracteer's resolver cannot reach.
+Contracteer resolves `$ref` pointers under `#/components/schemas`, `#/components/parameters`, `#/components/responses`, `#/components/headers`, `#/components/requestBodies`, and `#/components/examples`.
+Pointers into `$defs`, `definitions`, or into the content of `examples` and `requestBodies` are rejected.
+
+**Fix:** Move the target schema into `#/components/schemas` and update the `$ref` accordingly.
+Contracteer resolves JSON Pointers into nested Schema locations (for example `#/components/schemas/User/properties/address`), so deep targets within a Schema work as long as the entry point is a supported components section.
+See [References](../concepts/openapi-coverage.md#references-ref) for the full list of supported `$ref` forms.
 
 ### Recursive array generates fewer items than minItems
 
@@ -252,8 +264,8 @@ The size limit is a safety net: schemas that describe pathologically large struc
 **Common causes:**
 
 - **Invalid YAML or JSON.** Check syntax with a YAML linter.
-- **Unsupported OpenAPI version.** Contracteer supports OpenAPI 3.0.x only.
-  OpenAPI 3.1 is not yet supported.
+- **Unsupported OpenAPI version.** Contracteer supports OpenAPI 3.0 and 3.1.
+  Other versions (Swagger 2.0, OpenAPI 4.x) are rejected at load time.
 - **`example` and `examples` on the same element.** The OpenAPI specification declares these mutually exclusive.
   Contracteer rejects the specification if both are present on the same parameter or media type.
 - **Multiple composition keywords on the same schema.** A schema combining `allOf`, `anyOf`, or `oneOf` at the same level is rejected.
@@ -369,7 +381,7 @@ Common examples:
 - **`default`** on a property.
   The verifier may omit an optional property when the server expects the default value.
 
-**Fix:** Check the [OpenAPI 3.0 Coverage](../concepts/openapi-coverage.md) page for the full list of supported and unsupported keywords.
+**Fix:** Check the [OpenAPI Coverage](../concepts/openapi-coverage.md) page for the full list of supported and unsupported keywords.
 If your specification relies on an unsupported keyword, you may need to work around it until support is added.
 
 ### Operations missing from verification
@@ -387,7 +399,7 @@ Operations are skipped when they use:
 Contracteer logs a warning for each skipped operation.
 
 **Fix:** Add a schema to the content type declaration, or remove the content type if no schema is needed.
-Check the [OpenAPI 3.0 Coverage](../concepts/openapi-coverage.md) page for the full list of supported features.
+Check the [OpenAPI Coverage](../concepts/openapi-coverage.md) page for the full list of supported features.
 
 ### Confusing `example` and `examples`
 
@@ -414,7 +426,7 @@ See [OpenAPI Examples](../concepts/scenarios.md#openapi-examples-examples-and-ex
 
 ## Next Steps
 
-- [OpenAPI 3.0 Coverage](../concepts/openapi-coverage.md) -- which OpenAPI features are supported and which are not.
+- [OpenAPI Coverage](../concepts/openapi-coverage.md) -- which OpenAPI features are supported and which are not.
 - [Creating Scenarios](../concepts/scenarios.md) -- how to write OpenAPI examples that produce the scenarios you want.
 - [Testing Your Server](../concepts/testing-your-server.md) -- what the verifier checks in depth.
 - [Testing Your Client](../concepts/testing-your-client.md) -- how the mock server validates requests and generates responses.

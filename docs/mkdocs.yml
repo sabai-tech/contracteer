@@ -65,7 +65,7 @@ nav:
     - Creating Scenarios: concepts/scenarios.md
     - Testing Your Server: concepts/testing-your-server.md
     - Testing Your Client: concepts/testing-your-client.md
-    - OpenAPI 3.0 Coverage: concepts/openapi-coverage.md
+    - OpenAPI Coverage: concepts/openapi-coverage.md
   - Getting Started:
     - getting-started/index.md
     - Verifier: getting-started/verifier.md

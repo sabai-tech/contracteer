@@ -35,7 +35,7 @@ The CLI runs verification and starts mock servers from the command line -- no JV
 
 All guides assume:
 
-- An OpenAPI 3.0 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
 - JDK 21 or later (for JVM and Spring Boot guides)
 - Gradle or Maven (for JVM and Spring Boot guides)
 

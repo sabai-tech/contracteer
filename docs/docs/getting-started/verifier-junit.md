@@ -12,7 +12,7 @@ The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-exa
 - JDK 21 or later
 - Gradle or Maven
 - JUnit 5 on the test classpath
-- An OpenAPI 3.0 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
 
 ---
 
