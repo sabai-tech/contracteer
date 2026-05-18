@@ -95,15 +95,15 @@ To distinguish variants, add `required` properties unique to each variant, set `
 
 ### "No schema found for discriminator"
 
-**Symptom:** The verifier or mock server rejects a payload with "No schema found for discriminator property 'X' with value: Y".
+**Symptom:** The verifier or mock server rejects a body with "No schema found for discriminator property 'X' with value: Y".
 
-**Cause:** The payload's discriminator value (`Y`) is not listed in the discriminator's `mapping` and does not match the name of any sub-schema.
+**Cause:** The body's discriminator value (`Y`) is not listed in the discriminator's `mapping` and does not match the name of any sub-schema.
 
-**Fix:** Either add the value to the `mapping`, or change the payload to use a value that is already mapped or matches an existing schema name.
+**Fix:** Either add the value to the `mapping`, or change the body to use a value that is already mapped or matches an existing schema name.
 
-### Polymorphic payload passes validation without checking child-specific properties
+### Polymorphic body passes validation without checking child-specific properties
 
-**Symptom:** A payload for a parent schema with a discriminator is accepted even when its child-specific properties are wrong or missing.
+**Symptom:** A body for a parent schema with a discriminator is accepted even when its child-specific properties are wrong or missing.
 
 **Cause:** The parent schema is referenced directly via `$ref` at the usage site.
 The OpenAPI specification defines this form as non-validating: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases."
@@ -178,7 +178,7 @@ If it is, the server should not include it in responses.
 
 **Symptom:** Loading the specification fails with an error about `minProperties`/`maxProperties` combined with `readOnly` or `writeOnly` properties.
 
-**Cause:** The OAS specification does not define how `minProperties`/`maxProperties` interact with `readOnly`/`writeOnly`.
+**Cause:** The OpenAPI specification does not define how `minProperties`/`maxProperties` interact with `readOnly`/`writeOnly`.
 When properties are excluded from request or response schemas, the property count constraints become ambiguous.
 Contracteer rejects this combination to avoid silent misinterpretation.
 
@@ -224,6 +224,87 @@ For example, `Node.next → Link.target → Node` where both `next` and `target`
 **Fix:** Break the cycle by making at least one property in the chain optional (remove it from `required`), nullable (`nullable: true` on the referenced schema), or a collection (`type: array`).
 Any of these gives Contracteer a finite stopping point.
 
+### Sibling keyword on `$ref` is rejected
+
+**Symptom:** Loading an OpenAPI 3.1 specification fails with a message such as `Schema 'X': sibling 'propertyNames' on '$ref' is not supported.`
+
+**Cause:** A Schema Object combines `$ref` with a sibling keyword Contracteer does not merge.
+Supported siblings cover type, length and numeric bounds, enum and const, required, properties, items, additionalProperties, multipleOf, pattern, uniqueItems, and item/property count bounds.
+Other keywords are rejected as siblings -- even when Contracteer supports them standalone (for example `propertyNames`) and even when JSON Schema 2020-12 itself defines them (`if`/`then`/`else`, `dependentRequired`, JSON Schema applicators, and so on).
+
+**Fix:** Declare the unsupported keyword on the referenced schema, so it applies wherever the schema is used.
+If the constraint must apply only to this usage, factor it into a new component schema and reference that one instead.
+
+```yaml
+# Rejected -- propertyNames as a sibling
+Headers:
+  $ref: '#/components/schemas/HeaderMap'
+  propertyNames:
+    pattern: '^[A-Z][A-Za-z-]*$'
+
+# Accepted -- propertyNames declared on the referenced schema
+Headers:
+  $ref: '#/components/schemas/HttpHeaderMap'
+HttpHeaderMap:
+  type: object
+  propertyNames:
+    pattern: '^[A-Z][A-Za-z-]*$'
+  additionalProperties:
+    type: string
+```
+
+See [`$ref` with sibling keywords](../concepts/openapi-coverage.md#ref-with-sibling-keywords) for the full list of supported siblings.
+
+---
+
+### Sibling type conflicts with referenced target
+
+**Symptom:** Loading the specification fails with `Schema 'X': sibling 'type: A' conflicts with referenced target type 'B'`.
+
+**Cause:** The schema declares both `$ref: '#/components/schemas/Foo'` and a sibling `type` that differs from `Foo`'s effective type.
+Implicit `allOf` semantics require the instance to satisfy both the target and the sibling, but a value cannot be two distinct types at once.
+
+**Fix:** Remove the sibling `type` if it was a defensive redeclaration of the same type, or change the reference to a schema of the intended type.
+
+---
+
+### Sibling enum or const not in the target
+
+**Symptom:** Loading the specification fails with `Schema 'X': sibling 'enum' contains values not in target 'enum' (extras: 'A', 'B')` or `Schema 'X': sibling 'const: A' is not in target 'enum' (...)`.
+
+**Cause:** The target schema declares an `enum` (or `const`), and the sibling tries to add values the target does not allow.
+Siblings narrow the target; they cannot widen it.
+
+**Fix:** Make the sibling `enum` (or `const`) a subset of the target's `enum`, or remove values from the sibling that are not in the target.
+If you need a strictly larger value set, define a new component schema rather than referencing the existing one.
+
+---
+
+### Sibling and target both define the same field
+
+**Symptom:** Loading the specification fails with `Schema 'X': sibling 'properties' overlaps target on 'name'. Define each property in only one of the two.`, or a similar message for `items`, `additionalProperties`, `pattern`, or `multipleOf`.
+
+**Cause:** Contracteer does not recursively merge two definitions of the same property, item schema, or pattern.
+The implicit `allOf` semantics would require both definitions to be satisfied simultaneously, which is well defined in the JSON Schema specification but not implemented for these keywords.
+
+**Fix:** Define the field in only one place.
+For `properties`, move the overlapping property into either the target schema or the sibling.
+For `pattern` and `multipleOf`, drop one side or factor the schemas differently.
+
+---
+
+### `$ref` with siblings forms a cycle
+
+**Symptom:** Loading the specification fails with `Schema 'X': '$ref' with sibling keywords forms a cycle (X -> Y -> X). Cyclic merges cannot be resolved.`
+
+**Cause:** Two or more component schemas reference each other via `$ref` and each step carries sibling keywords.
+Each merge would need to expand into the next one, and the chain never terminates.
+
+**Fix:** Break the cycle by removing the sibling keywords from at least one step in the chain.
+If both ends genuinely need to constrain the other, express the relationship through `allOf` composition rather than `$ref` with siblings.
+
+---
+
 ### `$ref` cannot resolve JSON Pointer
 
 **Symptom:** Loading the specification fails with a message such as `$ref '#/$defs/Order': cannot resolve JSON Pointer -- segment '$defs' is not supported in Contracteer` or `$ref '#/components/schemas/Order/properties/total': cannot resolve JSON Pointer -- Schema has no field 'total'`.
@@ -247,7 +328,7 @@ This may violate the `minItems` constraint.
 **Fix:** Remove the `minItems` constraint from the recursive array property, or make the array items nullable.
 Recursive arrays with `minItems` describe a structure that requires infinite depth to satisfy -- no finite value can conform.
 
-### Generated value is smaller than the spec declares
+### Generated value is smaller than the specification declares
 
 **Symptom:** Generated request or response bodies contain fewer items, missing optional properties, or omitted sub-trees compared to what the OpenAPI schema declares.
 
@@ -286,8 +367,8 @@ Similarly, `form` style serialization is only defined for primitive property val
 
 **Symptom:** Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."
 
-**Cause:** A request or response body uses a media type that has no standard serialization for structured values -- `text/plain`, `text/html`, and `application/jwt` all describe scalar textual payloads.
-The OpenAPI specification does not define how to serialize an object, array, or composition for these media types, so any implementation would rely on an implicit convention between the spec author and the client.
+**Cause:** A request or response body uses a media type that has no standard serialization for structured values -- `text/plain`, `text/html`, and `application/jwt` all describe scalar textual content.
+The OpenAPI specification does not define how to serialize an object, array, or composition for these media types, so any implementation would rely on an implicit convention between the specification author and the client.
 Contracteer rejects the combination at load time rather than silently applying a guess.
 
 **Fix:** Change the content type to `application/json` if the schema describes a structured value, or simplify the schema to a primitive type if the content type must remain as declared.
@@ -339,8 +420,8 @@ This happens when the pattern uses constructs the value generator cannot handle,
 Contracteer automatically rewrites common Java-specific constructs (POSIX classes like `\p{Print}`, Java aliases like `\p{IsLetter}`, dash-position issues in character classes) into compatible equivalents.
 Patterns that cannot be rewritten are rejected at load time.
 
-**Fix:** Provide OpenAPI `examples` on the parameter or media type to create Scenarios with explicit values for this property.
-Contracteer uses Scenario values instead of generating random ones, bypassing the pattern limitation entirely.
+**Fix:** Provide OpenAPI `examples` on the parameter or media type to create scenarios with explicit values for this property.
+Contracteer uses scenario values instead of generating random ones, bypassing the pattern limitation entirely.
 See [Creating Scenarios](../concepts/scenarios.md) for how to provide examples.
 Alternatively, simplify the pattern to use standard character classes and quantifiers without lookaround assertions.
 
@@ -373,7 +454,7 @@ If the header legitimately conveys opaque binary or Unicode data, Base64-encode 
 
 **Symptom:** Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.
 
-**Cause:** Your specification uses an OpenAPI schema keyword that Contracteer does not yet support.
+**Cause:** Your specification uses an OpenAPI schema keyword that Contracteer does not support.
 The keyword is silently ignored, which changes validation behavior.
 
 Common examples:
@@ -389,7 +470,7 @@ If your specification relies on an unsupported keyword, you may need to work aro
 **Symptom:** Some operations in your specification are not tested.
 Contracteer produces no verification cases for them.
 
-**Cause:** The operation uses a feature that Contracteer does not yet support.
+**Cause:** The operation uses a feature that Contracteer does not support.
 Operations are skipped when they use:
 
 - `application/xml` content types.

@@ -12,12 +12,13 @@ paths:
               type: object
               properties:
                 prop1:
-                  $ref: '#/components/schemas/Name'
-                  minLength: 5
+                  $ref: '#/components/schemas/SmallInt'
+                  maximum: 50
       responses:
         200:
           description: ok
 components:
   schemas:
-    Name:
-      type: string
+    SmallInt:
+      type: integer
+      maximum: 100

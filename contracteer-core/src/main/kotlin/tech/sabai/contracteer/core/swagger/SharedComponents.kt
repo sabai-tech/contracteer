@@ -24,8 +24,21 @@ internal class SharedComponents(
   private val responses: Map<String, ApiResponse>
 ) {
 
-  fun resolve(schema: Schema<*>): Result<Schema<*>> =
-    resolveSchema(schema, MAX_DEPTH)
+  fun dereference(ref: String): Result<Schema<*>> {
+    if (!ref.startsWith("#/")) return failure(unresolvable(ref, "external references are not supported"))
+
+    val segments = ref.removePrefix("#/").split("/").map(::unescapePointerSegment)
+    if (segments.size < 3 || segments[0] != "components") return failure(unresolvable(ref, "expected '#/components/<section>/<name>'"))
+
+    val section = segments[1]
+    val name = segments[2]
+    val components = componentsFor(section)
+                     ?: return failure(unresolvable(ref, "section '$section' is not supported in Contracteer"))
+    val start = components[name]
+                ?: return failure(unresolvable(ref, "$section '$name' not found"))
+
+    return walk(start, segments.drop(3), ref).flatMap { ensureSchema(it, ref) }
+  }
 
   fun resolve(parameter: Parameter): Result<Parameter> =
     resolveRef(parameter, parameters, Parameter::shortRef, "Parameter", "components/parameters")
@@ -51,33 +64,7 @@ internal class SharedComponents(
   fun resolveExampleValues(examples: Map<String, Example>): Result<Map<String, Any?>> =
     resolve(examples).map { resolved -> resolved.mapValues { (_, example) -> example.value?.normalize() } }
 
-  private fun resolveSchema(schema: Schema<*>, depth: Int): Result<Schema<*>> {
-    if (depth < 0) return failure("Maximum recursive depth reached while resolving Schema")
-    val ref = schema.`$ref` ?: return success(schema)
-    return walkSchemaRef(ref).flatMap { resolved ->
-      if (resolved.`$ref` != null) resolveSchema(resolved, depth - 1) else success(resolved)
-    }
-  }
-
-  private fun walkSchemaRef(originalRef: String): Result<Schema<*>> {
-    if (!originalRef.startsWith("#/")) {
-      return failure(unresolvable(originalRef, "external references are not supported"))
-    }
-    val segments = originalRef.removePrefix("#/").split("/").map(::unescapePointerSegment)
-    if (segments.size < 3 || segments[0] != "components") {
-      return failure(unresolvable(originalRef, "expected '#/components/<section>/<name>'"))
-    }
-    val section = segments[1]
-    val name = segments[2]
-    val sectionMap = sectionMap(section)
-                     ?: return failure(unresolvable(originalRef, "section '$section' is not supported in Contracteer"))
-    val start = sectionMap[name]
-                ?: return failure(unresolvable(originalRef, "$section '$name' not found"))
-
-    return walk(start, segments.drop(3), originalRef).flatMap { ensureSchema(it, originalRef) }
-  }
-
-  private fun sectionMap(section: String): Map<String, Any>? =
+  private fun componentsFor(section: String): Map<String, Any>? =
     when (section) {
       "schemas"    -> schemas
       "parameters" -> parameters

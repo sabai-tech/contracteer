@@ -132,13 +132,344 @@ class SchemaConversionTest {
   }
 
   @Test
-  fun `rejects 3 1 schema with ref-and-sibling and names the offending sibling`() {
+  fun `merges 3 1 ref-with-sibling by taking the tighter minLength`() {
     // when
-    val result = loadOperations("3.1", "ref_with_sibling_validation_error.yaml")
+    val dataType = getDataType("3.1", "ref_with_sibling_min_length.yaml") as StringDataType
+
+    // then
+    assert(dataType.lengthRange.minimum == 5.toBigDecimal())
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter minimum`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_minimum.yaml") as IntegerDataType
+
+    // then
+    assert(dataType.range.minimum == 10.toBigDecimal())
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter maximum`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_maximum.yaml") as IntegerDataType
+
+    // then
+    assert(dataType.range.maximum == 50.toBigDecimal())
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter exclusiveMinimum`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_exclusive_minimum.yaml") as IntegerDataType
+
+    // then
+    assert(dataType.range.minimum == 5.toBigDecimal())
+    assert(dataType.range.exclusiveMinimum)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter exclusiveMaximum`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_exclusive_maximum.yaml") as IntegerDataType
+
+    // then
+    assert(dataType.range.maximum == 50.toBigDecimal())
+    assert(dataType.range.exclusiveMaximum)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter minProperties`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_min_properties.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.minProperties == 2)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter maxProperties`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_max_properties.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.maxProperties == 2)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter minItems`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_min_items.yaml") as ArrayDataType
+
+    // then
+    assert(dataType.minItems == 3)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter maxItems`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_max_items.yaml") as ArrayDataType
+
+    // then
+    assert(dataType.maxItems == 5)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by ORing uniqueItems`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_unique_items.yaml") as ArrayDataType
+
+    // then
+    assert(dataType.uniqueItems)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking sibling multipleOf when target has none`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_multiple_of.yaml") as IntegerDataType
+
+    // then
+    assert(dataType.multipleOf == 5.toBigDecimal())
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling multipleOf differs from target`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_multiple_of_conflict_error.yaml")
 
     // then
     val errors = result.assertFailure()
-    assert(errors.any { it.contains($$"$ref") && it.contains("minLength") })
+    assert(errors.any { it.contains("multipleOf") && it.contains("2") && it.contains("3") }) {
+      "Expected an error naming the conflicting multipleOf values but got: $errors"
+    }
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking sibling pattern when target has none`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_pattern.yaml") as StringDataType
+
+    // then
+    assert(dataType.pattern?.source == "^[a-z]+$")
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when both target and sibling define pattern`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_pattern_conflict_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("sibling 'pattern'") && it.contains("Merging multiple patterns") })
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking sibling items when target has none`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_items.yaml") as ArrayDataType
+
+    // then
+    assert(dataType.itemDataType is IntegerDataType)
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when both target and sibling define items`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_items_conflict_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("sibling 'items'") && it.contains("conflicts with target 'items'") })
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking sibling additionalProperties when target has none`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_additional_properties.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.allowAdditionalProperties)
+    assert(dataType.additionalPropertiesDataType is IntegerDataType)
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when both target and sibling define additionalProperties`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_additional_properties_conflict_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("sibling 'additionalProperties'") && it.contains("conflicts with target 'additionalProperties'") })
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking sibling const when target has none`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_const.yaml") as StringDataType
+
+    // then
+    assert(dataType.allowedValues != null)
+    assert(dataType.allowedValues!!.contains("active").isSuccess())
+    assert(dataType.allowedValues.contains("inactive").isFailure())
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling const conflicts with target const`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_const_conflict_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("sibling 'const: inactive'") && it.contains("target 'const: active'") })
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by narrowing target enum to sibling const`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_const_narrows_enum.yaml") as StringDataType
+
+    // then
+    assert(dataType.allowedValues != null)
+    assert(dataType.allowedValues!!.contains("active").isSuccess())
+    assert(dataType.allowedValues.contains("inactive").isFailure())
+    assert(dataType.allowedValues.contains("pending").isFailure())
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling const is not in target enum`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_const_not_in_enum_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("sibling 'const: archived'") && it.contains("target 'enum'") })
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling when sibling type matches target type`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_type_match.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.properties.keys == setOf("name", "port"))
+    assert(dataType.properties["name"] is StringDataType)
+    assert(dataType.properties["port"] is IntegerDataType)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by taking the tighter maxLength`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_max_length.yaml") as StringDataType
+
+    // then
+    assert(dataType.lengthRange.maximum == 5.toBigDecimal())
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by intersecting enum when sibling is a subset`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_enum.yaml") as StringDataType
+
+    // then
+    assert(dataType.allowedValues != null)
+    assert(dataType.allowedValues!!.contains("active").isSuccess())
+    assert(dataType.allowedValues.contains("pending").isSuccess())
+    assert(dataType.allowedValues.contains("inactive").isFailure())
+    assert(dataType.allowedValues.contains("archived").isFailure())
+  }
+
+  @Test
+  fun `merges 3 1 ref chain by preserving intermediate siblings`() {
+    // when
+    val dataType = getDataType("3.1", "ref_chain_with_siblings.yaml") as StringDataType
+
+    // then -- tightest maxLength across the chain (outer 5, intermediate 10, base 20) wins
+    assert(dataType.lengthRange.maximum == 5.toBigDecimal())
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling uses an unsupported keyword`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_unsupported_keyword_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("not") && it.contains("not supported") }) {
+      "Expected an error naming the 'not' keyword but got: $errors"
+    }
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling properties overlap target properties`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_properties_overlap_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("properties") && it.contains("name") }) {
+      "Expected an error naming the overlapping property but got: $errors"
+    }
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by extending target with sibling properties`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_properties.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.properties.keys == setOf("name", "email", "phone"))
+    assert(dataType.properties["phone"] is StringDataType)
+  }
+
+  @Test
+  fun `merges 3 1 ref-with-sibling by unioning required with target`() {
+    // when
+    val dataType = getDataType("3.1", "ref_with_sibling_required.yaml") as ObjectDataType
+
+    // then
+    assert(dataType.requiredProperties == setOf("name", "email"))
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling enum is disjoint from target enum`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_enum_disjoint_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("enum") && it.contains("draft") && it.contains("completed") }) {
+      "Expected an error naming the disjoint enum values but got: $errors"
+    }
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when sibling type conflicts with target type`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_type_conflict_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("type") && it.contains("string") && it.contains("object") })
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when the merge chain forms a cycle`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_cycle_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("forms a cycle") && it.contains("A → B → A") })
+  }
+
+  @Test
+  fun `rejects 3 1 ref-with-sibling when the merge recurses through the same object`() {
+    // when
+    val result = loadOperations("3.1", "ref_with_sibling_self_recursion_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("forms a cycle") && it.contains("Tree → Tree") })
   }
 
   @Test
@@ -946,7 +1277,6 @@ class SchemaConversionTest {
       Arguments.of("dependentRequired",     "dependent_required_error.yaml"),
       Arguments.of("dependentSchemas",      "dependent_schemas_error.yaml"),
       Arguments.of("contentSchema",         "content_schema_error.yaml"),
-      Arguments.of($$"$ref", "ref_with_sibling_validation_error.yaml"),
     )
   }
 }

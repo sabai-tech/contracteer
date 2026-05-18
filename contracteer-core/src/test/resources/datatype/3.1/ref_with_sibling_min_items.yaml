@@ -1,0 +1,26 @@
+openapi: "3.1.0"
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  $ref: '#/components/schemas/Items'
+                  minItems: 3
+      responses:
+        200:
+          description: ok
+components:
+  schemas:
+    Items:
+      type: array
+      minItems: 1
+      items:
+        type: string

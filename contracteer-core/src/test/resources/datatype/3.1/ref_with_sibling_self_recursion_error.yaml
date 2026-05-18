@@ -1,0 +1,28 @@
+openapi: "3.1.0"
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /probe:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tree'
+      responses:
+        200:
+          description: ok
+components:
+  schemas:
+    Tree:
+      type: object
+      required: [value]
+      properties:
+        value:
+          type: string
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tree'
+            required: [value]

@@ -1,0 +1,28 @@
+openapi: "3.1.0"
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /products:
+    get:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prop1:
+                  $ref: '#/components/schemas/Config'
+                  type: object
+      responses:
+        200:
+          description: ok
+components:
+  schemas:
+    Config:
+      type: object
+      properties:
+        name:
+          type: string
+        port:
+          type: integer

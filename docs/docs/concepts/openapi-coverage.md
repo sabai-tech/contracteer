@@ -5,7 +5,9 @@ Behavior is the same across both versions except where noted below.
 
 - Using OpenAPI 3.0? Jump to [OpenAPI 3.0-specific behavior](#openapi-30-specific-behavior).
 - Using OpenAPI 3.1? Jump to [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
-- Migrating an OpenAPI 3.0 spec to 3.1? See [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) for what becomes available and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords) for what Contracteer rejects. For syntax rewrites required by 3.1 itself, consult the [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2).
+- Migrating an OpenAPI 3.0 specification to 3.1?
+  See [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) for what becomes available and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords) for what Contracteer rejects.
+  For syntax rewrites required by 3.1 itself, consult the [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2).
 
 ---
 
@@ -130,7 +132,7 @@ maxLength: 10
 JSON Schema allows `allOf`, `anyOf`, and `oneOf` to appear on the same schema, with each keyword applying independently:
 
 ```yaml
-# Valid per the spec, but rejected by Contracteer
+# Valid per the specification, but rejected by Contracteer
 ProductOrService:
   allOf:
     - $ref: '#/components/schemas/Purchasable'
@@ -252,15 +254,15 @@ This is consistent with the specification, which permits typeless schemas while 
 
 ### Discriminator validation
 
-Contracteer uses the discriminator as a hint to select which sub-schema in a `oneOf`, `anyOf`, or `allOf` composition validates the payload.
+Contracteer uses the discriminator as a hint to select which sub-schema in a `oneOf`, `anyOf`, or `allOf` composition validates the body.
 When the discriminator cannot identify a single sub-schema, Contracteer follows the OpenAPI rule that "discriminator MUST NOT change the validation outcome of the schema".
 
 Three runtime cases:
 
 **Property is absent.**
-When the discriminator property is missing from the payload, Contracteer validates the payload against every sub-schema as if no discriminator were declared.
+When the discriminator property is missing from the body, Contracteer validates the body against every sub-schema as if no discriminator were declared.
 The OpenAPI specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
-The payload is accepted if exactly one sub-schema matches (`oneOf`) or at least one sub-schema matches (`anyOf`).
+The body is accepted if exactly one sub-schema matches (`oneOf`) or at least one sub-schema matches (`anyOf`).
 
 **Property is not a string.**
 When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
@@ -269,7 +271,7 @@ Contracteer does not coerce non-string values.
 Sub-schemas usually declare the discriminator property as `type: string`, so a non-string value fails the string type check within each branch.
 
 **Value does not match any mapping or schema name.**
-When the discriminator property is a string that matches no entry in `mapping` and no schema name under `components/schemas`, Contracteer rejects the payload with `No schema found for discriminator property '<name>' with value: <value>`.
+When the discriminator property is a string that matches no entry in `mapping` and no schema name under `components/schemas`, Contracteer rejects the body with `No schema found for discriminator property '<name>' with value: <value>`.
 The OpenAPI specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".
 
 ### Discriminator on a parent schema used via `$ref`
@@ -309,7 +311,7 @@ paths:
               $ref: '#/components/schemas/Pet'
 ```
 
-When `Pet` is referenced directly via `$ref` (without wrapping it in `oneOf` or `anyOf` at the usage site), Contracteer validates the payload against `Pet` only.
+When `Pet` is referenced directly via `$ref` (without wrapping it in `oneOf` or `anyOf` at the usage site), Contracteer validates the body against `Pet` only.
 Child-specific properties (`huntingSkill`, `packSize`) are not checked.
 This matches the OpenAPI rule: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases; validation with the parent schema with this form of `discriminator` _does not_ perform a search for child schemas or use them in validation in any way".
 
@@ -327,7 +329,7 @@ requestBody:
           propertyName: petType
 ```
 
-With this form, Contracteer uses the discriminator to select the matching child schema and validates the payload against both the parent and the child.
+With this form, Contracteer uses the discriminator to select the matching child schema and validates the body against both the parent and the child.
 
 ### Parameters
 
@@ -405,7 +407,7 @@ MySchema:
     - $ref: '#/components/schemas/Dog'
 ```
 
-Contracteer honours `nullable: true` on composition schemas regardless of whether `type` is present.
+Contracteer honors `nullable: true` on composition schemas regardless of whether `type` is present.
 This matches the behavior of most OpenAPI tooling and what users expect.
 The `nullable` rule is widely considered a specification design flaw, which OpenAPI 3.1 resolved by replacing `nullable` with `type` arrays (e.g., `type: ["object", "null"]`).
 
@@ -460,7 +462,7 @@ components:
       const: ACTIVE
 ```
 
-A schema with `const: null` is not currently representable.
+A schema with `const: null` is not representable.
 
 ### `propertyNames`
 
@@ -469,7 +471,7 @@ OpenAPI 3.1 introduces `propertyNames` to constrain the names of properties in a
 
 Contracteer applies the constraint at three points:
 
-- **Validation.** Every property name in the payload -- both declared properties and additional properties -- must satisfy the constraint.
+- **Validation.** Every property name in the body -- both declared properties and additional properties -- must satisfy the constraint.
 - **Generation.** When generating values for `additionalProperties`, Contracteer draws candidate names that satisfy the constraint.
 - **Load time.** Contracteer rejects a schema whose declared property names violate the constraint.
 
@@ -489,8 +491,8 @@ components:
 
 Contracteer recognizes two OpenAPI 3.1 keywords for declaring binary content in string schemas:
 
-- `contentEncoding: base64` -- the payload is base64-encoded binary data (replacing OpenAPI 3.0's `format: byte`).
-- `contentMediaType: <media type>` -- the payload is raw binary content of the named media type (replacing OpenAPI 3.0's `format: binary`).
+- `contentEncoding: base64` -- the body is base64-encoded binary data (replacing OpenAPI 3.0's `format: byte`).
+- `contentMediaType: <media type>` -- the body is raw binary content of the named media type (replacing OpenAPI 3.0's `format: binary`).
 
 ```yaml
 # Base64-encoded binary content
@@ -516,6 +518,69 @@ See [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
 For request and response bodies declared with a binary content type (`application/octet-stream`, `image/*`, etc.) but no schema or an empty schema, Contracteer infers binary content automatically.
 This applies to OpenAPI 3.0 specifications as well.
 
+### `$ref` with sibling keywords
+
+OpenAPI 3.1 follows JSON Schema 2020-12, which allows other keywords alongside `$ref` in a Schema Object.
+The resolved target and the siblings must both be satisfied -- this is implicit `allOf` semantics.
+
+Contracteer supports this by resolving the `$ref` one hop, merging the sibling keywords onto the resolved target per the rules below, and converting the merged schema once.
+Chains of `$ref` with siblings recurse naturally and intermediate siblings are preserved.
+
+The following sibling patterns are supported:
+
+```yaml
+# Sibling type redeclaration -- must match the target's type
+config:
+  $ref: '#/components/schemas/Settings'
+  type: object
+
+# Narrowing a primitive target
+name:
+  $ref: '#/components/schemas/Name'
+  maxLength: 80
+  minLength: 1
+
+# Restricting an enum -- sibling values must be a subset of the target's enum
+status:
+  $ref: '#/components/schemas/Status'
+  enum: [active, pending]
+
+# Extending an object target with additional required fields
+contact:
+  $ref: '#/components/schemas/Contact'
+  required: [email]
+
+# Extending an object target with additional properties (no overlap with target)
+shipment:
+  $ref: '#/components/schemas/Order'
+  properties:
+    tracking_id:
+      type: string
+```
+
+Per-keyword merge rules:
+
+| Sibling keyword                                                                                                  | Merge rule                                                                                  |
+|------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `type` / `types`                                                                                                 | Must equal the target's single type. Mismatch is rejected at load time.                     |
+| `minLength` / `maxLength` / `minimum` / `maximum` / `exclusiveMinimum` / `exclusiveMaximum` / `multipleOf`        | Take the tighter bound. `multipleOf` is rejected if both are set and differ.                |
+| `minProperties` / `maxProperties` / `minItems` / `maxItems`                                                      | Take the tighter bound.                                                                     |
+| `uniqueItems`                                                                                                    | OR (`true` wins, because uniqueness narrows the contract).                                  |
+| `pattern`                                                                                                        | Sibling fills if the target has none. Both defined is rejected at load time.                |
+| `enum`                                                                                                           | Sibling values must be a subset of the target's `enum`. The merged result uses the sibling. |
+| `const`                                                                                                          | Sibling value must equal the target's `const` (if any) or be in the target's `enum`.        |
+| `required`                                                                                                       | Union with the target's `required`.                                                         |
+| `properties`                                                                                                     | Merged map. Overlapping property names are rejected at load time.                           |
+| `items` / `additionalProperties`                                                                                 | Sibling fills if the target has none. Both defined is rejected at load time.                |
+| Any other keyword (`not`, `allOf`/`anyOf`/`oneOf` as siblings, `if`/`then`/`else`, JSON Schema applicators, etc.) | Rejected at load time with a message naming the unsupported keyword.                        |
+
+Reference Object siblings (under `parameters`, `requestBodies`, `responses`, `headers`, `examples`) are separate from Schema Object siblings.
+The OpenAPI 3.1 specification states that only `summary` and `description` are allowed on a Reference Object; any other keyword is ignored.
+Contracteer follows that rule.
+
+If two schemas reference each other via `$ref` with siblings (for example `A → B → A`), the merge fails at load time with a message naming the cycle path.
+Regular `$ref` chains without siblings still permit circular references with the usual rules (see [Circular schema reference rejected](../guides/troubleshooting.md#circular-schema-reference-rejected)).
+
 ---
 
 ## Unsupported OpenAPI 3.1 keywords
@@ -537,7 +602,6 @@ A few do not produce an error -- they are simply not honored, and references tha
 | Non-base64 `contentEncoding`                 | Rejected at load time               | Only `base64` is supported today.                                                                       |
 | Structured-text `contentMediaType`           | Rejected at load time               | Inline content validation for `application/json`, `application/xml`, etc. is not implemented.           |
 | Multi-type schemas (multiple non-null types) | Rejected at load time               | Union disambiguation requires runtime type dispatch. Use `anyOf`.                                       |
-| `$ref` with sibling keywords                 | Rejected at load time               | `$ref` is resolved strictly; siblings are ignored per OpenAPI semantics. Declare overrides via `allOf`. |
 | `$defs`                                      | Rejected when referenced via `$ref` | Use `#/components/schemas` instead.                                                                     |
 | `$anchor` / `$id`                            | Not honored                         | Use `$ref` to `#/components/schemas` paths instead.                                                     |
 | `$dynamicRef` / `$dynamicAnchor`             | Not honored                         | Use `$ref`.                                                                                             |

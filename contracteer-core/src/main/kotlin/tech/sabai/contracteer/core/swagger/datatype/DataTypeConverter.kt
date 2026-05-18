@@ -9,7 +9,6 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.Result.Success
 import tech.sabai.contracteer.core.datatype.*
-import tech.sabai.contracteer.core.joinWithQuotes
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.swagger.*
 
@@ -17,7 +16,8 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
 
   private val logger = KotlinLogging.logger {}
   private val dataTypeCache: MutableMap<String, DataType<out Any>> = mutableMapOf()
-  private val inProgress: MutableMap<String, ProxyDataType> = mutableMapOf()
+  private val refsBeingResolved: MutableMap<String, ProxyDataType> = mutableMapOf()
+  private val refsBeingMerged: MutableSet<String> = linkedSetOf()
   private val discriminatorCache: MutableMap<String, Discriminator> = mutableMapOf()
 
   init {
@@ -26,18 +26,30 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
 
   fun convertToDataType(schema: Schema<*>, defaultName: String): Result<DataType<out Any>> {
     val ref = schema.`$ref` ?: return convertSchema(schema, defaultName)
-    val refSiblings = schema.effectiveNonAnnotationSiblings()
+    val siblings = schema.effectiveNonAnnotationSiblings()
+    val cached = dataTypeCache[ref]
+    val proxy = refsBeingResolved[ref]
     return when {
-      refSiblings.isNotEmpty()       -> refWithSiblingsError(displayName(ref), refSiblings)
-      dataTypeCache.containsKey(ref) -> success(dataTypeCache[ref]!!).also { logger.debug { "DataType already cached for Schema '$ref'" } }
-      inProgress.containsKey(ref)    -> success(inProgress[ref]!!).also { logger.debug { "Circular reference detected for Schema '$ref', returning proxy" } }
-      else                           -> resolveReferencedSchema(schema, ref)
+      siblings.isNotEmpty() -> convertRefWithSiblings(schema, ref, defaultName)
+      cached != null        -> success(cached).also { logger.debug { "DataType already cached for Schema '$ref'" } }
+      proxy != null         -> success(proxy).also { logger.debug { "Circular reference detected for Schema '$ref', returning proxy" } }
+      else                  -> resolveReferencedSchema(ref)
     }
   }
 
-  private fun refWithSiblingsError(name: String, siblings: List<String>): Result<DataType<out Any>> {
-    val noun = if (siblings.size == 1) "sibling keyword" else "sibling keywords"
-    return failure("Schema '$name': '\$ref' with $noun ${siblings.joinWithQuotes()} is not supported in Contracteer.")
+  private fun convertRefWithSiblings(schema: Schema<*>, ref: String, defaultName: String): Result<DataType<out Any>> {
+    if (!refsBeingMerged.add(ref)) return cycleError(ref)
+    return sharedComponents
+      .dereference(ref)
+      .flatMap { resolved -> mergeSchemaAndSiblings(resolved, schema, displayName(ref)) }
+      .flatMap { merged -> convertToDataType(merged, defaultName) }
+      .also { refsBeingMerged.remove(ref) }
+  }
+
+  private fun cycleError(ref: String): Result<DataType <out Any>> {
+    val path = (refsBeingMerged.toList() + ref).joinToString(" → ", transform = ::displayName)
+    return failure($$"Schema '$${displayName(ref)}': '$ref' with sibling keywords forms a cycle ($$path). Cyclic merges cannot be resolved.")
+
   }
 
   fun convertMediaTypeSchema(mediaType: MediaType): Result<DataType<out Any>> =
@@ -53,15 +65,15 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       )
     }
 
-  private fun resolveReferencedSchema(schema: Schema<*>, ref: String): Result<DataType<out Any>> {
+  private fun resolveReferencedSchema(ref: String): Result<DataType<out Any>> {
     val name = displayName(ref)
     val proxy = ProxyDataType(name)
-    inProgress[ref] = proxy
+    refsBeingResolved[ref] = proxy
 
     return sharedComponents
-      .resolve(schema)
-      .flatMap { resolved -> convertSchema(resolved, name) }
-      .also { inProgress.remove(ref) }
+      .dereference(ref)
+      .flatMap { resolved -> convertToDataType(resolved, name) }
+      .also { refsBeingResolved.remove(ref) }
       .flatMap { dataType ->
         proxy.delegate = dataType
         validateNoInfiniteCycle(proxy, ref, dataType)
