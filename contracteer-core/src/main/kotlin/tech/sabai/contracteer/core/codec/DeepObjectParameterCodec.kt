@@ -31,4 +31,7 @@ data class DeepObjectParameterCodec(
       }
       else -> decodePrimitive(valueExtractor, paramName, dataType)
     }
+
+  override fun supportsTypeMismatchMutation(dataType: DataType<out Any>): Boolean =
+    !(dataType is ObjectDataType && dataType.isStructurallyOpen())
 }

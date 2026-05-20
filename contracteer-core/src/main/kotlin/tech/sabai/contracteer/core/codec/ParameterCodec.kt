@@ -50,6 +50,12 @@ sealed interface ParameterCodec {
    * single-value styles, or per-property for exploded object styles.
    */
   fun decode(valueExtractor: (String) -> List<String>, dataType: DataType<out Any>): Result<Any?>
+
+  /**
+   * Whether a raw type-mismatched value placed under [paramName] can be observed
+   * by a downstream validator when decoded against [dataType].
+   */
+  fun supportsTypeMismatchMutation(dataType: DataType<out Any>): Boolean = true
 }
 
 // === Shared encode helpers ===
@@ -110,6 +116,9 @@ internal fun deserializeProperties(valueExtractor: (String) -> List<String>,
       acc.flatMap { map -> result.map { map + (name to it) } }
     }
     .map { it.ifEmpty { null } }
+
+internal fun ObjectDataType.isStructurallyOpen(): Boolean =
+  requiredProperties.isEmpty() && allowAdditionalProperties
 
 private fun deserializeProperty(objectDataType: ObjectDataType, key: String, raw: String): Result<Any?> {
   val propDataType = objectDataType.properties[key] ?: return failure("Unknown property: $key")

@@ -40,6 +40,9 @@ data class FormParameterCodec(
       else                         -> decodePrimitive(valueExtractor, paramName, dataType)
     }
 
+  override fun supportsTypeMismatchMutation(dataType: DataType<out Any>): Boolean =
+    !(explode && dataType is ObjectDataType && dataType.isStructurallyOpen())
+
   private fun decodeMultiValueItems(valueExtractor: (String) -> List<String>, dataType: ArrayDataType): Result<Any?> {
     val allValues = valueExtractor(paramName)
     return if (allValues.isEmpty()) Result.success(null)

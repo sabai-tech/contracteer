@@ -3,6 +3,7 @@ package tech.sabai.contracteer.verifier
 import tech.sabai.contracteer.core.dsl.ApiOperationBuilder
 import tech.sabai.contracteer.core.dsl.apiOperation
 import tech.sabai.contracteer.core.dsl.deepObject
+import tech.sabai.contracteer.core.dsl.form
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType
 import tech.sabai.contracteer.core.dsl.stringType
@@ -388,6 +389,73 @@ class VerificationCaseFactoryTypeMismatchTest {
 
     // Then
     assert(cases.none { it is TypeMismatch })
+  }
+
+  @Test
+  fun `does not generate parameter type mismatch for form-explode object with no declared properties and additionalProperties true`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam(
+          "params",
+          objectType(allowAdditionalProperties = true) {},
+          codec = form(explode = true)
+        )
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.none { it is TypeMismatch })
+  }
+
+  @Test
+  fun `generates parameter type mismatch for form-no-explode object with no declared properties and additionalProperties true`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam(
+          "params",
+          objectType(allowAdditionalProperties = true) {},
+          codec = form(explode = false)
+        )
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 1)
+    assert(typeMismatchCases[0].mutatedElement == MutatedElement.Parameter(QueryParam("params")))
+  }
+
+  @Test
+  fun `generates parameter type mismatch for form-explode object with required property`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        queryParam(
+          "filter",
+          objectType {
+            properties { "name" to stringType() }
+            required("name")
+          },
+          codec = form(explode = true)
+        )
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 1)
+    assert(typeMismatchCases[0].mutatedElement == MutatedElement.Parameter(QueryParam("filter")))
   }
 
   private fun apiOperationWith400(
