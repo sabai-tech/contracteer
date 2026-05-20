@@ -353,15 +353,19 @@ The size limit is a safety net: schemas that describe pathologically large struc
   Restructure the schema to use a single composition keyword.
   See [Multiple composition keywords](../concepts/openapi-coverage.md#multiple-composition-keywords-on-the-same-schema) for the recommended pattern.
 
-### Extraction fails with nested types in deepObject or form-urlencoded
+### Extraction fails with nested types in parameter styles
 
-**Symptom:** Loading the specification fails with "does not support nested objects or arrays in properties (undefined behavior in the OpenAPI specification)."
+**Symptom:** Loading the specification fails with "does not support objects with nested objects or arrays in properties (undefined behavior in the OpenAPI specification)" or "does not support arrays with nested objects or arrays as items (undefined behavior in the OpenAPI specification)."
 
-**Cause:** A `deepObject` query parameter or a `form-urlencoded` request body has properties with object or array types.
-The OpenAPI specification explicitly states that the behavior of `deepObject` for nested objects and arrays is undefined.
-Similarly, `form` style serialization is only defined for primitive property values.
+**Cause:** A flat-style parameter (`simple`, `form`, `label`, `matrix`) or a `deepObject` query parameter has a schema that nests structured values beyond what the OpenAPI specification defines. Examples:
 
-**Fix:** Restructure the schema to use only primitive properties, or switch to a JSON-encoded parameter using the `content` keyword instead of `style`/`explode`.
+- A query parameter with `type: array` whose `items` are themselves objects or arrays (e.g., `?inputs[]={_path: "/x"}` has no spec-defined serialization).
+- A query parameter with `type: object` whose properties include nested objects or arrays.
+- A `form-urlencoded` request body with the same nested shapes.
+
+OpenAPI's style table only defines serialization one level deep. `deepObject` extends this for flat objects but still excludes arrays and nested structures.
+
+**Fix:** Restructure the schema to use only primitive property values and primitive array items, switch to a JSON-encoded parameter using the `content` keyword instead of `style`/`explode`, or move the structured payload into the request body.
 
 ### Extraction fails with non-JSON content type and structured schema
 

@@ -1,0 +1,22 @@
+openapi: 3.0.0
+info:
+  title: Query Form Array of Objects Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: query
+          name: inputs
+          schema:
+            type: array
+            items:
+              type: object
+              required: [_path]
+              properties:
+                _path:
+                  type: string
+              additionalProperties: true
+      responses:
+        '200':
+          description: Success

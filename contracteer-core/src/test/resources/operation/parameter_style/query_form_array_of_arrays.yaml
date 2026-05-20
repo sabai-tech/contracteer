@@ -1,0 +1,19 @@
+openapi: 3.0.0
+info:
+  title: Query Form Array of Arrays Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: query
+          name: matrix
+          schema:
+            type: array
+            items:
+              type: array
+              items:
+                type: string
+      responses:
+        '200':
+          description: Success

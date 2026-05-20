@@ -75,20 +75,21 @@ internal class CodecFactory {
                                        dataType: DataType<out Any>,
                                        paramName: String): Result<Unit> =
     when (style) {
-      Simple, Form, Label, Matrix   -> validateFlatObjectProperties(style, dataType, paramName)
+      Simple, Form, Label, Matrix   -> validateFlatStructuralValues(style, dataType, paramName)
       DeepObject                    -> validateDeepObjectParameters(style, dataType, paramName, explode)
       SpaceDelimited, PipeDelimited -> validateDelimitedArrayParameter(style, dataType, paramName, explode)
     }
 
-  private fun validateFlatObjectProperties(style: Style,
+  private fun validateFlatStructuralValues(style: Style,
                                            dataType: DataType<out Any>,
                                            paramName: String): Result<Unit> =
-    if (dataType is ObjectDataType && dataType.hasNonPrimitiveProperties())
-      failureForKey(
-        paramName,
-        "Style '${style.canonicalName}' does not support objects with nested objects or arrays in properties $UNDEFINED_BEHAVIOR")
-    else
-      success()
+    when (dataType) {
+      is ObjectDataType if dataType.hasNonPrimitiveProperties() -> failureForKey(paramName,
+                                                                                 "Style '${style.canonicalName}' does not support objects with nested objects or arrays in properties $UNDEFINED_BEHAVIOR")
+      is ArrayDataType if dataType.hasNonPrimitiveItems()       -> failureForKey(paramName,
+                                                                                 "Style '${style.canonicalName}' does not support arrays with nested objects or arrays as items $UNDEFINED_BEHAVIOR")
+      else                                                      -> success()
+    }
 
   private fun validateDeepObjectParameters(style: Style,
                                            dataType: DataType<out Any>,
@@ -151,6 +152,9 @@ private val ParameterElement.locationName: String
 
 private fun ObjectDataType.hasNonPrimitiveProperties(): Boolean =
   properties.values.any { it.isNonPrimitive() }
+
+private fun ArrayDataType.hasNonPrimitiveItems(): Boolean =
+  itemDataType.isNonPrimitive()
 
 private fun DataType<out Any>.isNonPrimitive(): Boolean =
   isFullyStructured() || this is ArrayDataType
