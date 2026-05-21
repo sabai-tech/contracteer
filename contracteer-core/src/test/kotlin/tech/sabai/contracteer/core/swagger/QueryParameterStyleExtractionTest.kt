@@ -201,6 +201,40 @@ class QueryParameterStyleExtractionTest {
     assert(result.errors().any { it.contains("matrix") && it.contains("nested") })
   }
 
+  @Test
+  fun `rejects form-explode object with additionalProperties schema`() {
+    // when
+    val result = loadResult("query_form_explode_additional_properties_schema.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("color") && it.contains("deepObject") })
+  }
+
+  @Test
+  fun `rejects form-explode object with additionalProperties false`() {
+    // when
+    val result = loadResult("query_form_explode_additional_properties_false.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("color") && it.contains("deepObject") })
+  }
+
+  @Test
+  fun `accepts form-explode object with additionalProperties true`() {
+    // when
+    val operations = loadResult("query_form_explode_additional_properties_true.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.codec is FormParameterCodec)
+    assert((queryParam.codec as FormParameterCodec).explode)
+    assert(queryParam.dataType is ObjectDataType)
+    assert((queryParam.dataType as ObjectDataType).allowAdditionalProperties)
+    assert((queryParam.dataType as ObjectDataType).additionalPropertiesDataType == null)
+  }
+
   @ParameterizedTest(name = "rejects query parameter with unsupported style {0}")
   @ValueSource(strings = ["simple", "label", "matrix"])
   fun `parameterized test for all unsupported query parameter styles`(style: String) {

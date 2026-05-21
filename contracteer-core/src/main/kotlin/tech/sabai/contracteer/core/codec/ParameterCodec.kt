@@ -43,13 +43,17 @@ sealed interface ParameterCodec {
   fun encode(value: Any?): List<Pair<String, String>>
 
   /**
-   * Decodes a typed value from HTTP transport using a value extractor.
+   * Decodes a parameter value from its HTTP representation.
    *
-   * The [valueExtractor] returns all string values for a given key from an HTTP request.
-   * The codec calls it with the appropriate key(s) depending on the style — once for
-   * single-value styles, or per-property for exploded object styles.
+   * [values] holds raw string values keyed by their HTTP-level name (header, query, cookie,
+   * or path). `List<String>` accommodates names that appear more than once on the wire.
+   * The caller MUST scope the map to a single parameter location so names cannot collide
+   * across locations.
+   *
+   * Returns success with the decoded value (or `null` if the parameter is absent), or a
+   * failure if the input cannot be parsed against [dataType].
    */
-  fun decode(valueExtractor: (String) -> List<String>, dataType: DataType<out Any>): Result<Any?>
+  fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?>
 
   /**
    * Whether a raw type-mismatched value placed under [paramName] can be observed
@@ -74,15 +78,15 @@ internal fun serializeKeyValueEntries(entries: Map<*, *>, separator: String): St
 
 // === Shared decode helpers ===
 
-internal fun decodePrimitive(valueExtractor: (String) -> List<String>,
+internal fun decodePrimitive(values: Map<String, List<String>>,
                              paramName: String,
                              dataType: DataType<out Any>): Result<Any?> {
 
-  val values = valueExtractor(paramName)
-  return if (values.isEmpty())
+  val raw = values[paramName].orEmpty()
+  return if (raw.isEmpty())
     success(null)
   else
-    PlainTextSerde.deserialize(values.first(), dataType)
+    PlainTextSerde.deserialize(raw.first(), dataType)
 }
 
 internal fun deserializeItems(items: List<String>, itemDataType: DataType<out Any>): Result<Any?> =
@@ -106,11 +110,11 @@ internal fun deserializeKeyValuePairs(pairs: List<String>, objectDataType: Objec
     }
   }
 
-internal fun deserializeProperties(valueExtractor: (String) -> List<String>,
+internal fun deserializeProperties(values: Map<String, List<String>>,
                                    objectDataType: ObjectDataType): Result<Any?> =
   objectDataType.properties
     .mapNotNull { (name, dataType) ->
-      valueExtractor(name).firstOrNull()?.let { name to PlainTextSerde.deserialize(it, dataType) }
+      values[name]?.firstOrNull()?.let { name to PlainTextSerde.deserialize(it, dataType) }
     }
     .fold(success(emptyMap<String, Any?>())) { acc, (name, result) ->
       acc.flatMap { map -> result.map { map + (name to it) } }

@@ -21,12 +21,6 @@ fun <T> List<T>.assertSingle(): T {
   return single()
 }
 
-// ParameterCodec test helpers
-fun valueExtractor(vararg entries: Pair<String, List<String>>): (String) -> List<String> {
-  val map = entries.toMap()
-  return { key -> map[key] ?: emptyList() }
-}
-
 fun rgbObjectType() = objectType {
   properties {
     "R" to integerType()

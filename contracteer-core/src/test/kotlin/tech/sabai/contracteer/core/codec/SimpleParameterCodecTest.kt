@@ -4,7 +4,6 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectType
-import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
 class SimpleParameterCodecTest {
@@ -37,10 +36,10 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode primitive`() {
     // given
-    val extractor = valueExtractor("color" to listOf("blue"))
+    val values = mapOf("color" to listOf("blue"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(extractor, stringType())
+    val result = SimpleParameterCodec("color", explode = false).decode(values, stringType())
 
     // then
     assert(result.assertSuccess() =="blue")
@@ -49,10 +48,10 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode array with explode false`() {
     // given
-    val extractor = valueExtractor("color" to listOf("blue,black,brown"))
+    val values = mapOf("color" to listOf("blue,black,brown"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(extractor, arrayType(items = stringType()))
+    val result = SimpleParameterCodec("color", explode = false).decode(values, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -61,10 +60,10 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode array with explode true`() {
     // given
-    val extractor = valueExtractor("color" to listOf("blue,black,brown"))
+    val values = mapOf("color" to listOf("blue,black,brown"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = true).decode(extractor, arrayType(items = stringType()))
+    val result = SimpleParameterCodec("color", explode = true).decode(values, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -73,10 +72,10 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode object with explode false`() {
     // given
-    val extractor = valueExtractor("color" to listOf("R,100,G,200,B,150"))
+    val values = mapOf("color" to listOf("R,100,G,200,B,150"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(extractor, rgbObjectType())
+    val result = SimpleParameterCodec("color", explode = false).decode(values, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
@@ -88,10 +87,10 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode object with explode true`() {
     // given
-    val extractor = valueExtractor("color" to listOf("R=100,G=200,B=150"))
+    val values = mapOf("color" to listOf("R=100,G=200,B=150"))
 
     // when
-    val result = SimpleParameterCodec("color", explode = true).decode(extractor, rgbObjectType())
+    val result = SimpleParameterCodec("color", explode = true).decode(values, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
@@ -103,7 +102,7 @@ class SimpleParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = SimpleParameterCodec("color", explode = false).decode(valueExtractor(), stringType())
+    val result = SimpleParameterCodec("color", explode = false).decode(emptyMap(), stringType())
 
     // then
     assert(result.assertSuccess() ==null)

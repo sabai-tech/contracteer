@@ -56,8 +56,8 @@ internal object ScenarioMatcher {
     requestSchema: RequestSchema
   ): Boolean {
     val paramSchema = requestSchema.parameters.find { it.element == element } ?: return false
-    val valueExtractor = request.valueExtractorFor(element)
-    val result = paramSchema.codec.decode(valueExtractor, paramSchema.dataType)
+    val values = request.valuesFor(element)
+    val result = paramSchema.codec.decode(values, paramSchema.dataType)
     return result is Success && result.value == expectedValue
   }
 

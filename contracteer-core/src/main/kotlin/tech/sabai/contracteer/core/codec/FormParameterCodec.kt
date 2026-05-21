@@ -3,6 +3,7 @@ package tech.sabai.contracteer.core.codec
 import tech.sabai.contracteer.core.serde.PlainTextSerde
 
 import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
@@ -31,27 +32,27 @@ data class FormParameterCodec(
     else                          -> encodePrimitive(paramName, value)
   }
 
-  override fun decode(valueExtractor: (String) -> List<String>, dataType: DataType<out Any>): Result<Any?> =
+  override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> =
     when (dataType) {
-      is ArrayDataType if explode  -> decodeMultiValueItems(valueExtractor, dataType)
-      is ArrayDataType             -> decodeSingleValue(valueExtractor) { deserializeItems(it.split(","), dataType.itemDataType) }
-      is ObjectDataType if explode -> deserializeProperties(valueExtractor, dataType)
-      is ObjectDataType            -> decodeSingleValue(valueExtractor) { deserializeFlatEntries(it.split(","), dataType) }
-      else                         -> decodePrimitive(valueExtractor, paramName, dataType)
+      is ArrayDataType if explode  -> decodeMultiValueItems(values, dataType)
+      is ArrayDataType             -> decodeSingleValue(values) { deserializeItems(it.split(","), dataType.itemDataType) }
+      is ObjectDataType if explode -> deserializeProperties(values, dataType)
+      is ObjectDataType            -> decodeSingleValue(values) { deserializeFlatEntries(it.split(","), dataType) }
+      else                         -> decodePrimitive(values, paramName, dataType)
     }
 
   override fun supportsTypeMismatchMutation(dataType: DataType<out Any>): Boolean =
     !(explode && dataType is ObjectDataType && dataType.isStructurallyOpen())
 
-  private fun decodeMultiValueItems(valueExtractor: (String) -> List<String>, dataType: ArrayDataType): Result<Any?> {
-    val allValues = valueExtractor(paramName)
-    return if (allValues.isEmpty()) Result.success(null)
+  private fun decodeMultiValueItems(values: Map<String, List<String>>, dataType: ArrayDataType): Result<Any?> {
+    val allValues = values[paramName].orEmpty()
+    return if (allValues.isEmpty()) success(null)
     else deserializeItems(allValues, dataType.itemDataType)
   }
 
-  private fun decodeSingleValue(valueExtractor: (String) -> List<String>, parse: (String) -> Result<Any?>): Result<Any?> {
-    val values = valueExtractor(paramName)
-    return if (values.isEmpty()) Result.success(null)
-    else parse(values.first())
+  private fun decodeSingleValue(values: Map<String, List<String>>, parse: (String) -> Result<Any?>): Result<Any?> {
+    val rawValues = values[paramName].orEmpty()
+    return if (rawValues.isEmpty()) success(null)
+    else parse(rawValues.first())
   }
 }

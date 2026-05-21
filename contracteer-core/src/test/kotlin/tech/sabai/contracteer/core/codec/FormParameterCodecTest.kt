@@ -4,7 +4,6 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectType
-import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
 class FormParameterCodecTest {
@@ -41,10 +40,10 @@ class FormParameterCodecTest {
   @Test
   fun `decode primitive`() {
     // given
-    val extractor = valueExtractor("color" to listOf("blue"))
+    val values = mapOf("color" to listOf("blue"))
 
     // when
-    val result = FormParameterCodec("color", explode = false).decode(extractor, stringType())
+    val result = FormParameterCodec("color", explode = false).decode(values, stringType())
 
     // then
     assert(result.assertSuccess() =="blue")
@@ -53,10 +52,10 @@ class FormParameterCodecTest {
   @Test
   fun `decode array with explode false`() {
     // given
-    val extractor = valueExtractor("color" to listOf("blue,black,brown"))
+    val values = mapOf("color" to listOf("blue,black,brown"))
 
     // when
-    val result = FormParameterCodec("color", explode = false).decode(extractor, arrayType(items = stringType()))
+    val result = FormParameterCodec("color", explode = false).decode(values, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -65,10 +64,10 @@ class FormParameterCodecTest {
   @Test
   fun `decode array with explode true`() {
     // given — the HTTP framework returns multiple values for the same key
-    val extractor = valueExtractor("color" to listOf("blue", "black", "brown"))
+    val values = mapOf("color" to listOf("blue", "black", "brown"))
 
     // when
-    val result = FormParameterCodec("color", explode = true).decode(extractor, arrayType(items = stringType()))
+    val result = FormParameterCodec("color", explode = true).decode(values, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -77,10 +76,10 @@ class FormParameterCodecTest {
   @Test
   fun `decode object with explode false`() {
     // given
-    val extractor = valueExtractor("color" to listOf("R,100,G,200,B,150"))
+    val values = mapOf("color" to listOf("R,100,G,200,B,150"))
 
     // when
-    val result = FormParameterCodec("color", explode = false).decode(extractor, rgbObjectType())
+    val result = FormParameterCodec("color", explode = false).decode(values, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
@@ -92,10 +91,10 @@ class FormParameterCodecTest {
   @Test
   fun `decode object with explode true`() {
     // given — each property is a separate query param extracted by its own key
-    val extractor = valueExtractor("R" to listOf("100"), "G" to listOf("200"), "B" to listOf("150"))
+    val values = mapOf("R" to listOf("100"), "G" to listOf("200"), "B" to listOf("150"))
 
     // when
-    val result = FormParameterCodec("color", explode = true).decode(extractor, rgbObjectType())
+    val result = FormParameterCodec("color", explode = true).decode(values, rgbObjectType())
 
     // then
     val obj = result.assertSuccess() as Map<*, *>
@@ -107,7 +106,7 @@ class FormParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = FormParameterCodec("color", explode = false).decode(valueExtractor(), stringType())
+    val result = FormParameterCodec("color", explode = false).decode(emptyMap(), stringType())
 
     // then
     assert(result.assertSuccess() ==null)

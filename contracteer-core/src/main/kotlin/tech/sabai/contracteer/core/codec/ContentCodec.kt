@@ -15,14 +15,16 @@ data class ContentCodec(
   override val paramName: String,
   val serde: Serde,
   override val allowReserved: Boolean = false
-) : ParameterCodec {
+): ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> =
     listOf(paramName to serde.serialize(value))
 
-  override fun decode(valueExtractor: (String) -> List<String>, dataType: DataType<out Any>): Result<Any?> {
-    val values = valueExtractor(paramName)
-    if (values.isEmpty()) return success(null)
-    return serde.deserialize(values.first(), dataType)
+  override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> {
+    val rawValues = values[paramName].orEmpty()
+    return when {
+      rawValues.isEmpty() -> success(null)
+      else                -> serde.deserialize(rawValues.first(), dataType)
+    }
   }
 }

@@ -367,6 +367,33 @@ OpenAPI's style table only defines serialization one level deep. `deepObject` ex
 
 **Fix:** Restructure the schema to use only primitive property values and primitive array items, switch to a JSON-encoded parameter using the `content` keyword instead of `style`/`explode`, or move the structured payload into the request body.
 
+### Extraction fails with `additionalProperties` on a form-explode query object
+
+**Symptom:** Loading the specification fails with "Style 'form' with explode=true cannot enforce 'additionalProperties' constraints: the encoding does not distinguish properties of this object from other query parameters."
+
+**Cause:** A query parameter uses `style: form` (the default), `explode: true` (the default for query), `type: object`, and either `additionalProperties: false` or `additionalProperties: <schema>`.
+The form/explode encoding flattens object properties into top-level query keys (`?R=100&G=200`), so Contracteer cannot tell whether an undeclared key like `?foo=bar` is an extra property of the object or an unrelated query parameter.
+Enforcing `additionalProperties` under that ambiguity would either misvalidate unrelated parameters or silently never reject anything.
+
+**Fix:** Switch the parameter to `style: deepObject`. Its `paramName[key]` syntax unambiguously scopes properties, so `additionalProperties` works correctly.
+
+```yaml
+parameters:
+  - in: query
+    name: color
+    style: deepObject
+    explode: true
+    schema:
+      type: object
+      properties:
+        R: { type: integer }
+        G: { type: integer }
+        B: { type: integer }
+      additionalProperties: false
+```
+
+If the constraint isn't load-bearing, set `additionalProperties: true` (or remove it) to keep `style: form`.
+
 ### Extraction fails with non-JSON content type and structured schema
 
 **Symptom:** Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."

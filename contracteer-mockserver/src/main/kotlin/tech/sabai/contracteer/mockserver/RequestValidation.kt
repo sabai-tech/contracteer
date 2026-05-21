@@ -13,8 +13,8 @@ import tech.sabai.contracteer.core.operation.RequestSchema
 
 internal fun RequestSchema.validate(request: Request): Result<Unit> =
   parameters.accumulate { paramSchema ->
-    val extractor = request.valueExtractorFor(paramSchema.element)
-    when (val result = paramSchema.codec.decode(extractor, paramSchema.dataType)) {
+    val values = request.valuesFor(paramSchema.element)
+    when (val result = paramSchema.codec.decode(values, paramSchema.dataType)) {
       is Failure                                                   ->
         result.forKey(paramSchema.element.name)
 

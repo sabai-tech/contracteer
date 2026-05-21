@@ -12,18 +12,21 @@ import tech.sabai.contracteer.core.operation.ParameterSchema
 import tech.sabai.contracteer.core.operation.ResponseSchema
 import tech.sabai.contracteer.verifier.VerificationCase.*
 
-private fun Headers.hasHeader(name: String) = any { it.first.equals(name, ignoreCase = true) }
-private fun Response.contentType(): String? = header("Content-Type")
+private fun Headers.hasHeader(name: String): Boolean =
+  any { it.first.equals(name, ignoreCase = true) }
+
+private fun Headers.valuesFor(name: String): List<String> =
+  filter { it.first.equals(name, ignoreCase = true) }.mapNotNull { it.second }
+
+private fun Response.contentType(): String? =
+  header("Content-Type")
 
 internal object ResponseValidator {
   fun validate(case: VerificationCase, response: Response): Result<Unit> {
     return when (case) {
-      is ScenarioBased ->
-        validateResponse(case.scenario.statusCode, case.responseSchema, response)
-      is SchemaBased   ->
-        validateResponse(case.statusCode, case.responseSchema, response)
-      is TypeMismatch  ->
-        validateResponse(400, case.responseSchema, response)
+      is ScenarioBased -> validateResponse(case.scenario.statusCode, case.responseSchema, response)
+      is SchemaBased   -> validateResponse(case.statusCode, case.responseSchema, response)
+      is TypeMismatch  -> validateResponse(400, case.responseSchema, response)
     }
   }
 
@@ -46,24 +49,19 @@ internal object ResponseValidator {
     }
   }
 
-  private fun validateHeaders(headerSchemas: List<ParameterSchema>, responseHeaders: Headers): Result<Unit> {
-    return headerSchemas.accumulate { paramSchema ->
+  private fun validateHeaders(headerSchemas: List<ParameterSchema>, responseHeaders: Headers): Result<Unit> =
+    headerSchemas.accumulate { paramSchema ->
       val element = paramSchema.element as Header
       when {
         !paramSchema.isRequired && !responseHeaders.hasHeader(element.name) -> success()
         paramSchema.isRequired && !responseHeaders.hasHeader(element.name)  -> failure("Response header '${element.name}' is missing")
         else                                                                ->
           paramSchema.codec
-            .decode({ key ->
-                      responseHeaders
-                        .filter { it.first.equals(key, ignoreCase = true) }
-                        .mapNotNull { it.second }
-                    }, paramSchema.dataType)
+            .decode(mapOf(element.name to responseHeaders.valuesFor(element.name)), paramSchema.dataType)
             .flatMap { paramSchema.dataType.validate(it) }
             .forKey(element.name)
       }
     }
-  }
 
   private fun validateBody(bodySchemas: List<BodySchema>,
                            response: Response): Result<Unit> {
@@ -84,6 +82,5 @@ internal object ResponseValidator {
       }
     }
   }
-
 }
 

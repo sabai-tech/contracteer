@@ -39,26 +39,25 @@ class FormUrlEncodedSerde(
     if (source == null) return success(null)
     if (targetDataType !is ObjectDataType) return Result.failure("Form-urlencoded requires object type")
 
-    val valueExtractor = buildValueExtractor(source)
+    val values = parseValues(source)
     return propertyEncodings.entries
       .map { (propName, encoding) ->
         encoding.codec
-          .decode(valueExtractor, targetDataType.properties.getValue(propName))
+          .decode(values, targetDataType.properties.getValue(propName))
           .map { propName to it }
       }
       .combineResults()
       .map { pairs -> pairs.filter { it.second != null }.toMap() }
   }
 
-  private fun buildValueExtractor(source: String): (String) -> List<String> {
-    val entries = source
+  private fun parseValues(source: String): Map<String, List<String>> =
+    source
       .split("&")
       .mapNotNull { entry ->
         val parts = entry.split("=", limit = 2)
         if (parts.size == 2) urlDecode(parts[0]) to urlDecode(parts[1]) else null
       }
-    return { key -> entries.filter { it.first == key }.map { it.second } }
-  }
+      .groupBy({ it.first }, { it.second })
 
   data class PropertyEncoding(val codec: ParameterCodec, val allowReserved: Boolean = false)
 }

@@ -3,7 +3,6 @@ package tech.sabai.contracteer.core.codec
 import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.stringType
-import tech.sabai.contracteer.core.valueExtractor
 import kotlin.test.Test
 
 class PipeDelimitedParameterCodecTest {
@@ -17,10 +16,10 @@ class PipeDelimitedParameterCodecTest {
   @Test
   fun `decode array`() {
     // given
-    val extractor = valueExtractor("color" to listOf("blue|black|brown"))
+    val values = mapOf("color" to listOf("blue|black|brown"))
 
     // when
-    val result = PipeDelimitedParameterCodec("color").decode(extractor, arrayType(items = stringType()))
+    val result = PipeDelimitedParameterCodec("color").decode(values, arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==listOf("blue", "black", "brown"))
@@ -29,7 +28,7 @@ class PipeDelimitedParameterCodecTest {
   @Test
   fun `decode returns null when value is absent`() {
     // when
-    val result = PipeDelimitedParameterCodec("color").decode(valueExtractor(), arrayType(items = stringType()))
+    val result = PipeDelimitedParameterCodec("color").decode(emptyMap(), arrayType(items = stringType()))
 
     // then
     assert(result.assertSuccess() ==null)

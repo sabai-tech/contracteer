@@ -1,10 +1,10 @@
 package tech.sabai.contracteer.core.codec
 
-import tech.sabai.contracteer.core.serde.PlainTextSerde
-
 import tech.sabai.contracteer.core.Result
+import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 
 /**
  * [ParameterCodec] for OpenAPI `spaceDelimited` style. Used for query parameters only.
@@ -17,20 +17,20 @@ import tech.sabai.contracteer.core.datatype.DataType
 data class SpaceDelimitedParameterCodec(
   override val paramName: String,
   override val allowReserved: Boolean = false
-) : ParameterCodec {
+): ParameterCodec {
   val explode = false
 
   override fun encode(value: Any?): List<Pair<String, String>> = when (value) {
     is List<*> -> listOf(paramName to serializeItems(value, " "))
-    else -> encodePrimitive(paramName, value)
+    else       -> encodePrimitive(paramName, value)
   }
 
-  override fun decode(valueExtractor: (String) -> List<String>, dataType: DataType<out Any>): Result<Any?> {
-    val values = valueExtractor(paramName)
-    if (values.isEmpty()) return Result.success(null)
-    return when (dataType) {
-      is ArrayDataType -> deserializeItems(values.first().split(" "), dataType.itemDataType)
-      else -> PlainTextSerde.deserialize(values.first(), dataType)
+  override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> {
+    val rawValues = values[paramName].orEmpty()
+    return when {
+      rawValues.isEmpty()       -> success(null)
+      dataType is ArrayDataType -> deserializeItems(rawValues.first().split(" "), dataType.itemDataType)
+      else                      -> PlainTextSerde.deserialize(rawValues.first(), dataType)
     }
   }
 }

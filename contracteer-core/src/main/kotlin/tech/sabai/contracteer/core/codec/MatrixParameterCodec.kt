@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.serde.PlainTextSerde
 
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
+import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
@@ -31,10 +32,10 @@ data class MatrixParameterCodec(override val paramName: String, val explode: Boo
     return listOf(paramName to encoded)
   }
 
-  override fun decode(valueExtractor: (String) -> List<String>, dataType: DataType<out Any>): Result<Any?> {
-    val values = valueExtractor(paramName)
-    if (values.isEmpty()) return Result.success(null)
-    val raw = values.first()
+  override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> {
+    val rawValues = values[paramName].orEmpty()
+    if (rawValues.isEmpty()) return success(null)
+    val raw = rawValues.first()
     if (!raw.startsWith(";")) return failure("Matrix style value must start with ';'")
 
     return when (dataType) {

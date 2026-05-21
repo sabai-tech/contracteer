@@ -75,10 +75,26 @@ internal class CodecFactory {
                                        dataType: DataType<out Any>,
                                        paramName: String): Result<Unit> =
     when (style) {
-      Simple, Form, Label, Matrix   -> validateFlatStructuralValues(style, dataType, paramName)
+      Simple, Form, Label, Matrix   -> validateFlatStructuralValues(style, dataType, paramName) andThen
+                                         { validateFormAdditionalProperties(style, explode, dataType, paramName) }
       DeepObject                    -> validateDeepObjectParameters(style, dataType, paramName, explode)
       SpaceDelimited, PipeDelimited -> validateDelimitedArrayParameter(style, dataType, paramName, explode)
     }
+
+  private fun validateFormAdditionalProperties(style: Style,
+                                               explode: Boolean,
+                                               dataType: DataType<out Any>,
+                                               paramName: String): Result<Unit> =
+    if (style == Form && explode && dataType is ObjectDataType && dataType.constrainsAdditionalProperties())
+      failureForKey(paramName,
+                    "Style 'form' with explode=true cannot enforce 'additionalProperties' constraints: " +
+                        "the encoding does not distinguish properties of this object from other query parameters. " +
+                        "Use 'deepObject' instead — its 'paramName[key]' syntax unambiguously scopes properties to this parameter")
+    else
+      success()
+
+  private fun ObjectDataType.constrainsAdditionalProperties(): Boolean =
+    !allowAdditionalProperties || additionalPropertiesDataType != null
 
   private fun validateFlatStructuralValues(style: Style,
                                            dataType: DataType<out Any>,
