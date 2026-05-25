@@ -26,7 +26,7 @@ import tech.sabai.contracteer.core.normalize
  * @param dataTypeClass the JVM class used for runtime type checking
  * @param allowedValues the `enum` constraint, if declared in the schema
  */
-sealed class ResolvedDataType<T>(
+sealed class ResolvedDataType<T : Any>(
   override val name: String,
   override val openApiType: String,
   override val isNullable: Boolean = false,

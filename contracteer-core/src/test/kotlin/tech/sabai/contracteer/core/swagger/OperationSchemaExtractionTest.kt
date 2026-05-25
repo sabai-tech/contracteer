@@ -426,6 +426,16 @@ class OperationSchemaExtractionTest {
   }
 
   @Test
+  fun `rejects text plain body with composite of arrays schema`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/operation/text_plain_composite_array_body.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("text/plain") && it.contains("primitive") })
+  }
+
+  @Test
   fun `extracts readOnly and writeOnly properties into request and response variants`() {
     // when
     val operation = loadSingleOperation("readonly_writeonly.yaml")

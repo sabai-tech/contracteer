@@ -12,8 +12,6 @@ class UuidDataType private constructor(name: String,
                                        allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/uuid", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     try {
       fromString(value)

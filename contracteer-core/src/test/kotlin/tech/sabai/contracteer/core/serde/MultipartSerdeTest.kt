@@ -1,6 +1,8 @@
 package tech.sabai.contracteer.core.serde
 
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.codec.DecodeView
+import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.binaryType
 import tech.sabai.contracteer.core.dsl.integerType
@@ -60,7 +62,7 @@ class MultipartSerdeTest {
   @Test
   fun `deserialize object with primitive properties`() {
     // given
-    val serde = multipartSerde("name" to textPart(), "age" to textPart())
+    val serde = multipartSerde("name" to textPart(), "age" to textPart(integerType()))
     val dataType = objectType {
       properties {
         "name" to stringType()
@@ -259,10 +261,12 @@ class MultipartSerdeTest {
 
 // --- Helpers ---
 
-private fun textPart() = PartConfig("text/plain", PlainTextSerde)
-private fun jsonPart() = PartConfig("application/json", JsonSerde)
-private fun binaryPart() = PartConfig("application/octet-stream", PlainTextSerde, isFile = true)
-private fun fileParts() = PartConfig("application/octet-stream", PlainTextSerde, isFile = true, expandArray = true)
+private fun textPart(dataType: DataType<out Any> = stringType()) = PartConfig("text/plain", PlainTextSerde, DecodeView.of(dataType))
+private fun jsonPart(dataType: DataType<out Any> = objectType { properties { "key" to stringType() } }) =
+  PartConfig("application/json", JsonSerde, DecodeView.of(dataType))
+private fun binaryPart() = PartConfig("application/octet-stream", PlainTextSerde, DecodeView.of(binaryType()), isFile = true)
+private fun fileParts() =
+  PartConfig("application/octet-stream", PlainTextSerde, DecodeView.of(arrayType(items = binaryType())), isFile = true, expandArray = true)
 
 private fun multipartSerde(vararg parts: Pair<String, PartConfig>) =
   MultipartSerde(parts.toMap())

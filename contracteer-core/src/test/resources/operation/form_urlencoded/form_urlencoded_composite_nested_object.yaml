@@ -1,0 +1,25 @@
+openapi: 3.0.0
+info:
+  title: Form URL-Encoded Composite Nested Object Tests
+  version: '1.0'
+paths:
+  /register:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    name:
+                      type: string
+                    address:
+                      allOf:
+                        - type: object
+                          properties:
+                            city:
+                              type: string
+      responses:
+        '200':
+          description: Success

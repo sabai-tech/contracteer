@@ -3,8 +3,10 @@ package tech.sabai.contracteer.core.swagger
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.datatype.AllOfDataType
 import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.datatype.OneOfDataType
 import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.codec.DeepObjectParameterCodec
 import tech.sabai.contracteer.core.codec.FormParameterCodec
@@ -232,7 +234,114 @@ class QueryParameterStyleExtractionTest {
     assert((queryParam.codec as FormParameterCodec).explode)
     assert(queryParam.dataType is ObjectDataType)
     assert((queryParam.dataType as ObjectDataType).allowAdditionalProperties)
-    assert((queryParam.dataType as ObjectDataType).additionalPropertiesDataType == null)
+    assert((queryParam.dataType).additionalPropertiesDataType == null)
+  }
+
+  @Test
+  fun `accepts deepObject composite of objects`() {
+    // when
+    val operations = loadResult("query_deepobject_allof_object.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.dataType is AllOfDataType)
+    assert(queryParam.codec is DeepObjectParameterCodec)
+  }
+
+  @Test
+  fun `accepts deepObject oneOf of objects`() {
+    // when
+    val operations = loadResult("query_deepobject_oneof_object.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.dataType is OneOfDataType)
+    assert(queryParam.codec is DeepObjectParameterCodec)
+  }
+
+  @Test
+  fun `rejects deepObject composite with nested object property`() {
+    // when
+    val result = loadResult("query_deepobject_composite_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `accepts spaceDelimited composite of arrays`() {
+    // when
+    val operations = loadResult("query_spacedelimited_composite_array.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.dataType is OneOfDataType)
+    assert(queryParam.codec is SpaceDelimitedParameterCodec)
+  }
+
+  @Test
+  fun `accepts pipeDelimited composite of arrays`() {
+    // when
+    val operations = loadResult("query_pipedelimited_composite_array.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.dataType is OneOfDataType)
+    assert(queryParam.codec is PipeDelimitedParameterCodec)
+  }
+
+  @Test
+  fun `accepts form composite of objects`() {
+    // when
+    val operations = loadResult("query_form_composite_object.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.dataType is AllOfDataType)
+    assert(queryParam.codec is FormParameterCodec)
+  }
+
+  @Test
+  fun `rejects form composite with nested object property`() {
+    // when
+    val result = loadResult("query_form_composite_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects form composite array of objects`() {
+    // when
+    val result = loadResult("query_form_composite_array_of_objects.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("inputs") && it.contains("nested") })
+  }
+
+  @Test
+  fun `rejects form-explode composite with additionalProperties false`() {
+    // when
+    val result = loadResult("query_form_explode_composite_additional_properties_false.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("filter") && it.contains("deepObject") })
+  }
+
+  @Test
+  fun `accepts form-explode oneOf when one branch is permissive (additionalProperties true)`() {
+    // when
+    val operations = loadResult("query_form_explode_oneof_permissive_branch.yaml").assertSuccess()
+
+    // then
+    val queryParam = operations.single().requestSchema.queryParameters.single()
+    assert(queryParam.codec is FormParameterCodec)
+    assert((queryParam.codec as FormParameterCodec).explode)
+    assert(queryParam.dataType is OneOfDataType)
   }
 
   @ParameterizedTest(name = "rejects query parameter with unsupported style {0}")

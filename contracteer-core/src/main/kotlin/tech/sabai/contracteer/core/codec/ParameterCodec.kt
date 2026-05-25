@@ -89,32 +89,32 @@ internal fun decodePrimitive(values: Map<String, List<String>>,
     PlainTextSerde.deserialize(raw.first(), dataType)
 }
 
-internal fun deserializeItems(items: List<String>, itemDataType: DataType<out Any>): Result<Any?> =
-  items.map { PlainTextSerde.deserialize(it, itemDataType) }.combineResults()
+internal fun deserializeItems(items: List<String>, itemView: DecodeView): Result<Any?> =
+  items.map { PlainTextSerde.deserialize(it, itemView) }.combineResults()
 
-internal fun deserializeFlatEntries(parts: List<String>, objectDataType: ObjectDataType): Result<Any?> {
+internal fun deserializeFlatEntries(parts: List<String>, properties: Map<String, DecodeView>): Result<Any?> {
   if (parts.size % 2 != 0) return failure("Invalid format: odd number of elements for object")
   return parts
     .chunked(2)
     .fold(success(emptyMap<String, Any?>())) { acc, (key, raw) ->
-      acc.flatMap { map -> deserializeProperty(objectDataType, key, raw).map { map + (key to it) } }
+      acc.flatMap { map -> deserializeProperty(properties, key, raw).map { map + (key to it) } }
     }
 }
 
-internal fun deserializeKeyValuePairs(pairs: List<String>, objectDataType: ObjectDataType): Result<Any?> =
+internal fun deserializeKeyValuePairs(pairs: List<String>, properties: Map<String, DecodeView>): Result<Any?> =
   pairs.fold(success(emptyMap<String, Any?>())) { acc, pair ->
     acc.flatMap { map ->
       parseKeyValue(pair).flatMap { (key, raw) ->
-        deserializeProperty(objectDataType, key, raw).map { map + (key to it) }
+        deserializeProperty(properties, key, raw).map { map + (key to it) }
       }
     }
   }
 
 internal fun deserializeProperties(values: Map<String, List<String>>,
-                                   objectDataType: ObjectDataType): Result<Any?> =
-  objectDataType.properties
-    .mapNotNull { (name, dataType) ->
-      values[name]?.firstOrNull()?.let { name to PlainTextSerde.deserialize(it, dataType) }
+                                   properties: Map<String, DecodeView>): Result<Any?> =
+  properties
+    .mapNotNull { (name, view) ->
+      values[name]?.firstOrNull()?.let { name to PlainTextSerde.deserialize(it, view) }
     }
     .fold(success(emptyMap<String, Any?>())) { acc, (name, result) ->
       acc.flatMap { map -> result.map { map + (name to it) } }
@@ -124,9 +124,9 @@ internal fun deserializeProperties(values: Map<String, List<String>>,
 internal fun ObjectDataType.isStructurallyOpen(): Boolean =
   requiredProperties.isEmpty() && allowAdditionalProperties
 
-private fun deserializeProperty(objectDataType: ObjectDataType, key: String, raw: String): Result<Any?> {
-  val propDataType = objectDataType.properties[key] ?: return failure("Unknown property: $key")
-  return PlainTextSerde.deserialize(raw, propDataType)
+private fun deserializeProperty(properties: Map<String, DecodeView>, key: String, raw: String): Result<Any?> {
+  val propView = properties[key] ?: return failure("Unknown property: $key")
+  return PlainTextSerde.deserialize(raw, propView)
 }
 
 private fun parseKeyValue(pair: String): Result<Pair<String, String>> {

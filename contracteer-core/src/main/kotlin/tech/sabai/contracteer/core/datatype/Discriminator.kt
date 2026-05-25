@@ -28,13 +28,12 @@ data class Discriminator(
     mappings.filterValues { it == dataTypeName }.keys.firstOrNull() ?: dataTypeName
 
   fun validate(dataType: DataType<out Any>): Result<DataType<out Any>> =
-    when {
-      !dataType.isFullyStructured() -> failure("Invalid schema for discriminator. Only 'object', 'anyOf', 'oneOf', or 'allOf' schemas are supported.")
-      dataType is ObjectDataType    -> validateObjectDataType(dataType)
-      dataType is AnyOfDataType     -> dataType.subTypes.map { validate(it) }.combineResults().map { dataType }
-      dataType is OneOfDataType     -> dataType.subTypes.map { validate(it) }.combineResults().map { dataType }
-      dataType is AllOfDataType     -> validateAllOf(dataType)
-      else                          -> failure("Invalid schema for discriminator. Only 'object', 'anyOf', 'oneOf', or 'allOf' schemas are supported.")
+    when (dataType) {
+      is ObjectDataType -> validateObjectDataType(dataType)
+      is AnyOfDataType  -> dataType.subTypes.map { validate(it) }.combineResults().map { dataType }
+      is OneOfDataType  -> dataType.subTypes.map { validate(it) }.combineResults().map { dataType }
+      is AllOfDataType  -> validateAllOf(dataType)
+      else              -> failure("Invalid schema for discriminator. Only 'object', 'anyOf', 'oneOf', or 'allOf' schemas are supported.")
     }
 
   private fun validateAllOf(dataType: AllOfDataType): Result<AllOfDataType> {

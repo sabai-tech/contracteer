@@ -4,6 +4,7 @@ import tech.sabai.contracteer.core.assertSuccess
 import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
 import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde
+import java.math.BigDecimal
 import kotlin.test.Test
 
 class FormUrlEncodedExtractionTest {
@@ -52,6 +53,37 @@ class FormUrlEncodedExtractionTest {
     assert(result.isFailure())
     assert(result.errors().any { it.contains("address") })
     assert(result.errors().any { it.contains("tags") })
+  }
+
+  @Test
+  fun `accepts form-urlencoded composite body (allOf of objects)`() {
+    // when
+    val operations = OpenApiLoader
+      .loadOperations("src/test/resources/operation/form_urlencoded/form_urlencoded_composite_body.yaml")
+      .assertSuccess()
+
+    // then — extraction succeeds and produces a FormUrlEncodedSerde
+    val body = operations.single().requestSchema.bodies.single()
+    assert(body.contentType.value == "application/x-www-form-urlencoded")
+    val serde = body.serde as FormUrlEncodedSerde
+
+    // and — round-trip preserves both branches' properties
+    val deserialized = serde.deserialize("name=John&size=42", body.dataType).assertSuccess() as Map<*, *>
+    assert(deserialized["name"] == "John")
+    assert(deserialized["size"] == BigDecimal(42))
+    val serialized = serde.serialize(mapOf("name" to "John", "size" to 42))
+    assert(serialized == "name=John&size=42")
+  }
+
+  @Test
+  fun `rejects form-urlencoded composite body with composite nested object property`() {
+    // when
+    val result = OpenApiLoader
+      .loadOperations("src/test/resources/operation/form_urlencoded/form_urlencoded_composite_nested_object.yaml")
+
+    // then
+    assert(result.isFailure())
+    assert(result.errors().any { it.contains("address") && it.contains("nested object") })
   }
 
   // --- Helpers ---

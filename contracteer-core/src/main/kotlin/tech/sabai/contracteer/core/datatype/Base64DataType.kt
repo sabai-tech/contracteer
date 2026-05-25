@@ -16,8 +16,6 @@ class Base64DataType private constructor(name: String,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/byte", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     lengthRange.contains(value.length.toBigDecimal())
       .mapErrors { "Invalid length. Expected a value within $lengthRange, but got ${value.length}." }

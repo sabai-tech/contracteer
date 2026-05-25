@@ -14,8 +14,6 @@ class NumberDataType private constructor(name: String,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<BigDecimal>(name, "number", isNullable, BigDecimal::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: BigDecimal): Result<BigDecimal> {
     return if (multipleOf != null && value.remainder(multipleOf).compareTo(BigDecimal.ZERO) != 0)
       failure("Value $value is not a multiple of $multipleOf")

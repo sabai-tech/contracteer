@@ -6,6 +6,7 @@ import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
 import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
 import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 import tech.sabai.contracteer.core.dsl.anyOfType
+import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.booleanType
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType

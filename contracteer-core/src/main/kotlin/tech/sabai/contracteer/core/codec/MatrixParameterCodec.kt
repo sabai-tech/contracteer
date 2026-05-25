@@ -5,9 +5,7 @@ import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
 
 /**
  * [ParameterCodec] for OpenAPI `matrix` style. Used for path parameters only.
@@ -38,21 +36,23 @@ data class MatrixParameterCodec(override val paramName: String, val explode: Boo
     val raw = rawValues.first()
     if (!raw.startsWith(";")) return failure("Matrix style value must start with ';'")
 
-    return when (dataType) {
-      is ArrayDataType if explode  -> decodeExplodedArrayItems(raw, dataType)
-      is ArrayDataType             -> extractValue(raw) { deserializeItems(it.split(","), dataType.itemDataType) }
-      is ObjectDataType if explode -> deserializeKeyValuePairs(raw.split(";").filter { it.isNotEmpty() }, dataType)
-      is ObjectDataType            -> extractValue(raw) { deserializeFlatEntries(it.split(","), dataType) }
-      else                         -> extractValue(raw) { PlainTextSerde.deserialize(it, dataType) }
+    return EncodingShape.of(dataType).flatMap { shape ->
+      when (shape) {
+        is EncodingShape.Array  if explode              -> decodeExplodedArrayItems(raw, shape.itemType)
+        is EncodingShape.Array                          -> extractValue(raw) { content -> deserializeItems(content.split(","), shape.itemType) }
+        is EncodingShape.Object if explode              -> deserializeKeyValuePairs(raw.split(";").filter { it.isNotEmpty() }, shape.properties)
+        is EncodingShape.Object                         -> extractValue(raw) { content -> deserializeFlatEntries(content.split(","), shape.properties) }
+        is EncodingShape.Scalar, is EncodingShape.Mixed -> extractValue(raw) { PlainTextSerde.deserialize(it, dataType) }
+      }
     }
   }
 
-  private fun decodeExplodedArrayItems(raw: String, dataType: ArrayDataType): Result<Any?> {
+  private fun decodeExplodedArrayItems(raw: String, itemView: DecodeView): Result<Any?> {
     val items = raw.split(";").filter { it.isNotEmpty() }.mapNotNull { segment ->
       val parts = segment.split("=", limit = 2)
       if (parts.size == 2 && parts[0] == paramName) parts[1] else null
     }
-    return deserializeItems(items, dataType.itemDataType)
+    return deserializeItems(items, itemView)
   }
 
   private fun extractValue(raw: String, parse: (String) -> Result<Any?>): Result<Any?> {

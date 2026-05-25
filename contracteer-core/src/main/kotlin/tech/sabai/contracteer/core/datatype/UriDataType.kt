@@ -12,8 +12,6 @@ class UriDataType private constructor(name: String,
                                       allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/uri", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     try {
       if (URI(value).isAbsolute) success(value)

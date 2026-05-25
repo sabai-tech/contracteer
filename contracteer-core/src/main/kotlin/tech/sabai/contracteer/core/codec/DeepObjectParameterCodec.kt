@@ -25,10 +25,11 @@ data class DeepObjectParameterCodec(
       else         -> encodePrimitive(paramName, value)
     }
 
-  override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> {
-    require(dataType is ObjectDataType) { "DeepObjectParameterCodec requires ObjectDataType" }
-    return decodeObject(extractPropertyValues(values), dataType)
-  }
+  override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> =
+    EncodingShape.of(dataType).flatMap { shape ->
+      require(shape is EncodingShape.Object) { "DeepObjectParameterCodec requires object-like data type" }
+      decodeObject(extractPropertyValues(values), shape.properties, shape.additionalProperties)
+    }
 
   override fun supportsTypeMismatchMutation(dataType: DataType<out Any>): Boolean =
     !(dataType is ObjectDataType && dataType.isStructurallyOpen())
@@ -41,10 +42,11 @@ data class DeepObjectParameterCodec(
   }
 
   private fun decodeObject(propertyValues: Map<String, List<String>>,
-                           objectDataType: ObjectDataType): Result<Any?> {
-    val declaredEntries = decodeDeclaredProperties(propertyValues, objectDataType)
+                           properties: Map<String, DecodeView>,
+                           policy: EncodingShape.AdditionalPropertiesPolicy): Result<Any?> {
+    val declaredEntries = decodeDeclaredProperties(propertyValues, properties)
     val additionalEntries =
-      if (objectDataType.mustDecodeAdditionalProperties()) decodeAdditionalProperties(propertyValues, objectDataType)
+      if (policy.mustDecode()) decodeAdditionalProperties(propertyValues, properties.keys, policy.itemType)
       else emptyList()
     return (declaredEntries + additionalEntries).combineResults().map { entries ->
       if (entries.isEmpty()) null else entries.toMap()
@@ -52,27 +54,26 @@ data class DeepObjectParameterCodec(
   }
 
   private fun decodeDeclaredProperties(propertyValues: Map<String, List<String>>,
-                                       objectDataType: ObjectDataType): List<Result<Pair<String, Any?>>> =
-    objectDataType.properties.mapNotNull { (name, propDataType) ->
+                                       properties: Map<String, DecodeView>): List<Result<Pair<String, Any?>>> =
+    properties.mapNotNull { (name, propView) ->
       propertyValues[name]?.firstOrNull()?.let { raw ->
-        PlainTextSerde.deserialize(raw, propDataType).map { name to it }
+        PlainTextSerde.deserialize(raw, propView).map { name to it }
       }
     }
 
   private fun decodeAdditionalProperties(propertyValues: Map<String, List<String>>,
-                                         objectDataType: ObjectDataType): List<Result<Pair<String, Any?>>> {
-    val additionalNames = propertyValues.keys - objectDataType.properties.keys
-    val additionalPropertiesType = objectDataType.additionalPropertiesDataType
+                                         declaredNames: Set<String>,
+                                         additionalPropertiesView: DecodeView?): List<Result<Pair<String, Any?>>> {
+    val additionalNames = propertyValues.keys - declaredNames
     return additionalNames.mapNotNull { name ->
       propertyValues[name]?.firstOrNull()?.let { raw ->
-        if (additionalPropertiesType != null)
-          PlainTextSerde.deserialize(raw, additionalPropertiesType).map { name to it }
+        if (additionalPropertiesView != null)
+          PlainTextSerde.deserialize(raw, additionalPropertiesView).map { name to it }
         else
           success<Pair<String, Any?>>(name to raw)
       }
     }
   }
 
-  private fun ObjectDataType.mustDecodeAdditionalProperties(): Boolean =
-    !allowAdditionalProperties || additionalPropertiesDataType != null
+  private fun EncodingShape.AdditionalPropertiesPolicy.mustDecode(): Boolean = !allowed || itemType != null
 }

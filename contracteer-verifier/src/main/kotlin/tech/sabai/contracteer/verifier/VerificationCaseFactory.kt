@@ -1,6 +1,8 @@
 package tech.sabai.contracteer.verifier
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import tech.sabai.contracteer.core.datatype.AllOfDataType
+import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.*
 import tech.sabai.contracteer.verifier.VerificationCase.*
@@ -155,8 +157,13 @@ object VerificationCaseFactory {
 
   private fun BodySchema.isFormWithAllOptionalProperties(): Boolean {
     if (!contentType.isFormUrlEncoded()) return false
-    val objectType = dataType as? ObjectDataType ?: return false
-    return objectType.requiredProperties.isEmpty() && objectType.allowAdditionalProperties
+    return dataType.isStructurallyPermissive()
+  }
+
+  private fun DataType<out Any>.isStructurallyPermissive(): Boolean = when (this) {
+    is ObjectDataType -> requiredProperties.isEmpty() && allowAdditionalProperties
+    is AllOfDataType  -> subTypes.isNotEmpty() && subTypes.all { it.isStructurallyPermissive() }
+    else              -> false
   }
 
   private fun createSchemaBasedCases(

@@ -1,12 +1,9 @@
 package tech.sabai.contracteer.core.codec
 
-import tech.sabai.contracteer.core.serde.PlainTextSerde
-
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
+import tech.sabai.contracteer.core.serde.PlainTextSerde
 
 /**
  * [ParameterCodec] for OpenAPI `simple` style. Used for path and header parameters.
@@ -17,7 +14,7 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  * - Object explode=false: `key1,value1,key2,value2`
  * - Object explode=true: `key1=value1,key2=value2`
  */
-data class SimpleParameterCodec(override val paramName: String, val explode: Boolean) : ParameterCodec {
+data class SimpleParameterCodec(override val paramName: String, val explode: Boolean): ParameterCodec {
 
   override fun encode(value: Any?): List<Pair<String, String>> {
     val encoded = when (value) {
@@ -34,11 +31,13 @@ data class SimpleParameterCodec(override val paramName: String, val explode: Boo
     if (rawValues.isEmpty()) return success(null)
     val raw = rawValues.first()
 
-    return when (dataType) {
-      is ArrayDataType             -> deserializeItems(raw.split(","), dataType.itemDataType)
-      is ObjectDataType if explode -> deserializeKeyValuePairs(raw.split(","), dataType)
-      is ObjectDataType            -> deserializeFlatEntries(raw.split(","), dataType)
-      else                         -> PlainTextSerde.deserialize(raw, dataType)
+    return EncodingShape.of(dataType).flatMap { shape ->
+      when (shape) {
+        is EncodingShape.Array                          -> deserializeItems(raw.split(","), shape.itemType)
+        is EncodingShape.Object if explode              -> deserializeKeyValuePairs(raw.split(","), shape.properties)
+        is EncodingShape.Object                         -> deserializeFlatEntries(raw.split(","), shape.properties)
+        is EncodingShape.Scalar, is EncodingShape.Mixed -> PlainTextSerde.deserialize(raw, dataType)
+      }
     }
   }
 }

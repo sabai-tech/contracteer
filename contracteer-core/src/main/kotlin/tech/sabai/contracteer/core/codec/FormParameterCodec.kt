@@ -4,7 +4,6 @@ import tech.sabai.contracteer.core.serde.PlainTextSerde
 
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.datatype.ObjectDataType
 
@@ -24,30 +23,33 @@ data class FormParameterCodec(
   override val allowReserved: Boolean = false
 ) : ParameterCodec {
 
-  override fun encode(value: Any?): List<Pair<String, String>> = when {
-    value is List<*> && explode  -> value.map { paramName to PlainTextSerde.serialize(it) }
-    value is List<*>             -> listOf(paramName to serializeItems(value, ","))
-    value is Map<*, *> && explode -> value.entries.map { it.key.toString() to PlainTextSerde.serialize(it.value) }
-    value is Map<*, *>            -> listOf(paramName to serializeFlatEntries(value))
-    else                          -> encodePrimitive(paramName, value)
-  }
+  override fun encode(value: Any?): List<Pair<String, String>> =
+    when (value) {
+      is List<*> if explode   -> value.map { paramName to PlainTextSerde.serialize(it) }
+      is List<*>              -> listOf(paramName to serializeItems(value, ","))
+      is Map<*, *> if explode -> value.entries.map { it.key.toString() to PlainTextSerde.serialize(it.value) }
+      is Map<*, *>            -> listOf(paramName to serializeFlatEntries(value))
+      else                    -> encodePrimitive(paramName, value)
+    }
 
   override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> =
-    when (dataType) {
-      is ArrayDataType if explode  -> decodeMultiValueItems(values, dataType)
-      is ArrayDataType             -> decodeSingleValue(values) { deserializeItems(it.split(","), dataType.itemDataType) }
-      is ObjectDataType if explode -> deserializeProperties(values, dataType)
-      is ObjectDataType            -> decodeSingleValue(values) { deserializeFlatEntries(it.split(","), dataType) }
-      else                         -> decodePrimitive(values, paramName, dataType)
+    EncodingShape.of(dataType).flatMap { shape ->
+      when (shape) {
+        is EncodingShape.Array  if explode              -> decodeMultiValueItems(values, shape.itemType)
+        is EncodingShape.Array                          -> decodeSingleValue(values) { raw -> deserializeItems(raw.split(","), shape.itemType) }
+        is EncodingShape.Object if explode              -> deserializeProperties(values, shape.properties)
+        is EncodingShape.Object                         -> decodeSingleValue(values) { raw -> deserializeFlatEntries(raw.split(","), shape.properties) }
+        is EncodingShape.Scalar, is EncodingShape.Mixed -> decodePrimitive(values, paramName, dataType)
+      }
     }
 
   override fun supportsTypeMismatchMutation(dataType: DataType<out Any>): Boolean =
     !(explode && dataType is ObjectDataType && dataType.isStructurallyOpen())
 
-  private fun decodeMultiValueItems(values: Map<String, List<String>>, dataType: ArrayDataType): Result<Any?> {
+  private fun decodeMultiValueItems(values: Map<String, List<String>>, itemView: DecodeView): Result<Any?> {
     val allValues = values[paramName].orEmpty()
     return if (allValues.isEmpty()) success(null)
-    else deserializeItems(allValues, dataType.itemDataType)
+    else deserializeItems(allValues, itemView)
   }
 
   private fun decodeSingleValue(values: Map<String, List<String>>, parse: (String) -> Result<Any?>): Result<Any?> {

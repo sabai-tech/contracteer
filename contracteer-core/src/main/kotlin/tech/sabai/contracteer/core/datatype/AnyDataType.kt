@@ -9,8 +9,6 @@ object AnyDataType: ResolvedDataType<Any>("any type", "any type", false, Any::cl
 
   private const val SAMPLE_VALUE = "RANDOM VALUE FOR ANY TYPE SCHEMA"
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: Any): Result<Any> = success(value)
 
   override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Any> = Value(SAMPLE_VALUE)

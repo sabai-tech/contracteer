@@ -2,11 +2,16 @@ package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertFailure
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.dsl.allOfType
+import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType
+import tech.sabai.contracteer.core.dsl.oneOfType
+import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectType
 import kotlin.test.Test
 
+@Suppress("UNCHECKED_CAST")
 class DeepObjectParameterCodecTest {
 
   @Test
@@ -120,5 +125,93 @@ class DeepObjectParameterCodecTest {
 
     // then
     result.assertFailure()
+  }
+
+  @Test
+  fun `decode allOf of objects merges properties from both branches`() {
+    // given
+    val schema = allOfType {
+      subType(objectType("base") { properties { "name" to stringType() } })
+      subType(objectType("extra") { properties { "age" to integerType() } })
+    }
+    val values = mapOf("user[name]" to listOf("ada"), "user[age]" to listOf("36"))
+
+    // when
+    val result = DeepObjectParameterCodec("user").decode(values, schema)
+
+    // then
+    val obj = result.assertSuccess() as Map<*, *>
+    assert(obj["name"] == "ada")
+    assert(obj["age"] == 36.toBigDecimal())
+    schema.validate(obj as Map<String, Any?>).assertSuccess()
+  }
+
+  @Test
+  fun `decode oneOf of objects decodes properties from any branch`() {
+    // given
+    val schema = oneOfType {
+      subType(objectType("primary", allowAdditionalProperties = false) {
+        properties { "kind" to stringType(); "primary" to stringType() }
+      })
+      subType(objectType("secondary", allowAdditionalProperties = false) {
+        properties { "kind" to stringType(); "secondary" to stringType() }
+      })
+    }
+    val values = mapOf("payload[kind]" to listOf("primary"), "payload[primary]" to listOf("yes"))
+
+    // when
+    val result = DeepObjectParameterCodec("payload").decode(values, schema)
+
+    // then
+    val obj = result.assertSuccess() as Map<*, *>
+    assert(obj["kind"] == "primary")
+    assert(obj["primary"] == "yes")
+    schema.validate(obj as Map<String, Any?>).assertSuccess()
+  }
+
+  @Test
+  fun `decode anyOf of objects decodes properties from any branch`() {
+    // given
+    val schema = anyOfType {
+      subType(objectType("base") { properties { "name" to stringType() } })
+      subType(objectType("contact") { properties { "email" to stringType() } })
+    }
+    val values = mapOf("payload[name]" to listOf("ada"), "payload[email]" to listOf("ada@example.com"))
+
+    // when
+    val result = DeepObjectParameterCodec("payload").decode(values, schema)
+
+    // then
+    val obj = result.assertSuccess() as Map<*, *>
+    assert(obj["name"] == "ada")
+    assert(obj["email"] == "ada@example.com")
+    schema.validate(obj as Map<String, Any?>).assertSuccess()
+  }
+
+  @Test
+  fun `decode allOf composite honors closed additionalProperties policy across branches`() {
+    // given
+    val schema = allOfType {
+      subType(objectType("base", allowAdditionalProperties = false) {
+        properties { "name" to stringType() }
+      })
+      subType(objectType("extra", allowAdditionalProperties = false) {
+        properties { "age" to integerType() }
+      })
+    }
+    val values = mapOf(
+      "user[name]" to listOf("ada"),
+      "user[age]" to listOf("36"),
+      "user[unexpected]" to listOf("ignored")
+    )
+
+    // when
+    val result = DeepObjectParameterCodec("user").decode(values, schema)
+
+    // then
+    val obj = result.assertSuccess() as Map<*, *>
+    assert(obj.keys.containsAll(setOf("name", "age", "unexpected")))
+    assert(schema.validate(obj as Map<String, Any?>).assertFailure()
+            .any { it.contains("Additional properties are not allowed") && it.contains("unexpected") })
   }
 }

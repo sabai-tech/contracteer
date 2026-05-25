@@ -13,15 +13,13 @@ import kotlin.random.Random
 class DateTimeDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/date-time", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     try {
       OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
       success(value)
     } catch (_: Exception) {
       failure("Invalid date-time. The provided string is not in the ISO DATE TIME WITH OFFSET format (e.g., 2023-06-01T15:30:00+01:00).")
-    }
+    }   
 
   override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
     val year = Random.nextInt(2000, 2100)

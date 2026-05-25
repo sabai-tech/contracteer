@@ -28,8 +28,6 @@ class ObjectDataType private constructor(name: String,
                                         MAP_CLASS,
                                         allowedValues) {
 
-  override fun isFullyStructured() = true
-
   override fun doValidate(value: Map<String, Any?>): Result<Map<String, Any?>> =
     validatePropertyCount(value) andThen
         { validatePropertyNames(value) } andThen

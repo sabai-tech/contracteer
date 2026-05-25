@@ -29,14 +29,6 @@ class ProxyDataType internal constructor(override val name: String): DataType<An
   override fun randomValue(ctx: GenerationContext): GenerationOutcome<Any> =
     ctx.cycleGuard.visit(this) { delegate.randomValue(ctx) }
 
-  /**
-   * Returns `true` when the delegate is fully structured, or when the proxy is still being
-   * resolved during conversion. Reporting `true` for an unresolved proxy lets composite
-   * validation (e.g. `allOf` subtypes checks) accept the placeholder; once resolution completes,
-   * the answer comes from the real delegate.
-   */
-  override fun isFullyStructured(): Boolean = !isResolved || delegate.isFullyStructured()
-
   override fun asRequestType(): DataType<Any> = this
 
   override fun asResponseType(): DataType<Any> = this

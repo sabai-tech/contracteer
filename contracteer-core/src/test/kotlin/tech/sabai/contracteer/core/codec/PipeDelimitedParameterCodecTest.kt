@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.stringType
 import kotlin.test.Test
@@ -32,5 +33,21 @@ class PipeDelimitedParameterCodecTest {
 
     // then
     assert(result.assertSuccess() ==null)
+  }
+
+  @Test
+  fun `decode anyOf of arrays`() {
+    // given
+    val schema = anyOfType {
+      subType(arrayType(items = stringType()))
+      subType(arrayType(items = stringType()))
+    }
+    val values = mapOf("color" to listOf("blue|black|brown"))
+
+    // when
+    val result = PipeDelimitedParameterCodec("color").decode(values, schema)
+
+    // then
+    assert(result.assertSuccess() == listOf("blue", "black", "brown"))
   }
 }

@@ -1,0 +1,26 @@
+openapi: 3.0.0
+info:
+  title: Multipart Composite Body Tests
+  version: '1.0'
+paths:
+  /register:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    name:
+                      type: string
+                    avatar:
+                      type: string
+                      format: binary
+                - type: object
+                  properties:
+                    description:
+                      type: string
+      responses:
+        '200':
+          description: Success

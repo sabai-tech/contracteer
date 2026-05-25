@@ -3,10 +3,10 @@ package tech.sabai.contracteer.core.serde
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.UrlEncoding
+import tech.sabai.contracteer.core.codec.DecodeView
 import tech.sabai.contracteer.core.codec.ParameterCodec
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
 import java.net.URLDecoder
 import java.net.URLEncoder
 
@@ -16,7 +16,7 @@ import java.net.URLEncoder
  * Delegates to per-property [ParameterCodec]s for encoding/decoding individual properties
  * of the object.
  */
-class FormUrlEncodedSerde(
+class FormUrlEncodedSerde internal constructor(
   internal val propertyEncodings: Map<String, PropertyEncoding>
 ): Serde() {
 
@@ -37,13 +37,12 @@ class FormUrlEncodedSerde(
 
   override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> {
     if (source == null) return success(null)
-    if (targetDataType !is ObjectDataType) return Result.failure("Form-urlencoded requires object type")
 
     val values = parseValues(source)
     return propertyEncodings.entries
       .map { (propName, encoding) ->
         encoding.codec
-          .decode(values, targetDataType.properties.getValue(propName))
+          .decode(values, encoding.view.source)
           .map { propName to it }
       }
       .combineResults()
@@ -58,9 +57,9 @@ class FormUrlEncodedSerde(
         if (parts.size == 2) urlDecode(parts[0]) to urlDecode(parts[1]) else null
       }
       .groupBy({ it.first }, { it.second })
-
-  data class PropertyEncoding(val codec: ParameterCodec, val allowReserved: Boolean = false)
 }
+
+internal data class PropertyEncoding(val codec: ParameterCodec, val view: DecodeView, val allowReserved: Boolean = false)
 
 private fun urlEncode(value: String): String = URLEncoder.encode(value, "UTF-8")
 

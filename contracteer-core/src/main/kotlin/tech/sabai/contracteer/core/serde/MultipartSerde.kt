@@ -3,10 +3,11 @@ package tech.sabai.contracteer.core.serde
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
+import tech.sabai.contracteer.core.codec.DecodeView
+import tech.sabai.contracteer.core.codec.EncodingShape
+import tech.sabai.contracteer.core.codec.deserialize
 import tech.sabai.contracteer.core.combineResults
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
 
 /**
  * [Serde] for multipart request bodies (form-data, mixed, etc.).
@@ -15,7 +16,7 @@ import tech.sabai.contracteer.core.datatype.ObjectDataType
  * Each part has its own content type and serde (e.g. [JsonSerde] for objects,
  * [PlainTextSerde] for primitives and binary).
  */
-class MultipartSerde(
+class MultipartSerde internal constructor(
   internal val partConfigs: Map<String, PartConfig>
 ): Serde() {
 
@@ -32,12 +33,11 @@ class MultipartSerde(
 
   override fun doDeserialize(source: String?, targetDataType: DataType<out Any>): Result<Any?> {
     if (source == null) return success(null)
-    if (targetDataType !is ObjectDataType) return failure("Multipart requires object type")
     val parts = parseParts(source) ?: return failure("Invalid multipart body")
 
     return partConfigs.entries
       .filter { (propName, _) -> propName in parts }
-      .map { (propName, config) -> deserializePart(propName, config, parts.getValue(propName), targetDataType) }
+      .map { (propName, config) -> deserializePart(propName, config, parts.getValue(propName)) }
       .combineResults()
       .map { pairs -> pairs.filter { it.second != null }.toMap() }
   }
@@ -52,23 +52,16 @@ class MultipartSerde(
 
   private fun deserializePart(propName: String,
                               config: PartConfig,
-                              values: List<String>,
-                              targetDataType: ObjectDataType): Result<Pair<String, Any?>> {
-    val propDataType = targetDataType.properties.getValue(propName)
-    return when {
-      config.expandArray && propDataType is ArrayDataType ->
-        values
-          .map { config.serde.deserialize(it, propDataType.itemDataType) }
-          .combineResults()
-          .map { propName to it }
-
-      config.expandArray                                  ->
-        failure("Expected ArrayDataType for expandArray part '$propName'")
-
-      else                                                ->
-        config.serde.deserialize(values.first(), propDataType).map { propName to it }
-    }
-  }
+                              values: List<String>): Result<Pair<String, Any?>> =
+    if (config.expandArray)
+      config.view.shape().flatMap { shape ->
+        when (shape) {
+          is EncodingShape.Array -> values.map { config.serde.deserialize(it, shape.itemType) }.combineResults()
+          else                    -> failure("Expected an array schema for expandArray part '$propName'")
+        }
+      }.map { propName to it }
+    else
+      config.serde.deserialize(values.first(), config.view).map { propName to it }
 
   private fun serializePart(name: String, config: PartConfig, value: Any?): String {
     val disposition =
@@ -117,9 +110,10 @@ class MultipartSerde(
   }
 }
 
-data class PartConfig(
+internal data class PartConfig(
   val contentType: String,
   val serde: Serde,
+  val view: DecodeView,
   val isFile: Boolean = false,
   val expandArray: Boolean = false
 )

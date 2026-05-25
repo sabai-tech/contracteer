@@ -16,8 +16,6 @@ class StringDataType private constructor(name: String,
                                          allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, openApiType, isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String): Result<String> =
     when {
       pattern != null -> pattern.validate(value)

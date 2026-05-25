@@ -15,9 +15,6 @@ class OneOfDataType private constructor(name: String,
                                         allowedValues: AllowedValues? = null):
     CompositeDataType<Any>(name, "oneOf", isNullable, subTypes, Any::class.java, allowedValues) {
 
-  override fun isFullyStructured() =
-    subTypes.all { it.isFullyStructured() }
-
   override fun asRequestType(): DataType<Any> =
     subTypes
       .map { it.asRequestType() }

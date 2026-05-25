@@ -8,8 +8,6 @@ import kotlin.random.Random
 class BooleanDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
     ResolvedDataType<Boolean>(name, "boolean", isNullable, Boolean::class.javaObjectType, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: Boolean) = success(value)
 
   override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Boolean> = Value(Random.nextBoolean())

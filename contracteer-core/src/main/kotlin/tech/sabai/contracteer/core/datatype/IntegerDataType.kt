@@ -14,8 +14,6 @@ class IntegerDataType private constructor(name: String,
                                           allowedValues: AllowedValues? = null):
     ResolvedDataType<BigDecimal>(name, "integer", isNullable, BigDecimal::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: BigDecimal): Result<BigDecimal> {
     return when {
       !value.isInteger()                                                                ->

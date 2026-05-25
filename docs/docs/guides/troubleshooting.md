@@ -394,6 +394,65 @@ parameters:
 
 If the constraint isn't load-bearing, set `additionalProperties: true` (or remove it) to keep `style: form`.
 
+### Composed schema has branches with incompatible kinds
+
+**Symptom:** Loading the specification fails with `composed schemas define incompatible kinds: 'primitive' vs 'object'` (or any other kind pair).
+
+**Cause:** Two branches of a `oneOf` or `anyOf` declare the same property name with different kinds -- one as a primitive, another as an object or array.
+The composition is used in a type-blind wire format (`application/x-www-form-urlencoded`, `multipart/*`, `deepObject`, or one of the flat parameter styles).
+For these formats, the wire bytes carry no information about which branch's interpretation applies, so Contracteer cannot decode the value.
+The same composition is accepted in `application/json` bodies, where the wire format disambiguates.
+
+**Fix:** Either restructure the composition so colliding properties share a kind, split the operation into multiple operations with distinct request bodies, or move the composition into an `application/json` body.
+
+```yaml
+# Rejected on form-urlencoded -- 'value' is primitive in one branch, object in another
+oneOf:
+  - type: object
+    properties:
+      kind: { type: string, enum: [text] }
+      value: { type: string }
+  - type: object
+    properties:
+      kind: { type: string, enum: [count] }
+      value:
+        type: object
+        properties:
+          n: { type: integer }
+```
+
+Use `application/json` instead, or split the operation so each request body declares only one of the shapes.
+
+See [Composed schemas with incompatible branches](../concepts/openapi-coverage.md#composed-schemas-with-incompatible-branches) for the full rationale.
+
+### Multipart part has composed schema with no default content type
+
+**Symptom:** Loading the specification fails with `Cannot determine default content type for multipart part: schema branches have incompatible shapes. Specify 'contentType' explicitly in the encoding to resolve.`
+
+**Cause:** A multipart part's schema is a composition whose branches have incompatible encoding shapes (e.g., a primitive branch and an object branch).
+The OpenAPI specification defaults a multipart part's content type from its schema shape -- `text/plain` for primitives, `application/json` for objects and arrays.
+When the branches give different shapes, no single default applies.
+
+**Fix:** Declare the part's content type explicitly on the `encoding` object.
+
+```yaml
+requestBody:
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          payload:
+            oneOf:
+              - type: string
+              - type: object
+                properties:
+                  count: { type: integer }
+      encoding:
+        payload:
+          contentType: application/json
+```
+
 ### Extraction fails with non-JSON content type and structured schema
 
 **Symptom:** Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."

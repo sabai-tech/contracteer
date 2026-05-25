@@ -10,8 +10,6 @@ class HostnameDataType private constructor(name: String,
                                            allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/hostname", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     when {
       value.length > MAX_HOSTNAME_LENGTH -> failure("Invalid hostname. The provided string exceeds $MAX_HOSTNAME_LENGTH characters.")

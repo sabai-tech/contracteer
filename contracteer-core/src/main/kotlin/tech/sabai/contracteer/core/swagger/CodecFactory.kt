@@ -3,8 +3,8 @@ package tech.sabai.contracteer.core.swagger
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failureForKey
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.result
 import tech.sabai.contracteer.core.codec.DeepObjectParameterCodec
+import tech.sabai.contracteer.core.codec.EncodingShape
 import tech.sabai.contracteer.core.codec.FormParameterCodec
 import tech.sabai.contracteer.core.codec.LabelParameterCodec
 import tech.sabai.contracteer.core.codec.MatrixParameterCodec
@@ -12,13 +12,13 @@ import tech.sabai.contracteer.core.codec.ParameterCodec
 import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
 import tech.sabai.contracteer.core.codec.SimpleParameterCodec
 import tech.sabai.contracteer.core.codec.SpaceDelimitedParameterCodec
-import tech.sabai.contracteer.core.datatype.ArrayDataType
+import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.ParameterElement
 import tech.sabai.contracteer.core.operation.ParameterElement.Cookie
 import tech.sabai.contracteer.core.operation.ParameterElement.PathParam
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
+import tech.sabai.contracteer.core.result
 import tech.sabai.contracteer.core.swagger.Style.DeepObject
 import tech.sabai.contracteer.core.swagger.Style.Form
 import tech.sabai.contracteer.core.swagger.Style.Label
@@ -74,18 +74,20 @@ internal class CodecFactory {
                                        explode: Boolean,
                                        dataType: DataType<out Any>,
                                        paramName: String): Result<Unit> =
-    when (style) {
-      Simple, Form, Label, Matrix   -> validateFlatStructuralValues(style, dataType, paramName) andThen
-                                         { validateFormAdditionalProperties(style, explode, dataType, paramName) }
-      DeepObject                    -> validateDeepObjectParameters(style, dataType, paramName, explode)
-      SpaceDelimited, PipeDelimited -> validateDelimitedArrayParameter(style, dataType, paramName, explode)
+    EncodingShape.of(dataType).flatMap { shape ->
+      when (style) {
+        Simple, Form, Label, Matrix   -> validateFlatStructuralValues(style, shape, paramName) andThen
+                                           { validateFormAdditionalProperties(style, explode, shape, paramName) }
+        DeepObject                    -> validateDeepObjectParameters(style, shape, paramName, explode)
+        SpaceDelimited, PipeDelimited -> validateDelimitedArrayParameter(style, shape, paramName, explode)
+      }
     }
 
   private fun validateFormAdditionalProperties(style: Style,
                                                explode: Boolean,
-                                               dataType: DataType<out Any>,
+                                               shape: EncodingShape,
                                                paramName: String): Result<Unit> =
-    if (style == Form && explode && dataType is ObjectDataType && dataType.constrainsAdditionalProperties())
+    if (style == Form && explode && shape is EncodingShape.Object && shape.constrainsAdditionalProperties())
       failureForKey(paramName,
                     "Style 'form' with explode=true cannot enforce 'additionalProperties' constraints: " +
                         "the encoding does not distinguish properties of this object from other query parameters. " +
@@ -93,39 +95,62 @@ internal class CodecFactory {
     else
       success()
 
-  private fun ObjectDataType.constrainsAdditionalProperties(): Boolean =
-    !allowAdditionalProperties || additionalPropertiesDataType != null
+  private fun EncodingShape.Object.constrainsAdditionalProperties(): Boolean =
+    !additionalProperties.allowed || additionalProperties.itemType != null
 
   private fun validateFlatStructuralValues(style: Style,
-                                           dataType: DataType<out Any>,
+                                           shape: EncodingShape,
                                            paramName: String): Result<Unit> =
-    when (dataType) {
-      is ObjectDataType if dataType.hasNonPrimitiveProperties() -> failureForKey(paramName,
-                                                                                 "Style '${style.canonicalName}' does not support objects with nested objects or arrays in properties $UNDEFINED_BEHAVIOR")
-      is ArrayDataType if dataType.hasNonPrimitiveItems()       -> failureForKey(paramName,
-                                                                                 "Style '${style.canonicalName}' does not support arrays with nested objects or arrays as items $UNDEFINED_BEHAVIOR")
-      else                                                      -> success()
+    when (shape) {
+      is EncodingShape.Object -> rejectIfPropertiesAreNonPrimitive(shape, paramName,
+                                                                   "Style '${style.canonicalName}' does not support objects with nested objects or arrays in properties $UNDEFINED_BEHAVIOR")
+      is EncodingShape.Array  -> rejectIfItemsAreNonPrimitive(shape, paramName,
+                                                              "Style '${style.canonicalName}' does not support arrays with nested objects or arrays as items $UNDEFINED_BEHAVIOR")
+      else                    -> success()
     }
 
   private fun validateDeepObjectParameters(style: Style,
-                                           dataType: DataType<out Any>,
+                                           shape: EncodingShape,
                                            paramName: String,
                                            explode: Boolean): Result<Unit> =
     when {
-      dataType !is ObjectDataType          -> failureForKey(paramName, "Style '${style.canonicalName}' requires object type")
-      !explode                             -> failureForKey(paramName, "Style '${style.canonicalName}' requires explode=true")
-      dataType.hasNonPrimitiveProperties() -> failureForKey(paramName, "Style '${style.canonicalName}' does not support nested objects or arrays in properties $UNDEFINED_BEHAVIOR")
-      else                                 -> success()
+      shape !is EncodingShape.Object -> failureForKey(paramName, "Style '${style.canonicalName}' requires object type")
+      !explode                       -> failureForKey(paramName, "Style '${style.canonicalName}' requires explode=true")
+      else                           -> rejectIfPropertiesAreNonPrimitive(shape, paramName,
+                                                                          "Style '${style.canonicalName}' does not support nested objects or arrays in properties $UNDEFINED_BEHAVIOR")
     }
 
   private fun validateDelimitedArrayParameter(style: Style,
-                                              dataType: DataType<out Any>,
+                                              shape: EncodingShape,
                                               paramName: String,
                                               explode: Boolean): Result<Unit> =
     when {
-      dataType !is ArrayDataType -> failureForKey(paramName, "Style '${style.canonicalName}' requires array type")
-      explode                    -> failureForKey(paramName, "Style '${style.canonicalName}' requires explode=false")
-      else                       -> success()
+      shape !is EncodingShape.Array -> failureForKey(paramName, "Style '${style.canonicalName}' requires array type")
+      explode                        -> failureForKey(paramName, "Style '${style.canonicalName}' requires explode=false")
+      else                           -> success()
+    }
+
+  private fun rejectIfPropertiesAreNonPrimitive(shape: EncodingShape.Object,
+                                                paramName: String,
+                                                error: String): Result<Unit> =
+    shape.properties.values
+      .map { it.shape() }
+      .combineResults()
+      .flatMap { propShapes ->
+        if (propShapes.any { it is EncodingShape.Object || it is EncodingShape.Array })
+          failureForKey(paramName, error)
+        else
+          success()
+      }
+
+  private fun rejectIfItemsAreNonPrimitive(shape: EncodingShape.Array,
+                                           paramName: String,
+                                           error: String): Result<Unit> =
+    shape.itemType.shape().flatMap { itemShape ->
+      if (itemShape is EncodingShape.Object || itemShape is EncodingShape.Array)
+        failureForKey(paramName, error)
+      else
+        success()
     }
 }
 
@@ -165,14 +190,5 @@ private val ParameterElement.locationName: String
     is ParameterElement.Header -> "header"
     is Cookie                  -> "cookie"
   }
-
-private fun ObjectDataType.hasNonPrimitiveProperties(): Boolean =
-  properties.values.any { it.isNonPrimitive() }
-
-private fun ArrayDataType.hasNonPrimitiveItems(): Boolean =
-  itemDataType.isNonPrimitive()
-
-private fun DataType<out Any>.isNonPrimitive(): Boolean =
-  isFullyStructured() || this is ArrayDataType
 
 private const val UNDEFINED_BEHAVIOR = "(undefined behavior in the OpenAPI specification)"

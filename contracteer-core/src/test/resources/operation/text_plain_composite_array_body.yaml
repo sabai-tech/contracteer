@@ -1,0 +1,21 @@
+openapi: 3.0.0
+info:
+  title: Text Plain Composite Array Body Test
+  version: '1.0'
+paths:
+  /items:
+    post:
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              oneOf:
+                - type: array
+                  items:
+                    type: string
+                - type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Success

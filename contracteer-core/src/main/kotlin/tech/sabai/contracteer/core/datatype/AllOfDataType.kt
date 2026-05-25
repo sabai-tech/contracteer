@@ -22,8 +22,6 @@ class AllOfDataType private constructor(name: String,
                            Any::class.java,
                            allowedValues) {
 
-  override fun isFullyStructured() = subTypes.all { it.isFullyStructured() }
-
   override fun asRequestType(): DataType<Any> =
     subTypes
       .map { it.asRequestType() }
@@ -69,15 +67,17 @@ class AllOfDataType private constructor(name: String,
     }
   }
 
-  private fun DataType<*>.propertyNames(): Set<String> = when (this) {
-    is ObjectDataType       -> properties.keys
-    is CompositeDataType<*> -> subTypes.flatMapTo(mutableSetOf()) { it.propertyNames() }
-    else                    -> emptySet()
-  }
+  private fun DataType<out Any>.propertyNames(): Set<String> =
+    when (this) {
+      is ObjectDataType       -> properties.keys
+      is CompositeDataType<*> -> subTypes.flatMapTo(mutableSetOf()) { it.propertyNames() }
+      is ProxyDataType        -> emptySet()
+      else                    -> emptySet()
+    }
 
   override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Any> =
     if (subTypes.size == 1) generateFromSingleSubType(ctx)
-    else                    generateFromMergedSubTypes(ctx)
+    else generateFromMergedSubTypes(ctx)
 
   private fun generateFromSingleSubType(ctx: GenerationContext): GenerationOutcome<Any> {
     val singleSubType = subTypes.single()
@@ -111,11 +111,11 @@ class AllOfDataType private constructor(name: String,
   private fun validateDiscriminator(value: Any): Result<Any> {
     val discriminatorValue = (value as? Map<*, *>)?.get(discriminator!!.propertyName)
     return when {
-      discriminatorValue !is String -> success(value)
+      discriminatorValue !is String                                -> success(value)
       discriminator.getDataTypeNameFor(discriminatorValue) != name -> failure(
         "Invalid value for discriminator property '${discriminator.propertyName}'. " +
         "Expected '${discriminator.getMappingName(name)}', but found '$discriminatorValue'.")
-      else -> success(value)
+      else                                                         -> success(value)
     }
   }
 
@@ -156,7 +156,7 @@ class AllOfDataType private constructor(name: String,
         }
 
     private fun List<DataType<out Any>>.validate(discriminator: Discriminator?): Result<Discriminator?> {
-      if (size > 1 && any { !it.isFullyStructured() }) return failure("Only structured schemas (object, allOf, anyOf, oneOf) are supported for multi-element 'allOf'.")
+      if (size > 1 && any { !it.canBeAllOfSubtype() }) return failure("Only structured schemas (object, allOf, anyOf, oneOf) are supported for multi-element 'allOf'.")
       if (discriminator == null) return success(null)
 
       val results = map { discriminator.validate(it).forProperty(it.name) }
@@ -166,6 +166,13 @@ class AllOfDataType private constructor(name: String,
         successes > 1  -> failure("Ambiguous discriminator. The discriminator property '${discriminator.propertyName}' is present in multiple 'allOf' sub-schemas.")
         else           -> results.combineResults().retypeError()
       }
+    }
+
+    private fun DataType<out Any>.canBeAllOfSubtype(): Boolean = when (this) {
+      is ObjectDataType       -> true
+      is CompositeDataType<*> -> subTypes.all { it.canBeAllOfSubtype() }
+      is ProxyDataType        -> !isResolved || delegate.canBeAllOfSubtype()
+      else                    -> false
     }
   }
 }

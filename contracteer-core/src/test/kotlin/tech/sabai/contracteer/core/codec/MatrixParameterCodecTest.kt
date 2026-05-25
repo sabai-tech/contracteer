@@ -1,7 +1,11 @@
 package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.dsl.allOfType
+import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.arrayType
+import tech.sabai.contracteer.core.dsl.integerType
+import tech.sabai.contracteer.core.dsl.objectType
 import tech.sabai.contracteer.core.dsl.stringType
 import tech.sabai.contracteer.core.rgbObjectType
 import kotlin.test.Test
@@ -122,5 +126,73 @@ class MatrixParameterCodecTest {
 
     // then
     assert(result.isFailure())
+  }
+
+  @Test
+  fun `decode allOf of objects with explode false`() {
+    // given
+    val schema = allOfType {
+      subType(objectType("base") { properties { "name" to stringType() } })
+      subType(objectType("extra") { properties { "age" to integerType() } })
+    }
+    val values = mapOf("user" to listOf(";user=name,ada,age,36"))
+
+    // when
+    val result = MatrixParameterCodec("user", explode = false).decode(values, schema)
+
+    // then
+    val obj = result.assertSuccess() as Map<*, *>
+    assert(obj["name"] == "ada")
+    assert(obj["age"] == 36.toBigDecimal())
+  }
+
+  @Test
+  fun `decode allOf of objects with explode true`() {
+    // given
+    val schema = allOfType {
+      subType(objectType("base") { properties { "name" to stringType() } })
+      subType(objectType("extra") { properties { "age" to integerType() } })
+    }
+    val values = mapOf("user" to listOf(";name=ada;age=36"))
+
+    // when
+    val result = MatrixParameterCodec("user", explode = true).decode(values, schema)
+
+    // then
+    val obj = result.assertSuccess() as Map<*, *>
+    assert(obj["name"] == "ada")
+    assert(obj["age"] == 36.toBigDecimal())
+  }
+
+  @Test
+  fun `decode anyOf of arrays with explode false`() {
+    // given
+    val schema = anyOfType {
+      subType(arrayType(items = stringType()))
+      subType(arrayType(items = stringType()))
+    }
+    val values = mapOf("color" to listOf(";color=blue,black,brown"))
+
+    // when
+    val result = MatrixParameterCodec("color", explode = false).decode(values, schema)
+
+    // then
+    assert(result.assertSuccess() == listOf("blue", "black", "brown"))
+  }
+
+  @Test
+  fun `decode anyOf of arrays with explode true`() {
+    // given
+    val schema = anyOfType {
+      subType(arrayType(items = stringType()))
+      subType(arrayType(items = stringType()))
+    }
+    val values = mapOf("color" to listOf(";color=blue;color=black;color=brown"))
+
+    // when
+    val result = MatrixParameterCodec("color", explode = true).decode(values, schema)
+
+    // then
+    assert(result.assertSuccess() == listOf("blue", "black", "brown"))
   }
 }

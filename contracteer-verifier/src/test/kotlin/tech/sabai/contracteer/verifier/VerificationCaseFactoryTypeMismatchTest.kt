@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.dsl.ApiOperationBuilder
+import tech.sabai.contracteer.core.dsl.allOfType
 import tech.sabai.contracteer.core.dsl.apiOperation
 import tech.sabai.contracteer.core.dsl.deepObject
 import tech.sabai.contracteer.core.dsl.form
@@ -356,6 +357,84 @@ class VerificationCaseFactoryTypeMismatchTest {
           "application/x-www-form-urlencoded",
           objectType(allowAdditionalProperties = false) {
             properties { "name" to stringType() }
+          },
+          JsonSerde
+        )
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 1)
+    assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
+  }
+
+  @Test
+  fun `does not generate body type mismatch for form-urlencoded allOf where every branch is all-optional`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        body(
+          "application/x-www-form-urlencoded",
+          allOfType {
+            subType(objectType { properties { "name" to stringType() } })
+            subType(objectType { properties { "size" to integerType() } })
+          },
+          JsonSerde
+        )
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+
+    // Then
+    assert(cases.none { it is TypeMismatch })
+  }
+
+  @Test
+  fun `generates body type mismatch for form-urlencoded allOf where one branch has a required property`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        body(
+          "application/x-www-form-urlencoded",
+          allOfType {
+            subType(objectType {
+              properties { "name" to stringType() }
+              required("name")
+            })
+            subType(objectType { properties { "size" to integerType() } })
+          },
+          JsonSerde
+        )
+      }
+    }
+
+    // When
+    val cases = VerificationCaseFactory.create(apiOperation)
+    val typeMismatchCases = cases.filterIsInstance<TypeMismatch>()
+
+    // Then
+    assert(typeMismatchCases.size == 1)
+    assert(typeMismatchCases[0].mutatedElement == MutatedElement.Body)
+  }
+
+  @Test
+  fun `generates body type mismatch for form-urlencoded allOf where one branch forbids additionalProperties`() {
+    // Given
+    val apiOperation = apiOperationWith400 {
+      request {
+        body(
+          "application/x-www-form-urlencoded",
+          allOfType {
+            subType(objectType(allowAdditionalProperties = false) {
+              properties { "name" to stringType() }
+            })
+            subType(objectType { properties { "size" to integerType() } })
           },
           JsonSerde
         )

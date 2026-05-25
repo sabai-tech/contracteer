@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Multipart Kind-Divergent Part Without Explicit Content Type
+  version: '1.0'
+paths:
+  /upload:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                payload:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: string
+                        format: binary
+                    - type: string
+      responses:
+        '200':
+          description: Success

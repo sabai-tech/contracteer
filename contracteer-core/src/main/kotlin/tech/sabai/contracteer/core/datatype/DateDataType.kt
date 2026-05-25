@@ -12,8 +12,6 @@ import kotlin.random.Random
 class DateDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/date", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     try {
       LocalDate.parse(value, ISO_LOCAL_DATE)

@@ -1,13 +1,14 @@
 package tech.sabai.contracteer.core.serde
 
 import tech.sabai.contracteer.core.assertSuccess
+import tech.sabai.contracteer.core.codec.DecodeView
+import tech.sabai.contracteer.core.codec.FormParameterCodec
+import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
+import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.integerType
 import tech.sabai.contracteer.core.dsl.objectType
 import tech.sabai.contracteer.core.dsl.stringType
-import tech.sabai.contracteer.core.codec.FormParameterCodec
-import tech.sabai.contracteer.core.codec.PipeDelimitedParameterCodec
-import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde.PropertyEncoding
 import kotlin.test.Test
 
 class FormUrlEncodedSerdeTest {
@@ -15,7 +16,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `serialize object with primitive properties`() {
     // given
-    val serde = formUrlEncodedSerde("name", "age")
+    val serde = formUrlEncodedSerde("name" to stringType(), "age" to integerType())
 
     // when
     val result = serde.serialize(mapOf("name" to "John", "age" to 30))
@@ -27,7 +28,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `serialize object with array property using default encoding`() {
     // given
-    val serde = formUrlEncodedSerde("name", "colors")
+    val serde = formUrlEncodedSerde("name" to stringType(), "colors" to arrayType(items = stringType()))
 
     // when
     val result = serde.serialize(mapOf("name" to "John", "colors" to listOf("blue", "black")))
@@ -40,8 +41,8 @@ class FormUrlEncodedSerdeTest {
   fun `serialize object with custom encoding`() {
     // given
     val serde = FormUrlEncodedSerde(mapOf(
-      "name" to PropertyEncoding(FormParameterCodec("name", explode = true)),
-      "colors" to PropertyEncoding(PipeDelimitedParameterCodec("colors"))
+      "name" to PropertyEncoding(FormParameterCodec("name", explode = true), DecodeView.of(stringType())),
+      "colors" to PropertyEncoding(PipeDelimitedParameterCodec("colors"), DecodeView.of(arrayType(items = stringType())))
     ))
 
     // when
@@ -54,7 +55,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `serialize URL-encodes special characters in values`() {
     // given
-    val serde = formUrlEncodedSerde("name", "city")
+    val serde = formUrlEncodedSerde("name" to stringType(), "city" to stringType())
 
     // when
     val result = serde.serialize(mapOf("name" to "John Doe", "city" to "New York"))
@@ -67,7 +68,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `deserialize object with primitive properties`() {
     // given
-    val serde = formUrlEncodedSerde("name", "age")
+    val serde = formUrlEncodedSerde("name" to stringType(), "age" to integerType())
     val dataType = objectType {
       properties {
         "name" to stringType()
@@ -87,7 +88,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `deserialize object with array property using default encoding`() {
     // given
-    val serde = formUrlEncodedSerde("name", "colors")
+    val serde = formUrlEncodedSerde("name" to stringType(), "colors" to arrayType(items = stringType()))
     val dataType = objectType {
       properties {
         "name" to stringType()
@@ -108,8 +109,8 @@ class FormUrlEncodedSerdeTest {
   fun `deserialize object with custom encoding`() {
     // given
     val serde = FormUrlEncodedSerde(mapOf(
-      "name" to PropertyEncoding(FormParameterCodec("name", explode = true)),
-      "colors" to PropertyEncoding(PipeDelimitedParameterCodec("colors"))
+      "name" to PropertyEncoding(FormParameterCodec("name", explode = true), DecodeView.of(stringType())),
+      "colors" to PropertyEncoding(PipeDelimitedParameterCodec("colors"), DecodeView.of(arrayType(items = stringType())))
     ))
     val dataType = objectType {
       properties {
@@ -130,7 +131,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `deserialize URL-decodes special characters in values`() {
     // given
-    val serde = formUrlEncodedSerde("name", "city")
+    val serde = formUrlEncodedSerde("name" to stringType(), "city" to stringType())
     val dataType = objectType {
       properties {
         "name" to stringType()
@@ -151,8 +152,8 @@ class FormUrlEncodedSerdeTest {
   fun `serialize preserves reserved characters when allowReserved is true`() {
     // given
     val serde = FormUrlEncodedSerde(mapOf(
-      "callback" to PropertyEncoding(FormParameterCodec("callback", explode = true), allowReserved = true),
-      "name" to PropertyEncoding(FormParameterCodec("name", explode = true))
+      "callback" to PropertyEncoding(FormParameterCodec("callback", explode = true), DecodeView.of(stringType()), allowReserved = true),
+      "name" to PropertyEncoding(FormParameterCodec("name", explode = true), DecodeView.of(stringType()))
     ))
 
     // when
@@ -166,8 +167,8 @@ class FormUrlEncodedSerdeTest {
   fun `serialize encodes reserved characters when allowReserved is false`() {
     // given
     val serde = FormUrlEncodedSerde(mapOf(
-      "callback" to PropertyEncoding(FormParameterCodec("callback", explode = true), allowReserved = false),
-      "name" to PropertyEncoding(FormParameterCodec("name", explode = true))
+      "callback" to PropertyEncoding(FormParameterCodec("callback", explode = true), DecodeView.of(stringType()), allowReserved = false),
+      "name" to PropertyEncoding(FormParameterCodec("name", explode = true), DecodeView.of(stringType()))
     ))
 
     // when
@@ -180,7 +181,7 @@ class FormUrlEncodedSerdeTest {
   @Test
   fun `deserialize returns null for null source`() {
     // given
-    val serde = formUrlEncodedSerde("name")
+    val serde = formUrlEncodedSerde("name" to stringType())
     val dataType = objectType { properties { "name" to stringType() } }
 
     // when
@@ -191,6 +192,8 @@ class FormUrlEncodedSerdeTest {
   }
 }
 
-/** Creates a FormUrlEncodedSerde with default encoding (form, explode=true) for the given property names. */
-private fun formUrlEncodedSerde(vararg propertyNames: String) =
-  FormUrlEncodedSerde(propertyNames.associateWith { PropertyEncoding(FormParameterCodec(it, explode = true)) })
+/** Creates a FormUrlEncodedSerde with default encoding (form, explode=true) for the given properties. */
+private fun formUrlEncodedSerde(vararg properties: Pair<String, DataType<out Any>>) =
+  FormUrlEncodedSerde(properties.associate { (name, type) ->
+    name to PropertyEncoding(FormParameterCodec(name, explode = true), DecodeView.of(type))
+  })

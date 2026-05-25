@@ -1,108 +1,131 @@
 package tech.sabai.contracteer.core.swagger
 
+import io.swagger.v3.oas.models.media.Encoding
 import io.swagger.v3.oas.models.media.MediaType
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.accumulate
+import tech.sabai.contracteer.core.codec.DecodeView
+import tech.sabai.contracteer.core.codec.EncodingShape
 import tech.sabai.contracteer.core.combineResults
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.Base64DataType
 import tech.sabai.contracteer.core.datatype.BinaryDataType
+import tech.sabai.contracteer.core.datatype.CompositeDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
 import tech.sabai.contracteer.core.operation.ContentType
 import tech.sabai.contracteer.core.operation.ParameterElement.QueryParam
-import tech.sabai.contracteer.core.serde.FormUrlEncodedSerde
-import tech.sabai.contracteer.core.serde.JsonSerde
-import tech.sabai.contracteer.core.serde.MultipartSerde
-import tech.sabai.contracteer.core.serde.PartConfig
-import tech.sabai.contracteer.core.serde.PlainTextSerde
-import tech.sabai.contracteer.core.serde.Serde
+import tech.sabai.contracteer.core.serde.*
 
 internal class SerdeFactory(private val codecFactory: CodecFactory) {
 
   fun buildSerde(contentType: ContentType,
                  mediaType: MediaType,
                  dataType: DataType<out Any>): Result<Serde> =
-    when {
-      contentType.isFormUrlEncoded()                                                      ->
-        when (dataType) {
-          is ObjectDataType -> buildFormUrlEncodedSerde(dataType, mediaType)
-          else              -> failure("Content type ${contentType.value} requires object schema")
-        }
-
-      contentType.isMultipart()                                                           ->
-        when (dataType) {
-          is ObjectDataType -> buildMultipartSerde(dataType, mediaType)
-          else              -> failure("Content type ${contentType.value} requires object schema")
-        }
-
-      contentType.isJson()                                                                ->
-        success(JsonSerde)
-
-      !contentType.isXml() && (dataType.isFullyStructured() || dataType is ArrayDataType) ->
-        failure("Content type ${contentType.value} supports only primitive schemas (string, integer, number, boolean and their formats)")
-
-      else                                                                                ->
-        success(PlainTextSerde)
+    EncodingShape.of(dataType).flatMap { shape ->
+      val shapeIsStructural = shape is EncodingShape.Object || shape is EncodingShape.Array
+      when {
+        contentType.isFormUrlEncoded() -> requireObjectShape(contentType, shape) { buildFormUrlEncodedSerde(it, mediaType) }
+        contentType.isMultipart()      -> requireObjectShape(contentType, shape) { buildMultipartSerde(it, mediaType) }
+        contentType.isJson()           -> success(JsonSerde)
+        contentType.isXml()            -> success(PlainTextSerde)
+        shapeIsStructural              -> failure("Content type ${contentType.value} supports only primitive schemas (string, integer, number, boolean and their formats)")
+        else                           -> success(PlainTextSerde)
+      }
     }
 
-  private fun buildFormUrlEncodedSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
-    val nestedTypeErrors = validateFormUrlEncodedProperties(dataType)
-    if (nestedTypeErrors.isFailure()) return nestedTypeErrors.retypeError()
+  private fun requireObjectShape(contentType: ContentType,
+                                 shape: EncodingShape,
+                                 build: (EncodingShape.Object) -> Result<Serde>): Result<Serde> =
+    if (shape is EncodingShape.Object) build(shape)
+    else failure("Content type ${contentType.value} requires object schema")
 
-    val encodingMap = mediaType.encoding ?: emptyMap()
-    return dataType.properties
-      .map { (name, type) ->
-        val encoding = encodingMap[name]
-        val allowReserved = encoding?.allowReserved == true
-        codecFactory.createCodec(QueryParam(name), encoding?.style?.toString(), encoding?.explode, type, name)
-          .map { name to FormUrlEncodedSerde.PropertyEncoding(it, allowReserved) }
+  private fun buildFormUrlEncodedSerde(shape: EncodingShape.Object, mediaType: MediaType): Result<Serde> =
+    validateFormUrlEncodedProperties(shape.properties).flatMap {
+      val encodingMap = mediaType.encoding ?: emptyMap()
+      shape.properties
+        .map { (name, view) -> buildPropertyEncodingEntry(name, view, encodingMap[name]) }
+        .combineResults()
+        .map<Serde> { FormUrlEncodedSerde(it.toMap()) }
+    }
+
+  private fun buildPropertyEncodingEntry(name: String,
+                                         view: DecodeView,
+                                         encoding: Encoding?): Result<Pair<String, PropertyEncoding>> {
+    val allowReserved = encoding?.allowReserved == true
+    return codecFactory
+      .createCodec(QueryParam(name), encoding?.style?.toString(), encoding?.explode, view.source, name)
+      .map { name to PropertyEncoding(it, view, allowReserved) }
+  }
+
+  private fun validateFormUrlEncodedProperties(properties: Map<String, DecodeView>): Result<Unit> =
+    properties.entries.accumulate { (name, view) -> validateFormUrlEncodedProperty(name, view) }
+
+  private fun validateFormUrlEncodedProperty(name: String, view: DecodeView): Result<Unit> =
+    view.shape().flatMap { shape ->
+      when (shape) {
+        is EncodingShape.Object -> failure(name, "Form-urlencoded does not support nested object properties $UNDEFINED_BEHAVIOR")
+        is EncodingShape.Array  -> rejectIfArrayOfComplexItems(name, shape)
+        else                    -> success()
       }
+    }
+
+  private fun rejectIfArrayOfComplexItems(name: String, array: EncodingShape.Array): Result<Unit> =
+    array.itemType.shape().flatMap { itemShape ->
+      if (itemShape is EncodingShape.Object || itemShape is EncodingShape.Array)
+        failure(name, "Form-urlencoded does not support arrays of complex types (item type: '${array.itemType.source.openApiType}') $UNDEFINED_BEHAVIOR")
+      else success()
+    }
+
+  private fun buildMultipartSerde(shape: EncodingShape.Object, mediaType: MediaType): Result<Serde> {
+    val encodingMap = mediaType.encoding ?: emptyMap()
+    return shape.properties.entries
+      .map { (name, view) -> buildPartConfigEntry(name, view, encodingMap[name]?.contentType) }
       .combineResults()
-      .map<Serde> { FormUrlEncodedSerde(it.toMap()) }
+      .map<Serde> { MultipartSerde(it.toMap()) }
   }
 
-  private fun validateFormUrlEncodedProperties(dataType: ObjectDataType): Result<Unit> =
-    dataType.properties.entries.accumulate { (name, type) ->
-      when (type) {
-        is ObjectDataType                                      ->
-          failure(name, "Form-urlencoded does not support nested object properties $UNDEFINED_BEHAVIOR")
-
-        is ArrayDataType if type.itemDataType.isNonPrimitive() ->
-          failure(name, "Form-urlencoded does not support arrays of complex types $UNDEFINED_BEHAVIOR")
-
-        else                                                   ->
-          success()
-      }
+  private fun buildPartConfigEntry(name: String,
+                                   view: DecodeView,
+                                   explicitContentType: String?): Result<Pair<String, PartConfig>> =
+    view.shape().flatMap { shape ->
+      val isFileArray = (shape as? EncodingShape.Array)?.itemType?.source?.isBinary() == true
+      resolveContentType(name, view, shape, isFileArray, explicitContentType)
+        .map { contentType -> name to toPartConfig(contentType, view, isFileArray) }
     }
 
-  private fun buildMultipartSerde(dataType: ObjectDataType, mediaType: MediaType): Result<Serde> {
-    val encodingMap = mediaType.encoding ?: emptyMap()
-    val partConfigs = dataType.properties.map { (name, propType) ->
-      val contentType = encodingMap[name]?.contentType ?: defaultPartContentType(propType)
-      val isFile = propType.isBinary()
-      val isFileArray = propType is ArrayDataType && propType.itemDataType.isBinary()
-      name to PartConfig(contentType, serdeForContentType(contentType), isFile || isFileArray, isFileArray)
-    }.toMap()
-    return success(MultipartSerde(partConfigs))
+  private fun resolveContentType(name: String,
+                                 view: DecodeView,
+                                 shape: EncodingShape,
+                                 isFileArray: Boolean,
+                                 explicit: String?): Result<String> =
+    if (explicit != null) success(explicit)
+    else defaultPartContentType(name, view, shape, isFileArray)
+
+  private fun toPartConfig(contentType: String, view: DecodeView, isFileArray: Boolean): PartConfig {
+    val isFile = view.source.isBinary()
+    return PartConfig(contentType, serdeForContentType(contentType), view, isFile || isFileArray, isFileArray)
   }
 
-  private fun defaultPartContentType(dataType: DataType<out Any>): String = when {
-    dataType.isBinary()                                           -> "application/octet-stream"
-    dataType is ArrayDataType && dataType.itemDataType.isBinary() -> "application/octet-stream"
-    dataType is ArrayDataType || dataType.isFullyStructured()     -> "application/json"
-    else                                                          -> "text/plain"
-  }
+  private fun defaultPartContentType(name: String,
+                                     view: DecodeView,
+                                     shape: EncodingShape,
+                                     isFileArray: Boolean): Result<String> =
+    when {
+      view.source.isBinary() || isFileArray                         -> success("application/octet-stream")
+      shape is EncodingShape.Mixed                                  -> failure(name, "Cannot determine default content type for multipart part: schema branches have incompatible shapes. Specify 'contentType' explicitly in the encoding to resolve.")
+      shape is EncodingShape.Array || shape is EncodingShape.Object -> success("application/json")
+      else                                                          -> success("text/plain")
+    }
 
   private fun serdeForContentType(contentType: String): Serde =
     if ("json" in contentType.lowercase()) JsonSerde else PlainTextSerde
 }
 
-private fun DataType<out Any>.isBinary() = this is BinaryDataType || this is Base64DataType
-
-private fun DataType<out Any>.isNonPrimitive(): Boolean =
-  isFullyStructured() || this is ArrayDataType
+private fun DataType<out Any>.isBinary(): Boolean = when (this) {
+  is BinaryDataType, is Base64DataType -> true
+  is CompositeDataType<*>              -> subTypes.all { it.isBinary() }
+  else                                 -> false
+}
 
 private const val UNDEFINED_BEHAVIOR = "(undefined behavior in the OpenAPI specification)"

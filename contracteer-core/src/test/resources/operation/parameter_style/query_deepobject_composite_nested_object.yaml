@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info:
+  title: DeepObject Composite With Nested Object Test
+  version: '1.0'
+paths:
+  /test:
+    get:
+      parameters:
+        - in: query
+          name: filter
+          style: deepObject
+          explode: true
+          schema:
+            allOf:
+              - type: object
+                properties:
+                  color:
+                    type: string
+              - type: object
+                properties:
+                  address:
+                    type: object
+                    properties:
+                      city:
+                        type: string
+      responses:
+        '200':
+          description: Success

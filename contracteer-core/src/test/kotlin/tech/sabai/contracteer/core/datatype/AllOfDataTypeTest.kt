@@ -278,15 +278,6 @@ class AllOfDataTypeTest {
       assert(allOfDataType.validate(randomValue).isSuccess())
     }
 
-    @Test
-    fun `is not fully structured`() {
-      // given
-      val allOfDataType = allOfType { subType(stringType()) }
-
-      // then
-      assert(!allOfDataType.isFullyStructured())
-    }
-
   }
 
   @Test
@@ -449,4 +440,5 @@ class AllOfDataTypeTest {
       assert((randomValue as Map<*, *>)["petType"] == "CAT")
     }
   }
+
 }

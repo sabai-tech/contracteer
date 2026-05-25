@@ -16,8 +16,6 @@ class UriReferenceDataType private constructor(name: String,
                                                allowedValues: AllowedValues? = null):
     ResolvedDataType<String>(name, "string/uri-reference", isNullable, String::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun doValidate(value: String) =
     try {
       URI(value)

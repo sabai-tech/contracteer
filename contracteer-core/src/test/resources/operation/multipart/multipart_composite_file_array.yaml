@@ -1,0 +1,28 @@
+openapi: 3.0.0
+info:
+  title: Multipart Composite File Array Tests
+  version: '1.0'
+paths:
+  /upload:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                files:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: string
+                        format: binary
+                    - type: array
+                      items:
+                        type: string
+                        format: binary
+      responses:
+        '200':
+          description: Success

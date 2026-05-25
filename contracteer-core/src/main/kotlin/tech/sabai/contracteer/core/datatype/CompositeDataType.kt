@@ -7,7 +7,7 @@ import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
 /**
  * Base type for composite schemas (`allOf`, `anyOf`, `oneOf`) that combine multiple [subTypes].
  */
-abstract class CompositeDataType<T>(
+abstract class CompositeDataType<T : Any>(
   name: String,
   openApiType: String,
   isNullable: Boolean,

@@ -21,8 +21,6 @@ class ArrayDataType private constructor(name: String,
                                         allowedValues: AllowedValues? = null):
     ResolvedDataType<List<Any?>>(name, "array", isNullable, List::class.java, allowedValues) {
 
-  override fun isFullyStructured() = false
-
   override fun asRequestType(): DataType<List<Any?>> =
     itemDataType.asRequestType().let {
       if (it === itemDataType) this

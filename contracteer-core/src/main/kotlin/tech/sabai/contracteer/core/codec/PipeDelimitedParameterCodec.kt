@@ -2,7 +2,6 @@ package tech.sabai.contracteer.core.codec
 
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.serde.PlainTextSerde
 
@@ -26,10 +25,14 @@ data class PipeDelimitedParameterCodec(
 
   override fun decode(values: Map<String, List<String>>, dataType: DataType<out Any>): Result<Any?> {
     val rawValues = values[paramName].orEmpty()
-    return when {
-      rawValues.isEmpty()       -> success(null)
-      dataType is ArrayDataType -> deserializeItems(rawValues.first().split("|"), dataType.itemDataType)
-      else                      -> PlainTextSerde.deserialize(rawValues.first(), dataType)
+    if (rawValues.isEmpty()) return success(null)
+    val raw = rawValues.first()
+
+    return EncodingShape.of(dataType).flatMap { shape ->
+      when (shape) {
+        is EncodingShape.Array -> deserializeItems(raw.split("|"), shape.itemType)
+        else                   -> PlainTextSerde.deserialize(raw, dataType)
+      }
     }
   }
 }

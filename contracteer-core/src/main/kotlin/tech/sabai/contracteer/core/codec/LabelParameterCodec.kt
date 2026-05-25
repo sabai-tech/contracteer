@@ -5,9 +5,7 @@ import tech.sabai.contracteer.core.serde.PlainTextSerde
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
-import tech.sabai.contracteer.core.datatype.ArrayDataType
 import tech.sabai.contracteer.core.datatype.DataType
-import tech.sabai.contracteer.core.datatype.ObjectDataType
 
 /**
  * [ParameterCodec] for OpenAPI `label` style. Used for path parameters only.
@@ -40,12 +38,14 @@ data class LabelParameterCodec(override val paramName: String, val explode: Bool
     if (!raw.startsWith(".")) return failure("Label style value must start with '.'")
 
     val content = raw.substring(1)
-    return when (dataType) {
-      is ArrayDataType if explode  -> deserializeItems(content.split("."), dataType.itemDataType)
-      is ArrayDataType             -> deserializeItems(content.split(","), dataType.itemDataType)
-      is ObjectDataType if explode -> deserializeKeyValuePairs(content.split("."), dataType)
-      is ObjectDataType            -> deserializeFlatEntries(content.split(","), dataType)
-      else                         -> PlainTextSerde.deserialize(content, dataType)
+    return EncodingShape.of(dataType).flatMap { shape ->
+      when (shape) {
+        is EncodingShape.Array  if explode              -> deserializeItems(content.split("."), shape.itemType)
+        is EncodingShape.Array                          -> deserializeItems(content.split(","), shape.itemType)
+        is EncodingShape.Object if explode              -> deserializeKeyValuePairs(content.split("."), shape.properties)
+        is EncodingShape.Object                         -> deserializeFlatEntries(content.split(","), shape.properties)
+        is EncodingShape.Scalar, is EncodingShape.Mixed -> PlainTextSerde.deserialize(content, dataType)
+      }
     }
   }
 }

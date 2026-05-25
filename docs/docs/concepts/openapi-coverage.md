@@ -158,6 +158,72 @@ ProductOrService:
         - $ref: '#/components/schemas/Service'
 ```
 
+### Composed schemas with incompatible branches
+
+A composition (`allOf`, `oneOf`, `anyOf`) whose branches are all objects or all arrays is accepted wherever a bare object or array schema is accepted -- including request and response bodies in `application/x-www-form-urlencoded` and `multipart/*`, and parameter styles `deepObject`, `simple`, `form`, `label`, `matrix`, `spaceDelimited`, and `pipeDelimited`.
+
+Two cases are rejected at load time.
+
+#### Cross-kind property collisions on type-blind wire formats
+
+Two branches of a `oneOf` or `anyOf` may declare the same property with different kinds:
+
+```yaml
+oneOf:
+  - type: object
+    properties:
+      value:
+        type: string
+  - type: object
+    properties:
+      value:
+        type: object
+        properties:
+          x: { type: integer }
+```
+
+On JSON, the wire bytes disambiguate -- a string is `"foo"`, an object is `{...}`.
+On `application/x-www-form-urlencoded`, `multipart/*`, `deepObject`, and the flat parameter styles, the wire format carries no information about whether `value=foo` should be decoded as a string or as a serialized object.
+Contracteer rejects this combination at load time:
+
+```
+composed schemas define incompatible kinds: 'primitive' vs 'object'
+```
+
+The OpenAPI specification permits the composition.
+Contracteer rejects it for type-blind wire formats because silently selecting one branch would break the trust model of contract testing: a green run must mean the whole specification was exercised, not one arbitrary interpretation of it.
+
+The same composition is accepted in `application/json` request and response bodies, where the wire format disambiguates.
+
+#### Multipart part default content type for mixed-shape branches
+
+The OpenAPI specification defaults a multipart part's content type based on its schema -- `text/plain` for primitives, `application/json` for objects and arrays, `application/octet-stream` for binary.
+When a part's schema is a composition whose branches have incompatible encoding shapes (e.g., a primitive branch and an object branch), no single default applies.
+
+Contracteer rejects the specification at load time.
+The spec author must declare the part's content type explicitly via the `encoding` object:
+
+```yaml
+requestBody:
+  content:
+    multipart/form-data:
+      schema:
+        type: object
+        properties:
+          payload:
+            oneOf:
+              - type: string
+              - type: object
+                properties:
+                  count: { type: integer }
+      encoding:
+        payload:
+          contentType: application/json
+```
+
+The OpenAPI specification does not define what to default to in this case.
+Contracteer chooses explicit declaration over a silent guess.
+
 ---
 
 ## Not Applicable to Contract Testing
@@ -252,6 +318,10 @@ This is consistent with the specification, which permits typeless schemas while 
 | `anyOf`         | Validates that at least one sub-schema matches. Sibling `properties`, `required`, and `additionalProperties` are supported                                                                |
 | `discriminator` | `propertyName` and `mapping` on `oneOf`/`anyOf`/`allOf`. See [Discriminator validation](#discriminator-validation)                                                                        |
 
+A composition whose branches are all objects is accepted wherever a bare object schema is accepted: request and response bodies, parameter styles, content types.
+The same holds for compositions whose branches are all arrays.
+See [Composed schemas with incompatible branches](#composed-schemas-with-incompatible-branches) for the two cases Contracteer rejects at load time.
+
 ### Discriminator validation
 
 Contracteer uses the discriminator as a hint to select which sub-schema in a `oneOf`, `anyOf`, or `allOf` composition validates the body.
@@ -340,6 +410,7 @@ With this form, Contracteer uses the discriminator to select the matching child 
 | `in: header`                    | Primitive, array, and object types. Style: `simple`                                                                                                                                                                                                                                                                 |
 | `in: cookie`                    | Primitive, array, and object types. Style: `form`                                                                                                                                                                                                                                                                   |
 | `style` / `explode`             | All style/explode combinations with correct defaults per location. Flat styles (`simple`, `form`, `label`, `matrix`) reject nested non-primitive values -- arrays of objects, arrays of arrays, and objects with object/array properties -- because the OpenAPI specification leaves their serialization undefined. |
+| Composed schemas                | `allOf`/`oneOf`/`anyOf` whose branches are all objects (or all arrays) are accepted wherever a bare object schema (or array schema) is accepted. The merged shape must still satisfy the per-style restrictions above.                                                                                              |
 | `content` (instead of `schema`) | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                                                                                                                                                                                                                                    |
 | `allowReserved`                 | Query parameters and `application/x-www-form-urlencoded` encoding properties                                                                                                                                                                                                                                        |
 
@@ -349,8 +420,8 @@ With this form, Contracteer uses the discriminator to select the matching child 
 |----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `application/json`                           | Primitive, object, array, and composition schemas.                                                                                                                |
 | `text/plain`, `text/html`, `application/jwt` | Primitive schemas only. Object, array, and composition schemas are rejected at load time because no standard defines how to serialize them for these media types. |
-| `multipart/*` (form-data, mixed, etc.)       | Per-part content type via the `encoding` object                                                                                                                   |
-| `application/x-www-form-urlencoded`          | Per-property encoding via the `encoding` object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected.             |
+| `multipart/*` (form-data, mixed, etc.)       | Object schemas and `allOf`/`oneOf`/`anyOf` of objects. Per-part content type via the `encoding` object.                                                                                                                                                  |
+| `application/x-www-form-urlencoded`          | Object schemas and `allOf`/`oneOf`/`anyOf` of objects. Per-property encoding via the `encoding` object. Only primitive and array-of-primitive properties; nested objects and arrays of objects are rejected.             |
 | Multiple content types                       | Produces one verification per content type combination                                                                                                            |
 | `required` (request body)                    | Supported                                                                                                                                                         |
 | Content negotiation (Accept header)          | RFC 7231 support with quality factors and wildcard subtypes                                                                                                       |

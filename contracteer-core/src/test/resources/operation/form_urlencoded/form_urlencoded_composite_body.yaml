@@ -1,0 +1,23 @@
+openapi: 3.0.0
+info:
+  title: Form URL-Encoded Composite Body Tests
+  version: '1.0'
+paths:
+  /register:
+    post:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    name:
+                      type: string
+                - type: object
+                  properties:
+                    size:
+                      type: integer
+      responses:
+        '200':
+          description: Success

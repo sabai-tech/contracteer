@@ -26,7 +26,7 @@ class AllowedValues private constructor(values: List<Any?>) {
 
   companion object {
     @JvmStatic
-    fun <T, DT: DataType<T>> create(values: List<Any?>, dataType: DT) =
+    fun <T : Any, DT: DataType<T>> create(values: List<Any?>, dataType: DT) =
       when {
         values.isEmpty()                              -> failure("enum", "cannot be empty")
         values.contains(null) && !dataType.isNullable -> failure("enum", "cannot contain a null value when schema is not nullable")
