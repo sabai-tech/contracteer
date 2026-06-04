@@ -141,6 +141,33 @@ class SwaggerHelpersTest {
   }
 
   @Test
+  fun `isAnyType returns false for a 3 1 schema with only the null type`() {
+    // given
+    val schema = JsonSchema().apply {
+      specVersion = SpecVersion.V31
+      types = linkedSetOf("null")
+    }
+
+    // when
+    val isAny = schema.isAnyType()
+
+    // then
+    assert(!isAny)
+  }
+
+  @Test
+  fun `isAnyType returns true for an unconstrained 3 1 schema`() {
+    // given
+    val schema = JsonSchema().apply { specVersion = SpecVersion.V31 }
+
+    // when
+    val isAny = schema.isAnyType()
+
+    // then
+    assert(isAny)
+  }
+
+  @Test
   fun `effectiveExclusiveMinimum reads the boolean flag in 3 0`() {
     // Given
     val schema = Schema<Any>().apply {

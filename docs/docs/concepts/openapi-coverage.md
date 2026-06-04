@@ -519,6 +519,60 @@ ProductId:
     - type: integer
 ```
 
+### `type: null`
+
+OpenAPI 3.1 represents "null is a valid value" with the JSON Schema 2020-12 form `type: "null"`.
+A `{type: "null"}` schema accepts only `null` and rejects every other value with `Type mismatch, expected type 'null'`.
+
+Contracteer supports `{type: "null"}` wherever it describes a coherent contract:
+
+- **Property, array-item, and `additionalProperties` schemas.**
+  Use it wherever `null` is the only valid value in that position.
+- **A branch inside `anyOf` or `oneOf`.**
+  A `{type: "null"}` branch makes the composition nullable -- the way to make a `$ref` or composed schema nullable.
+  For a single named type, `type: [Type, "null"]` is the more concise equivalent (see [Type arrays](#type-arrays)).
+
+Composite nullability rules:
+
+- `anyOf` accepts null if the outer schema is nullable or any branch admits null.
+- `oneOf` accepts null if the outer is nullable or exactly one branch admits null.
+  Two or more null-admitting branches make the composite non-nullable -- the specification is ambiguous, so Contracteer treats it as non-null.
+- `allOf` accepts null if the outer is nullable or every branch admits null.
+
+The three positions below are rejected at load time because the construct has no coherent meaning there, not because the feature is missing:
+
+- **Standalone body or parameter schema.**
+  A `{type: "null"}` body or parameter conveys no meaningful constraint and is almost always an author error.
+  Use `anyOf: [Type, {type: "null"}]` for a nullable value or HTTP status `204` for an empty response.
+  See [`type: null` is rejected as a body or parameter schema](../guides/troubleshooting.md#type-null-is-rejected-as-a-body-or-parameter-schema).
+- **`anyOf` or `oneOf` whose outer `type` array excludes `"null"` but a branch declares `type: "null"`.**
+  The outer-type constraint and the null branch are contradictory.
+  See [Outer `type` excludes null but a composition branch declares it](../guides/troubleshooting.md#outer-type-excludes-null-but-a-composition-branch-declares-it).
+- **`allOf` with any `type: "null"` branch.**
+  Unsatisfiable: a value cannot match both `{type: "null"}` and any non-null branch.
+  See [`allOf` includes a `type: null` branch](../guides/troubleshooting.md#allof-includes-a-type-null-branch).
+
+```yaml
+components:
+  schemas:
+    # Nullable property: anyOf with the actual type and a null branch
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+        nickname:
+          anyOf:
+            - type: string
+            - type: "null"
+    # Null-only property: accepts only null
+    Marker:
+      type: object
+      properties:
+        tombstone:
+          type: "null"
+```
+
 ### `const`
 
 OpenAPI 3.1 introduces `const` for schemas with a single allowed value.

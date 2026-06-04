@@ -2,15 +2,8 @@ package tech.sabai.contracteer.core.datatype
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
-import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
-import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
-import tech.sabai.contracteer.core.dsl.anyOfType
-import tech.sabai.contracteer.core.dsl.arrayType
-import tech.sabai.contracteer.core.dsl.booleanType
-import tech.sabai.contracteer.core.dsl.integerType
-import tech.sabai.contracteer.core.dsl.objectType
-import tech.sabai.contracteer.core.dsl.stringType
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.*
+import tech.sabai.contracteer.core.dsl.*
 import tech.sabai.contracteer.core.normalize
 
 class AnyOfDataTypeTest {
@@ -74,6 +67,102 @@ class AnyOfDataTypeTest {
 
     // then
     assert(anyOfDataType.validate(randomValue).isSuccess())
+  }
+
+  @Test
+  fun `isNullable is true when any subtype admits null`() {
+    // given
+    val anyOf = anyOfType {
+      subType(stringType())
+      subType(NullDataType)
+    }
+
+    // when
+    val nullable = anyOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable is true when outer is nullable regardless of subtypes`() {
+    // given
+    val anyOf = anyOfType(isNullable = true) {
+      subType(stringType())
+      subType(integerType())
+    }
+
+    // when
+    val nullable = anyOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable is false when no subtype admits null and outer is non-nullable`() {
+    // given
+    val anyOf = anyOfType {
+      subType(stringType())
+      subType(integerType())
+    }
+
+    // when
+    val nullable = anyOf.isNullable
+
+    // then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `isNullable walks a nested composite to detect a null branch`() {
+    // given
+    val nestedNullable = oneOfType(name = "nested") {
+      subType(stringType())
+      subType(NullDataType)
+    }
+    val anyOf = anyOfType {
+      subType(integerType())
+      subType(nestedNullable)
+    }
+
+    // when
+    val nullable = anyOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable on a self-referential anyOf with a null branch returns true without infinite recursion`() {
+    // given
+    val proxy = ProxyDataType("Recursive")
+    val recursive = anyOfType(name = "Recursive") {
+      subType(NullDataType)
+      subType(proxy)
+    }
+    proxy.delegate = recursive
+
+    // when
+    val nullable = recursive.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
+  fun `randomValue never picks NullDataType subtype in anyOf`() {
+    // given
+    val anyOfDataType = anyOfType {
+      subType(stringType())
+      subType(NullDataType)
+    }
+
+    // when
+    val values = (1..50).map { anyOfDataType.randomValue() }
+
+    // then
+    assert(values.all { it != null })
   }
 
   @Test

@@ -11,16 +11,19 @@ import java.lang.System.lineSeparator
 class AnyOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
                                         override val discriminator: Discriminator? = null,
-                                        isNullable: Boolean = false,
+                                        outerIsNullable: Boolean = false,
                                         allowedValues: AllowedValues? = null):
-    CompositeDataType<Any>(name, "anyOf", isNullable, subTypes, Any::class.java, allowedValues) {
+    CompositeDataType<Any>(name, "anyOf", outerIsNullable, subTypes, Any::class.java, allowedValues) {
+
+  override fun computeNullable(guard: CycleGuard<Boolean>): Boolean =
+    outerIsNullable || subTypes.any { isNullableBranch(it, guard) }
 
   override fun asRequestType(): DataType<Any> =
     subTypes
       .map { it.asRequestType() }
       .let { transformed ->
         if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
-        else AnyOfDataType(name, transformed, discriminator, isNullable, allowedValues)
+        else AnyOfDataType(name, transformed, discriminator, outerIsNullable, allowedValues)
       }
 
   override fun asResponseType(): DataType<Any> =
@@ -28,7 +31,7 @@ class AnyOfDataType private constructor(name: String,
       .map { it.asResponseType() }
       .let { transformed ->
         if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
-        else AnyOfDataType(name, transformed, discriminator, isNullable, allowedValues)
+        else AnyOfDataType(name, transformed, discriminator, outerIsNullable, allowedValues)
       }
 
   override fun doValidate(value: Any): Result<Any> =
@@ -79,15 +82,15 @@ class AnyOfDataType private constructor(name: String,
     fun create(name: String,
                subTypes: List<DataType<out Any>>,
                discriminator: Discriminator? = null,
-               isNullable: Boolean = false,
+               outerIsNullable: Boolean = false,
                enum: List<Any?> = emptyList()) =
       subTypes.validate(discriminator)
         .flatMap {
-          AnyOfDataType(name, subTypes, discriminator, isNullable).let { dataType ->
+          AnyOfDataType(name, subTypes, discriminator, outerIsNullable).let { dataType ->
             if (enum.isEmpty()) success(dataType)
             else AllowedValues
               .create(enum, dataType)
-              .map { AnyOfDataType(name, subTypes, discriminator, isNullable, it) }
+              .map { AnyOfDataType(name, subTypes, discriminator, outerIsNullable, it) }
           }
         }
 

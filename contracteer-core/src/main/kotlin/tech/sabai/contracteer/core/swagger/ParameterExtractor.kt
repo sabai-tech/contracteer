@@ -113,6 +113,7 @@ internal class ParameterExtractor(
     val contentType = ContentType(mediaTypeString)
     return result {
       val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj).bind()
+      dataType.ensureNotStandaloneNull("Parameter '${parameter.name}' (in: ${parameter.`in`})").bind()
       val examples = sharedComponents.resolveExampleValues(parameter.safeExamples()).bind()
 
       if (dataType is AnyDataType)
@@ -139,6 +140,7 @@ internal class ParameterExtractor(
                                              allowReserved: Boolean): Result<ExtractedParameterSchema> =
     result {
       val dataType = dataTypeConverter.convertToDataType(parameter.schema, "").bind()
+      dataType.ensureNotStandaloneNull("Parameter '${parameter.name}' (in: ${parameter.`in`})").bind()
       val examples = sharedComponents.resolveExampleValues(parameter.safeExamples()).bind()
       val codec = codecFactory
         .createCodec(element, parameter.style?.toString(), parameter.explode, dataType, parameter.name, allowReserved)
@@ -161,6 +163,7 @@ internal class ParameterExtractor(
     val contentType = ContentType(mediaTypeString)
     return result {
       val dataType = dataTypeConverter.convertMediaTypeSchema(mediaTypeObj).bind()
+      dataType.ensureNotStandaloneNull("Response header '$name'").bind()
       val examples = sharedComponents.resolveExampleValues(header.safeExamples()).bind()
 
       val element = Header(name)
@@ -180,6 +183,7 @@ internal class ParameterExtractor(
   private fun extractResponseHeaderFromSchemaForm(header: Header, name: String): Result<ExtractedParameterSchema> =
     result {
       val dataType = dataTypeConverter.convertToDataType(header.schema, "").bind()
+      dataType.ensureNotStandaloneNull("Response header '$name'").bind()
       val codec = codecFactory
         .createCodec(Header(name), header.style?.toString(), header.explode, dataType, name)
         .bind()

@@ -1,0 +1,17 @@
+openapi: "3.1.0"
+info:
+  title: Standalone Null Query Parameter Content
+  version: '1.0'
+paths:
+  /things:
+    get:
+      parameters:
+        - name: tombstone
+          in: query
+          content:
+            application/json:
+              schema:
+                type: ["null"]
+      responses:
+        '200':
+          description: OK

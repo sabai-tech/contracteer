@@ -9,6 +9,7 @@ import tech.sabai.contracteer.core.codec.EncodingShape.Scalar
 import tech.sabai.contracteer.core.datatype.AllOfDataType
 import tech.sabai.contracteer.core.datatype.AnyDataType
 import tech.sabai.contracteer.core.datatype.AnyOfDataType
+import tech.sabai.contracteer.core.datatype.NullDataType
 import tech.sabai.contracteer.core.datatype.ProxyDataType
 import tech.sabai.contracteer.core.dsl.allOfType
 import tech.sabai.contracteer.core.serde.PlainTextSerde
@@ -277,6 +278,24 @@ class EncodingShapeTest {
     // then
     val obj = shape as Object
     assert(obj.properties == mapOf("name" to DecodeView.of(name), "email" to DecodeView.of(email)))
+  }
+
+  @Test
+  fun `of anyOf of object and null branches returns Object ignoring the null branch`() {
+    // given
+    val name = stringType()
+    val person = objectType("person") { properties { "name" to name } }
+    val composed = anyOfType {
+      subType(person)
+      subType(NullDataType)
+    }
+
+    // when
+    val shape = EncodingShape.of(composed).assertSuccess()
+
+    // then
+    val obj = shape as Object
+    assert(obj.properties == mapOf("name" to DecodeView.of(name)))
   }
 
   @Test

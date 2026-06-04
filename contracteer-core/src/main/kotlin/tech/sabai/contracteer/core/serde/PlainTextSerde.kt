@@ -19,6 +19,7 @@ object PlainTextSerde: Serde() {
         is CompositeDataType                    -> deserializeComposite(source, targetDataType)
         is ObjectDataType                       -> failure(targetDataType.name, "'object' is not supported")
         is ArrayDataType                        -> failure(targetDataType.name, "'array' are not supported")
+        is NullDataType                         -> failure(targetDataType.name, "Cannot deserialize non-null text as 'null' type")
         is BooleanDataType                      -> source.asBoolean()
         is NumberDataType, is IntegerDataType   -> source.asBigDecimal()
         is AnyDataType, is StringDataType,

@@ -25,12 +25,13 @@ internal object OneOfDataTypeConverter {
         .combineResults()
         .bind()
         .filter { it !is AnyDataType }
+      schema.rejectNullBranchAgainstOuterType(subTypes, "oneOf").bind()
       val enum = schema.effectiveEnum().bind()
       OneOfDataType.create(
         name = schema.name,
         subTypes = subTypes,
         discriminator = discriminator(schema),
-        isNullable = schema.isNullable(),
+        outerIsNullable = schema.isNullable(),
         enum = enum
       ).bind()
     }

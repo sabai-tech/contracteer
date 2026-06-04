@@ -16,6 +16,8 @@ import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
+import tech.sabai.contracteer.core.datatype.DataType
+import tech.sabai.contracteer.core.datatype.NullDataType
 import tech.sabai.contracteer.core.joinWithQuotes
 import tech.sabai.contracteer.core.operation.ContentType
 import java.math.BigDecimal
@@ -197,6 +199,7 @@ internal fun Schema<*>.hasStructuredTextContent(): Boolean =
 
 internal fun Schema<*>.isAnyType() =
   effectiveType() == null &&
+  !isNullOnly() &&
   properties.isNullOrEmpty() &&
   additionalProperties == null &&
   format == null &&
@@ -212,6 +215,17 @@ internal fun Schema<*>.isAnyType() =
   example == null &&
   `enum`.isNullOrEmpty() &&
   effectiveConst() == null
+
+internal fun Schema<*>.isNullOnly(): Boolean =
+  specVersion == V31 && effectiveType() == null && "null" in types.orEmpty()
+
+internal fun DataType<out Any>.ensureNotStandaloneNull(location: String): Result<Unit> =
+  if (this is NullDataType)
+    failure(
+      "$location: standalone 'type: null' is not a meaningful schema. " +
+      "For a nullable value, use 'anyOf: [Type, {type: null}]'. " +
+      "For an empty response, omit the 'content' field and use status code 204.")
+  else success()
 
 internal fun Schema<*>.safeProperties() =
   properties ?: emptyMap()

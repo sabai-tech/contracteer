@@ -29,6 +29,7 @@ internal object AllOfDataTypeConverter {
         .combineResults()
         .bind()
         .filter { it !is AnyDataType }
+      schema.rejectAllOfNullBranch(subDataTypes).bind()
       val enum = schema.effectiveEnum().bind()
       val discriminators = schema.allOf.mapNotNull { discriminator(it) }
       when {
@@ -37,7 +38,7 @@ internal object AllOfDataTypeConverter {
           AllOfDataType.create(
             name = schema.name,
             subTypes = subDataTypes,
-            isNullable = schema.isNullable(),
+            outerIsNullable = schema.isNullable(),
             discriminator = discriminators.firstOrNull(),
             enum = enum
           ).bind()

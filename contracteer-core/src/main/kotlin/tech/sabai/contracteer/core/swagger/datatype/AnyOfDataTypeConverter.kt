@@ -26,12 +26,13 @@ internal object AnyOfDataTypeConverter {
         .combineResults()
         .bind()
         .filter { it !is AnyDataType }
+      schema.rejectNullBranchAgainstOuterType(subTypes, "anyOf").bind()
       val enum = schema.effectiveEnum().bind()
       AnyOfDataType.create(
         name = schema.name,
         subTypes = subTypes,
         discriminator = discriminator(schema),
-        isNullable = schema.isNullable(),
+        outerIsNullable = schema.isNullable(),
         enum = enum
       ).bind()
     }

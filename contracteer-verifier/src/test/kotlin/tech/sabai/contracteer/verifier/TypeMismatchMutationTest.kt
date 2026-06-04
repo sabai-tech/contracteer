@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.verifier
 
 import tech.sabai.contracteer.core.datatype.AnyDataType
+import tech.sabai.contracteer.core.datatype.NullDataType
 import tech.sabai.contracteer.core.dsl.allOfType
 import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.arrayType
@@ -147,5 +148,14 @@ class TypeMismatchMutationTest {
   @Test
   fun `returns null for AnyDataType`() {
     assert(TypeMismatchMutation.mutate(AnyDataType) == null)
+  }
+
+  @Test
+  fun `returns null for NullDataType`() {
+    // when
+    val result = TypeMismatchMutation.mutate(NullDataType)
+
+    // then
+    assert(result == null)
   }
 }

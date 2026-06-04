@@ -453,6 +453,84 @@ requestBody:
           contentType: application/json
 ```
 
+### `type: null` is rejected as a body or parameter schema
+
+**Symptom:** Loading the specification fails with `standalone 'type: null' is not a meaningful schema. For a nullable value, use 'anyOf: [Type, {type: null}]'. For an empty response, omit the 'content' field and use status code 204.`
+
+**Cause:** A request body, response body, parameter, or header declares `type: null` as its top-level schema.
+A `null`-only schema carries no useful constraint: the wire value can never be anything but `null`, so the schema neither validates a payload nor describes a value to generate.
+The pattern is almost always one of two author mistakes -- modeling "empty response" with `type: null` instead of HTTP `204`, or modeling "nullable value" with `type: null` instead of `anyOf: [Type, {type: null}]`.
+
+**Fix:** Replace the standalone `type: null` with the construct that matches your intent:
+
+```yaml
+# Empty response: drop the content map and use status 204
+responses:
+  '204':
+    description: No content
+
+# Nullable value: use anyOf with the actual type and a null branch
+parameters:
+  - name: tombstone
+    in: query
+    schema:
+      anyOf:
+        - type: string
+        - type: "null"
+```
+
+`type: null` remains valid as a property schema, an array item schema, or an `additionalProperties` schema -- only the top-level body or parameter use is rejected.
+See [`type: null`](../concepts/openapi-coverage.md#type-null) for the full position rules.
+
+### Outer `type` excludes null but a composition branch declares it
+
+**Symptom:** Loading the specification fails with `outer 'type: [object]' constrains type but the 'anyOf' branch '#1' declares 'type: null'. Either add 'null' to the outer type array or remove the null branch.`
+
+**Cause:** An `anyOf` or `oneOf` schema declares both an outer `type` array (excluding `"null"`) and a sub-branch that uses `type: "null"`.
+The two constraints contradict each other: the outer type restricts the value to non-null types, while the null branch claims `null` is a valid match.
+
+**Fix:** Decide which side of the contradiction reflects the actual contract:
+
+```yaml
+# If null is acceptable: add "null" to the outer type array
+schema:
+  type: ["object", "null"]
+  anyOf:
+    - type: object
+      properties: { ... }
+    - type: "null"
+
+# If null is not acceptable: remove the null branch
+schema:
+  type: ["object"]
+  anyOf:
+    - type: object
+      properties: { ... }
+```
+
+### `allOf` includes a `type: null` branch
+
+**Symptom:** Loading the specification fails with `'allOf' includes a 'type: null' branch (#1) which is unsatisfiable: a value cannot match both the null type and any non-null branch. Use 'anyOf' if a nullable union is intended, or remove the null branch.`
+
+**Cause:** An `allOf` composition includes a `type: null` sub-schema.
+`allOf` requires the value to match *every* branch simultaneously.
+A null value satisfies the null branch but cannot satisfy any non-null branch; a non-null value satisfies the non-null branches but cannot satisfy the null branch.
+The schema therefore admits no value, which is almost always an author error.
+
+**Fix:** If the intent is a nullable composition, replace `allOf` with `anyOf`:
+
+```yaml
+# Nullable composition (any of the branches, including null)
+schema:
+  anyOf:
+    - allOf:
+        - $ref: '#/components/schemas/Pet'
+        - $ref: '#/components/schemas/Owned'
+    - type: "null"
+```
+
+If the null branch was added by mistake, remove it -- `allOf` of the remaining branches expresses the original intent.
+
 ### Extraction fails with non-JSON content type and structured schema
 
 **Symptom:** Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."

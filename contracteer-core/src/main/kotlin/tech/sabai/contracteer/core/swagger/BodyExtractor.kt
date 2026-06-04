@@ -58,6 +58,8 @@ internal class BodyExtractor(
           BinaryDataType.create(name = "binary").bind()
         else
           dataTypeConverter.convertMediaTypeSchema(mediaType).bind()
+
+      dataType.ensureNotStandaloneNull("Body '${contentType.value}'").bind()
       val examples = sharedComponents.resolveExampleValues(mediaType.safeExamples()).bind()
       val (bodyType, serde) =
         if (dataType is AnyDataType) dataType to PlainTextSerde

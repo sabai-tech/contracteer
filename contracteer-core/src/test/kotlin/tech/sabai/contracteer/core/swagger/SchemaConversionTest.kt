@@ -1240,6 +1240,33 @@ class SchemaConversionTest {
     assert(errors.any { it.contains("Circular") })
   }
 
+  @Test
+  fun `extract NullDataType from a 3 1 property schema with type null`() {
+    // when
+    val dataType = getDataType("3.1", "null_type.yaml")
+
+    // then
+    assert(dataType == NullDataType)
+  }
+
+  @Test
+  fun `extract NullDataType from a 3 1 array items schema with type null`() {
+    // when
+    val arrayDataType = getDataType("3.1", "null_type.yaml", "nullItems") as ArrayDataType
+
+    // then
+    assert(arrayDataType.itemDataType == NullDataType)
+  }
+
+  @Test
+  fun `extract NullDataType from a 3 1 additionalProperties schema with type null`() {
+    // when
+    val objectDataType = getDataType("3.1", "null_type.yaml", "nullMap") as ObjectDataType
+
+    // then
+    assert(objectDataType.additionalPropertiesDataType == NullDataType)
+  }
+
   // --- Helpers ---
 
   private fun getDataType(version: String, yamlFile: String, propName: String = "prop1"): DataType<out Any> =

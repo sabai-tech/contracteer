@@ -1,0 +1,21 @@
+openapi: "3.1.0"
+info:
+  title: allOf includes a null branch
+  version: '1.0'
+paths:
+  /things:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: [object]
+                  properties:
+                    name:
+                      type: ["string"]
+                - type: ["null"]
+      responses:
+        '204':
+          description: No Content

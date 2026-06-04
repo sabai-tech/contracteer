@@ -1,0 +1,16 @@
+openapi: "3.1.0"
+info:
+  title: Standalone Null Request Body
+  version: '1.0'
+paths:
+  /things:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: ["null"]
+      responses:
+        '204':
+          description: No Content

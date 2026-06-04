@@ -11,7 +11,7 @@ package tech.sabai.contracteer.core.datatype
  */
 class GenerationContext private constructor(
   internal val budget: GenerationBudget,
-  internal val cycleGuard: CycleGuard
+  internal val cycleGuard: CycleGuard<GenerationOutcome<Any>>
 ) {
 
   companion object {

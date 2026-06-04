@@ -27,7 +27,9 @@ class ProxyDataType internal constructor(override val name: String): DataType<An
   override fun validate(value: Any?): Result<Any?> = delegate.validate(value)
 
   override fun randomValue(ctx: GenerationContext): GenerationOutcome<Any> =
-    ctx.cycleGuard.visit(this) { delegate.randomValue(ctx) }
+    ctx.cycleGuard.visit(this, onCycle = { GenerationOutcome.Boundary(GenerationOutcome.Reason.CYCLE) }) {
+      delegate.randomValue(ctx)
+    }
 
   override fun asRequestType(): DataType<Any> = this
 

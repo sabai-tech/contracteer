@@ -1,5 +1,6 @@
 package tech.sabai.contracteer.core.serde
 
+import tech.sabai.contracteer.core.datatype.NullDataType
 import tech.sabai.contracteer.core.dsl.anyOfType
 import tech.sabai.contracteer.core.dsl.arrayType
 import tech.sabai.contracteer.core.dsl.booleanType
@@ -179,6 +180,24 @@ class PlainTextSerdeTest {
 
     // then
     assert(result.isSuccess())
+  }
+
+  @Test
+  fun `successfully deserializes null source to NullDataType`() {
+    // when
+    val result = PlainTextSerde.deserialize(null, NullDataType)
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `fails to deserialize non-null text to NullDataType`() {
+    // when
+    val result = PlainTextSerde.deserialize("anything", NullDataType)
+
+    // then
+    assert(result.isFailure())
   }
 
   @Test

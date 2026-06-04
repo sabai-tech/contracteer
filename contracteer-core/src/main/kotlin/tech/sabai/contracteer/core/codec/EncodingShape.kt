@@ -5,7 +5,6 @@ import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
 import tech.sabai.contracteer.core.combineResults
 import tech.sabai.contracteer.core.datatype.*
-import java.util.*
 
 internal sealed class EncodingShape {
   object Scalar: EncodingShape()
@@ -19,44 +18,39 @@ internal sealed class EncodingShape {
 
   companion object {
     fun of(dataType: DataType<out Any>): Result<EncodingShape> =
-      compute(dataType, Collections.newSetFromMap(IdentityHashMap()))
+      compute(dataType, CycleGuard())
 
-    private fun compute(dataType: DataType<out Any>, visited: MutableSet<ProxyDataType>): Result<EncodingShape> =
+    private fun compute(dataType: DataType<out Any>, guard: CycleGuard<Result<EncodingShape>>): Result<EncodingShape> =
       when (dataType) {
         is AnyDataType          -> success(Scalar)
-        is ObjectDataType       -> success(fromObject(dataType))
+        is ObjectDataType       -> ofObject(dataType)
         is ArrayDataType        -> success(Array(DecodeView.of(dataType.itemDataType)))
-        is ProxyDataType        -> ofProxy(dataType, visited)
-        is CompositeDataType<*> -> ofComposite(dataType, visited)
+        is ProxyDataType        -> ofProxy(dataType, guard)
+        is CompositeDataType<*> -> ofComposite(dataType, guard)
         else                    -> success(Scalar)
       }
 
-    private fun fromObject(dataType: ObjectDataType): Object =
-      Object(
+    private fun ofObject(dataType: ObjectDataType): Result<EncodingShape> =
+      success(Object(
         properties = dataType.properties.mapValues { (_, type) -> DecodeView.of(type) },
         additionalProperties = AdditionalPropertiesPolicy(
           allowed = dataType.allowAdditionalProperties,
           itemType = dataType.additionalPropertiesDataType?.let { DecodeView.of(it) }
         )
-      )
+      ))
 
-    private fun ofProxy(proxy: ProxyDataType, visited: MutableSet<ProxyDataType>): Result<EncodingShape> {
-      if (!proxy.isResolved) return success(Scalar)
-      if (!visited.add(proxy)) return success(cycleSentinel())
-      return try {
-        compute(proxy.delegate, visited)
-      } finally {
-        visited.remove(proxy)
-      }
-    }
+    private fun ofProxy(proxy: ProxyDataType, guard: CycleGuard<Result<EncodingShape>>): Result<EncodingShape> =
+      if (!proxy.isResolved) success(Scalar)
+      else guard.visit(proxy, onCycle = { success(cycleSentinel()) }) { compute(proxy.delegate, guard) }
 
     private fun cycleSentinel(): EncodingShape =
       Object(emptyMap(), AdditionalPropertiesPolicy(allowed = true, itemType = null))
 
     private fun ofComposite(composite: CompositeDataType<*>,
-                            visited: MutableSet<ProxyDataType>): Result<EncodingShape> =
+                            guard: CycleGuard<Result<EncodingShape>>): Result<EncodingShape> =
       composite.subTypes
-        .map { compute(it, visited) }
+        .filterNot { it is NullDataType }
+        .map { compute(it, guard) }
         .combineResults()
         .flatMap { branches -> mergeBranches(composite, branches) }
 

@@ -1,21 +1,53 @@
 package tech.sabai.contracteer.core.datatype
 
-import tech.sabai.contracteer.core.datatype.GenerationOutcome.Boundary
-import tech.sabai.contracteer.core.datatype.GenerationOutcome.Reason
-import tech.sabai.contracteer.core.datatype.GenerationOutcome.Value
+import tech.sabai.contracteer.core.datatype.GenerationOutcome.*
 
 /**
- * Base type for composite schemas (`allOf`, `anyOf`, `oneOf`) that combine multiple [subTypes].
+ * Base type for composite schemas (`allOf`, `anyOf`, `oneOf`) that validate a value
+ * against the combination of their [subTypes].
  */
-abstract class CompositeDataType<T : Any>(
-  name: String,
-  openApiType: String,
-  isNullable: Boolean,
-  val subTypes: List<DataType<out T>>,
-  dataTypeClass: Class<out T>,
-  allowedValues: AllowedValues? = null): ResolvedDataType<T>(name, openApiType, isNullable, dataTypeClass, allowedValues) {
+abstract class CompositeDataType<T: Any>(name: String,
+                                         openApiType: String,
+                                         internal val outerIsNullable: Boolean,
+                                         val subTypes: List<DataType<out T>>,
+                                         dataTypeClass: Class<out T>,
+                                         allowedValues: AllowedValues? = null
+): ResolvedDataType<T>(name, openApiType, dataTypeClass = dataTypeClass, allowedValues = allowedValues) {
 
   abstract val discriminator: Discriminator?
+
+  /**
+   * Computed lazily so unresolved [ProxyDataType] sub-types can resolve before the
+   * per-kind rule is consulted. See [computeNullable] for the rule and cycle handling.
+   */
+  final override val isNullable: Boolean by lazy { computeNullable(CycleGuard()) }
+
+  /**
+   * Returns whether this composite admits null under the per-kind rule
+   * (`anyOf: any`, `oneOf: count==1`, `allOf: all`), short-circuiting through
+   * [outerIsNullable]. Threads [guard] across cyclic sub-branches; a re-entered
+   * composite collapses to `false` for that branch, but [outerIsNullable] still
+   * wins because it short-circuits the rule.
+   *
+   * Exposed as a separate method (rather than overriding the [isNullable] lazy
+   * directly) so a walk into nested composites can thread the same [guard],
+   * keeping cycle detection continuous across kinds.
+   */
+  protected abstract fun computeNullable(guard: CycleGuard<Boolean>): Boolean
+
+  /**
+   * Returns whether [dataType] admits null in the context of an enclosing composite walk.
+   * Delegates to [computeNullable] for nested composites so [guard] threads across kinds.
+   * An unresolved proxy collapses to `false` (no information is available).
+   */
+  protected fun isNullableBranch(dataType: DataType<*>, guard: CycleGuard<Boolean>): Boolean =
+    when (dataType) {
+      is ProxyDataType        -> guard.visit(dataType, onCycle = { false }) {
+        if (dataType.isResolved) isNullableBranch(dataType.delegate, guard) else false
+      }
+      is CompositeDataType<*> -> dataType.computeNullable(guard)
+      else                    -> dataType.isNullable
+    }
 
   /**
    * Injects the discriminator property into [value] when both are present.
@@ -32,13 +64,14 @@ abstract class CompositeDataType<T : Any>(
   }
 
   /**
-   * Walks [subTypes] in shuffled order and returns the first sub-type that produces a [Value],
-   * with the discriminator injected. If every sub-type produces [Boundary], the first such
-   * boundary is propagated; if [subTypes] is empty, falls back to [Reason.CYCLE].
+   * Walks the non-null sub-types in shuffled order and returns the first that produces a [Value],
+   * with the discriminator injected. If every candidate produces [Boundary], the first such
+   * boundary is propagated; if no candidate produces a [Value] (including the case where every
+   * sub-type is [NullDataType]), falls back to [Reason.CYCLE].
    */
   protected fun generateFromAnySubType(ctx: GenerationContext): GenerationOutcome<Any> {
     var firstBoundary: Boundary? = null
-    for (subType in subTypes.shuffled()) {
+    for (subType in subTypes.filterNot { it is NullDataType }.shuffled()) {
       when (val result = subType.randomValue(ctx).forProperty(subType.name)) {
         is Value    -> return Value(injectDiscriminator(result.value, subType.name))
         is Boundary -> firstBoundary = firstBoundary ?: result

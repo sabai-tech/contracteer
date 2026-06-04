@@ -190,6 +190,107 @@ class ExtractionErrorTest {
   }
 
   @Test
+  fun `fails when request body schema is standalone type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/null_request_body.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("standalone 'type: null'") && it.contains("anyOf") }) {
+      "Expected standalone null type error but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when query parameter schema is standalone type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/null_query_parameter.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("standalone 'type: null'") && it.contains("anyOf") }) {
+      "Expected standalone null type error but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when request header parameter schema is standalone type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/null_request_header.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("standalone 'type: null'") && it.contains("in: header") }) {
+      "Expected standalone null type error mentioning 'in: header' but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when query parameter content schema is standalone type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/null_query_parameter_content.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("standalone 'type: null'") && it.contains("anyOf") }) {
+      "Expected standalone null type error but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when response header schema is standalone type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/null_response_header.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("standalone 'type: null'") && it.contains("anyOf") }) {
+      "Expected standalone null type error but got: $errors"
+    }
+  }
+
+  @Test
+  fun `fails when anyOf outer type constrains non-null but a branch declares type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/anyof_outer_type_conflicts_with_null_branch.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("outer 'type: [object]'") &&
+      it.contains("'anyOf' branch '#1'") &&
+      it.contains("Either add 'null' to the outer type array or remove the null branch")
+    }) { "Expected anyOf outer-type conflict error but got: $errors" }
+  }
+
+  @Test
+  fun `fails when oneOf outer type constrains non-null but a branch declares type null`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/oneof_outer_type_conflicts_with_null_branch.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("outer 'type: [string]'") &&
+      it.contains("'oneOf' branch '#1'") &&
+      it.contains("Either add 'null' to the outer type array or remove the null branch")
+    }) { "Expected oneOf outer-type conflict error but got: $errors" }
+  }
+
+  @Test
+  fun `fails when allOf includes a type null branch`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/allof_with_null_branch.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any {
+      it.contains("'allOf' includes a 'type: null' branch (#1)") &&
+      it.contains("unsatisfiable")
+    }) { "Expected allOf null-branch unsatisfiable error but got: $errors" }
+  }
+
+  @Test
   fun `fails with a clear message when a JSON Pointer segment names an unknown Schema field`() {
     // when
     val result = OpenApiLoader.loadOperations("src/test/resources/error/ref_unknown_segment.yaml")

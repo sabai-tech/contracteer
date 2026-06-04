@@ -114,6 +114,7 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       type == "number"                                              -> NumberDataTypeConverter.convert(schema)
       schema.hasStructuredTextContent()                             -> unsupportedStructuredTextContentMediaType(schema)
       type == "string"                                              -> convertStringSchema(schema)
+      schema.isNullOnly()                                           -> success(NullDataType)
       else                                                          -> tryToInferSchemaType(schema)
     }
   }

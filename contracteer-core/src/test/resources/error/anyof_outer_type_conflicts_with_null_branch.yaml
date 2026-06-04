@@ -1,0 +1,22 @@
+openapi: "3.1.0"
+info:
+  title: anyOf outer-type conflicts with null branch
+  version: '1.0'
+paths:
+  /things:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: [object]
+              anyOf:
+                - type: [object]
+                  properties:
+                    name:
+                      type: ["string"]
+                - type: ["null"]
+      responses:
+        '204':
+          description: No Content

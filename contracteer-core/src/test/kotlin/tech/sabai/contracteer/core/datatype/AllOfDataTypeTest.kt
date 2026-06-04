@@ -28,6 +28,60 @@ class AllOfDataTypeTest {
   }
 
   @Test
+  fun `isNullable is true when every subtype admits null`() {
+    // given
+    val nullableA = objectType(name = "A", isNullable = true) { properties { "a" to stringType() } }
+    val nullableB = objectType(name = "B", isNullable = true) { properties { "b" to integerType() } }
+    val allOf = allOfType { subType(nullableA); subType(nullableB) }
+
+    // when
+    val nullable = allOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable is false when any subtype does not admit null`() {
+    // given
+    val nullableA = objectType(name = "A", isNullable = true) { properties { "a" to stringType() } }
+    val nonNullableB = objectType(name = "B") { properties { "b" to integerType() } }
+    val allOf = allOfType { subType(nullableA); subType(nonNullableB) }
+
+    // when
+    val nullable = allOf.isNullable
+
+    // then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `isNullable is false when an allOf branch is an unresolved proxy`() {
+    // given
+    val nullableObj = objectType(name = "X", isNullable = true) { properties { "a" to stringType() } }
+    val unresolvedProxy = ProxyDataType("Pending")
+    val allOf = allOfType { subType(nullableObj); subType(unresolvedProxy) }
+
+    // when
+    val nullable = allOf.isNullable
+
+    // then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `isNullable is true when outer is nullable regardless of subtypes`() {
+    // given
+    val allOf = allOfType(isNullable = true) { subType(pet); subType(cat) }
+
+    // when
+    val nullable = allOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
   fun `validation fails when any of the sub datatypes validation fails`() {
     // given
     val allOfDataType = allOfType { subType(pet); subType(cat) }

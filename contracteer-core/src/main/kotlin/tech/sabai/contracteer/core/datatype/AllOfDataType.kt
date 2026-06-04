@@ -12,22 +12,25 @@ import java.lang.System.lineSeparator
 /** OpenAPI `allOf` composition. The value must match all sub-schemas simultaneously. */
 class AllOfDataType private constructor(name: String,
                                         subTypes: List<DataType<out Any>>,
-                                        isNullable: Boolean,
+                                        outerIsNullable: Boolean,
                                         override val discriminator: Discriminator?,
                                         allowedValues: AllowedValues? = null):
     CompositeDataType<Any>(name,
                            "allOf",
-                           isNullable,
+                           outerIsNullable,
                            subTypes,
                            Any::class.java,
                            allowedValues) {
+
+  override fun computeNullable(guard: CycleGuard<Boolean>): Boolean =
+    outerIsNullable || subTypes.all { isNullableBranch(it, guard) }
 
   override fun asRequestType(): DataType<Any> =
     subTypes
       .map { it.asRequestType() }
       .let { transformed ->
         if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
-        else AllOfDataType(name, transformed, isNullable, discriminator, allowedValues)
+        else AllOfDataType(name, transformed, outerIsNullable, discriminator, allowedValues)
       }
 
   override fun asResponseType(): DataType<Any> =
@@ -35,7 +38,7 @@ class AllOfDataType private constructor(name: String,
       .map { it.asResponseType() }
       .let { transformed ->
         if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
-        else AllOfDataType(name, transformed, isNullable, discriminator, allowedValues)
+        else AllOfDataType(name, transformed, outerIsNullable, discriminator, allowedValues)
       }
 
   override fun doValidate(value: Any): Result<Any> {
@@ -140,18 +143,18 @@ class AllOfDataType private constructor(name: String,
     @JvmOverloads
     fun create(name: String,
                subTypes: List<DataType<out Any>>,
-               isNullable: Boolean = false,
+               outerIsNullable: Boolean = false,
                discriminator: Discriminator? = null,
                enum: List<Any?> = emptyList()) =
       subTypes.validate(discriminator)
         .flatMap {
-          val defaultDataType = AllOfDataType(name, subTypes, isNullable, discriminator)
+          val defaultDataType = AllOfDataType(name, subTypes, outerIsNullable, discriminator)
           if (enum.isEmpty()) {
             success(defaultDataType)
           } else {
             AllowedValues
               .create(enum, defaultDataType)
-              .map { AllOfDataType(name, subTypes, isNullable, discriminator, it) }
+              .map { AllOfDataType(name, subTypes, outerIsNullable, discriminator, it) }
           }
         }
 

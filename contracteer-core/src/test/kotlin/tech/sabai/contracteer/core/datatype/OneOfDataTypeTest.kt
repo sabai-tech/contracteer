@@ -29,6 +29,67 @@ class OneOfDataTypeTest {
 
   private val quantity = integerType(name = "quantity")
 
+  @Test
+  fun `isNullable is true when exactly one subtype admits null`() {
+    // given
+    val oneOf = oneOfType {
+      subType(stringType())
+      subType(NullDataType)
+    }
+
+    // when
+    val nullable = oneOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
+  @Test
+  fun `isNullable is false when two subtypes admit null`() {
+    // given
+    val oneOf = oneOfType {
+      subType(stringType(isNullable = true))
+      subType(NullDataType)
+    }
+
+    // when
+    val nullable = oneOf.isNullable
+
+    // then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `isNullable is false when three subtypes admit null`() {
+    // given
+    val oneOf = oneOfType {
+      subType(stringType(isNullable = true))
+      subType(integerType(isNullable = true))
+      subType(NullDataType)
+    }
+
+    // when
+    val nullable = oneOf.isNullable
+
+    // then
+    assert(!nullable)
+  }
+
+  @Test
+  fun `isNullable is true when outer is nullable even with no null-admitting subtype`() {
+    // given
+    val oneOf = oneOfType(isNullable = true) {
+      subType(stringType())
+      subType(integerType())
+    }
+
+    // when
+    val nullable = oneOf.isNullable
+
+    // then
+    assert(nullable)
+  }
+
   private val name = stringType(name = "name")
 
   @Test
