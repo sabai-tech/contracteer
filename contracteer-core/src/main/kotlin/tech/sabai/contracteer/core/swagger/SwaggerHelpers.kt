@@ -128,6 +128,9 @@ internal fun Schema<*>.hasContains(): Boolean =
 internal fun Schema<*>.hasConditional(): Boolean =
   `if` != null || then != null || `else` != null
 
+internal fun Schema<*>.hasNot(): Boolean =
+  not != null
+
 internal fun Schema<*>.hasUnevaluatedProperties(): Boolean =
   unevaluatedProperties != null
 

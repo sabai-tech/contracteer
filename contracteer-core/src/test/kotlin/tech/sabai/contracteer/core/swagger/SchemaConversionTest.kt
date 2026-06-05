@@ -132,6 +132,18 @@ class SchemaConversionTest {
   }
 
   @Test
+  fun `rejects 3 0 schema with not keyword`() {
+    // when
+    val result = loadOperations("3.0", "not_error.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("'not'") && it.contains("not supported") }) {
+      "Expected an error naming the 'not' keyword but got: $errors"
+    }
+  }
+
+  @Test
   fun `merges 3 1 ref-with-sibling by taking the tighter minLength`() {
     // when
     val dataType = getDataType("3.1", "ref_with_sibling_min_length.yaml") as StringDataType
@@ -1304,6 +1316,8 @@ class SchemaConversionTest {
       Arguments.of("dependentRequired",     "dependent_required_error.yaml"),
       Arguments.of("dependentSchemas",      "dependent_schemas_error.yaml"),
       Arguments.of("contentSchema",         "content_schema_error.yaml"),
+      Arguments.of("'not'",                 "not_error.yaml"),
+      Arguments.of("'not'",                 "not_alone_error.yaml"),
     )
   }
 }

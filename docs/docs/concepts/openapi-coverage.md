@@ -13,17 +13,15 @@ Behavior is the same across both versions except where noted below.
 
 ## Limitations
 
-Contracteer does not reject a specification because it contains unsupported features.
-Unsupported content types cause the operation to be skipped with a warning.
-Unsupported schema keywords are ignored.
-Your specification still loads.
+Contracteer handles unsupported features in one of two ways.
+Some are accepted but degraded -- the specification still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
+Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at load with an explanatory message; see [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
 
 | Feature                                     | Impact                                                                                                                                                                                                                                                                                                                                                |
 |---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `application/xml`                           | Operations with XML-only content types are skipped with a warning.                                                                                                                                                                                                                                                                                    |
 | Missing schema on body or parameter content | Operations with request/response bodies or parameter `content` entries that have no schema are skipped with a warning. Exception: bodies declared with a binary content type (`application/octet-stream`, `image/*`, etc.) default to binary content.                                                                                                |
 | Empty schema (`schema: {}`)                 | Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.                                                                                                                                                                                  |
-| `not` (schema negation)                     | The keyword is ignored. Values are validated and generated without it.                                                                                                                                                                                                                                                                                |
 | `externalValue` (Example Objects)           | Only inline `value` is read. External references are not fetched.                                                                                                                                                                                                                                                                                     |
 | Pattern generation (regex)                  | Common Java-specific constructs (POSIX classes, `\p{Is...}` aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See [Troubleshooting](../guides/troubleshooting.md#pattern-not-supported-for-value-generation) for details.                                                                                |
 | Unknown integer/number formats              | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                                                                                                                                                                                                             |
@@ -723,6 +721,7 @@ A few do not produce an error -- they are simply not honored, and references tha
 | `dependentSchemas`                           | Rejected at load time               | Conditional-schema behavior not implemented.                                                            |
 | `unevaluatedItems` / `unevaluatedProperties` | Rejected at load time               | Adjacent-keyword evaluation not implemented.                                                            |
 | `if` / `then` / `else`                       | Rejected at load time               | Conditional validation not implemented.                                                                 |
+| `not`                                        | Rejected at load time               | Subschema negation not implemented. Also rejected in OAS 3.0.                                           |
 | `contentSchema`                              | Rejected at load time               | Nested-content validation not implemented.                                                              |
 | Non-base64 `contentEncoding`                 | Rejected at load time               | Only `base64` is supported today.                                                                       |
 | Structured-text `contentMediaType`           | Rejected at load time               | Inline content validation for `application/json`, `application/xml`, etc. is not implemented.           |
