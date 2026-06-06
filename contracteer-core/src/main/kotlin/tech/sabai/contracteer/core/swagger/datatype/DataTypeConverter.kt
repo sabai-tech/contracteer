@@ -91,20 +91,10 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
     val type = schema.effectiveType()
     val contentEncoding = schema.effectiveContentEncoding()
     val contentMediaType = schema.effectiveContentMediaType()?.let(::ContentType)
+    val unsupportedFeature = schema.unsupportedFeature()
     return when {
       schema.hasComposition()                                       -> convertComposedSchema(schema, convert, discriminator)
-      schema.booleanSchemaValue() != null                           -> unsupported(schema, "boolean schema '${schema.booleanSchemaValue()}'", "Use a schema object instead.")
-      schema.hasNonNullableMultiType()                              -> unsupported(schema, "non-nullable multi-type 'types: ${schema.types}'", "Use 'oneOf' or 'anyOf' to express a union of types.")
-      schema.hasPrefixItems()                                       -> unsupported(schema, "'prefixItems'", "Use 'items' if all positions share a single type.")
-      schema.hasContains()                                          -> unsupported(schema, "'contains/minContains/maxContains'")
-      schema.hasConditional()                                       -> unsupported(schema, "'if/then/else'")
-      schema.hasNot()                                               -> unsupported(schema, "'not'")
-      schema.hasUnevaluatedProperties()                             -> unsupported(schema, "'unevaluatedProperties'")
-      schema.hasUnevaluatedItems()                                  -> unsupported(schema, "'unevaluatedItems'")
-      schema.hasPatternProperties()                                 -> unsupported(schema, "'patternProperties'")
-      schema.hasDependentRequired()                                 -> unsupported(schema, "'dependentRequired'")
-      schema.hasDependentSchemas()                                  -> unsupported(schema, "'dependentSchemas'")
-      schema.hasContentSchema()                                     -> unsupported(schema, "'contentSchema'")
+      unsupportedFeature != null                                    -> unsupported(schema, unsupportedFeature.description, unsupportedFeature.suggestion)
       contentEncoding == "base64"                                   -> Base64DataTypeConverter.convert(schema)
       contentEncoding != null                                       -> unsupportedContentEncoding(schema, contentEncoding)
       contentMediaType?.isBinary() == true                          -> BinaryDataTypeConverter.convert(schema)
@@ -119,6 +109,25 @@ internal class DataTypeConverter(private val sharedComponents: SharedComponents)
       else                                                          -> tryToInferSchemaType(schema)
     }
   }
+
+  private data class UnsupportedFeature(val description: String, val suggestion: String? = null)
+
+  private fun Schema<*>.unsupportedFeature(): UnsupportedFeature? =
+    when {
+      booleanSchemaValue() != null -> UnsupportedFeature("boolean schema '${booleanSchemaValue()}'", "Use a schema object instead.")
+      hasNonNullableMultiType()    -> UnsupportedFeature("non-nullable multi-type 'types: $types'", "Use 'oneOf' or 'anyOf' to express a union of types.")
+      hasPrefixItems()             -> UnsupportedFeature("'prefixItems'", "Use 'items' if all positions share a single type.")
+      hasContains()                -> UnsupportedFeature("'contains/minContains/maxContains'")
+      hasConditional()             -> UnsupportedFeature("'if/then/else'")
+      hasNot()                     -> UnsupportedFeature("'not'")
+      hasUnevaluatedProperties()   -> UnsupportedFeature("'unevaluatedProperties'")
+      hasUnevaluatedItems()        -> UnsupportedFeature("'unevaluatedItems'")
+      hasPatternProperties()       -> UnsupportedFeature("'patternProperties'")
+      hasDependentRequired()       -> UnsupportedFeature("'dependentRequired'")
+      hasDependentSchemas()        -> UnsupportedFeature("'dependentSchemas'")
+      hasContentSchema()           -> UnsupportedFeature("'contentSchema'")
+      else                         -> null
+    }
 
   private fun convertStringSchema(schema: Schema<*>): Result<DataType<out Any>> =
     when (schema.format) {
