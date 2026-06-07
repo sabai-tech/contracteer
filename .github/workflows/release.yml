@@ -120,6 +120,8 @@ jobs:
     if: github.ref == 'refs/heads/main' && vars.JRELEASER_DRY_RUN != 'true'
     name: Deploy Documentation
     needs: release
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-docs.yml
     with:
       version: ${{ inputs.version }}
