@@ -1930,10 +1930,9 @@ Behavior is the same across both versions except where noted below.</p>
 </ul>
 <hr />
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
-<p>Contracteer does not reject a specification because it contains unsupported features.
-Unsupported content types cause the operation to be skipped with a warning.
-Unsupported schema keywords are ignored.
-Your specification still loads.</p>
+<p>Contracteer handles unsupported features in one of two ways.
+Some are accepted but degraded -- the specification still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
+Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at load with an explanatory message; see <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</p>
 <table>
 <thead>
 <tr>
@@ -1953,10 +1952,6 @@ Your specification still loads.</p>
 <tr>
 <td>Empty schema (<code>schema: {}</code>)</td>
 <td>Treated as unconstrained ("any type"). Validation accepts any value; random generation produces a placeholder value that may not be meaningful for contract testing.</td>
-</tr>
-<tr>
-<td><code>not</code> (schema negation)</td>
-<td>The keyword is ignored. Values are validated and generated without it.</td>
 </tr>
 <tr>
 <td><code>externalValue</code> (Example Objects)</td>
@@ -2954,6 +2949,11 @@ A few do not produce an error -- they are simply not honored, and references tha
 <td><code>if</code> / <code>then</code> / <code>else</code></td>
 <td>Rejected at load time</td>
 <td>Conditional validation not implemented.</td>
+</tr>
+<tr>
+<td><code>not</code></td>
+<td>Rejected at load time</td>
+<td>Subschema negation not implemented. Also rejected in OAS 3.0.</td>
 </tr>
 <tr>
 <td><code>contentSchema</code></td>
