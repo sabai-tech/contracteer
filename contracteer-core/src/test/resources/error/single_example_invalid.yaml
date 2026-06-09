@@ -1,0 +1,26 @@
+openapi: 3.0.0
+info:
+  title: Single Example API
+  version: '1.0'
+paths:
+  /items/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        example: not-an-integer
+    get:
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+              example:
+                id: 1

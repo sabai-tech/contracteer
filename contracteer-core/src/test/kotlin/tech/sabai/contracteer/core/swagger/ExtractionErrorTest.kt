@@ -144,6 +144,22 @@ class ExtractionErrorTest {
     // then
     val errors = result.assertFailure()
     assert(errors.size == 5) { "Expected 5 validation errors but got ${errors.size}: $errors" }
+    assert(errors.any { it.contains("'request.body.examples[CREATE_PRODUCT].id'") }) { errors.toString() }
+    assert(errors.any { it.contains("'request.path[id].examples[NOT_FOUND]'") }) { errors.toString() }
+    assert(errors.any { it.contains("'response.body.examples[GET_DETAILS].quantity'") }) { errors.toString() }
+    assert(errors.any { it.contains("'response.header[location].examples[ASYNC]'") }) { errors.toString() }
+    assert(errors.any { it.contains("'response.body.examples[NOT_FOUND].error'") }) { errors.toString() }
+  }
+
+  @Test
+  fun `uses the singular example keyword in the error path and does not leak the internal key`() {
+    // when
+    val result = OpenApiLoader.loadOperations("src/test/resources/error/single_example_invalid.yaml")
+
+    // then
+    val errors = result.assertFailure()
+    assert(errors.any { it.contains("'request.path[id].example'") }) { errors.toString() }
+    assert(errors.none { it.contains("_example") }) { errors.toString() }
   }
 
   @Test

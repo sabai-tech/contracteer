@@ -1,6 +1,7 @@
 package tech.sabai.contracteer.core.swagger
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.swagger.v3.oas.models.examples.Example
 import tech.sabai.contracteer.core.Result
 import tech.sabai.contracteer.core.Result.Companion.failure
 import tech.sabai.contracteer.core.Result.Companion.success
@@ -137,7 +138,7 @@ internal object ScenarioBuilder {
     val paramValidation = params.map { (element, value) ->
       when (val paramSchema = schemasByElement[element]) {
         null -> failure("Example '$key' has no schema for request parameter '${elementName(element)}'")
-        else -> paramSchema.dataType.validate(value).forProperty(elementName(element))
+        else -> paramSchema.dataType.validate(value).forExample(key).forProperty(elementName(element))
       }
     }.combineResults()
 
@@ -154,7 +155,7 @@ internal object ScenarioBuilder {
     val headerValidation = headers.map { (element, value) ->
       when (val headerSchema = schemasByElement[element]) {
         null -> failure("Example '$key' has no schema for response header '${elementName(element)}'")
-        else -> headerSchema.dataType.validate(value).forProperty(elementName(element))
+        else -> headerSchema.dataType.validate(value).forExample(key).forProperty(elementName(element))
       }
     }.combineResults()
 
@@ -173,6 +174,7 @@ internal object ScenarioBuilder {
       else when (val bodySchema = bodySchemas.find { it.contentType.value == body.contentType.value }) {
         null -> failure("Example '$key' has no schema for $role body '${body.contentType.value}'")
         else -> bodySchema.dataType.validate(body.value)
+          .forExample(key)
           .let { if (multiContent) it.forKey(body.contentType.value) else it }
           .forProperty("body")
       }
@@ -195,6 +197,10 @@ internal object ScenarioBuilder {
       }
     }
   }
+
+  private fun <T> Result<T>.forExample(key: String): Result<T> =
+    if (key == SINGLE_EXAMPLE_KEY) forProperty("example")
+    else forKey(key).forProperty("examples")
 
   private fun elementName(element: ParameterElement) =
     when (element) {

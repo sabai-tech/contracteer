@@ -22,6 +22,8 @@ import tech.sabai.contracteer.core.joinWithQuotes
 import tech.sabai.contracteer.core.operation.ContentType
 import java.math.BigDecimal
 
+internal const val SINGLE_EXAMPLE_KEY = "_example"
+
 internal fun MediaType.safeExamples() =
   examples ?: example?.let(::singleExampleMap) ?: emptyMap()
 
@@ -272,7 +274,7 @@ internal fun Example.shortRef() =
 internal fun ApiResponse.shortRef() =
   this.`$ref`?.replace("#/components/responses/", "")
 
-private fun singleExampleMap(exampleValue: Any) =
+internal fun singleExampleMap(exampleValue: Any) =
   mapOf("_example" to Example().apply { value = exampleValue })
 
 internal fun isClassCode(code: String): Boolean =
