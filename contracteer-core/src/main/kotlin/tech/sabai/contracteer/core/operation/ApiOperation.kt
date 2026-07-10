@@ -5,7 +5,7 @@ import tech.sabai.contracteer.core.datatype.DataType
 import tech.sabai.contracteer.core.serde.Serde
 
 /**
- * Represents a single API operation (path + HTTP method) extracted from an OpenAPI specification.
+ * Represents a single API operation (path + HTTP method) extracted from an OpenAPI document.
  *
  * Contains the structural schemas describing what the operation accepts and returns,
  * and the scenarios providing named example-based request/response pairings.

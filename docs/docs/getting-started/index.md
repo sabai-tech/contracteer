@@ -7,7 +7,7 @@ Pick the guide that matches your setup.
 
 ## Test Your Server
 
-The verifier sends requests to your running server and validates that responses conform to your OpenAPI specification.
+The verifier sends requests to your running server and validates that responses conform to your OpenAPI document.
 
 - [Verifier](verifier.md) -- programmatic setup for Kotlin or Java projects.
 - [Verifier with JUnit 5](verifier-junit.md) -- annotation-based setup with `@ContracteerTest`.
@@ -35,7 +35,7 @@ The CLI runs verification and starts mock servers from the command line -- no JV
 
 All guides assume:
 
-- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 document (`.yaml` or `.json`)
 - JDK 21 or later (for JVM and Spring Boot guides)
 - Gradle or Maven (for JVM and Spring Boot guides)
 
@@ -44,4 +44,4 @@ All guides assume:
 ## New to Contract Testing?
 
 - [What Is Contract Testing?](../concepts/contract-testing.md) -- what contract testing is and why it matters.
-- [How Contracteer Works](../concepts/how-contracteer-works.md) -- how Contracteer turns your OpenAPI specification into a verifier and a mock server.
+- [How Contracteer Works](../concepts/how-contracteer-works.md) -- how Contracteer turns your OpenAPI document into a verifier and a mock server.

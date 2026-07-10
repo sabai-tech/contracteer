@@ -1,6 +1,6 @@
 # Testing Your Client
 
-The **mock server** is a strict reference implementation of your OpenAPI specification.
+The **mock server** is a strict reference implementation of your OpenAPI document.
 It validates every incoming request, returns spec-compliant responses, and rejects anything that violates the contract.
 
 ---
@@ -13,7 +13,7 @@ Here is the `GET /musketeers/{id}` operation from the [Musketeer API](https://gi
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full spec: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
 paths:
   /musketeers/{id}:
     get:
@@ -75,7 +75,7 @@ For elements where the scenario provides an example value, the request value mus
 For elements where the scenario has no example, the mock server checks type and structure only.
 
 `GET /musketeers/1` matches the ATHOS scenario -- the path parameter `id` equals the example value `1`.
-The mock server returns `200` with Athos's response data from the specification.
+The mock server returns `200` with Athos's response data from the OpenAPI document.
 
 `GET /musketeers/999` matches the 404_UNKNOWN_MUSKETEER scenario.
 The mock server returns `404`.
@@ -144,8 +144,8 @@ The mock server catches client-side bugs that lenient mocks miss:
 If the mock server rejects your request, a correctly-implemented real server would reject it too.
 
 Like the verifier, the mock server follows [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle).
-It validates request elements declared in the specification.
-Extra query parameters or headers that the specification does not mention are ignored.
+It validates request elements declared in the OpenAPI document.
+Extra query parameters or headers that the OpenAPI document does not mention are ignored.
 There is no schema to validate them against.
 
 ---
@@ -157,7 +157,7 @@ The mock server serves as a [test double](https://martinfowler.com/bliki/TestDou
 In Martin Fowler's [distinction](https://martinfowler.com/bliki/IntegrationTest.html), a **narrow integration test** exercises your code's interaction with a separate component.
 It replaces the real component with a test double.
 The mock server fills this role.
-Your client sends real HTTP requests to a server that behaves according to the specification.
+Your client sends real HTTP requests to a server that behaves according to the OpenAPI document.
 
 This gives you three properties that end-to-end tests against a real server cannot:
 
@@ -172,7 +172,7 @@ Tests do not fail because of external server state, data changes, or network iss
 **Contract confidence.**
 The mock server's strictness means that a passing test is a genuine signal.
 Your client sends valid requests and handles the documented responses.
-If the real server conforms to the same specification -- which the [verifier](testing-your-server.md) ensures -- the integration will work.
+If the real server conforms to the same OpenAPI document -- which the [verifier](testing-your-server.md) ensures -- the integration will work.
 
 Unit tests verify that your business logic is correct.
 The mock server verifies that your client respects the contract at the HTTP boundary.
@@ -228,7 +228,7 @@ If you need to test how your client handles a specific value, that belongs in a 
 - It returns `418` when it cannot determine the correct response -- read the 418 body for diagnostics.
 - The mock server is strict by design.
   If it rejects your request, a correctly-implemented real server would too.
-- It follows Postel's Law: it validates what the specification defines and ignores undeclared elements.
+- It follows Postel's Law: it validates what the OpenAPI document defines and ignores undeclared elements.
 - Assert structure, not values -- your client should handle any valid response, not just the example data.
 - Use the mock server as a test double for narrow integration tests -- fast, reliable, and contract-enforcing.
 
@@ -243,6 +243,6 @@ If you need to test how your client handles a specific value, that belongs in a 
 
 ## Next Steps
 
-- [Testing Your Server](testing-your-server.md) -- how the verifier tests your server against the specification.
+- [Testing Your Server](testing-your-server.md) -- how the verifier tests your server against the OpenAPI document.
 - [Creating Scenarios](scenarios.md) -- how to write OpenAPI examples that produce the scenarios you want.
 - Getting started with the mock server: [Mock Server](../getting-started/mockserver.md) | [Mock Server (Spring Boot)](../getting-started/mockserver-spring.md)

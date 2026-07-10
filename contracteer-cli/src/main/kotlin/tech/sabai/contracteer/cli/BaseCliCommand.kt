@@ -16,7 +16,7 @@ import kotlin.system.exitProcess
 abstract class BaseCliCommand: Callable<Unit> {
 
   @Parameters(index = "0",
-              description = ["Path or URL of the OpenAPI 3 Specification that defines the API operations."]
+              description = ["Path or URL of the OpenAPI document that defines the API operations."]
   )
   protected lateinit var path: String
 

@@ -24,7 +24,7 @@ import tech.sabai.contracteer.core.serde.Serde
  */
 sealed interface ParameterCodec {
 
-  /** The parameter name as declared in the OpenAPI specification. */
+  /** The parameter name as declared in the OpenAPI document. */
   val paramName: String
 
   /**

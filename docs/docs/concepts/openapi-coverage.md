@@ -5,7 +5,7 @@ Behavior is the same across both versions except where noted below.
 
 - Using OpenAPI 3.0? Jump to [OpenAPI 3.0-specific behavior](#openapi-30-specific-behavior).
 - Using OpenAPI 3.1? Jump to [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
-- Migrating an OpenAPI 3.0 specification to 3.1?
+- Migrating an OpenAPI 3.0 document to 3.1?
   See [OpenAPI 3.1-specific behavior](#openapi-31-specific-behavior) for what becomes available and [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords) for what Contracteer rejects.
   For syntax rewrites required by 3.1 itself, consult the [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2).
 
@@ -14,7 +14,7 @@ Behavior is the same across both versions except where noted below.
 ## Limitations
 
 Contracteer handles unsupported features in one of two ways.
-Some are accepted but degraded -- the specification still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
+Some are accepted but degraded -- the OpenAPI document still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
 Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at load with an explanatory message; see [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
 
 | Feature                                     | Impact                                                                                                                                                                                                                                                                                                                                                |
@@ -26,13 +26,13 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 | Pattern generation (regex)                  | Common Java-specific constructs (POSIX classes, `\p{Is...}` aliases) are rewritten automatically. Patterns that the generator cannot handle are rejected at load time. See [Troubleshooting](../guides/troubleshooting.md#pattern-not-supported-for-value-generation) for details.                                                                                |
 | Unknown integer/number formats              | Ignored with a warning. Only `int32`, `int64`, `float`, `double` apply range constraints.                                                                                                                                                                                                                                                             |
 
-If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the specification.
+If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the OpenAPI document.
 
 ---
 
 ## Deviations from the Specification
 
-The OpenAPI specification is sometimes ambiguous or impractical for contract testing.
+The OpenAPI Specification is sometimes ambiguous or impractical for contract testing.
 In these cases, Contracteer makes explicit choices.
 
 ### String constraint precedence
@@ -51,19 +51,19 @@ Generating a random value that satisfies both a regex pattern and a length range
 Contracteer uses the same constraint for both validation and generation to ensure consistency.
 What Contracteer validates is what it can generate.
 
-`enum` is always validated against the active constraint when loading the specification.
-If all enum values satisfy the active constraint, the specification is accepted.
-If any enum value violates it, the specification is rejected.
+`enum` is always validated against the active constraint when loading the OpenAPI document.
+If all enum values satisfy the active constraint, the OpenAPI document is accepted.
+If any enum value violates it, the document is rejected.
 
 Random value generation for patterns uses the [RgxGen](https://github.com/curious-odd-man/rgxgen) library.
 RgxGen supports most common regex features, but lookaheads and lookbehinds do not generate correctly.
-If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in your specification.
+If Contracteer generates invalid values for your pattern, use `enum` values instead, or provide explicit `examples` in your OpenAPI document.
 
 ### Multipart default content types
 
-The OpenAPI specification defaults arrays of primitives to `text/plain` in multipart parts.
+The OpenAPI Specification defaults arrays of primitives to `text/plain` in multipart parts.
 Contracteer uses `application/json` for all arrays.
-The specification does not define how to serialize an array as plain text in a multipart part.
+The OpenAPI Specification does not define how to serialize an array as plain text in a multipart part.
 
 | Property type                                       | Contracteer default        |
 |-----------------------------------------------------|----------------------------|
@@ -111,12 +111,12 @@ allOf:
     maxLength: 10
 ```
 
-The OpenAPI specification allows `allOf` sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
+The OpenAPI Specification allows `allOf` sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
 For objects, this works -- different sub-schemas contribute different properties that combine cleanly.
 For primitives, constraints overlap on the same value.
 A `minLength: 5` from one sub-schema and a `maxLength: 10` from another would require computing the constraint intersection, which Contracteer does not do.
 
-If your specification uses multi-element `allOf` with primitives, combine the constraints into a single schema:
+If your OpenAPI document uses multi-element `allOf` with primitives, combine the constraints into a single schema:
 
 ```yaml
 # Equivalent single schema
@@ -130,7 +130,7 @@ maxLength: 10
 JSON Schema allows `allOf`, `anyOf`, and `oneOf` to appear on the same schema, with each keyword applying independently:
 
 ```yaml
-# Valid per the specification, but rejected by Contracteer
+# Valid per the OpenAPI Specification, but rejected by Contracteer
 ProductOrService:
   allOf:
     - $ref: '#/components/schemas/Purchasable'
@@ -143,8 +143,8 @@ Contracteer rejects schemas that combine multiple composition keywords.
 Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one must match).
 Combining them would require a compound validation that Contracteer does not implement.
 
-This pattern is extremely rare in real-world specifications and is almost always a mistake.
-If your specification combines composition keywords, restructure it to use a single keyword:
+This pattern is extremely rare in real-world OpenAPI documents and is almost always a mistake.
+If your OpenAPI document combines composition keywords, restructure it to use a single keyword:
 
 ```yaml
 # Use allOf to combine the base schema with a oneOf
@@ -188,18 +188,18 @@ Contracteer rejects this combination at load time:
 composed schemas define incompatible kinds: 'primitive' vs 'object'
 ```
 
-The OpenAPI specification permits the composition.
-Contracteer rejects it for type-blind wire formats because silently selecting one branch would break the trust model of contract testing: a green run must mean the whole specification was exercised, not one arbitrary interpretation of it.
+The OpenAPI Specification permits the composition.
+Contracteer rejects it for type-blind wire formats because silently selecting one branch would break the trust model of contract testing: a green run must mean the whole OpenAPI document was exercised, not one arbitrary interpretation of it.
 
 The same composition is accepted in `application/json` request and response bodies, where the wire format disambiguates.
 
 #### Multipart part default content type for mixed-shape branches
 
-The OpenAPI specification defaults a multipart part's content type based on its schema -- `text/plain` for primitives, `application/json` for objects and arrays, `application/octet-stream` for binary.
+The OpenAPI Specification defaults a multipart part's content type based on its schema -- `text/plain` for primitives, `application/json` for objects and arrays, `application/octet-stream` for binary.
 When a part's schema is a composition whose branches have incompatible encoding shapes (e.g., a primitive branch and an object branch), no single default applies.
 
-Contracteer rejects the specification at load time.
-The spec author must declare the part's content type explicitly via the `encoding` object:
+Contracteer rejects the OpenAPI document at load time.
+The OpenAPI document's author must declare the part's content type explicitly via the `encoding` object:
 
 ```yaml
 requestBody:
@@ -219,14 +219,14 @@ requestBody:
           contentType: application/json
 ```
 
-The OpenAPI specification does not define what to default to in this case.
+The OpenAPI Specification does not define what to default to in this case.
 Contracteer chooses explicit declaration over a silent guess.
 
 ---
 
 ## Not Applicable to Contract Testing
 
-These features are defined in the OpenAPI specification but do not affect the structural contract between client and server.
+These features are defined in the OpenAPI Specification but do not affect the structural contract between client and server.
 Contracteer does not process them.
 
 | Feature                          | Reason                                                                                                                                 |
@@ -305,7 +305,7 @@ Contracteer does not process them.
 
 **Type inference.**
 When a schema declares no `type` but uses `properties`, `additionalProperties`, or `items`, Contracteer treats it as an object or array schema accordingly.
-This is consistent with the specification, which permits typeless schemas while defining these keywords only for objects or arrays.
+This is consistent with the OpenAPI Specification, which permits typeless schemas while defining these keywords only for objects or arrays.
 
 ### Schema composition
 
@@ -329,18 +329,18 @@ Three runtime cases:
 
 **Property is absent.**
 When the discriminator property is missing from the body, Contracteer validates the body against every sub-schema as if no discriminator were declared.
-The OpenAPI specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
+The OpenAPI Specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
 The body is accepted if exactly one sub-schema matches (`oneOf`) or at least one sub-schema matches (`anyOf`).
 
 **Property is not a string.**
 When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
-The OpenAPI specification states: "Mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison."
+The OpenAPI Specification states: "Mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison."
 Contracteer does not coerce non-string values.
 Sub-schemas usually declare the discriminator property as `type: string`, so a non-string value fails the string type check within each branch.
 
 **Value does not match any mapping or schema name.**
 When the discriminator property is a string that matches no entry in `mapping` and no schema name under `components/schemas`, Contracteer rejects the body with `No schema found for discriminator property '<name>' with value: <value>`.
-The OpenAPI specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".
+The OpenAPI Specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".
 
 ### Discriminator on a parent schema used via `$ref`
 
@@ -407,7 +407,7 @@ With this form, Contracteer uses the discriminator to select the matching child 
 | `in: query`                     | Primitive, array, and object types. Styles: `form`, `spaceDelimited`, `pipeDelimited`, `deepObject`. `deepObject` only supports flat objects with primitive properties.                                                                                                                                             |
 | `in: header`                    | Primitive, array, and object types. Style: `simple`                                                                                                                                                                                                                                                                 |
 | `in: cookie`                    | Primitive, array, and object types. Style: `form`                                                                                                                                                                                                                                                                   |
-| `style` / `explode`             | All style/explode combinations with correct defaults per location. Flat styles (`simple`, `form`, `label`, `matrix`) reject nested non-primitive values -- arrays of objects, arrays of arrays, and objects with object/array properties -- because the OpenAPI specification leaves their serialization undefined. |
+| `style` / `explode`             | All style/explode combinations with correct defaults per location. Flat styles (`simple`, `form`, `label`, `matrix`) reject nested non-primitive values -- arrays of objects, arrays of arrays, and objects with object/array properties -- because the OpenAPI Specification leaves their serialization undefined. |
 | Composed schemas                | `allOf`/`oneOf`/`anyOf` whose branches are all objects (or all arrays) are accepted wherever a bare object schema (or array schema) is accepted. The merged shape must still satisfy the per-style restrictions above.                                                                                              |
 | `content` (instead of `schema`) | Parameter value serialized via content type (e.g., JSON-encoded query parameter)                                                                                                                                                                                                                                    |
 | `allowReserved`                 | Query parameters and `application/x-www-form-urlencoded` encoding properties                                                                                                                                                                                                                                        |
@@ -461,11 +461,11 @@ See [Creating Scenarios](scenarios.md) for how examples drive scenario creation.
 
 ## OpenAPI 3.0-specific behavior
 
-These behaviors apply only when your specification is OpenAPI 3.0.
+These behaviors apply only to OpenAPI 3.0 documents.
 
 ### `nullable` on composition schemas
 
-The OpenAPI specification states that `nullable` only takes effect when `type` is explicitly defined on the same schema.
+The OpenAPI Specification states that `nullable` only takes effect when `type` is explicitly defined on the same schema.
 Composition schemas (`oneOf`, `anyOf`, `allOf`) typically do not declare `type`, which means `nullable: true` should technically have no effect:
 
 ```yaml
@@ -490,7 +490,7 @@ The keyword was deprecated in OpenAPI 3.0 and dropped from OpenAPI 3.1.
 
 ## OpenAPI 3.1-specific behavior
 
-These behaviors apply only when your specification is OpenAPI 3.1.
+These behaviors apply only to OpenAPI 3.1 documents.
 
 ### Type arrays
 
@@ -534,7 +534,7 @@ Composite nullability rules:
 
 - `anyOf` accepts null if the outer schema is nullable or any branch admits null.
 - `oneOf` accepts null if the outer is nullable or exactly one branch admits null.
-  Two or more null-admitting branches make the composite non-nullable -- the specification is ambiguous, so Contracteer treats it as non-null.
+  Two or more null-admitting branches make the composite non-nullable -- the OpenAPI document is ambiguous, so Contracteer treats it as non-null.
 - `allOf` accepts null if the outer is nullable or every branch admits null.
 
 The three positions below are rejected at load time because the construct has no coherent meaning there, not because the feature is missing:
@@ -639,7 +639,7 @@ Other `contentEncoding` values (`base16`, `base32`, `quoted-printable`, etc.) an
 See [Unsupported OpenAPI 3.1 keywords](#unsupported-openapi-31-keywords).
 
 For request and response bodies declared with a binary content type (`application/octet-stream`, `image/*`, etc.) but no schema or an empty schema, Contracteer infers binary content automatically.
-This applies to OpenAPI 3.0 specifications as well.
+This applies to OpenAPI 3.0 documents as well.
 
 ### `$ref` with sibling keywords
 
@@ -698,7 +698,7 @@ Per-keyword merge rules:
 | Any other keyword (`not`, `allOf`/`anyOf`/`oneOf` as siblings, `if`/`then`/`else`, JSON Schema applicators, etc.) | Rejected at load time with a message naming the unsupported keyword.                        |
 
 Reference Object siblings (under `parameters`, `requestBodies`, `responses`, `headers`, `examples`) are separate from Schema Object siblings.
-The OpenAPI 3.1 specification states that only `summary` and `description` are allowed on a Reference Object; any other keyword is ignored.
+The OpenAPI 3.1 Specification states that only `summary` and `description` are allowed on a Reference Object; any other keyword is ignored.
 Contracteer follows that rule.
 
 If two schemas reference each other via `$ref` with siblings (for example `A → B → A`), the merge fails at load time with a message naming the cycle path.
@@ -734,7 +734,7 @@ A few do not produce an error -- they are simply not honored, and references tha
 
 ## Specification references
 
-Quotes throughout this page come from the OpenAPI specification:
+Quotes throughout this page come from the OpenAPI Specification:
 
 - [OpenAPI Specification 3.0.4](https://spec.openapis.org/oas/v3.0.4)
 - [OpenAPI Specification 3.1.2](https://spec.openapis.org/oas/v3.1.2)

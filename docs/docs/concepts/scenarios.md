@@ -9,7 +9,7 @@ All examples come from the [Musketeer API](https://github.com/sabai-tech/contrac
 
 ## OpenAPI Examples: `examples` and `example`
 
-The OpenAPI specification defines two ways to provide example values: the `examples` keyword and the `example` keyword.
+The OpenAPI Specification defines two ways to provide example values: the `examples` keyword and the `example` keyword.
 
 ### The `examples` keyword
 
@@ -20,7 +20,7 @@ Here is the `GET /musketeers/{id}` operation with `examples` on the path paramet
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full spec: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
 paths:
   /musketeers/{id}:
     get:
@@ -99,8 +99,8 @@ Both the request body and the response header carry an `example`.
 Contracteer creates one scenario: send the mission data, expect a `201` with `Location: /missions/3`.
 
 !!! danger "`example` and `examples` are mutually exclusive"
-    The OpenAPI specification declares `example` and `examples` mutually exclusive on the same element.
-    If both are present on the same parameter or media type, Contracteer rejects the specification.
+    The OpenAPI Specification declares `example` and `examples` mutually exclusive on the same element.
+    If both are present on the same parameter or media type, Contracteer rejects the OpenAPI document.
 
 ---
 
@@ -132,7 +132,7 @@ A scenario requires at least one request element and one response element sharin
 Not every element needs an example for that key.
 Elements without an example are filled with random values from the schema.
 
-This keeps your OpenAPI specification light.
+This keeps your OpenAPI document light.
 You only define the values that are relevant for a specific case -- Contracteer generates the rest.
 
 This principle applies to all scenario types: intersection-based scenarios, status-code-prefixed scenarios, and scenarios from the `example` keyword.

@@ -104,26 +104,26 @@ Your client tests point to it via the `API_BASE_URL` environment variable (or ho
 
 ---
 
-## The Specification as a Shared Artifact
+## The OpenAPI Document as a Shared Artifact
 
-The strongest CI setup treats the OpenAPI specification as a **versioned, published artifact**.
+The strongest CI setup treats the OpenAPI document as a **versioned, published artifact**.
 Both server and client pipelines consume it.
 
 The pattern:
 
-1. The specification lives in its own repository or module.
+1. The OpenAPI document lives in its own repository or module.
 2. It is published as a versioned artifact (e.g., a Maven dependency).
 3. Server and client projects declare a dependency on it.
-4. A specification change triggers both pipelines.
+4. A change to the OpenAPI document triggers both pipelines.
 
 This ensures that server and client always test against the same version of the contract.
-If the specification changes and either side fails to conform, CI catches it immediately.
+If the OpenAPI document changes and either side fails to conform, CI catches it immediately.
 
 The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern.
-The `musketeer-spec` module publishes the OpenAPI specification as a dependency.
+The `musketeer-spec` module publishes the OpenAPI document as a dependency.
 The server and client projects both consume it via `classpath:musketeer-api.yaml`.
 
-See [The Specification as Source of Truth](../concepts/contract-testing.md#the-specification-as-source-of-truth) for the rationale behind this approach.
+See [The OpenAPI Document as Source of Truth](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth) for the rationale behind this approach.
 
 ---
 
@@ -132,4 +132,4 @@ See [The Specification as Source of Truth](../concepts/contract-testing.md#the-s
 - [Use the CLI](../getting-started/cli.md) -- CLI installation and commands.
 - [Verify Your API with JUnit 5](../getting-started/verifier-junit.md) -- JVM verifier setup.
 - [Mock an API with Spring Boot](../getting-started/mockserver-spring.md) -- JVM mock server setup.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects demonstrating the shared specification pattern.
+- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects demonstrating the shared OpenAPI document pattern.

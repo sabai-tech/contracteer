@@ -14,7 +14,7 @@ import kotlin.system.exitProcess
   header = ["Contracteer - the musketeer of your API contracts"],
   synopsisHeading = "\n@|bold,cyan Usage|@:\n  ",
   descriptionHeading = "\n@|bold,cyan Description|@:\n  ",
-  description = ["A tool for validating API contracts and running mock servers based on OpenAPI 3 Specifications."],
+  description = ["A tool for validating API contracts and running mock servers based on OpenAPI 3 documents."],
   optionListHeading = "\n@|bold,cyan Options|@:\n",
   commandListHeading = "\n@|bold,cyan Commands|@:\n",
   mixinStandardHelpOptions = true,

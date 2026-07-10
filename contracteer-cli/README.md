@@ -25,7 +25,7 @@ Start a mock server:
 contracteer mock openapi.yaml
 ```
 
-The specification can be a local file path or an HTTP(S) URL.
+The OpenAPI document can be a local file path or an HTTP(S) URL.
 
 ## Documentation
 

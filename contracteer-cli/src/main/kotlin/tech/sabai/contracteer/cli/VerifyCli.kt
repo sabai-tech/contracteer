@@ -16,7 +16,7 @@ import kotlin.system.exitProcess
   synopsisHeading = "\n@|bold,cyan Usage|@:\n  ",
   descriptionHeading = "\n@|bold,cyan Description|@:\n  ",
   description = [
-    "Verify that a server's API implementation adheres to the defined OpenAPI 3 Specification."
+    "Verify that a server's API implementation adheres to its OpenAPI document."
   ],
   optionListHeading = "\n@|bold,cyan Options|@:\n",
   parameterListHeading = "\n@|bold,cyan Parameters|@:\n",
@@ -43,7 +43,7 @@ class VerifyCli: BaseCliCommand() {
     println()
     println(AUTO.string("🚀 Starting contract verification..."))
     println(AUTO.string("Target Server: @|bold,green $baseUrl|@"))
-    println(AUTO.string("Specification: @|bold,green ${path}|@"))
+    println(AUTO.string("OpenAPI document: @|bold,green ${path}|@"))
     println()
 
     val outcomes = cases.map { verifier.verify(it).also { outcome -> printOutcome(outcome) } }

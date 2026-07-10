@@ -128,4 +128,4 @@ private fun DataType<out Any>.isBinary(): Boolean = when (this) {
   else                                 -> false
 }
 
-private const val UNDEFINED_BEHAVIOR = "(undefined behavior in the OpenAPI specification)"
+private const val UNDEFINED_BEHAVIOR = "(undefined behavior in the OpenAPI document)"

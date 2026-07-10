@@ -1,6 +1,6 @@
 # contracteer-mockserver
 
-Start a mock server from an OpenAPI specification.
+Start a mock server from an OpenAPI document.
 Use this module when you need programmatic control -- for a custom test harness or a non-Spring framework.
 
 If you use Spring Boot, consider [contracteer-mockserver-spring](../contracteer-mockserver-spring/) for an annotation-based setup.
@@ -31,7 +31,7 @@ Maven:
 ```kotlin
 val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
 if (result.isFailure()) {
-    fail("Failed to load spec: ${result.errors()}")
+    fail("Failed to load OpenAPI document: ${result.errors()}")
 }
 
 val mockServer = MockServer(

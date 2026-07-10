@@ -1,6 +1,6 @@
 # Verify Your API with JUnit 5
 
-Add a single annotation to your JUnit tests to verify that your API matches your OpenAPI specification.
+Add a single annotation to your JUnit tests to verify that your API matches your OpenAPI document.
 
 The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains a complete working project.
 The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-server) demonstrates everything covered on this page.
@@ -12,7 +12,7 @@ The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-exa
 - JDK 21 or later
 - Gradle or Maven
 - JUnit 5 on the test classpath
-- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 document (`.yaml` or `.json`)
 
 ---
 
@@ -42,7 +42,7 @@ The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-exa
 ## Write the Test
 
 Annotate a test method with `@ContracteerTest`.
-Contracteer reads the OpenAPI specification, generates verification cases, and runs each as an individual JUnit test.
+Contracteer reads the OpenAPI document, generates verification cases, and runs each as an individual JUnit test.
 
 === "Kotlin"
 
@@ -83,7 +83,7 @@ After it returns, Contracteer sends the request and validates the response.
 
 ### `@ContracteerTest` fields
 
-**`openApiDoc`** *(required)* -- Path to the OpenAPI specification.
+**`openApiDoc`** *(required)* -- Path to the OpenAPI document.
 Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:openapi.yaml`).
 
 **`serverUrl`** *(default: `http://localhost`)* -- Base URL of the server under test.
@@ -91,10 +91,10 @@ Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:o
 **`serverPort`** *(default: `8080`)* -- Port of the server under test.
 Overridden by `@ContracteerServerPort` if the annotated field has a non-zero value.
 
-!!! tip "Treat the specification as a shared artifact"
-    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-specification-as-source-of-truth): the OpenAPI specification exists independently of both server and client.
+!!! tip "Treat the OpenAPI document as a shared artifact"
+    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
-    This ensures that the server, client, and contract tests all use the same specification.
+    This ensures that the server, client, and contract tests all use the same OpenAPI document.
     The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
 
 ### Dynamic server port

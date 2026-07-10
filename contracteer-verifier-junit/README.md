@@ -1,6 +1,6 @@
 # contracteer-verifier-junit
 
-JUnit 5 integration for contract verification against an OpenAPI specification.
+JUnit 5 integration for contract verification against an OpenAPI document.
 One annotation, zero plumbing.
 
 ## Dependency
@@ -42,7 +42,7 @@ class ContractTest {
 }
 ```
 
-Contracteer reads the specification, generates one JUnit test per verification case, and validates that your server responds as documented.
+Contracteer reads the OpenAPI document, generates one JUnit test per verification case, and validates that your server responds as documented.
 
 ## Documentation
 

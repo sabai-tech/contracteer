@@ -10,7 +10,7 @@ import tech.sabai.contracteer.core.operation.Scenario
  * A test case for verifying a server implementation against an OpenAPI contract.
  *
  * Each subtype represents a different verification strategy:
- * - [ScenarioBased]: driven by a named scenario from the specification
+ * - [ScenarioBased]: driven by a named scenario from the OpenAPI document
  * - [SchemaBased]: generated from the schema when no 2xx scenario exists
  * - [TypeMismatch]: sends an intentionally malformed request to verify 400 handling
  */
@@ -19,7 +19,7 @@ sealed class VerificationCase {
   abstract val displayName: String
 
   /**
-   * A verification case driven by a named [Scenario] from the OpenAPI specification.
+   * A verification case driven by a named [Scenario] from the OpenAPI document.
    *
    * [requestContentType] is the content type used for the request body. When the scenario carries
    * an explicit body example, it equals `scenario.request.body.contentType`. When the scenario has

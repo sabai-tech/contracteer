@@ -1,6 +1,6 @@
 # Mock an API with Spring Boot
 
-Add `@ContracteerMockServer` to your Spring Boot test class to start a mock server from your OpenAPI specification.
+Add `@ContracteerMockServer` to your Spring Boot test class to start a mock server from your OpenAPI document.
 No handwritten stubs required.
 
 The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains a complete working project.
@@ -13,7 +13,7 @@ The [musketeer-spring-boot-client](https://github.com/sabai-tech/contracteer-exa
 - JDK 21 or later
 - Gradle or Maven
 - Spring Boot test on the classpath
-- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 document (`.yaml` or `.json`)
 
 ---
 
@@ -157,7 +157,7 @@ The client connects to the mock server without any manual wiring.
 
 ## `@ContracteerMockServer` fields
 
-**`openApiDoc`** *(required)* -- Path to the OpenAPI specification.
+**`openApiDoc`** *(required)* -- Path to the OpenAPI document.
 Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:openapi.yaml`).
 
 **`port`** *(default: `0`)* -- Port for the mock server.
@@ -168,10 +168,10 @@ Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., `classpath:o
 **`baseUrlProperty`** *(default: `contracteer.mockserver.baseUrl`)* -- Spring property name where the base URL is injected.
 Format: `http://localhost:{port}`.
 
-!!! tip "Treat the specification as a shared artifact"
-    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-specification-as-source-of-truth): the OpenAPI specification exists independently of both server and client.
+!!! tip "Treat the OpenAPI document as a shared artifact"
+    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
-    This ensures that the server, client, and contract tests all use the same specification.
+    This ensures that the server, client, and contract tests all use the same OpenAPI document.
     The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
 
 ---
@@ -179,7 +179,7 @@ Format: `http://localhost:{port}`.
 ## How the Mock Server Responds
 
 The mock server is not a hand-written stub.
-It validates every incoming request against the OpenAPI schema and determines the response from the specification.
+It validates every incoming request against the OpenAPI schema and determines the response from the OpenAPI document.
 
 ### Request validation
 
@@ -203,7 +203,7 @@ No one wrote a mock rule for this -- the schema drives the rejection.
 
 ### Scenario matching
 
-If the request is valid, the mock server compares it against the scenarios defined in the specification.
+If the request is valid, the mock server compares it against the scenarios defined in the OpenAPI document.
 
 The client sends `{name: "d'Artagnan", rank: "CADET", weapon: "Rapier"}` to `POST /musketeers`.
 This matches the `D_ARTAGNAN_JOINS` scenario:
@@ -248,7 +248,7 @@ The mock server returns `404`.
 
 If the request is valid but matches no scenario, the mock server generates a response from the schema.
 
-`GET /musketeers` has no examples in the specification.
+`GET /musketeers` has no examples in the OpenAPI document.
 The mock server returns `200` with an array of randomly generated `Musketeer` objects.
 The values satisfy the schema but are different on each run.
 
@@ -270,7 +270,7 @@ Read it before investigating further -- it usually points directly to the cause.
 
 Contract tests verify that your client handles the documented response structure -- not that the server returns specific data.
 Assert that fields are present and correctly typed.
-Do not assert on example values from the specification.
+Do not assert on example values from the OpenAPI document.
 
 A test that asserts a response field equals a specific example value is a functional test, not a contract test.
 Your client must handle any valid response, not just the example data.

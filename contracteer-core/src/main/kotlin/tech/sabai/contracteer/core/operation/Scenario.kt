@@ -6,7 +6,7 @@ import tech.sabai.contracteer.core.normalize
  * A named example-based pairing of request values and response values for a specific status code.
  *
  * Scenarios are derived from OpenAPI example keys. Each scenario contains only the values
- * explicitly provided in the specification; parameters without example values for a given
+ * explicitly provided in the OpenAPI document; parameters without example values for a given
  * key are absent from the scenario.
  *
  * @param path the URL path pattern

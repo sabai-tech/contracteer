@@ -13,20 +13,20 @@
 ![License](https://img.shields.io/github/license/sabai-tech/contracteer)
 [![Documentation](https://img.shields.io/badge/docs-sabai--tech.github.io%2Fcontracteer-blue)](https://sabai-tech.github.io/contracteer/latest/)
 
-Contracteer verifies that your API implementation matches your OpenAPI specification and provides a mock server that behaves exactly as your spec defines.
-Your OpenAPI specification is the single source of truth -- Contracteer turns it into executable tests and a faithful mock.
+Contracteer verifies that your API implementation matches your OpenAPI document and provides a mock server that behaves exactly as your document defines.
+Your OpenAPI document is the single source of truth -- Contracteer turns it into executable tests and a faithful mock.
 
 ## Why Contracteer?
 
-API specifications drift from their implementations.
+OpenAPI documents drift from their implementations.
 A field gets renamed, a status code changes, a required parameter becomes optional -- and nothing catches it until a consumer breaks in production.
 
 Contract tests catch this drift early.
 They run in the build, with the speed of unit tests, and verify that the boundary between services works as documented.
 
 Contracteer is **specification-driven**.
-Unlike consumer-driven tools where consumers define their expectations, Contracteer takes the OpenAPI specification you already have and tests conformance to it.
-If your spec includes named examples, Contracteer uses them as scenarios for targeted, deterministic testing.
+Unlike consumer-driven tools where consumers define their expectations, Contracteer takes the OpenAPI document you already have and tests conformance to it.
+If your OpenAPI document includes named examples, Contracteer uses them as scenarios for targeted, deterministic testing.
 If not, it generates values from the schema.
 
 ## Quick Start
@@ -70,7 +70,7 @@ class ContractTest {
 }
 ```
 
-Contracteer reads the specification, generates one JUnit test per verification case, and validates that your server responds as documented.
+Contracteer reads the OpenAPI document, generates one JUnit test per verification case, and validates that your server responds as documented.
 Works with any server -- Spring Boot, Quarkus, Micronaut, or plain Java.
 
 ### Mock an API (Spring Boot)

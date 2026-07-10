@@ -133,7 +133,7 @@ internal class ApiOperationExtractor(private val sharedComponents: SharedCompone
       .filterValues { it.size > 1 }
       .map { (_, equivalentPaths) ->
         "Equivalent paths found: ${equivalentPaths.joinToString(" and ") { "'$it'" }}. " +
-        "These paths are identical after ignoring parameter names and are considered invalid by the OpenAPI specification (OAS 3.0 §4.7.9)."
+        "These paths are identical after ignoring parameter names and are considered invalid by the OpenAPI Specification (OAS 3.0 §4.7.9)."
       }
 
   private fun logExtractedOperations(operations: List<ApiOperation>) {

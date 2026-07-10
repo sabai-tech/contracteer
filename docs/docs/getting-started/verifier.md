@@ -13,7 +13,7 @@ The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) r
 
 - JDK 21 or later
 - Gradle or Maven
-- An OpenAPI 3.0 or 3.1 specification (`.yaml` or `.json`)
+- An OpenAPI 3.0 or 3.1 document (`.yaml` or `.json`)
 
 ---
 
@@ -42,15 +42,15 @@ The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) r
 
 ## Load, Generate, Verify
 
-Three steps: load the specification, generate verification cases, run them against your server.
+Three steps: load the OpenAPI document, generate verification cases, run them against your server.
 
 === "Kotlin"
 
     ```kotlin
-    // 1. Load the OpenAPI specification
+    // 1. Load the OpenAPI document
     val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
     if (result.isFailure()) {
-        fail("Failed to load spec: ${result.errors()}")
+        fail("Failed to load OpenAPI document: ${result.errors()}")
     }
 
     // 2. Generate verification cases
@@ -77,10 +77,10 @@ Three steps: load the specification, generate verification cases, run them again
 === "Java"
 
     ```java
-    // 1. Load the OpenAPI specification
+    // 1. Load the OpenAPI document
     var result = OpenApiLoader.loadOperations("classpath:openapi.yaml");
     if (result.isFailure()) {
-        fail("Failed to load spec: " + result.errors());
+        fail("Failed to load OpenAPI document: " + result.errors());
     }
 
     // 2. Generate verification cases
@@ -114,10 +114,10 @@ Three steps: load the specification, generate verification cases, run them again
   Must include scheme (`http` or `https`), host, and port.
   May include a path prefix (e.g., `https://api.example.com/v1`); query strings and fragments are rejected.
 
-!!! tip "Treat the specification as a shared artifact"
-    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-specification-as-source-of-truth): the OpenAPI specification exists independently of both server and client.
+!!! tip "Treat the OpenAPI document as a shared artifact"
+    Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
-    This ensures that the server, client, and contract tests all use the same specification.
+    This ensures that the server, client, and contract tests all use the same OpenAPI document.
     The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
 
 ---

@@ -191,4 +191,4 @@ private val ParameterElement.locationName: String
     is Cookie                  -> "cookie"
   }
 
-private const val UNDEFINED_BEHAVIOR = "(undefined behavior in the OpenAPI specification)"
+private const val UNDEFINED_BEHAVIOR = "(undefined behavior in the OpenAPI document)"

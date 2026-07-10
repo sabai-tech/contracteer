@@ -8,7 +8,7 @@ import tech.sabai.contracteer.mockserver.MockServer
   name = "mock",
   synopsisHeading = "\n@|bold,cyan Usage|@:\n  ",
   descriptionHeading = "\n@|bold,cyan Description|@:\n  ",
-  description = ["Launch a Contracteer Mock Server that simulates API responses based on an OpenAPI 3 Specification."],
+  description = ["Launch a Contracteer Mock Server that simulates API responses based on an OpenAPI document."],
   optionListHeading = "\n@|bold,cyan Options|@:\n",
   parameterListHeading = "\n@|bold,cyan Parameters|@:\n",
   mixinStandardHelpOptions = true,

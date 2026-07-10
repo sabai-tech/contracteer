@@ -1,9 +1,9 @@
 # How Contracteer Works
 
-Contracteer reads your OpenAPI specification and provides two tools.
-The **verifier** tests your server against the specification.
+Contracteer reads your OpenAPI document and provides two tools.
+The **verifier** tests your server against the document.
 The **mock server** gives your client tests a strict, spec-compliant API to run against.
-Both derive their behavior entirely from the specification -- no handwritten mocks, no manually maintained test cases.
+Both derive their behavior entirely from the document -- no handwritten mocks, no manually maintained test cases.
 
 ---
 
@@ -14,11 +14,11 @@ Throughout this documentation, we use the [Musketeer API](https://github.com/sab
 !!! note "Why musketeers?"
     Contracteer is a portmanteau of *Contract* and *Musketeer* -- because every API deserves a loyal guard defending its contract.
 
-Here is the `GET /musketeers/{id}` operation from its OpenAPI specification:
+Here is the `GET /musketeers/{id}` operation from its OpenAPI document:
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full spec: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
 paths:
   /musketeers/{id}:
     get:
@@ -71,14 +71,14 @@ Two scenarios come from this operation:
 
 A **verification case** is what Contracteer actually executes.
 Every scenario produces a verification case, but Contracteer also generates verification cases automatically.
-Here, the specification declares that `id` is an integer and that a `400` response exists.
+Here, the OpenAPI document declares that `id` is an integer and that a `400` response exists.
 Contracteer creates an automatic **type-mismatch verification case**: it sends an invalid type (a string instead of an integer) and expects a `400` with a response matching the ProblemDetail schema.
 
-Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the specification.
+Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the OpenAPI document.
 
 !!! warning
     Contracteer requires every operation to define at least one 2xx response.
-    If any operation lacks a 2xx response, Contracteer rejects the specification.
+    If any operation lacks a 2xx response, Contracteer rejects the OpenAPI document.
 
 The full mechanics of how scenarios are created are covered in [Creating Scenarios](scenarios.md).
 
@@ -103,12 +103,12 @@ How the verifier works in depth is covered in [Testing Your Server](testing-your
 
 ## The Mock Server: Testing Your Client
 
-The mock server is a **strict reference implementation** of the API defined by your OpenAPI specification.
+The mock server is a **strict reference implementation** of the API defined by your OpenAPI document.
 It validates every incoming request against the OpenAPI schema and returns spec-compliant responses.
 
 If a request matches a scenario, the mock server returns that scenario's response values.
 If the request is valid but matches no scenario, it returns a response generated from the schema.
-If the request violates the specification -- wrong types, missing required fields -- it rejects it.
+If the request violates the OpenAPI document -- wrong types, missing required fields -- it rejects it.
 
 This strictness is what makes the mock server useful for testing.
 It enforces the contract on every request.
@@ -127,7 +127,7 @@ It cannot be exhaustive -- testing every possible request for every operation is
 Instead, it tests the named scenarios from your examples and automatic cases for error handling.
 Its claim is:
 
-> For each verification case, the server responds as the specification says it should.
+> For each verification case, the server responds as the OpenAPI document says it should.
 
 The mock server validates **every request**.
 It cannot afford to be lenient.
@@ -147,35 +147,35 @@ The mock server proves that your client respects the contract in all cases.
 
 Contracteer follows [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle): *be conservative in what you send, liberal in what you accept*.
 
-The **mock server** validates request elements declared in the specification.
-If your client sends an extra query parameter or header that the spec doesn't mention, the mock server does not reject the request.
+The **mock server** validates request elements declared in the OpenAPI document.
+If your client sends an extra query parameter or header that the OpenAPI document doesn't mention, the mock server does not reject the request.
 There is no schema to validate it against.
 
-The **verifier** validates response elements declared in the specification.
-If your server returns additional fields beyond what the spec declares, the verifier does not fail.
+The **verifier** validates response elements declared in the OpenAPI document.
+If your server returns additional fields beyond what the OpenAPI document declares, the verifier does not fail.
 Those fields are outside the contract's scope.
 
-This tolerance applies when the specification is silent.
-When the specification explicitly declares a constraint, Contracteer enforces it.
+This tolerance applies when the OpenAPI document is silent.
+When the OpenAPI document explicitly declares a constraint, Contracteer enforces it.
 For example, `additionalProperties: false` on a response schema means the verifier rejects responses with extra fields.
-The spec author deliberately restricted the contract.
+The OpenAPI document's author deliberately restricted the contract.
 
 This tolerance makes contract tests stable across API evolution.
 A server can add new response fields without breaking the verifier (unless `additionalProperties: false` is declared).
 A client can send additional parameters without breaking the mock server.
-Only changes to what the specification **defines** are caught -- which is exactly what contract tests should detect.
+Only changes to what the OpenAPI document **defines** are caught -- which is exactly what contract tests should detect.
 
 ---
 
 ## Key Takeaways
 
-- Contracteer reads your OpenAPI specification and provides two tools: a verifier (tests your server) and a mock server (tests your client).
+- Contracteer reads your OpenAPI document and provides two tools: a verifier (tests your server) and a mock server (tests your client).
 - Scenarios are named pairings of request and response values, derived from OpenAPI examples or status-code-prefixed keys.
   Verification cases are what Contracteer executes -- they include scenarios and automatic type-mismatch cases.
 - The verifier checks structure and types, not values -- the contract guarantees the shape, not the content.
 - The mock server is a strict reference implementation. It enforces the contract on every request, giving your client tests an accurate representation of the real API.
 - The two are intentionally asymmetric: the verifier tests representative cases, the mock server validates every request.
-- Contracteer follows Postel's Law: it validates what the specification defines and tolerates what it doesn't.
+- Contracteer follows Postel's Law: it validates what the OpenAPI document defines and tolerates what it doesn't.
 
 ---
 
@@ -190,5 +190,5 @@ Only changes to what the specification **defines** are caught -- which is exactl
 
 - [Testing Your Server](testing-your-server.md) -- how the verifier works in depth, including automatic 400 testing.
 - [Testing Your Client](testing-your-client.md) -- how the mock server works in depth, including the 418 diagnostic response.
-- [Creating Scenarios](scenarios.md) -- how to create scenarios from your OpenAPI specification.
+- [Creating Scenarios](scenarios.md) -- how to create scenarios from your OpenAPI document.
 - [Getting Started](../getting-started/index.md) -- set up Contracteer in your project.

@@ -49,13 +49,13 @@ See [Prepare Test Data](../getting-started/verifier-junit.md#prepare-test-data) 
 
 **Fix:** Add input validation to your server.
 For Spring Boot, ensure type-mismatch exceptions are mapped to `400` responses.
-The response must use the content type and schema declared in your OpenAPI specification (e.g., `application/problem+json` with a ProblemDetail body).
+The response must use the content type and schema declared in your OpenAPI document (e.g., `application/problem+json` with a ProblemDetail body).
 
 ### Response body validation fails
 
 **Symptom:** The verification case reports errors like `'name': expected type 'string' but got 'integer'` or `'email': required field missing`.
 
-**Cause:** The server's response does not conform to the schema declared in the OpenAPI specification.
+**Cause:** The server's response does not conform to the schema declared in the OpenAPI document.
 
 **Fix:** Compare the server's actual response (visible in DEBUG logs) against the schema.
 Common causes:
@@ -75,7 +75,7 @@ Either add the field to the schema's `properties`, or remove `additionalProperti
 
 ### No scenarios created for an operation
 
-**Symptom:** An operation has examples in the specification, but Contracteer does not generate scenario-based verification cases for it.
+**Symptom:** An operation has examples in the OpenAPI document, but Contracteer does not generate scenario-based verification cases for it.
 
 **Cause:** The example keys exist only on the request side or only on the response side.
 Contracteer needs at least one shared key between request and response elements.
@@ -106,7 +106,7 @@ To distinguish variants, add `required` properties unique to each variant, set `
 **Symptom:** A body for a parent schema with a discriminator is accepted even when its child-specific properties are wrong or missing.
 
 **Cause:** The parent schema is referenced directly via `$ref` at the usage site.
-The OpenAPI specification defines this form as non-validating: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases."
+The OpenAPI Specification defines this form as non-validating: "The `allOf` form of `discriminator` is _only_ useful for non-validation use cases."
 
 **Fix:** Replace the direct `$ref` to the parent with a `oneOf` or `anyOf` listing the child schemas explicitly, and keep the discriminator at that usage site.
 See [Discriminator on a parent schema used via `$ref`](../concepts/openapi-coverage.md#discriminator-on-a-parent-schema-used-via-ref) for an example.
@@ -171,14 +171,14 @@ Contracteer excludes `writeOnly` properties from the response schema.
 If the field is also `required`, the server should not return it and the verifier should not expect it.
 
 **Fix:** This is usually correct behavior.
-If the verifier fails, check that the field is actually marked `writeOnly: true` in your specification.
+If the verifier fails, check that the field is actually marked `writeOnly: true` in your OpenAPI document.
 If it is, the server should not include it in responses.
 
 ### Extraction fails with minProperties/maxProperties and readOnly/writeOnly
 
-**Symptom:** Loading the specification fails with an error about `minProperties`/`maxProperties` combined with `readOnly` or `writeOnly` properties.
+**Symptom:** Loading the OpenAPI document fails with an error about `minProperties`/`maxProperties` combined with `readOnly` or `writeOnly` properties.
 
-**Cause:** The OpenAPI specification does not define how `minProperties`/`maxProperties` interact with `readOnly`/`writeOnly`.
+**Cause:** The OpenAPI Specification does not define how `minProperties`/`maxProperties` interact with `readOnly`/`writeOnly`.
 When properties are excluded from request or response schemas, the property count constraints become ambiguous.
 Contracteer rejects this combination to avoid silent misinterpretation.
 
@@ -192,20 +192,20 @@ Contracteer rejects this combination to avoid silent misinterpretation.
 When no scenario matches, the mock server generates a response from the schema with random values.
 
 **Fix:** This is expected behavior when no scenario is defined for the request.
-If you need deterministic responses, define scenarios in your OpenAPI specification.
+If you need deterministic responses, define scenarios in your OpenAPI document.
 Use `examples` on both request and response elements.
 See [Creating Scenarios](../concepts/scenarios.md) for how to do this.
 
 ---
 
-## Specification Issues
+## OpenAPI Document Issues
 
 ### Equivalent paths rejected
 
-**Symptom:** Loading the specification fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."
+**Symptom:** Loading the OpenAPI document fails with "Equivalent paths found: '/resources/{resourceId}/items' and '/resources/{parentId}/items'."
 
-**Cause:** The specification defines two paths that differ only in parameter names.
-The OpenAPI specification considers these identical and invalid because both match the same set of URLs.
+**Cause:** The OpenAPI document defines two paths that differ only in parameter names.
+The OpenAPI Specification considers these identical and invalid because both match the same set of URLs.
 Parameter types and constraints do not matter -- equivalence is purely structural.
 
 **Fix:** Rename one of the paths so that the static segments differ, or merge both operations under a single path.
@@ -214,9 +214,9 @@ Parameter types and constraints do not matter -- equivalence is purely structura
 
 ### Circular schema reference rejected
 
-**Symptom:** Loading the specification fails with "Circular reference with no optional, nullable, or collection exit point."
+**Symptom:** Loading the OpenAPI document fails with "Circular reference with no optional, nullable, or collection exit point."
 
-**Cause:** The specification contains a circular `$ref` chain where every property in the cycle is required and non-nullable.
+**Cause:** The OpenAPI document contains a circular `$ref` chain where every property in the cycle is required and non-nullable.
 This describes an infinite structure that cannot be instantiated.
 
 For example, `Node.next → Link.target → Node` where both `next` and `target` are required and non-nullable creates a structure with no valid finite value.
@@ -226,7 +226,7 @@ Any of these gives Contracteer a finite stopping point.
 
 ### Sibling keyword on `$ref` is rejected
 
-**Symptom:** Loading an OpenAPI 3.1 specification fails with a message such as `Schema 'X': sibling 'propertyNames' on '$ref' is not supported.`
+**Symptom:** Loading an OpenAPI 3.1 document fails with a message such as `Schema 'X': sibling 'propertyNames' on '$ref' is not supported.`
 
 **Cause:** A Schema Object combines `$ref` with a sibling keyword Contracteer does not merge.
 Supported siblings cover type, length and numeric bounds, enum and const, required, properties, items, additionalProperties, multipleOf, pattern, uniqueItems, and item/property count bounds.
@@ -259,7 +259,7 @@ See [`$ref` with sibling keywords](../concepts/openapi-coverage.md#ref-with-sibl
 
 ### Sibling type conflicts with referenced target
 
-**Symptom:** Loading the specification fails with `Schema 'X': sibling 'type: A' conflicts with referenced target type 'B'`.
+**Symptom:** Loading the OpenAPI document fails with `Schema 'X': sibling 'type: A' conflicts with referenced target type 'B'`.
 
 **Cause:** The schema declares both `$ref: '#/components/schemas/Foo'` and a sibling `type` that differs from `Foo`'s effective type.
 Implicit `allOf` semantics require the instance to satisfy both the target and the sibling, but a value cannot be two distinct types at once.
@@ -270,7 +270,7 @@ Implicit `allOf` semantics require the instance to satisfy both the target and t
 
 ### Sibling enum or const not in the target
 
-**Symptom:** Loading the specification fails with `Schema 'X': sibling 'enum' contains values not in target 'enum' (extras: 'A', 'B')` or `Schema 'X': sibling 'const: A' is not in target 'enum' (...)`.
+**Symptom:** Loading the OpenAPI document fails with `Schema 'X': sibling 'enum' contains values not in target 'enum' (extras: 'A', 'B')` or `Schema 'X': sibling 'const: A' is not in target 'enum' (...)`.
 
 **Cause:** The target schema declares an `enum` (or `const`), and the sibling tries to add values the target does not allow.
 Siblings narrow the target; they cannot widen it.
@@ -282,7 +282,7 @@ If you need a strictly larger value set, define a new component schema rather th
 
 ### Sibling and target both define the same field
 
-**Symptom:** Loading the specification fails with `Schema 'X': sibling 'properties' overlaps target on 'name'. Define each property in only one of the two.`, or a similar message for `items`, `additionalProperties`, `pattern`, or `multipleOf`.
+**Symptom:** Loading the OpenAPI document fails with `Schema 'X': sibling 'properties' overlaps target on 'name'. Define each property in only one of the two.`, or a similar message for `items`, `additionalProperties`, `pattern`, or `multipleOf`.
 
 **Cause:** Contracteer does not recursively merge two definitions of the same property, item schema, or pattern.
 The implicit `allOf` semantics would require both definitions to be satisfied simultaneously, which is well defined in the JSON Schema specification but not implemented for these keywords.
@@ -295,7 +295,7 @@ For `pattern` and `multipleOf`, drop one side or factor the schemas differently.
 
 ### `$ref` with siblings forms a cycle
 
-**Symptom:** Loading the specification fails with `Schema 'X': '$ref' with sibling keywords forms a cycle (X -> Y -> X). Cyclic merges cannot be resolved.`
+**Symptom:** Loading the OpenAPI document fails with `Schema 'X': '$ref' with sibling keywords forms a cycle (X -> Y -> X). Cyclic merges cannot be resolved.`
 
 **Cause:** Two or more component schemas reference each other via `$ref` and each step carries sibling keywords.
 Each merge would need to expand into the next one, and the chain never terminates.
@@ -307,7 +307,7 @@ If both ends genuinely need to constrain the other, express the relationship thr
 
 ### `$ref` cannot resolve JSON Pointer
 
-**Symptom:** Loading the specification fails with a message such as `$ref '#/$defs/Order': cannot resolve JSON Pointer -- segment '$defs' is not supported in Contracteer` or `$ref '#/components/schemas/Order/properties/total': cannot resolve JSON Pointer -- Schema has no field 'total'`.
+**Symptom:** Loading the OpenAPI document fails with a message such as `$ref '#/$defs/Order': cannot resolve JSON Pointer -- segment '$defs' is not supported in Contracteer` or `$ref '#/components/schemas/Order/properties/total': cannot resolve JSON Pointer -- Schema has no field 'total'`.
 
 **Cause:** A `$ref` points into a part of the document Contracteer's resolver cannot reach.
 Contracteer resolves `$ref` pointers under `#/components/schemas`, `#/components/parameters`, `#/components/responses`, `#/components/headers`, `#/components/requestBodies`, and `#/components/examples`.
@@ -328,7 +328,7 @@ This may violate the `minItems` constraint.
 **Fix:** Remove the `minItems` constraint from the recursive array property, or make the array items nullable.
 Recursive arrays with `minItems` describe a structure that requires infinite depth to satisfy -- no finite value can conform.
 
-### Generated value is smaller than the specification declares
+### Generated value is smaller than the OpenAPI document declares
 
 **Symptom:** Generated request or response bodies contain fewer items, missing optional properties, or omitted sub-trees compared to what the OpenAPI schema declares.
 
@@ -338,26 +338,26 @@ When the limit is reached, Contracteer stops generating deeper values, producing
 **Fix:** Reduce `minItems`/`maxItems` on large recursive arrays, or simplify deeply interconnected schemas.
 The size limit is a safety net: schemas that describe pathologically large structures produce correspondingly bounded generated values.
 
-### Spec loading fails
+### OpenAPI document loading fails
 
-**Symptom:** Contracteer reports errors when loading the OpenAPI specification.
+**Symptom:** Contracteer reports errors when loading the OpenAPI document.
 
 **Common causes:**
 
 - **Invalid YAML or JSON.** Check syntax with a YAML linter.
 - **Unsupported OpenAPI version.** Contracteer supports OpenAPI 3.0 and 3.1.
   Other versions (Swagger 2.0, OpenAPI 4.x) are rejected at load time.
-- **`example` and `examples` on the same element.** The OpenAPI specification declares these mutually exclusive.
-  Contracteer rejects the specification if both are present on the same parameter or media type.
+- **`example` and `examples` on the same element.** The OpenAPI Specification declares these mutually exclusive.
+  Contracteer rejects the OpenAPI document if both are present on the same parameter or media type.
 - **Multiple composition keywords on the same schema.** A schema combining `allOf`, `anyOf`, or `oneOf` at the same level is rejected.
   Restructure the schema to use a single composition keyword.
   See [Multiple composition keywords](../concepts/openapi-coverage.md#multiple-composition-keywords-on-the-same-schema) for the recommended pattern.
 
 ### Extraction fails with nested types in parameter styles
 
-**Symptom:** Loading the specification fails with "does not support objects with nested objects or arrays in properties (undefined behavior in the OpenAPI specification)" or "does not support arrays with nested objects or arrays as items (undefined behavior in the OpenAPI specification)."
+**Symptom:** Loading the OpenAPI document fails with "does not support objects with nested objects or arrays in properties (undefined behavior in the OpenAPI document)" or "does not support arrays with nested objects or arrays as items (undefined behavior in the OpenAPI document)."
 
-**Cause:** A flat-style parameter (`simple`, `form`, `label`, `matrix`) or a `deepObject` query parameter has a schema that nests structured values beyond what the OpenAPI specification defines. Examples:
+**Cause:** A flat-style parameter (`simple`, `form`, `label`, `matrix`) or a `deepObject` query parameter has a schema that nests structured values beyond what the OpenAPI Specification defines. Examples:
 
 - A query parameter with `type: array` whose `items` are themselves objects or arrays (e.g., `?inputs[]={_path: "/x"}` has no spec-defined serialization).
 - A query parameter with `type: object` whose properties include nested objects or arrays.
@@ -369,7 +369,7 @@ OpenAPI's style table only defines serialization one level deep. `deepObject` ex
 
 ### Extraction fails with `additionalProperties` on a form-explode query object
 
-**Symptom:** Loading the specification fails with "Style 'form' with explode=true cannot enforce 'additionalProperties' constraints: the encoding does not distinguish properties of this object from other query parameters."
+**Symptom:** Loading the OpenAPI document fails with "Style 'form' with explode=true cannot enforce 'additionalProperties' constraints: the encoding does not distinguish properties of this object from other query parameters."
 
 **Cause:** A query parameter uses `style: form` (the default), `explode: true` (the default for query), `type: object`, and either `additionalProperties: false` or `additionalProperties: <schema>`.
 The form/explode encoding flattens object properties into top-level query keys (`?R=100&G=200`), so Contracteer cannot tell whether an undeclared key like `?foo=bar` is an extra property of the object or an unrelated query parameter.
@@ -396,7 +396,7 @@ If the constraint isn't load-bearing, set `additionalProperties: true` (or remov
 
 ### Composed schema has branches with incompatible kinds
 
-**Symptom:** Loading the specification fails with `composed schemas define incompatible kinds: 'primitive' vs 'object'` (or any other kind pair).
+**Symptom:** Loading the OpenAPI document fails with `composed schemas define incompatible kinds: 'primitive' vs 'object'` (or any other kind pair).
 
 **Cause:** Two branches of a `oneOf` or `anyOf` declare the same property name with different kinds -- one as a primitive, another as an object or array.
 The composition is used in a type-blind wire format (`application/x-www-form-urlencoded`, `multipart/*`, `deepObject`, or one of the flat parameter styles).
@@ -427,10 +427,10 @@ See [Composed schemas with incompatible branches](../concepts/openapi-coverage.m
 
 ### Multipart part has composed schema with no default content type
 
-**Symptom:** Loading the specification fails with `Cannot determine default content type for multipart part: schema branches have incompatible shapes. Specify 'contentType' explicitly in the encoding to resolve.`
+**Symptom:** Loading the OpenAPI document fails with `Cannot determine default content type for multipart part: schema branches have incompatible shapes. Specify 'contentType' explicitly in the encoding to resolve.`
 
 **Cause:** A multipart part's schema is a composition whose branches have incompatible encoding shapes (e.g., a primitive branch and an object branch).
-The OpenAPI specification defaults a multipart part's content type from its schema shape -- `text/plain` for primitives, `application/json` for objects and arrays.
+The OpenAPI Specification defaults a multipart part's content type from its schema shape -- `text/plain` for primitives, `application/json` for objects and arrays.
 When the branches give different shapes, no single default applies.
 
 **Fix:** Declare the part's content type explicitly on the `encoding` object.
@@ -455,7 +455,7 @@ requestBody:
 
 ### `type: null` is rejected as a body or parameter schema
 
-**Symptom:** Loading the specification fails with `standalone 'type: null' is not a meaningful schema. For a nullable value, use 'anyOf: [Type, {type: null}]'. For an empty response, omit the 'content' field and use status code 204.`
+**Symptom:** Loading the OpenAPI document fails with `standalone 'type: null' is not a meaningful schema. For a nullable value, use 'anyOf: [Type, {type: null}]'. For an empty response, omit the 'content' field and use status code 204.`
 
 **Cause:** A request body, response body, parameter, or header declares `type: null` as its top-level schema.
 A `null`-only schema carries no useful constraint: the wire value can never be anything but `null`, so the schema neither validates a payload nor describes a value to generate.
@@ -484,7 +484,7 @@ See [`type: null`](../concepts/openapi-coverage.md#type-null) for the full posit
 
 ### Outer `type` excludes null but a composition branch declares it
 
-**Symptom:** Loading the specification fails with `outer 'type: [object]' constrains type but the 'anyOf' branch '#1' declares 'type: null'. Either add 'null' to the outer type array or remove the null branch.`
+**Symptom:** Loading the OpenAPI document fails with `outer 'type: [object]' constrains type but the 'anyOf' branch '#1' declares 'type: null'. Either add 'null' to the outer type array or remove the null branch.`
 
 **Cause:** An `anyOf` or `oneOf` schema declares both an outer `type` array (excluding `"null"`) and a sub-branch that uses `type: "null"`.
 The two constraints contradict each other: the outer type restricts the value to non-null types, while the null branch claims `null` is a valid match.
@@ -510,7 +510,7 @@ schema:
 
 ### `allOf` includes a `type: null` branch
 
-**Symptom:** Loading the specification fails with `'allOf' includes a 'type: null' branch (#1) which is unsatisfiable: a value cannot match both the null type and any non-null branch. Use 'anyOf' if a nullable union is intended, or remove the null branch.`
+**Symptom:** Loading the OpenAPI document fails with `'allOf' includes a 'type: null' branch (#1) which is unsatisfiable: a value cannot match both the null type and any non-null branch. Use 'anyOf' if a nullable union is intended, or remove the null branch.`
 
 **Cause:** An `allOf` composition includes a `type: null` sub-schema.
 `allOf` requires the value to match *every* branch simultaneously.
@@ -533,17 +533,17 @@ If the null branch was added by mistake, remove it -- `allOf` of the remaining b
 
 ### Extraction fails with non-JSON content type and structured schema
 
-**Symptom:** Loading the specification fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."
+**Symptom:** Loading the OpenAPI document fails with "Content type [text/plain|text/html|application/jwt] supports only primitive schemas."
 
 **Cause:** A request or response body uses a media type that has no standard serialization for structured values -- `text/plain`, `text/html`, and `application/jwt` all describe scalar textual content.
-The OpenAPI specification does not define how to serialize an object, array, or composition for these media types, so any implementation would rely on an implicit convention between the specification author and the client.
+The OpenAPI Specification does not define how to serialize an object, array, or composition for these media types, so any implementation would rely on an implicit convention between the document author and the client.
 Contracteer rejects the combination at load time rather than silently applying a guess.
 
 **Fix:** Change the content type to `application/json` if the schema describes a structured value, or simplify the schema to a primitive type if the content type must remain as declared.
 
 ### No scenarios created at all
 
-**Symptom:** The specification has example values, but Contracteer creates no scenarios.
+**Symptom:** The OpenAPI document has example values, but Contracteer creates no scenarios.
 
 **Cause:** The examples are defined under `schema.properties` instead of on the parameter or media type.
 Contracteer reads examples from parameters and media types, not from schema properties.
@@ -575,7 +575,7 @@ If you need length constraints to apply, remove the `pattern`.
 
 ### Pattern not supported for value generation
 
-**Symptom:** Loading the specification fails with "pattern is not supported for value generation."
+**Symptom:** Loading the OpenAPI document fails with "pattern is not supported for value generation."
 
 **Cause:** The `pattern` is a valid regex but Contracteer cannot generate values that match it.
 This happens when the pattern uses constructs the value generator cannot handle, such as:
@@ -595,7 +595,7 @@ Alternatively, simplify the pattern to use standard character classes and quanti
 
 ### Header pattern, enum, or example admits invalid HTTP characters
 
-**Symptom:** Loading the specification fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:
+**Symptom:** Loading the OpenAPI document fails with an error naming a header and referencing RFC 7230 §3.2.6, for example:
 
 ```
 Header 'X-Custom-Attributes' may carry character U+0000 not valid in HTTP
@@ -620,9 +620,9 @@ If the header legitimately conveys opaque binary or Unicode data, Base64-encode 
 
 ### Unexpected behavior from unsupported schema keywords
 
-**Symptom:** Verification fails or the mock server rejects valid requests / returns wrong responses, even though the specification looks correct.
+**Symptom:** Verification fails or the mock server rejects valid requests / returns wrong responses, even though the OpenAPI document looks correct.
 
-**Cause:** Your specification uses an OpenAPI schema keyword that Contracteer does not support.
+**Cause:** Your OpenAPI document uses an OpenAPI schema keyword that Contracteer does not support.
 The keyword is silently ignored, which changes validation behavior.
 
 Common examples:
@@ -631,11 +631,11 @@ Common examples:
   The verifier may omit an optional property when the server expects the default value.
 
 **Fix:** Check the [OpenAPI Coverage](../concepts/openapi-coverage.md) page for the full list of supported and unsupported keywords.
-If your specification relies on an unsupported keyword, you may need to work around it until support is added.
+If your OpenAPI document relies on an unsupported keyword, you may need to work around it until support is added.
 
 ### Operations missing from verification
 
-**Symptom:** Some operations in your specification are not tested.
+**Symptom:** Some operations in your OpenAPI document are not tested.
 Contracteer produces no verification cases for them.
 
 **Cause:** The operation uses a feature that Contracteer does not support.

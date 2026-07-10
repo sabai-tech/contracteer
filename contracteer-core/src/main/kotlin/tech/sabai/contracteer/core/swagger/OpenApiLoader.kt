@@ -14,7 +14,7 @@ import java.io.File
 import java.net.*
 
 /**
- * Loads and parses an OpenAPI 3.0.x or 3.1.x specification into a list of [ApiOperation] instances.
+ * Loads and parses an OpenAPI 3.0.x or 3.1.x document into a list of [ApiOperation] instances.
  *
  * Accepts a file path, an HTTP(S) URL, or a `classpath:` resource pointing to an OpenAPI document.
  */

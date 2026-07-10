@@ -34,7 +34,7 @@ Maven:
 val result = OpenApiLoader.loadOperations("classpath:openapi.yaml")
 ```
 
-`OpenApiLoader.loadOperations()` parses an OpenAPI specification and returns the list of operations it defines.
+`OpenApiLoader.loadOperations()` parses an OpenAPI document and returns the list of operations it defines.
 It accepts a file path, an HTTP(S) URL, or a `classpath:` resource.
 
 ## Documentation

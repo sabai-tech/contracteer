@@ -25,7 +25,7 @@ internal class ContractTestExtension: TestTemplateInvocationContextProvider {
 
     if (operationsResult !is Success) {
       throw IllegalArgumentException(
-        "Failed to load OpenAPI spec file:${lineSeparator()}" +
+        "Failed to load OpenAPI document:${lineSeparator()}" +
         operationsResult.errors().joinToString(prefix = "- ", separator = "${lineSeparator()}- "))
     }
 

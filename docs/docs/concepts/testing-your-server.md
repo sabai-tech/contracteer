@@ -1,7 +1,7 @@
 # Testing Your Server
 
-The **verifier** tests your server against your OpenAPI specification.
-It builds requests from the specification, sends them to your running server, and validates that responses conform to the contract.
+The **verifier** tests your server against your OpenAPI document.
+It builds requests from the OpenAPI document, sends them to your running server, and validates that responses conform to the contract.
 
 ---
 
@@ -11,7 +11,7 @@ Here is the `GET /musketeers/{id}` operation from the [Musketeer API](https://gi
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full spec: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
 paths:
   /musketeers/{id}:
     get:
@@ -52,7 +52,7 @@ paths:
 
 This operation contains two [scenarios](scenarios.md) -- named pairings of request values with expected responses, derived from OpenAPI examples.
 Each scenario produces a **verification case**: a request the verifier builds, sends, and validates.
-Contracteer also generates verification cases automatically when the specification provides enough information.
+Contracteer also generates verification cases automatically when the OpenAPI document provides enough information.
 
 From this single operation, the verifier creates three verification cases:
 
@@ -146,7 +146,7 @@ Type mismatch is also skipped in the following cases:
 !!! note
     Automatic 400 testing validates that your server rejects structurally invalid input.
     It does not test business validation rules (e.g., "age must be positive").
-    For business validation, define explicit 400 scenarios with intentionally invalid example values in your specification.
+    For business validation, define explicit 400 scenarios with intentionally invalid example values in your OpenAPI document.
 
 ---
 
@@ -158,8 +158,8 @@ Parameter values satisfy the type and format constraints, and a random request b
 It sends this request and validates that the response matches the 2xx response schema.
 
 This is the right choice when request values do not affect which response the server returns.
-A `GET /health` endpoint, a `POST` that creates a resource from any valid body -- these operations need no examples in the specification.
-Contracteer generates valid requests and verifies the contract, keeping the specification lean.
+A `GET /health` endpoint, a `POST` that creates a resource from any valid body -- these operations need no examples in the OpenAPI document.
+Contracteer generates valid requests and verifies the contract, keeping the OpenAPI document lean.
 
 Schema-only verification has one constraint: the operation must define exactly one 2xx response status code.
 If multiple 2xx responses exist and no scenario disambiguates which one to expect, the verifier cannot determine the correct status code.
@@ -172,14 +172,14 @@ When multiple request or response content types exist, the verifier generates on
 ## What the Verifier Does Not Test
 
 The verifier is precise in scope.
-It validates what the specification defines and ignores what it does not.
+It validates what the OpenAPI document defines and ignores what it does not.
 
 **No value comparison.**
 Response values are not compared to example values.
 The server is free to return any data that satisfies the schema.
 
 **No undeclared fields** (by default).
-If your server returns fields that the specification does not define, the verifier ignores them.
+If your server returns fields that the OpenAPI document does not define, the verifier ignores them.
 This follows [Postel's Law](https://en.wikipedia.org/wiki/Robustness_principle): validate what is defined, tolerate what is not.
 A server can add new response fields without breaking the verifier.
 However, if the schema declares `additionalProperties: false`, the verifier enforces it -- extra fields are rejected because the constraint is explicitly declared.
@@ -197,14 +197,14 @@ For a broader discussion of what contract tests do and do not catch, see [What I
 
 ## Key Takeaways
 
-- The verifier creates verification cases from your OpenAPI specification: scenario-based (from your examples), status-code-prefixed (from keys like `404_NOT_FOUND`), automatic type-mismatch (when a 400 response is defined), and schema-only (when no examples exist).
+- The verifier creates verification cases from your OpenAPI document: scenario-based (from your examples), status-code-prefixed (from keys like `404_NOT_FOUND`), automatic type-mismatch (when a 400 response is defined), and schema-only (when no examples exist).
 - It checks status code, required headers, and response body structure -- not response values.
 - Automatic 400 testing sends intentionally wrong types and expects the server to reject them.
   It covers types that can be meaningfully violated (integers, booleans, dates, objects, arrays) but not plain strings.
 - Schema-only verification handles operations where request values do not matter.
   It generates random requests and requires exactly one 2xx response.
   Define scenarios only when specific request values affect the expected response.
-- The verifier follows Postel's Law: it validates what the specification defines and ignores additional fields.
+- The verifier follows Postel's Law: it validates what the OpenAPI document defines and ignores additional fields.
 
 ---
 
