@@ -1377,7 +1377,7 @@
 
 
 <h1 id="verify-your-api-with-junit-5">Verify Your API with JUnit 5<a class="headerlink" href="#verify-your-api-with-junit-5" title="Permanent link">&para;</a></h1>
-<p>Add a single annotation to your JUnit tests to verify that your API matches your OpenAPI specification.</p>
+<p>Add a single annotation to your JUnit tests to verify that your API matches your OpenAPI document.</p>
 <p>The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository contains a complete working project.
 The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-server">musketeer-spring-boot-server</a> demonstrates everything covered on this page.</p>
 <hr />
@@ -1386,7 +1386,7 @@ The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musket
 <li>JDK 21 or later</li>
 <li>Gradle or Maven</li>
 <li>JUnit 5 on the test classpath</li>
-<li>An OpenAPI 3.0 or 3.1 specification (<code>.yaml</code> or <code>.json</code>)</li>
+<li>An OpenAPI 3.0 or 3.1 document (<code>.yaml</code> or <code>.json</code>)</li>
 </ul>
 <hr />
 <h2 id="add-the-dependency">Add the Dependency<a class="headerlink" href="#add-the-dependency" title="Permanent link">&para;</a></h2>
@@ -1412,7 +1412,7 @@ The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musket
 <hr />
 <h2 id="write-the-test">Write the Test<a class="headerlink" href="#write-the-test" title="Permanent link">&para;</a></h2>
 <p>Annotate a test method with <code>@ContracteerTest</code>.
-Contracteer reads the OpenAPI specification, generates verification cases, and runs each as an individual JUnit test.</p>
+Contracteer reads the OpenAPI document, generates verification cases, and runs each as an individual JUnit test.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Kotlin</label><label for="__tabbed_2_2">Java</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -1450,16 +1450,16 @@ Contracteer reads the OpenAPI specification, generates verification cases, and r
 <p>The method body executes before each verification case.
 After it returns, Contracteer sends the request and validates the response.</p>
 <h3 id="contracteertest-fields"><code>@ContracteerTest</code> fields<a class="headerlink" href="#contracteertest-fields" title="Permanent link">&para;</a></h3>
-<p><strong><code>openApiDoc</code></strong> <em>(required)</em> -- Path to the OpenAPI specification.
+<p><strong><code>openApiDoc</code></strong> <em>(required)</em> -- Path to the OpenAPI document.
 Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., <code>classpath:openapi.yaml</code>).</p>
 <p><strong><code>serverUrl</code></strong> <em>(default: <code>http://localhost</code>)</em> -- Base URL of the server under test.</p>
 <p><strong><code>serverPort</code></strong> <em>(default: <code>8080</code>)</em> -- Port of the server under test.
 Overridden by <code>@ContracteerServerPort</code> if the annotated field has a non-zero value.</p>
 <div class="admonition tip">
-<p class="admonition-title">Treat the specification as a shared artifact</p>
-<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-specification-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI specification exists independently of both server and client.
+<p class="admonition-title">Treat the OpenAPI document as a shared artifact</p>
+<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI document exists independently of both server and client.
 Package it as a Maven or Gradle dependency and reference it with <code>classpath:openapi.yaml</code>.
-This ensures that the server, client, and contract tests all use the same specification.
+This ensures that the server, client, and contract tests all use the same OpenAPI document.
 The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern with the <code>musketeer-spec</code> module.</p>
 </div>
 <h3 id="dynamic-server-port">Dynamic server port<a class="headerlink" href="#dynamic-server-port" title="Permanent link">&para;</a></h3>

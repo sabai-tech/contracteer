@@ -1299,13 +1299,13 @@
 
 
 <h1 id="testing-your-server">Testing Your Server<a class="headerlink" href="#testing-your-server" title="Permanent link">&para;</a></h1>
-<p>The <strong>verifier</strong> tests your server against your OpenAPI specification.
-It builds requests from the specification, sends them to your running server, and validates that responses conform to the contract.</p>
+<p>The <strong>verifier</strong> tests your server against your OpenAPI document.
+It builds requests from the OpenAPI document, sends them to your running server, and validates that responses conform to the contract.</p>
 <hr />
 <h2 id="what-the-verifier-sends-and-checks">What the Verifier Sends and Checks<a class="headerlink" href="#what-the-verifier-sends-and-checks" title="Permanent link">&para;</a></h2>
 <p>Here is the <code>GET /musketeers/{id}</code> operation from the <a href="https://github.com/sabai-tech/contracteer-examples">Musketeer API</a>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Excerpt from musketeer-api.yaml</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full spec: https://github.com/sabai-tech/contracteer-examples</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">paths</span><span class="p">:</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">/musketeers/{id}</span><span class="p p-Indicator">:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">get</span><span class="p">:</span>
@@ -1345,7 +1345,7 @@ It builds requests from the specification, sends them to your running server, an
 </code></pre></div>
 <p>This operation contains two <a href="../scenarios/">scenarios</a> -- named pairings of request values with expected responses, derived from OpenAPI examples.
 Each scenario produces a <strong>verification case</strong>: a request the verifier builds, sends, and validates.
-Contracteer also generates verification cases automatically when the specification provides enough information.</p>
+Contracteer also generates verification cases automatically when the OpenAPI document provides enough information.</p>
 <p>From this single operation, the verifier creates three verification cases:</p>
 <p><strong>ATHOS</strong> -- The example key <code>ATHOS</code> appears on both the path parameter and the response body, creating a scenario.
 The verifier sends <code>GET /musketeers/1</code> and validates that the response has status <code>200</code> with a body matching the Musketeer schema.</p>
@@ -1466,7 +1466,7 @@ It mutates the first eligible parameter in each category.</p>
 <p class="admonition-title">Note</p>
 <p>Automatic 400 testing validates that your server rejects structurally invalid input.
 It does not test business validation rules (e.g., "age must be positive").
-For business validation, define explicit 400 scenarios with intentionally invalid example values in your specification.</p>
+For business validation, define explicit 400 scenarios with intentionally invalid example values in your OpenAPI document.</p>
 </div>
 <hr />
 <h2 id="schema-only-verification">Schema-Only Verification<a class="headerlink" href="#schema-only-verification" title="Permanent link">&para;</a></h2>
@@ -1475,8 +1475,8 @@ When an operation has no 2xx scenario, the verifier generates a fully random req
 Parameter values satisfy the type and format constraints, and a random request body is included if one is defined.
 It sends this request and validates that the response matches the 2xx response schema.</p>
 <p>This is the right choice when request values do not affect which response the server returns.
-A <code>GET /health</code> endpoint, a <code>POST</code> that creates a resource from any valid body -- these operations need no examples in the specification.
-Contracteer generates valid requests and verifies the contract, keeping the specification lean.</p>
+A <code>GET /health</code> endpoint, a <code>POST</code> that creates a resource from any valid body -- these operations need no examples in the OpenAPI document.
+Contracteer generates valid requests and verifies the contract, keeping the OpenAPI document lean.</p>
 <p>Schema-only verification has one constraint: the operation must define exactly one 2xx response status code.
 If multiple 2xx responses exist and no scenario disambiguates which one to expect, the verifier cannot determine the correct status code.
 It skips the operation.</p>
@@ -1484,12 +1484,12 @@ It skips the operation.</p>
 <hr />
 <h2 id="what-the-verifier-does-not-test">What the Verifier Does Not Test<a class="headerlink" href="#what-the-verifier-does-not-test" title="Permanent link">&para;</a></h2>
 <p>The verifier is precise in scope.
-It validates what the specification defines and ignores what it does not.</p>
+It validates what the OpenAPI document defines and ignores what it does not.</p>
 <p><strong>No value comparison.</strong>
 Response values are not compared to example values.
 The server is free to return any data that satisfies the schema.</p>
 <p><strong>No undeclared fields</strong> (by default).
-If your server returns fields that the specification does not define, the verifier ignores them.
+If your server returns fields that the OpenAPI document does not define, the verifier ignores them.
 This follows <a href="https://en.wikipedia.org/wiki/Robustness_principle">Postel's Law</a>: validate what is defined, tolerate what is not.
 A server can add new response fields without breaking the verifier.
 However, if the schema declares <code>additionalProperties: false</code>, the verifier enforces it -- extra fields are rejected because the constraint is explicitly declared.</p>
@@ -1502,14 +1502,14 @@ Multi-step flows involving tokens, sessions, or permissions are outside the scop
 <hr />
 <h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
 <ul>
-<li>The verifier creates verification cases from your OpenAPI specification: scenario-based (from your examples), status-code-prefixed (from keys like <code>404_NOT_FOUND</code>), automatic type-mismatch (when a 400 response is defined), and schema-only (when no examples exist).</li>
+<li>The verifier creates verification cases from your OpenAPI document: scenario-based (from your examples), status-code-prefixed (from keys like <code>404_NOT_FOUND</code>), automatic type-mismatch (when a 400 response is defined), and schema-only (when no examples exist).</li>
 <li>It checks status code, required headers, and response body structure -- not response values.</li>
 <li>Automatic 400 testing sends intentionally wrong types and expects the server to reject them.
   It covers types that can be meaningfully violated (integers, booleans, dates, objects, arrays) but not plain strings.</li>
 <li>Schema-only verification handles operations where request values do not matter.
   It generates random requests and requires exactly one 2xx response.
   Define scenarios only when specific request values affect the expected response.</li>
-<li>The verifier follows Postel's Law: it validates what the specification defines and ignores additional fields.</li>
+<li>The verifier follows Postel's Law: it validates what the OpenAPI document defines and ignores additional fields.</li>
 </ul>
 <hr />
 <h2 id="further-reading">Further Reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>

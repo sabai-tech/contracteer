@@ -1348,13 +1348,13 @@ This page explains how to write OpenAPI examples that produce the scenarios you 
 <p>All examples come from the <a href="https://github.com/sabai-tech/contracteer-examples">Musketeer API</a>.</p>
 <hr />
 <h2 id="openapi-examples-examples-and-example">OpenAPI Examples: <code>examples</code> and <code>example</code><a class="headerlink" href="#openapi-examples-examples-and-example" title="Permanent link">&para;</a></h2>
-<p>The OpenAPI specification defines two ways to provide example values: the <code>examples</code> keyword and the <code>example</code> keyword.</p>
+<p>The OpenAPI Specification defines two ways to provide example values: the <code>examples</code> keyword and the <code>example</code> keyword.</p>
 <h3 id="the-examples-keyword">The <code>examples</code> keyword<a class="headerlink" href="#the-examples-keyword" title="Permanent link">&para;</a></h3>
 <p>The <code>examples</code> keyword is a map where each entry has a name and a value.
 Contracteer uses the names as <strong>example keys</strong> to create scenarios.</p>
 <p>Here is the <code>GET /musketeers/{id}</code> operation with <code>examples</code> on the path parameter and the response body:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Excerpt from musketeer-api.yaml</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full spec: https://github.com/sabai-tech/contracteer-examples</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">paths</span><span class="p">:</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">/musketeers/{id}</span><span class="p p-Indicator">:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">get</span><span class="p">:</span>
@@ -1426,8 +1426,8 @@ Contracteer treats it the same way as <code>examples</code> -- it participates i
 Contracteer creates one scenario: send the mission data, expect a <code>201</code> with <code>Location: /missions/3</code>.</p>
 <div class="admonition danger">
 <p class="admonition-title"><code>example</code> and <code>examples</code> are mutually exclusive</p>
-<p>The OpenAPI specification declares <code>example</code> and <code>examples</code> mutually exclusive on the same element.
-If both are present on the same parameter or media type, Contracteer rejects the specification.</p>
+<p>The OpenAPI Specification declares <code>example</code> and <code>examples</code> mutually exclusive on the same element.
+If both are present on the same parameter or media type, Contracteer rejects the OpenAPI document.</p>
 </div>
 <hr />
 <h2 id="how-contracteer-creates-scenarios">How Contracteer Creates Scenarios<a class="headerlink" href="#how-contracteer-creates-scenarios" title="Permanent link">&para;</a></h2>
@@ -1468,7 +1468,7 @@ Contracteer creates two scenarios:</p>
 <p>A scenario requires at least one request element and one response element sharing the same example key.
 Not every element needs an example for that key.
 Elements without an example are filled with random values from the schema.</p>
-<p>This keeps your OpenAPI specification light.
+<p>This keeps your OpenAPI document light.
 You only define the values that are relevant for a specific case -- Contracteer generates the rest.</p>
 <p>This principle applies to all scenario types: intersection-based scenarios, status-code-prefixed scenarios, and scenarios from the <code>example</code> keyword.</p>
 <p>Not every operation needs scenarios.

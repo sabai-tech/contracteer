@@ -1365,7 +1365,7 @@
 
 
 <h1 id="mock-an-api-with-spring-boot">Mock an API with Spring Boot<a class="headerlink" href="#mock-an-api-with-spring-boot" title="Permanent link">&para;</a></h1>
-<p>Add <code>@ContracteerMockServer</code> to your Spring Boot test class to start a mock server from your OpenAPI specification.
+<p>Add <code>@ContracteerMockServer</code> to your Spring Boot test class to start a mock server from your OpenAPI document.
 No handwritten stubs required.</p>
 <p>The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository contains a complete working project.
 The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-client">musketeer-spring-boot-client</a> demonstrates everything covered on this page.</p>
@@ -1375,7 +1375,7 @@ The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musket
 <li>JDK 21 or later</li>
 <li>Gradle or Maven</li>
 <li>Spring Boot test on the classpath</li>
-<li>An OpenAPI 3.0 or 3.1 specification (<code>.yaml</code> or <code>.json</code>)</li>
+<li>An OpenAPI 3.0 or 3.1 document (<code>.yaml</code> or <code>.json</code>)</li>
 </ul>
 <hr />
 <h2 id="add-the-dependency">Add the Dependency<a class="headerlink" href="#add-the-dependency" title="Permanent link">&para;</a></h2>
@@ -1509,7 +1509,7 @@ If your client depends on multiple APIs, annotate the test class once per API wi
 </div>
 <hr />
 <h2 id="contracteermockserver-fields"><code>@ContracteerMockServer</code> fields<a class="headerlink" href="#contracteermockserver-fields" title="Permanent link">&para;</a></h2>
-<p><strong><code>openApiDoc</code></strong> <em>(required)</em> -- Path to the OpenAPI specification.
+<p><strong><code>openApiDoc</code></strong> <em>(required)</em> -- Path to the OpenAPI document.
 Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., <code>classpath:openapi.yaml</code>).</p>
 <p><strong><code>port</code></strong> <em>(default: <code>0</code>)</em> -- Port for the mock server.
 <code>0</code> assigns a random available port.</p>
@@ -1517,16 +1517,16 @@ Accepts a file path, an HTTP(S) URL, or a classpath resource (e.g., <code>classp
 <p><strong><code>baseUrlProperty</code></strong> <em>(default: <code>contracteer.mockserver.baseUrl</code>)</em> -- Spring property name where the base URL is injected.
 Format: <code>http://localhost:{port}</code>.</p>
 <div class="admonition tip">
-<p class="admonition-title">Treat the specification as a shared artifact</p>
-<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-specification-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI specification exists independently of both server and client.
+<p class="admonition-title">Treat the OpenAPI document as a shared artifact</p>
+<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI document exists independently of both server and client.
 Package it as a Maven or Gradle dependency and reference it with <code>classpath:openapi.yaml</code>.
-This ensures that the server, client, and contract tests all use the same specification.
+This ensures that the server, client, and contract tests all use the same OpenAPI document.
 The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern with the <code>musketeer-spec</code> module.</p>
 </div>
 <hr />
 <h2 id="how-the-mock-server-responds">How the Mock Server Responds<a class="headerlink" href="#how-the-mock-server-responds" title="Permanent link">&para;</a></h2>
 <p>The mock server is not a hand-written stub.
-It validates every incoming request against the OpenAPI schema and determines the response from the specification.</p>
+It validates every incoming request against the OpenAPI schema and determines the response from the OpenAPI document.</p>
 <h3 id="request-validation">Request validation<a class="headerlink" href="#request-validation" title="Permanent link">&para;</a></h3>
 <p>The mock server validates request parameters and body against the schema.</p>
 <p>The client sends <code>{name: "d'Artagnan", rank: "KNIGHT", weapon: "Rapier"}</code> to <code>POST /musketeers</code>.
@@ -1542,7 +1542,7 @@ The mock server checks the <code>rank</code> field against the schema:</p>
 The operation defines a <code>400</code> response, so the mock server returns <code>400</code>.
 No one wrote a mock rule for this -- the schema drives the rejection.</p>
 <h3 id="scenario-matching">Scenario matching<a class="headerlink" href="#scenario-matching" title="Permanent link">&para;</a></h3>
-<p>If the request is valid, the mock server compares it against the scenarios defined in the specification.</p>
+<p>If the request is valid, the mock server compares it against the scenarios defined in the OpenAPI document.</p>
 <p>The client sends <code>{name: "d'Artagnan", rank: "CADET", weapon: "Rapier"}</code> to <code>POST /musketeers</code>.
 This matches the <code>D_ARTAGNAN_JOINS</code> scenario:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">post</span><span class="p">:</span>
@@ -1575,7 +1575,7 @@ The request is valid (999 is an integer), and the value matches the <code>404_UN
 The mock server returns <code>404</code>.</p>
 <h3 id="schema-only-response">Schema-only response<a class="headerlink" href="#schema-only-response" title="Permanent link">&para;</a></h3>
 <p>If the request is valid but matches no scenario, the mock server generates a response from the schema.</p>
-<p><code>GET /musketeers</code> has no examples in the specification.
+<p><code>GET /musketeers</code> has no examples in the OpenAPI document.
 The mock server returns <code>200</code> with an array of randomly generated <code>Musketeer</code> objects.
 The values satisfy the schema but are different on each run.</p>
 <h3 id="the-418-diagnostic">The 418 diagnostic<a class="headerlink" href="#the-418-diagnostic" title="Permanent link">&para;</a></h3>
@@ -1590,7 +1590,7 @@ Read it before investigating further -- it usually points directly to the cause.
 <h2 id="assert-structure-not-values">Assert Structure, Not Values<a class="headerlink" href="#assert-structure-not-values" title="Permanent link">&para;</a></h2>
 <p>Contract tests verify that your client handles the documented response structure -- not that the server returns specific data.
 Assert that fields are present and correctly typed.
-Do not assert on example values from the specification.</p>
+Do not assert on example values from the OpenAPI document.</p>
 <p>A test that asserts a response field equals a specific example value is a functional test, not a contract test.
 Your client must handle any valid response, not just the example data.</p>
 <p>See <a href="../../concepts/testing-your-client/#assert-structure-not-values">Assert Structure, Not Values</a> for the full rationale.</p>

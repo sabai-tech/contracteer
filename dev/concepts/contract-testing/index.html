@@ -620,10 +620,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-specification-as-source-of-truth" class="md-nav__link">
+  <a href="#the-openapi-document-as-source-of-truth" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Specification as Source of Truth
+        The OpenAPI Document as Source of Truth
       
     </span>
   </a>
@@ -1291,10 +1291,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-specification-as-source-of-truth" class="md-nav__link">
+  <a href="#the-openapi-document-as-source-of-truth" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Specification as Source of Truth
+        The OpenAPI Document as Source of Truth
       
     </span>
   </a>
@@ -1473,37 +1473,37 @@ A developer consulting the auto-generated API documentation sees field names, ty
 When they send a request based on that documentation, it fails because the annotations no longer match the implementation.
 The documentation becomes misleading rather than helpful.</p>
 <h3 id="specification-driven-contract-first">Specification-Driven (Contract-First)<a class="headerlink" href="#specification-driven-contract-first" title="Permanent link">&para;</a></h3>
-<p>The specification exists <strong>independently</strong> of both consumer and provider.
-It is a shared artifact -- an industry-standard document like an OpenAPI specification -- that defines the API contract.
+<p>The contract exists <strong>independently</strong> of both consumer and provider.
+It is a shared, industry-standard artifact -- an OpenAPI document, for example -- that defines the API contract.
 Both sides develop against it.
 Neither side owns it exclusively.</p>
-<p>The workflow is <strong>parallel</strong>: the provider implements the API to match the specification, and the consumer builds a client against it.
+<p>The workflow is <strong>parallel</strong>: the provider implements the API to match the OpenAPI document, and the consumer builds a client against it.
 Neither blocks the other.
 Contract tests then verify that both sides conform.</p>
 <p>This is the approach Contracteer takes.</p>
 <hr />
-<h2 id="the-specification-as-source-of-truth">The Specification as Source of Truth<a class="headerlink" href="#the-specification-as-source-of-truth" title="Permanent link">&para;</a></h2>
-<p>In specification-driven contract testing, the OpenAPI specification is not a byproduct of implementation.
+<h2 id="the-openapi-document-as-source-of-truth">The OpenAPI Document as Source of Truth<a class="headerlink" href="#the-openapi-document-as-source-of-truth" title="Permanent link">&para;</a></h2>
+<p>In specification-driven contract testing, the OpenAPI document is not a byproduct of implementation.
 It is the <strong>starting point</strong>.
 Teams agree on the API design -- endpoints, request shapes, response structures, error formats -- before writing code.</p>
 <p>This changes the development dynamic in three ways.</p>
 <p><strong>Parallel development.</strong>
 The provider team and the consumer team start working at the same time.
-The provider implements the server to match the specification.
-The consumer builds against a mock server that enforces the specification.
+The provider implements the server to match the OpenAPI document.
+The consumer builds against a mock server that enforces the OpenAPI document.
 No team waits for the other.</p>
 <p><strong>A shared communication medium.</strong>
-The specification becomes the place where teams discuss API design.
-Merge requests to the specification become the vehicle for proposing and reviewing changes.
+The OpenAPI document becomes the place where teams discuss API design.
+Merge requests to the OpenAPI document become the vehicle for proposing and reviewing changes.
 Any team involved with the API can propose changes, regardless of who implements the provider.</p>
 <p><strong>Continuous conformance.</strong>
 Contract tests run in the build on every commit.
-On the provider side, they verify that the server still responds according to the specification.
+On the provider side, they verify that the server still responds according to the OpenAPI document.
 On the consumer side, they verify that the client sends valid requests.
 Drift is caught immediately, not in staging, not in production.</p>
-<p>When a contract test fails, the team faces a clear decision: fix the implementation to match the specification, or update the specification to reflect the intended change.
+<p>When a contract test fails, the team faces a clear decision: fix the implementation to match the OpenAPI document, or update the document to reflect the intended change.
 Either way, the contract stays aligned with reality.</p>
-<p>The specification is also <strong>portable</strong>.
+<p>The OpenAPI document is also <strong>portable</strong>.
 It uses an industry standard -- OpenAPI -- that integrates with documentation tools, API gateways, and testing tools.
 The contract is not locked into a proprietary format.</p>
 <hr />
@@ -1511,8 +1511,8 @@ The contract is not locked into a proprietary format.</p>
 <ul>
 <li>Contract testing verifies the boundary between services -- the status codes, response shapes, and headers that both sides depend on.</li>
 <li>Contract tests run fast (no deployment, no infrastructure) and catch the most common integration failure: structural mismatch between what the server sends and what the client expects.</li>
-<li>Three approaches exist: consumer-driven (consumer owns the contract), provider-driven (provider owns the contract), and specification-driven (a shared specification is the source of truth).</li>
-<li>Specification-driven contract testing enables parallel development, uses an industry-standard format, and makes the specification a communication medium between teams.</li>
+<li>Three approaches exist: consumer-driven (consumer owns the contract), provider-driven (provider owns the contract), and specification-driven (a shared OpenAPI document is the source of truth).</li>
+<li>Specification-driven contract testing enables parallel development, uses an industry-standard format, and makes the OpenAPI document a communication medium between teams.</li>
 <li>Contract tests do not replace other test types, but they significantly reduce the number of integration and end-to-end tests needed by catching structural mismatches early.</li>
 </ul>
 <hr />
@@ -1526,9 +1526,9 @@ The contract is not locked into a proprietary format.</p>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../how-contracteer-works/">How Contracteer Works</a> -- how Contracteer turns an OpenAPI specification into a verifier and a mock server.</li>
+<li><a href="../how-contracteer-works/">How Contracteer Works</a> -- how Contracteer turns an OpenAPI document into a verifier and a mock server.</li>
 <li><a href="../scenarios/">Creating Scenarios</a> -- how to write OpenAPI examples that produce the scenarios you want.</li>
-<li><a href="../testing-your-server/">Testing Your Server</a> -- how the verifier tests your server against the specification.</li>
+<li><a href="../testing-your-server/">Testing Your Server</a> -- how the verifier tests your server against the OpenAPI document.</li>
 <li><a href="../testing-your-client/">Testing Your Client</a> -- how the mock server validates requests and generates responses.</li>
 <li><a href="../../getting-started/">Getting Started</a> -- set up Contracteer in your project.</li>
 </ul>

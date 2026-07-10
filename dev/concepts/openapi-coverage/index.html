@@ -1924,14 +1924,14 @@ Behavior is the same across both versions except where noted below.</p>
 <ul>
 <li>Using OpenAPI 3.0? Jump to <a href="#openapi-30-specific-behavior">OpenAPI 3.0-specific behavior</a>.</li>
 <li>Using OpenAPI 3.1? Jump to <a href="#openapi-31-specific-behavior">OpenAPI 3.1-specific behavior</a> and <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</li>
-<li>Migrating an OpenAPI 3.0 specification to 3.1?
+<li>Migrating an OpenAPI 3.0 document to 3.1?
   See <a href="#openapi-31-specific-behavior">OpenAPI 3.1-specific behavior</a> for what becomes available and <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a> for what Contracteer rejects.
   For syntax rewrites required by 3.1 itself, consult the <a href="https://spec.openapis.org/oas/v3.1.2">OpenAPI Specification 3.1.2</a>.</li>
 </ul>
 <hr />
 <h2 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h2>
 <p>Contracteer handles unsupported features in one of two ways.
-Some are accepted but degraded -- the specification still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
+Some are accepted but degraded -- the OpenAPI document still loads, and the table below explains the impact (for example, unsupported content types skip the operation with a warning).
 Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at load with an explanatory message; see <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</p>
 <table>
 <thead>
@@ -1967,10 +1967,10 @@ Others -- chiefly unsupported JSON Schema 2020-12 keywords -- are rejected at lo
 </tr>
 </tbody>
 </table>
-<p>If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the specification.</p>
+<p>If Contracteer skips an operation or ignores a keyword, it logs a warning when loading the OpenAPI document.</p>
 <hr />
 <h2 id="deviations-from-the-specification">Deviations from the Specification<a class="headerlink" href="#deviations-from-the-specification" title="Permanent link">&para;</a></h2>
-<p>The OpenAPI specification is sometimes ambiguous or impractical for contract testing.
+<p>The OpenAPI Specification is sometimes ambiguous or impractical for contract testing.
 In these cases, Contracteer makes explicit choices.</p>
 <h3 id="string-constraint-precedence">String constraint precedence<a class="headerlink" href="#string-constraint-precedence" title="Permanent link">&para;</a></h3>
 <p>OpenAPI treats <code>format</code>, <code>pattern</code>, <code>minLength</code>, and <code>maxLength</code> as independent constraints applied simultaneously.
@@ -1986,16 +1986,16 @@ Contracteer applies them in a strict precedence order:</p>
 <p>Generating a random value that satisfies both a regex pattern and a length range is not reliably possible.
 Contracteer uses the same constraint for both validation and generation to ensure consistency.
 What Contracteer validates is what it can generate.</p>
-<p><code>enum</code> is always validated against the active constraint when loading the specification.
-If all enum values satisfy the active constraint, the specification is accepted.
-If any enum value violates it, the specification is rejected.</p>
+<p><code>enum</code> is always validated against the active constraint when loading the OpenAPI document.
+If all enum values satisfy the active constraint, the OpenAPI document is accepted.
+If any enum value violates it, the document is rejected.</p>
 <p>Random value generation for patterns uses the <a href="https://github.com/curious-odd-man/rgxgen">RgxGen</a> library.
 RgxGen supports most common regex features, but lookaheads and lookbehinds do not generate correctly.
-If Contracteer generates invalid values for your pattern, use <code>enum</code> values instead, or provide explicit <code>examples</code> in your specification.</p>
+If Contracteer generates invalid values for your pattern, use <code>enum</code> values instead, or provide explicit <code>examples</code> in your OpenAPI document.</p>
 <h3 id="multipart-default-content-types">Multipart default content types<a class="headerlink" href="#multipart-default-content-types" title="Permanent link">&para;</a></h3>
-<p>The OpenAPI specification defaults arrays of primitives to <code>text/plain</code> in multipart parts.
+<p>The OpenAPI Specification defaults arrays of primitives to <code>text/plain</code> in multipart parts.
 Contracteer uses <code>application/json</code> for all arrays.
-The specification does not define how to serialize an array as plain text in a multipart part.</p>
+The OpenAPI Specification does not define how to serialize an array as plain text in a multipart part.</p>
 <table>
 <thead>
 <tr>
@@ -2055,11 +2055,11 @@ The specification does not define how to serialize an array as plain text in a m
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">maxLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
 </code></pre></div>
-<p>The OpenAPI specification allows <code>allOf</code> sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
+<p>The OpenAPI Specification allows <code>allOf</code> sub-schemas of any type, but Contracteer generates random values for each sub-schema and merges the results.
 For objects, this works -- different sub-schemas contribute different properties that combine cleanly.
 For primitives, constraints overlap on the same value.
 A <code>minLength: 5</code> from one sub-schema and a <code>maxLength: 10</code> from another would require computing the constraint intersection, which Contracteer does not do.</p>
-<p>If your specification uses multi-element <code>allOf</code> with primitives, combine the constraints into a single schema:</p>
+<p>If your OpenAPI document uses multi-element <code>allOf</code> with primitives, combine the constraints into a single schema:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Equivalent single schema</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">string</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nt">minLength</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
@@ -2067,7 +2067,7 @@ A <code>minLength: 5</code> from one sub-schema and a <code>maxLength: 10</code>
 </code></pre></div>
 <h3 id="multiple-composition-keywords-on-the-same-schema">Multiple composition keywords on the same schema<a class="headerlink" href="#multiple-composition-keywords-on-the-same-schema" title="Permanent link">&para;</a></h3>
 <p>JSON Schema allows <code>allOf</code>, <code>anyOf</code>, and <code>oneOf</code> to appear on the same schema, with each keyword applying independently:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Valid per the specification, but rejected by Contracteer</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Valid per the OpenAPI Specification, but rejected by Contracteer</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">ProductOrService</span><span class="p">:</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;#/components/schemas/Purchasable&#39;</span>
@@ -2078,8 +2078,8 @@ A <code>minLength: 5</code> from one sub-schema and a <code>maxLength: 10</code>
 <p>Contracteer rejects schemas that combine multiple composition keywords.
 Each composition keyword produces a different validation strategy (all must match, exactly one must match, at least one must match).
 Combining them would require a compound validation that Contracteer does not implement.</p>
-<p>This pattern is extremely rare in real-world specifications and is almost always a mistake.
-If your specification combines composition keywords, restructure it to use a single keyword:</p>
+<p>This pattern is extremely rare in real-world OpenAPI documents and is almost always a mistake.
+If your OpenAPI document combines composition keywords, restructure it to use a single keyword:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Use allOf to combine the base schema with a oneOf</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nt">ProductOrService</span><span class="p">:</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">allOf</span><span class="p">:</span>
@@ -2110,14 +2110,14 @@ On <code>application/x-www-form-urlencoded</code>, <code>multipart/*</code>, <co
 Contracteer rejects this combination at load time:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>composed schemas define incompatible kinds: &#39;primitive&#39; vs &#39;object&#39;
 </code></pre></div>
-<p>The OpenAPI specification permits the composition.
-Contracteer rejects it for type-blind wire formats because silently selecting one branch would break the trust model of contract testing: a green run must mean the whole specification was exercised, not one arbitrary interpretation of it.</p>
+<p>The OpenAPI Specification permits the composition.
+Contracteer rejects it for type-blind wire formats because silently selecting one branch would break the trust model of contract testing: a green run must mean the whole OpenAPI document was exercised, not one arbitrary interpretation of it.</p>
 <p>The same composition is accepted in <code>application/json</code> request and response bodies, where the wire format disambiguates.</p>
 <h4 id="multipart-part-default-content-type-for-mixed-shape-branches">Multipart part default content type for mixed-shape branches<a class="headerlink" href="#multipart-part-default-content-type-for-mixed-shape-branches" title="Permanent link">&para;</a></h4>
-<p>The OpenAPI specification defaults a multipart part's content type based on its schema -- <code>text/plain</code> for primitives, <code>application/json</code> for objects and arrays, <code>application/octet-stream</code> for binary.
+<p>The OpenAPI Specification defaults a multipart part's content type based on its schema -- <code>text/plain</code> for primitives, <code>application/json</code> for objects and arrays, <code>application/octet-stream</code> for binary.
 When a part's schema is a composition whose branches have incompatible encoding shapes (e.g., a primitive branch and an object branch), no single default applies.</p>
-<p>Contracteer rejects the specification at load time.
-The spec author must declare the part's content type explicitly via the <code>encoding</code> object:</p>
+<p>Contracteer rejects the OpenAPI document at load time.
+The OpenAPI document's author must declare the part's content type explicitly via the <code>encoding</code> object:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nt">requestBody</span><span class="p">:</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">content</span><span class="p">:</span>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="nt">multipart/form-data</span><span class="p">:</span>
@@ -2134,11 +2134,11 @@ The spec author must declare the part's content type explicitly via the <code>en
 <a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="w">        </span><span class="nt">payload</span><span class="p">:</span>
 <a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">          </span><span class="nt">contentType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">application/json</span>
 </code></pre></div>
-<p>The OpenAPI specification does not define what to default to in this case.
+<p>The OpenAPI Specification does not define what to default to in this case.
 Contracteer chooses explicit declaration over a silent guess.</p>
 <hr />
 <h2 id="not-applicable-to-contract-testing">Not Applicable to Contract Testing<a class="headerlink" href="#not-applicable-to-contract-testing" title="Permanent link">&para;</a></h2>
-<p>These features are defined in the OpenAPI specification but do not affect the structural contract between client and server.
+<p>These features are defined in the OpenAPI Specification but do not affect the structural contract between client and server.
 Contracteer does not process them.</p>
 <table>
 <thead>
@@ -2386,7 +2386,7 @@ Contracteer does not process them.</p>
 </table>
 <p><strong>Type inference.</strong>
 When a schema declares no <code>type</code> but uses <code>properties</code>, <code>additionalProperties</code>, or <code>items</code>, Contracteer treats it as an object or array schema accordingly.
-This is consistent with the specification, which permits typeless schemas while defining these keywords only for objects or arrays.</p>
+This is consistent with the OpenAPI Specification, which permits typeless schemas while defining these keywords only for objects or arrays.</p>
 <h3 id="schema-composition">Schema composition<a class="headerlink" href="#schema-composition" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2423,16 +2423,16 @@ When the discriminator cannot identify a single sub-schema, Contracteer follows 
 <p>Three runtime cases:</p>
 <p><strong>Property is absent.</strong>
 When the discriminator property is missing from the body, Contracteer validates the body against every sub-schema as if no discriminator were declared.
-The OpenAPI specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
+The OpenAPI Specification states: "This property SHOULD be required in the payload schema, as the behavior when the property is absent is undefined."
 The body is accepted if exactly one sub-schema matches (<code>oneOf</code>) or at least one sub-schema matches (<code>anyOf</code>).</p>
 <p><strong>Property is not a string.</strong>
 When the discriminator property is present but not a string value, Contracteer falls back to the same plain composite matching.
-The OpenAPI specification states: "Mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison."
+The OpenAPI Specification states: "Mapping keys MUST be string values, but tooling MAY convert response values to strings for comparison."
 Contracteer does not coerce non-string values.
 Sub-schemas usually declare the discriminator property as <code>type: string</code>, so a non-string value fails the string type check within each branch.</p>
 <p><strong>Value does not match any mapping or schema name.</strong>
 When the discriminator property is a string that matches no entry in <code>mapping</code> and no schema name under <code>components/schemas</code>, Contracteer rejects the body with <code>No schema found for discriminator property '&lt;name&gt;' with value: &lt;value&gt;</code>.
-The OpenAPI specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".</p>
+The OpenAPI Specification states: "If the discriminating value does not match an implicit or explicit mapping, no schema can be determined and validation SHOULD fail".</p>
 <h3 id="discriminator-on-a-parent-schema-used-via-ref">Discriminator on a parent schema used via <code>$ref</code><a class="headerlink" href="#discriminator-on-a-parent-schema-used-via-ref" title="Permanent link">&para;</a></h3>
 <p>A common polymorphic pattern uses a parent schema that declares the discriminator and child schemas that extend the parent with <code>allOf</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">components</span><span class="p">:</span>
@@ -2508,7 +2508,7 @@ This matches the OpenAPI rule: "The <code>allOf</code> form of <code>discriminat
 </tr>
 <tr>
 <td><code>style</code> / <code>explode</code></td>
-<td>All style/explode combinations with correct defaults per location. Flat styles (<code>simple</code>, <code>form</code>, <code>label</code>, <code>matrix</code>) reject nested non-primitive values -- arrays of objects, arrays of arrays, and objects with object/array properties -- because the OpenAPI specification leaves their serialization undefined.</td>
+<td>All style/explode combinations with correct defaults per location. Flat styles (<code>simple</code>, <code>form</code>, <code>label</code>, <code>matrix</code>) reject nested non-primitive values -- arrays of objects, arrays of arrays, and objects with object/array properties -- because the OpenAPI Specification leaves their serialization undefined.</td>
 </tr>
 <tr>
 <td>Composed schemas</td>
@@ -2663,9 +2663,9 @@ This matches the OpenAPI rule: "The <code>allOf</code> form of <code>discriminat
 </table>
 <hr />
 <h2 id="openapi-30-specific-behavior">OpenAPI 3.0-specific behavior<a class="headerlink" href="#openapi-30-specific-behavior" title="Permanent link">&para;</a></h2>
-<p>These behaviors apply only when your specification is OpenAPI 3.0.</p>
+<p>These behaviors apply only to OpenAPI 3.0 documents.</p>
 <h3 id="nullable-on-composition-schemas"><code>nullable</code> on composition schemas<a class="headerlink" href="#nullable-on-composition-schemas" title="Permanent link">&para;</a></h3>
-<p>The OpenAPI specification states that <code>nullable</code> only takes effect when <code>type</code> is explicitly defined on the same schema.
+<p>The OpenAPI Specification states that <code>nullable</code> only takes effect when <code>type</code> is explicitly defined on the same schema.
 Composition schemas (<code>oneOf</code>, <code>anyOf</code>, <code>allOf</code>) typically do not declare <code>type</code>, which means <code>nullable: true</code> should technically have no effect:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="nt">MySchema</span><span class="p">:</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="w">  </span><span class="nt">nullable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
@@ -2682,7 +2682,7 @@ Contracteer ignores the flag.
 The keyword was deprecated in OpenAPI 3.0 and dropped from OpenAPI 3.1.</p>
 <hr />
 <h2 id="openapi-31-specific-behavior">OpenAPI 3.1-specific behavior<a class="headerlink" href="#openapi-31-specific-behavior" title="Permanent link">&para;</a></h2>
-<p>These behaviors apply only when your specification is OpenAPI 3.1.</p>
+<p>These behaviors apply only to OpenAPI 3.1 documents.</p>
 <h3 id="type-arrays">Type arrays<a class="headerlink" href="#type-arrays" title="Permanent link">&para;</a></h3>
 <p>OpenAPI 3.1 allows <code>type</code> to be an array of type strings.
 Contracteer supports two forms:</p>
@@ -2718,7 +2718,7 @@ A <code>{type: "null"}</code> schema accepts only <code>null</code> and rejects 
 <ul>
 <li><code>anyOf</code> accepts null if the outer schema is nullable or any branch admits null.</li>
 <li><code>oneOf</code> accepts null if the outer is nullable or exactly one branch admits null.
-  Two or more null-admitting branches make the composite non-nullable -- the specification is ambiguous, so Contracteer treats it as non-null.</li>
+  Two or more null-admitting branches make the composite non-nullable -- the OpenAPI document is ambiguous, so Contracteer treats it as non-null.</li>
 <li><code>allOf</code> accepts null if the outer is nullable or every branch admits null.</li>
 </ul>
 <p>The three positions below are rejected at load time because the construct has no coherent meaning there, not because the feature is missing:</p>
@@ -2806,7 +2806,7 @@ The schema's <code>type</code> must be declared explicitly -- Contracteer does n
 <p>Other <code>contentEncoding</code> values (<code>base16</code>, <code>base32</code>, <code>quoted-printable</code>, etc.) and structured-text <code>contentMediaType</code> values (<code>application/json</code>, <code>application/xml</code>, etc.) are rejected at load time.
 See <a href="#unsupported-openapi-31-keywords">Unsupported OpenAPI 3.1 keywords</a>.</p>
 <p>For request and response bodies declared with a binary content type (<code>application/octet-stream</code>, <code>image/*</code>, etc.) but no schema or an empty schema, Contracteer infers binary content automatically.
-This applies to OpenAPI 3.0 specifications as well.</p>
+This applies to OpenAPI 3.0 documents as well.</p>
 <h3 id="ref-with-sibling-keywords"><code>$ref</code> with sibling keywords<a class="headerlink" href="#ref-with-sibling-keywords" title="Permanent link">&para;</a></h3>
 <p>OpenAPI 3.1 follows JSON Schema 2020-12, which allows other keywords alongside <code>$ref</code> in a Schema Object.
 The resolved target and the siblings must both be satisfied -- this is implicit <code>allOf</code> semantics.</p>
@@ -2897,7 +2897,7 @@ Chains of <code>$ref</code> with siblings recurse naturally and intermediate sib
 </tbody>
 </table>
 <p>Reference Object siblings (under <code>parameters</code>, <code>requestBodies</code>, <code>responses</code>, <code>headers</code>, <code>examples</code>) are separate from Schema Object siblings.
-The OpenAPI 3.1 specification states that only <code>summary</code> and <code>description</code> are allowed on a Reference Object; any other keyword is ignored.
+The OpenAPI 3.1 Specification states that only <code>summary</code> and <code>description</code> are allowed on a Reference Object; any other keyword is ignored.
 Contracteer follows that rule.</p>
 <p>If two schemas reference each other via <code>$ref</code> with siblings (for example <code>A → B → A</code>), the merge fails at load time with a message naming the cycle path.
 Regular <code>$ref</code> chains without siblings still permit circular references with the usual rules (see <a href="../../guides/troubleshooting/#circular-schema-reference-rejected">Circular schema reference rejected</a>).</p>
@@ -2994,7 +2994,7 @@ A few do not produce an error -- they are simply not honored, and references tha
 </table>
 <hr />
 <h2 id="specification-references">Specification references<a class="headerlink" href="#specification-references" title="Permanent link">&para;</a></h2>
-<p>Quotes throughout this page come from the OpenAPI specification:</p>
+<p>Quotes throughout this page come from the OpenAPI Specification:</p>
 <ul>
 <li><a href="https://spec.openapis.org/oas/v3.0.4">OpenAPI Specification 3.0.4</a></li>
 <li><a href="https://spec.openapis.org/oas/v3.1.2">OpenAPI Specification 3.1.2</a></li>

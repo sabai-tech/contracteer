@@ -1243,10 +1243,10 @@
 
 
 <h1 id="how-contracteer-works">How Contracteer Works<a class="headerlink" href="#how-contracteer-works" title="Permanent link">&para;</a></h1>
-<p>Contracteer reads your OpenAPI specification and provides two tools.
-The <strong>verifier</strong> tests your server against the specification.
+<p>Contracteer reads your OpenAPI document and provides two tools.
+The <strong>verifier</strong> tests your server against the document.
 The <strong>mock server</strong> gives your client tests a strict, spec-compliant API to run against.
-Both derive their behavior entirely from the specification -- no handwritten mocks, no manually maintained test cases.</p>
+Both derive their behavior entirely from the document -- no handwritten mocks, no manually maintained test cases.</p>
 <hr />
 <h2 id="the-musketeer-api">The Musketeer API<a class="headerlink" href="#the-musketeer-api" title="Permanent link">&para;</a></h2>
 <p>Throughout this documentation, we use the <a href="https://github.com/sabai-tech/contracteer-examples">Musketeer API</a> -- a small REST API for managing musketeers and their missions.</p>
@@ -1254,9 +1254,9 @@ Both derive their behavior entirely from the specification -- no handwritten moc
 <p class="admonition-title">Why musketeers?</p>
 <p>Contracteer is a portmanteau of <em>Contract</em> and <em>Musketeer</em> -- because every API deserves a loyal guard defending its contract.</p>
 </div>
-<p>Here is the <code>GET /musketeers/{id}</code> operation from its OpenAPI specification:</p>
+<p>Here is the <code>GET /musketeers/{id}</code> operation from its OpenAPI document:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Excerpt from musketeer-api.yaml</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full spec: https://github.com/sabai-tech/contracteer-examples</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">paths</span><span class="p">:</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">/musketeers/{id}</span><span class="p p-Indicator">:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">get</span><span class="p">:</span>
@@ -1307,13 +1307,13 @@ Two scenarios come from this operation:</p>
 </ul>
 <p>A <strong>verification case</strong> is what Contracteer actually executes.
 Every scenario produces a verification case, but Contracteer also generates verification cases automatically.
-Here, the specification declares that <code>id</code> is an integer and that a <code>400</code> response exists.
+Here, the OpenAPI document declares that <code>id</code> is an integer and that a <code>400</code> response exists.
 Contracteer creates an automatic <strong>type-mismatch verification case</strong>: it sends an invalid type (a string instead of an integer) and expects a <code>400</code> with a response matching the ProblemDetail schema.</p>
-<p>Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the specification.</p>
+<p>Three verification cases from one operation, covering the happy path, a not-found case, and input validation -- all derived from the OpenAPI document.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Contracteer requires every operation to define at least one 2xx response.
-If any operation lacks a 2xx response, Contracteer rejects the specification.</p>
+If any operation lacks a 2xx response, Contracteer rejects the OpenAPI document.</p>
 </div>
 <p>The full mechanics of how scenarios are created are covered in <a href="../scenarios/">Creating Scenarios</a>.</p>
 <hr />
@@ -1330,11 +1330,11 @@ Your server is free to return any data that satisfies the schema.</p>
 <p>How the verifier works in depth is covered in <a href="../testing-your-server/">Testing Your Server</a>.</p>
 <hr />
 <h2 id="the-mock-server-testing-your-client">The Mock Server: Testing Your Client<a class="headerlink" href="#the-mock-server-testing-your-client" title="Permanent link">&para;</a></h2>
-<p>The mock server is a <strong>strict reference implementation</strong> of the API defined by your OpenAPI specification.
+<p>The mock server is a <strong>strict reference implementation</strong> of the API defined by your OpenAPI document.
 It validates every incoming request against the OpenAPI schema and returns spec-compliant responses.</p>
 <p>If a request matches a scenario, the mock server returns that scenario's response values.
 If the request is valid but matches no scenario, it returns a response generated from the schema.
-If the request violates the specification -- wrong types, missing required fields -- it rejects it.</p>
+If the request violates the OpenAPI document -- wrong types, missing required fields -- it rejects it.</p>
 <p>This strictness is what makes the mock server useful for testing.
 It enforces the contract on every request.
 Your client tests run against an accurate representation of the real API -- fast, in-process, with no external infrastructure.</p>
@@ -1347,7 +1347,7 @@ It cannot be exhaustive -- testing every possible request for every operation is
 Instead, it tests the named scenarios from your examples and automatic cases for error handling.
 Its claim is:</p>
 <blockquote>
-<p>For each verification case, the server responds as the specification says it should.</p>
+<p>For each verification case, the server responds as the OpenAPI document says it should.</p>
 </blockquote>
 <p>The mock server validates <strong>every request</strong>.
 It cannot afford to be lenient.
@@ -1363,30 +1363,30 @@ The mock server proves that your client respects the contract in all cases.</p>
 <hr />
 <h2 id="validate-what-is-defined-ignore-what-is-not">Validate What Is Defined, Ignore What Is Not<a class="headerlink" href="#validate-what-is-defined-ignore-what-is-not" title="Permanent link">&para;</a></h2>
 <p>Contracteer follows <a href="https://en.wikipedia.org/wiki/Robustness_principle">Postel's Law</a>: <em>be conservative in what you send, liberal in what you accept</em>.</p>
-<p>The <strong>mock server</strong> validates request elements declared in the specification.
-If your client sends an extra query parameter or header that the spec doesn't mention, the mock server does not reject the request.
+<p>The <strong>mock server</strong> validates request elements declared in the OpenAPI document.
+If your client sends an extra query parameter or header that the OpenAPI document doesn't mention, the mock server does not reject the request.
 There is no schema to validate it against.</p>
-<p>The <strong>verifier</strong> validates response elements declared in the specification.
-If your server returns additional fields beyond what the spec declares, the verifier does not fail.
+<p>The <strong>verifier</strong> validates response elements declared in the OpenAPI document.
+If your server returns additional fields beyond what the OpenAPI document declares, the verifier does not fail.
 Those fields are outside the contract's scope.</p>
-<p>This tolerance applies when the specification is silent.
-When the specification explicitly declares a constraint, Contracteer enforces it.
+<p>This tolerance applies when the OpenAPI document is silent.
+When the OpenAPI document explicitly declares a constraint, Contracteer enforces it.
 For example, <code>additionalProperties: false</code> on a response schema means the verifier rejects responses with extra fields.
-The spec author deliberately restricted the contract.</p>
+The OpenAPI document's author deliberately restricted the contract.</p>
 <p>This tolerance makes contract tests stable across API evolution.
 A server can add new response fields without breaking the verifier (unless <code>additionalProperties: false</code> is declared).
 A client can send additional parameters without breaking the mock server.
-Only changes to what the specification <strong>defines</strong> are caught -- which is exactly what contract tests should detect.</p>
+Only changes to what the OpenAPI document <strong>defines</strong> are caught -- which is exactly what contract tests should detect.</p>
 <hr />
 <h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Contracteer reads your OpenAPI specification and provides two tools: a verifier (tests your server) and a mock server (tests your client).</li>
+<li>Contracteer reads your OpenAPI document and provides two tools: a verifier (tests your server) and a mock server (tests your client).</li>
 <li>Scenarios are named pairings of request and response values, derived from OpenAPI examples or status-code-prefixed keys.
   Verification cases are what Contracteer executes -- they include scenarios and automatic type-mismatch cases.</li>
 <li>The verifier checks structure and types, not values -- the contract guarantees the shape, not the content.</li>
 <li>The mock server is a strict reference implementation. It enforces the contract on every request, giving your client tests an accurate representation of the real API.</li>
 <li>The two are intentionally asymmetric: the verifier tests representative cases, the mock server validates every request.</li>
-<li>Contracteer follows Postel's Law: it validates what the specification defines and tolerates what it doesn't.</li>
+<li>Contracteer follows Postel's Law: it validates what the OpenAPI document defines and tolerates what it doesn't.</li>
 </ul>
 <hr />
 <h2 id="further-reading">Further Reading<a class="headerlink" href="#further-reading" title="Permanent link">&para;</a></h2>
@@ -1399,7 +1399,7 @@ Only changes to what the specification <strong>defines</strong> are caught -- wh
 <ul>
 <li><a href="../testing-your-server/">Testing Your Server</a> -- how the verifier works in depth, including automatic 400 testing.</li>
 <li><a href="../testing-your-client/">Testing Your Client</a> -- how the mock server works in depth, including the 418 diagnostic response.</li>
-<li><a href="../scenarios/">Creating Scenarios</a> -- how to create scenarios from your OpenAPI specification.</li>
+<li><a href="../scenarios/">Creating Scenarios</a> -- how to create scenarios from your OpenAPI document.</li>
 <li><a href="../../getting-started/">Getting Started</a> -- set up Contracteer in your project.</li>
 </ul>
 

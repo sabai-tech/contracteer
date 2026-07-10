@@ -1027,10 +1027,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-specification-as-a-shared-artifact" class="md-nav__link">
+  <a href="#the-openapi-document-as-a-shared-artifact" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Specification as a Shared Artifact
+        The OpenAPI Document as a Shared Artifact
       
     </span>
   </a>
@@ -1169,10 +1169,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-specification-as-a-shared-artifact" class="md-nav__link">
+  <a href="#the-openapi-document-as-a-shared-artifact" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Specification as a Shared Artifact
+        The OpenAPI Document as a Shared Artifact
       
     </span>
   </a>
@@ -1296,29 +1296,29 @@ GitHub Actions treats a non-zero exit code as a failed step.</p>
 <p>The mock server runs in the background for the duration of the job.
 Your client tests point to it via the <code>API_BASE_URL</code> environment variable (or however your client is configured).</p>
 <hr />
-<h2 id="the-specification-as-a-shared-artifact">The Specification as a Shared Artifact<a class="headerlink" href="#the-specification-as-a-shared-artifact" title="Permanent link">&para;</a></h2>
-<p>The strongest CI setup treats the OpenAPI specification as a <strong>versioned, published artifact</strong>.
+<h2 id="the-openapi-document-as-a-shared-artifact">The OpenAPI Document as a Shared Artifact<a class="headerlink" href="#the-openapi-document-as-a-shared-artifact" title="Permanent link">&para;</a></h2>
+<p>The strongest CI setup treats the OpenAPI document as a <strong>versioned, published artifact</strong>.
 Both server and client pipelines consume it.</p>
 <p>The pattern:</p>
 <ol>
-<li>The specification lives in its own repository or module.</li>
+<li>The OpenAPI document lives in its own repository or module.</li>
 <li>It is published as a versioned artifact (e.g., a Maven dependency).</li>
 <li>Server and client projects declare a dependency on it.</li>
-<li>A specification change triggers both pipelines.</li>
+<li>A change to the OpenAPI document triggers both pipelines.</li>
 </ol>
 <p>This ensures that server and client always test against the same version of the contract.
-If the specification changes and either side fails to conform, CI catches it immediately.</p>
+If the OpenAPI document changes and either side fails to conform, CI catches it immediately.</p>
 <p>The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern.
-The <code>musketeer-spec</code> module publishes the OpenAPI specification as a dependency.
+The <code>musketeer-spec</code> module publishes the OpenAPI document as a dependency.
 The server and client projects both consume it via <code>classpath:musketeer-api.yaml</code>.</p>
-<p>See <a href="../../concepts/contract-testing/#the-specification-as-source-of-truth">The Specification as Source of Truth</a> for the rationale behind this approach.</p>
+<p>See <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">The OpenAPI Document as Source of Truth</a> for the rationale behind this approach.</p>
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../../getting-started/cli/">Use the CLI</a> -- CLI installation and commands.</li>
 <li><a href="../../getting-started/verifier-junit/">Verify Your API with JUnit 5</a> -- JVM verifier setup.</li>
 <li><a href="../../getting-started/mockserver-spring/">Mock an API with Spring Boot</a> -- JVM mock server setup.</li>
-<li><a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> -- complete working projects demonstrating the shared specification pattern.</li>
+<li><a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> -- complete working projects demonstrating the shared OpenAPI document pattern.</li>
 </ul>
 
 

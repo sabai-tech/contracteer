@@ -1330,7 +1330,7 @@ This is the right choice for Kotest, TestNG, a custom test harness, or any setup
 <ul>
 <li>JDK 21 or later</li>
 <li>Gradle or Maven</li>
-<li>An OpenAPI 3.0 or 3.1 specification (<code>.yaml</code> or <code>.json</code>)</li>
+<li>An OpenAPI 3.0 or 3.1 document (<code>.yaml</code> or <code>.json</code>)</li>
 </ul>
 <hr />
 <h2 id="add-the-dependency">Add the Dependency<a class="headerlink" href="#add-the-dependency" title="Permanent link">&para;</a></h2>
@@ -1355,14 +1355,14 @@ This is the right choice for Kotest, TestNG, a custom test harness, or any setup
 </div>
 <hr />
 <h2 id="load-generate-verify">Load, Generate, Verify<a class="headerlink" href="#load-generate-verify" title="Permanent link">&para;</a></h2>
-<p>Three steps: load the specification, generate verification cases, run them against your server.</p>
+<p>Three steps: load the OpenAPI document, generate verification cases, run them against your server.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Kotlin</label><label for="__tabbed_2_2">Java</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// 1. Load the OpenAPI specification</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// 1. Load the OpenAPI document</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiLoader</span><span class="p">.</span><span class="na">loadOperations</span><span class="p">(</span><span class="s">&quot;classpath:openapi.yaml&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isFailure</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load spec: </span><span class="si">${</span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load OpenAPI document: </span><span class="si">${</span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// 2. Generate verification cases</span>
@@ -1387,10 +1387,10 @@ This is the right choice for Kotest, TestNG, a custom test harness, or any setup
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// 1. Load the OpenAPI specification</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// 1. Load the OpenAPI document</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiLoader</span><span class="p">.</span><span class="na">loadOperations</span><span class="p">(</span><span class="s">&quot;classpath:openapi.yaml&quot;</span><span class="p">);</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isFailure</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load spec: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">());</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load OpenAPI document: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">());</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1">// 2. Generate verification cases</span>
@@ -1426,10 +1426,10 @@ This is the right choice for Kotest, TestNG, a custom test harness, or any setup
   May include a path prefix (e.g., <code>https://api.example.com/v1</code>); query strings and fragments are rejected.</li>
 </ul>
 <div class="admonition tip">
-<p class="admonition-title">Treat the specification as a shared artifact</p>
-<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-specification-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI specification exists independently of both server and client.
+<p class="admonition-title">Treat the OpenAPI document as a shared artifact</p>
+<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI document exists independently of both server and client.
 Package it as a Maven or Gradle dependency and reference it with <code>classpath:openapi.yaml</code>.
-This ensures that the server, client, and contract tests all use the same specification.
+This ensures that the server, client, and contract tests all use the same OpenAPI document.
 The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern with the <code>musketeer-spec</code> module.</p>
 </div>
 <hr />

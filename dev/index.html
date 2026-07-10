@@ -1249,21 +1249,21 @@
 
 <h1 id="contracteer">Contracteer<a class="headerlink" href="#contracteer" title="Permanent link">&para;</a></h1>
 <p><em>The loyal guard of your API contracts.</em></p>
-<p>Contracteer turns your OpenAPI specification into executable contract tests and a strict mock server.
-It is <strong>specification-driven</strong>: the OpenAPI specification is the single source of truth.
+<p>Contracteer turns your OpenAPI document into executable contract tests and a strict mock server.
+It is <strong>specification-driven</strong>: the OpenAPI document is the single source of truth.
 Contracteer verifies that both your server and your client conform to it.</p>
 <hr />
 <h2 id="why-contracteer">Why Contracteer?<a class="headerlink" href="#why-contracteer" title="Permanent link">&para;</a></h2>
-<p>API specifications drift from their implementations.
+<p>OpenAPI documents drift from their implementations.
 A field gets renamed, a status code changes, a required parameter becomes optional -- and nothing catches it until production breaks.</p>
 <p>Contract tests catch this drift early.
 They run in the build, with the speed of unit tests, and verify that the boundary between services works as documented.
-Contracteer reads your OpenAPI specification, generates test cases from it, and validates conformance.
+Contracteer reads your OpenAPI document, generates test cases from it, and validates conformance.
 No handwritten mocks, no manually maintained test cases.</p>
 <hr />
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <h3 id="test-your-server">Test your server<a class="headerlink" href="#test-your-server" title="Permanent link">&para;</a></h3>
-<p>Verify that your API implementation matches the specification.</p>
+<p>Verify that your API implementation matches the OpenAPI document.</p>
 <ul>
 <li><a href="getting-started/verifier-junit/">Verifier (JUnit 5)</a> -- one annotation, zero plumbing.</li>
 <li><a href="getting-started/verifier/">Verifier (programmatic)</a> -- for Kotest, TestNG, or custom harnesses.</li>
@@ -1283,7 +1283,7 @@ No handwritten mocks, no manually maintained test cases.</p>
 <h2 id="learn-the-concepts">Learn the Concepts<a class="headerlink" href="#learn-the-concepts" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="concepts/contract-testing/">What Is Contract Testing?</a> -- the problem, the insight, and where contract tests fit in the testing pyramid.</li>
-<li><a href="concepts/how-contracteer-works/">How Contracteer Works</a> -- the verifier, the mock server, and how they derive behavior from the specification.</li>
+<li><a href="concepts/how-contracteer-works/">How Contracteer Works</a> -- the verifier, the mock server, and how they derive behavior from the OpenAPI document.</li>
 <li><a href="concepts/scenarios/">Creating Scenarios</a> -- how OpenAPI examples become scenarios and verification cases.</li>
 <li><a href="concepts/testing-your-server/">Testing Your Server</a> -- what the verifier checks, automatic 400 testing, and schema-only verification.</li>
 <li><a href="concepts/testing-your-client/">Testing Your Client</a> -- how the mock server validates requests, the 418 diagnostic, and the mock server in your test strategy.</li>
@@ -1297,7 +1297,7 @@ No handwritten mocks, no manually maintained test cases.</p>
 <hr />
 <h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
 <p>The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository contains complete working projects.
-It demonstrates the specification-as-artifact pattern with a shared OpenAPI specification consumed by both server and client.</p>
+It demonstrates the specification-as-artifact pattern with a shared OpenAPI document consumed by both server and client.</p>
 
 
 

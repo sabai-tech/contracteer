@@ -1321,14 +1321,14 @@
 
 
 <h1 id="testing-your-client">Testing Your Client<a class="headerlink" href="#testing-your-client" title="Permanent link">&para;</a></h1>
-<p>The <strong>mock server</strong> is a strict reference implementation of your OpenAPI specification.
+<p>The <strong>mock server</strong> is a strict reference implementation of your OpenAPI document.
 It validates every incoming request, returns spec-compliant responses, and rejects anything that violates the contract.</p>
 <hr />
 <h2 id="how-the-mock-server-processes-a-request">How the Mock Server Processes a Request<a class="headerlink" href="#how-the-mock-server-processes-a-request" title="Permanent link">&para;</a></h2>
 <p>The mock server processes each request in three steps: validate, match, respond.</p>
 <p>Here is the <code>GET /musketeers/{id}</code> operation from the <a href="https://github.com/sabai-tech/contracteer-examples">Musketeer API</a>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Excerpt from musketeer-api.yaml</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full spec: https://github.com/sabai-tech/contracteer-examples</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">paths</span><span class="p">:</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">/musketeers/{id}</span><span class="p p-Indicator">:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">get</span><span class="p">:</span>
@@ -1382,7 +1382,7 @@ The operation defines a <code>400</code> response, so the mock server returns <c
 <p>For elements where the scenario provides an example value, the request value must match exactly.
 For elements where the scenario has no example, the mock server checks type and structure only.</p>
 <p><code>GET /musketeers/1</code> matches the ATHOS scenario -- the path parameter <code>id</code> equals the example value <code>1</code>.
-The mock server returns <code>200</code> with Athos's response data from the specification.</p>
+The mock server returns <code>200</code> with Athos's response data from the OpenAPI document.</p>
 <p><code>GET /musketeers/999</code> matches the 404_UNKNOWN_MUSKETEER scenario.
 The mock server returns <code>404</code>.</p>
 <p>If exactly one scenario matches, the mock server returns that scenario's response.
@@ -1453,8 +1453,8 @@ That is false confidence -- the worst kind of test result.</p>
 </ul>
 <p>If the mock server rejects your request, a correctly-implemented real server would reject it too.</p>
 <p>Like the verifier, the mock server follows <a href="https://en.wikipedia.org/wiki/Robustness_principle">Postel's Law</a>.
-It validates request elements declared in the specification.
-Extra query parameters or headers that the specification does not mention are ignored.
+It validates request elements declared in the OpenAPI document.
+Extra query parameters or headers that the OpenAPI document does not mention are ignored.
 There is no schema to validate them against.</p>
 <hr />
 <h2 id="the-mock-server-in-your-test-strategy">The Mock Server in Your Test Strategy<a class="headerlink" href="#the-mock-server-in-your-test-strategy" title="Permanent link">&para;</a></h2>
@@ -1462,7 +1462,7 @@ There is no schema to validate them against.</p>
 <p>In Martin Fowler's <a href="https://martinfowler.com/bliki/IntegrationTest.html">distinction</a>, a <strong>narrow integration test</strong> exercises your code's interaction with a separate component.
 It replaces the real component with a test double.
 The mock server fills this role.
-Your client sends real HTTP requests to a server that behaves according to the specification.</p>
+Your client sends real HTTP requests to a server that behaves according to the OpenAPI document.</p>
 <p>This gives you three properties that end-to-end tests against a real server cannot:</p>
 <p><strong>Speed.</strong>
 The mock server runs in-process.
@@ -1473,7 +1473,7 @@ Tests do not fail because of external server state, data changes, or network iss
 <p><strong>Contract confidence.</strong>
 The mock server's strictness means that a passing test is a genuine signal.
 Your client sends valid requests and handles the documented responses.
-If the real server conforms to the same specification -- which the <a href="../testing-your-server/">verifier</a> ensures -- the integration will work.</p>
+If the real server conforms to the same OpenAPI document -- which the <a href="../testing-your-server/">verifier</a> ensures -- the integration will work.</p>
 <p>Unit tests verify that your business logic is correct.
 The mock server verifies that your client respects the contract at the HTTP boundary.
 Your client sends well-formed requests and handles the documented responses.
@@ -1515,7 +1515,7 @@ Structure-based assertions pass regardless of whether the response comes from a 
 <li>It returns <code>418</code> when it cannot determine the correct response -- read the 418 body for diagnostics.</li>
 <li>The mock server is strict by design.
   If it rejects your request, a correctly-implemented real server would too.</li>
-<li>It follows Postel's Law: it validates what the specification defines and ignores undeclared elements.</li>
+<li>It follows Postel's Law: it validates what the OpenAPI document defines and ignores undeclared elements.</li>
 <li>Assert structure, not values -- your client should handle any valid response, not just the example data.</li>
 <li>Use the mock server as a test double for narrow integration tests -- fast, reliable, and contract-enforcing.</li>
 </ul>
@@ -1528,7 +1528,7 @@ Structure-based assertions pass regardless of whether the response comes from a 
 <hr />
 <h2 id="next-steps">Next Steps<a class="headerlink" href="#next-steps" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="../testing-your-server/">Testing Your Server</a> -- how the verifier tests your server against the specification.</li>
+<li><a href="../testing-your-server/">Testing Your Server</a> -- how the verifier tests your server against the OpenAPI document.</li>
 <li><a href="../scenarios/">Creating Scenarios</a> -- how to write OpenAPI examples that produce the scenarios you want.</li>
 <li>Getting started with the mock server: <a href="../../getting-started/mockserver/">Mock Server</a> | <a href="../../getting-started/mockserver-spring/">Mock Server (Spring Boot)</a></li>
 </ul>

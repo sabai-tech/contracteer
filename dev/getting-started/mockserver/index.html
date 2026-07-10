@@ -1352,7 +1352,7 @@ This is the right choice for custom test harnesses, non-Spring frameworks, or st
 <ul>
 <li>JDK 21 or later</li>
 <li>Gradle or Maven</li>
-<li>An OpenAPI 3.0 or 3.1 specification (<code>.yaml</code> or <code>.json</code>)</li>
+<li>An OpenAPI 3.0 or 3.1 document (<code>.yaml</code> or <code>.json</code>)</li>
 </ul>
 <hr />
 <h2 id="add-the-dependency">Add the Dependency<a class="headerlink" href="#add-the-dependency" title="Permanent link">&para;</a></h2>
@@ -1377,14 +1377,14 @@ This is the right choice for custom test harnesses, non-Spring frameworks, or st
 </div>
 <hr />
 <h2 id="start-the-mock-server">Start the Mock Server<a class="headerlink" href="#start-the-mock-server" title="Permanent link">&para;</a></h2>
-<p>Three steps: load the specification, create the mock server, start it.</p>
+<p>Three steps: load the OpenAPI document, create the mock server, start it.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">Kotlin</label><label for="__tabbed_2_2">Java</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// 1. Load the OpenAPI specification</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// 1. Load the OpenAPI document</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">val</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiLoader</span><span class="p">.</span><span class="na">loadOperations</span><span class="p">(</span><span class="s">&quot;classpath:openapi.yaml&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isFailure</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load spec: </span><span class="si">${</span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load OpenAPI document: </span><span class="si">${</span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">()</span><span class="si">}</span><span class="s">&quot;</span><span class="p">)</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">}</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// 2. Create the mock server</span>
@@ -1403,10 +1403,10 @@ This is the right choice for custom test harnesses, non-Spring frameworks, or st
 </code></pre></div>
 </div>
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// 1. Load the OpenAPI specification</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// 1. Load the OpenAPI document</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">var</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenApiLoader</span><span class="p">.</span><span class="na">loadOperations</span><span class="p">(</span><span class="s">&quot;classpath:openapi.yaml&quot;</span><span class="p">);</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="na">isFailure</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load spec: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">());</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">fail</span><span class="p">(</span><span class="s">&quot;Failed to load OpenAPI document: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="na">errors</span><span class="p">());</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="c1">// 2. Create the mock server</span>
@@ -1427,16 +1427,16 @@ This is the right choice for custom test harnesses, non-Spring frameworks, or st
 <p>Set <code>port</code> to <code>0</code> for a random available port, or to a fixed value if your test setup requires it.
 Call <code>mockServer.port()</code> after <code>start()</code> to get the actual port.</p>
 <div class="admonition tip">
-<p class="admonition-title">Treat the specification as a shared artifact</p>
-<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-specification-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI specification exists independently of both server and client.
+<p class="admonition-title">Treat the OpenAPI document as a shared artifact</p>
+<p>Contracteer encourages <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI document exists independently of both server and client.
 Package it as a Maven or Gradle dependency and reference it with <code>classpath:openapi.yaml</code>.
-This ensures that the server, client, and contract tests all use the same specification.
+This ensures that the server, client, and contract tests all use the same OpenAPI document.
 The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern with the <code>musketeer-spec</code> module.</p>
 </div>
 <hr />
 <h2 id="how-the-mock-server-responds">How the Mock Server Responds<a class="headerlink" href="#how-the-mock-server-responds" title="Permanent link">&para;</a></h2>
 <p>The mock server is not a hand-written stub.
-It validates every incoming request against the OpenAPI schema and determines the response from the specification.</p>
+It validates every incoming request against the OpenAPI schema and determines the response from the OpenAPI document.</p>
 <h3 id="request-validation">Request validation<a class="headerlink" href="#request-validation" title="Permanent link">&para;</a></h3>
 <p>The mock server validates request parameters and body against the schema.</p>
 <p>The client sends <code>{name: "d'Artagnan", rank: "KNIGHT", weapon: "Rapier"}</code> to <code>POST /musketeers</code>.
@@ -1452,7 +1452,7 @@ The mock server checks the <code>rank</code> field against the schema:</p>
 The operation defines a <code>400</code> response, so the mock server returns <code>400</code>.
 No one wrote a mock rule for this -- the schema drives the rejection.</p>
 <h3 id="scenario-matching">Scenario matching<a class="headerlink" href="#scenario-matching" title="Permanent link">&para;</a></h3>
-<p>If the request is valid, the mock server compares it against the scenarios defined in the specification.</p>
+<p>If the request is valid, the mock server compares it against the scenarios defined in the OpenAPI document.</p>
 <p>The client sends <code>{name: "d'Artagnan", rank: "CADET", weapon: "Rapier"}</code> to <code>POST /musketeers</code>.
 This matches the <code>D_ARTAGNAN_JOINS</code> scenario:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">post</span><span class="p">:</span>
@@ -1485,7 +1485,7 @@ The request is valid (999 is an integer), and the value matches the <code>404_UN
 The mock server returns <code>404</code>.</p>
 <h3 id="schema-only-response">Schema-only response<a class="headerlink" href="#schema-only-response" title="Permanent link">&para;</a></h3>
 <p>If the request is valid but matches no scenario, the mock server generates a response from the schema.</p>
-<p><code>GET /musketeers</code> has no examples in the specification.
+<p><code>GET /musketeers</code> has no examples in the OpenAPI document.
 The mock server returns <code>200</code> with an array of randomly generated <code>Musketeer</code> objects.
 The values satisfy the schema but are different on each run.</p>
 <h3 id="the-418-diagnostic">The 418 diagnostic<a class="headerlink" href="#the-418-diagnostic" title="Permanent link">&para;</a></h3>
@@ -1500,7 +1500,7 @@ Read it before investigating further -- it usually points directly to the cause.
 <h2 id="assert-structure-not-values">Assert Structure, Not Values<a class="headerlink" href="#assert-structure-not-values" title="Permanent link">&para;</a></h2>
 <p>Contract tests verify that your client handles the documented response structure -- not that the server returns specific data.
 Assert that fields are present and correctly typed.
-Do not assert on example values from the specification.</p>
+Do not assert on example values from the OpenAPI document.</p>
 <p>A test that asserts a response field equals a specific example value is a functional test, not a contract test.
 Your client must handle any valid response, not just the example data.</p>
 <p>See <a href="../../concepts/testing-your-client/#assert-structure-not-values">Assert Structure, Not Values</a> for the full rationale.</p>
