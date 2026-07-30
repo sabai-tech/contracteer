@@ -1,11 +1,11 @@
 site_name: Contracteer
-site_url: https://sabai-tech.github.io/contracteer
+site_url: https://contracteer.dev
 site_description: >-
-  Contract testing from your OpenAPI specification.
+  Contract testing from your OpenAPI document.
   Verify your API, mock your dependencies.
 
-repo_url: https://github.com/sabai-tech/contracteer
-repo_name: sabai-tech/contracteer
+repo_url: https://github.com/contracteer-dev/contracteer
+repo_name: contracteer-dev/contracteer
 
 theme:
   name: material
