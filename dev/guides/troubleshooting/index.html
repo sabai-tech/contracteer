@@ -2096,11 +2096,11 @@
 <h2 id="first-step-enable-http-traffic-logging">First Step: Enable HTTP Traffic Logging<a class="headerlink" href="#first-step-enable-http-traffic-logging" title="Permanent link">&para;</a></h2>
 <p>When something does not behave as expected, enable HTTP traffic logging.
 This shows every request and response exchanged between Contracteer and the server.</p>
-<p>For JVM projects, set the <code>tech.sabai.contracteer.http</code> logger to DEBUG:</p>
+<p>For JVM projects, set the <code>dev.contracteer.http</code> logger to DEBUG:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># application.yaml (Spring Boot)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">logging</span><span class="p">:</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">level</span><span class="p">:</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">tech.sabai.contracteer.http</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">    </span><span class="nt">dev.contracteer.http</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
 </code></pre></div>
 <p>For the CLI, add the <code>-t</code> flag:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>contracteer<span class="w"> </span>verify<span class="w"> </span>openapi.yaml<span class="w"> </span>-t

@@ -1367,8 +1367,8 @@
 <h1 id="mock-an-api-with-spring-boot">Mock an API with Spring Boot<a class="headerlink" href="#mock-an-api-with-spring-boot" title="Permanent link">&para;</a></h1>
 <p>Add <code>@ContracteerMockServer</code> to your Spring Boot test class to start a mock server from your OpenAPI document.
 No handwritten stubs required.</p>
-<p>The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository contains a complete working project.
-The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-client">musketeer-spring-boot-client</a> demonstrates everything covered on this page.</p>
+<p>The <a href="https://github.com/contracteer-dev/contracteer-examples">contracteer-examples</a> repository contains a complete working project.
+The <a href="https://github.com/contracteer-dev/contracteer-examples/tree/main/musketeer-spring-boot-client">musketeer-spring-boot-client</a> demonstrates everything covered on this page.</p>
 <hr />
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1383,13 +1383,13 @@ The <a href="https://github.com/sabai-tech/contracteer-examples/tree/main/musket
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;tech.sabai.contracteer:contracteer-mockserver-spring:&lt;version&gt;&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;dev.contracteer:contracteer-mockserver-spring:&lt;version&gt;&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">&lt;dependency&gt;</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>tech.sabai.contracteer<span class="nt">&lt;/groupId&gt;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="nt">&lt;groupId&gt;</span>dev.contracteer<span class="nt">&lt;/groupId&gt;</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>contracteer-mockserver-spring<span class="nt">&lt;/artifactId&gt;</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">&lt;version&gt;</span>${contracteer.version}<span class="nt">&lt;/version&gt;</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">&lt;scope&gt;</span>test<span class="nt">&lt;/scope&gt;</span>
@@ -1521,7 +1521,7 @@ Format: <code>http://localhost:{port}</code>.</p>
 <p>Contracteer encourages <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">specification-driven contract testing</a>: the OpenAPI document exists independently of both server and client.
 Package it as a Maven or Gradle dependency and reference it with <code>classpath:openapi.yaml</code>.
 This ensures that the server, client, and contract tests all use the same OpenAPI document.
-The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern with the <code>musketeer-spec</code> module.</p>
+The <a href="https://github.com/contracteer-dev/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern with the <code>musketeer-spec</code> module.</p>
 </div>
 <hr />
 <h2 id="how-the-mock-server-responds">How the Mock Server Responds<a class="headerlink" href="#how-the-mock-server-responds" title="Permanent link">&para;</a></h2>
@@ -1598,17 +1598,17 @@ Your client must handle any valid response, not just the example data.</p>
 <h2 id="debugging">Debugging<a class="headerlink" href="#debugging" title="Permanent link">&para;</a></h2>
 <p>When the mock server returns a <code>418</code> diagnostic response, Contracteer logs the request at WARN level automatically.
 No configuration is needed.</p>
-<p>To see all incoming requests and outgoing responses, set the <code>tech.sabai.contracteer.http</code> logger to DEBUG:</p>
+<p>To see all incoming requests and outgoing responses, set the <code>dev.contracteer.http</code> logger to DEBUG:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Logback (logback-test.xml)</label><label for="__tabbed_3_2">application.yaml (Spring Boot)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;tech.sabai.contracteer.http&quot;</span><span class="w"> </span><span class="na">level=</span><span class="s">&quot;DEBUG&quot;</span><span class="nt">/&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;dev.contracteer.http&quot;</span><span class="w"> </span><span class="na">level=</span><span class="s">&quot;DEBUG&quot;</span><span class="nt">/&gt;</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">logging</span><span class="p">:</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nt">level</span><span class="p">:</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">tech.sabai.contracteer.http</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="nt">dev.contracteer.http</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DEBUG</span>
 </code></pre></div>
 </div>
 </div>
@@ -1619,7 +1619,7 @@ No configuration is needed.</p>
 <li><a href="../../concepts/testing-your-client/">Testing Your Client</a> -- how the mock server validates requests and generates responses in depth.</li>
 <li><a href="../../concepts/scenarios/">Creating Scenarios</a> -- how to write OpenAPI examples that produce the scenarios you want.</li>
 <li><a href="../mockserver/">Mock Server</a> -- programmatic mock server setup without Spring Boot.</li>
-<li><a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> -- complete working projects with server and client examples.</li>
+<li><a href="https://github.com/contracteer-dev/contracteer-examples">contracteer-examples</a> -- complete working projects with server and client examples.</li>
 </ul>
 
 

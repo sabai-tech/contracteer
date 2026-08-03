@@ -1271,10 +1271,10 @@ The CLI exits with code <code>0</code> when all cases pass and <code>1</code> wh
 <hr />
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <h3 id="homebrew-macos-linux">Homebrew (macOS / Linux)<a class="headerlink" href="#homebrew-macos-linux" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>sabai-tech/contracteer/contracteer
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>brew<span class="w"> </span>install<span class="w"> </span>contracteer-dev/contracteer/contracteer
 </code></pre></div>
 <h3 id="github-releases-all-platforms">GitHub Releases (all platforms)<a class="headerlink" href="#github-releases-all-platforms" title="Permanent link">&para;</a></h3>
-<p>Download the archive for your platform from the <a href="https://github.com/sabai-tech/contracteer/releases/latest">latest release</a> and extract it.</p>
+<p>Download the archive for your platform from the <a href="https://github.com/contracteer-dev/contracteer/releases/latest">latest release</a> and extract it.</p>
 <h3 id="verify-the-installation">Verify the installation<a class="headerlink" href="#verify-the-installation" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>contracteer<span class="w"> </span>--version
 </code></pre></div>
@@ -1342,8 +1342,8 @@ The 418 body explains what happened -- read it before investigating further.</p>
 <p>See <a href="../../concepts/testing-your-client/">Testing Your Client</a> for a detailed explanation of mock server behavior.</p>
 <hr />
 <h2 id="try-it-now">Try It Now<a class="headerlink" href="#try-it-now" title="Permanent link">&para;</a></h2>
-<p>Start a mock server from the <a href="https://github.com/sabai-tech/contracteer-examples">Musketeer API</a> OpenAPI document without cloning anything:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/sabai-tech/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
+<p>Start a mock server from the <a href="https://github.com/contracteer-dev/contracteer-examples">Musketeer API</a> OpenAPI document without cloning anything:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>contracteer<span class="w"> </span>mock<span class="w"> </span>https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml<span class="w"> </span>-t
 </code></pre></div>
 <p>Then send a request:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>curl<span class="w"> </span>http://localhost:8080/musketeers
@@ -1354,7 +1354,7 @@ The 418 body explains what happened -- read it before investigating further.</p>
 <ul>
 <li><a href="../../concepts/testing-your-server/">Testing Your Server</a> -- what the verifier checks in depth, including automatic 400 testing.</li>
 <li><a href="../../concepts/testing-your-client/">Testing Your Client</a> -- how the mock server validates requests and generates responses.</li>
-<li><a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> -- complete working projects with server and client examples.</li>
+<li><a href="https://github.com/contracteer-dev/contracteer-examples">contracteer-examples</a> -- complete working projects with server and client examples.</li>
 </ul>
 
 

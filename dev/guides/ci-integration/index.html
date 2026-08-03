@@ -1248,7 +1248,7 @@ Your existing test step already runs contract tests.</p>
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Contracteer</span>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/sabai-tech/contracteer/releases/download/2.0.0/contracteer-2.0.0-linux-x86_64.zip -o contracteer.zip</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip</span>
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">          </span><span class="no">unzip contracteer.zip</span>
 <a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">          </span><span class="no">sudo mv contracteer /usr/local/bin/</span>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
@@ -1278,7 +1278,7 @@ GitHub Actions treats a non-zero exit code as a failed step.</p>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Install Contracteer</span>
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="w">        </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
-<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/sabai-tech/contracteer/releases/download/2.0.0/contracteer-2.0.0-linux-x86_64.zip -o contracteer.zip</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="w">          </span><span class="no">curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip</span>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">          </span><span class="no">unzip contracteer.zip</span>
 <a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">          </span><span class="no">sudo mv contracteer /usr/local/bin/</span>
 <a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
@@ -1308,7 +1308,7 @@ Both server and client pipelines consume it.</p>
 </ol>
 <p>This ensures that server and client always test against the same version of the contract.
 If the OpenAPI document changes and either side fails to conform, CI catches it immediately.</p>
-<p>The <a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern.
+<p>The <a href="https://github.com/contracteer-dev/contracteer-examples">contracteer-examples</a> repository demonstrates this pattern.
 The <code>musketeer-spec</code> module publishes the OpenAPI document as a dependency.
 The server and client projects both consume it via <code>classpath:musketeer-api.yaml</code>.</p>
 <p>See <a href="../../concepts/contract-testing/#the-openapi-document-as-source-of-truth">The OpenAPI Document as Source of Truth</a> for the rationale behind this approach.</p>
@@ -1318,7 +1318,7 @@ The server and client projects both consume it via <code>classpath:musketeer-api
 <li><a href="../../getting-started/cli/">Use the CLI</a> -- CLI installation and commands.</li>
 <li><a href="../../getting-started/verifier-junit/">Verify Your API with JUnit 5</a> -- JVM verifier setup.</li>
 <li><a href="../../getting-started/mockserver-spring/">Mock an API with Spring Boot</a> -- JVM mock server setup.</li>
-<li><a href="https://github.com/sabai-tech/contracteer-examples">contracteer-examples</a> -- complete working projects demonstrating the shared OpenAPI document pattern.</li>
+<li><a href="https://github.com/contracteer-dev/contracteer-examples">contracteer-examples</a> -- complete working projects demonstrating the shared OpenAPI document pattern.</li>
 </ul>
 
 

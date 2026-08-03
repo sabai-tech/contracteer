@@ -1249,14 +1249,14 @@ The <strong>mock server</strong> gives your client tests a strict, spec-complian
 Both derive their behavior entirely from the document -- no handwritten mocks, no manually maintained test cases.</p>
 <hr />
 <h2 id="the-musketeer-api">The Musketeer API<a class="headerlink" href="#the-musketeer-api" title="Permanent link">&para;</a></h2>
-<p>Throughout this documentation, we use the <a href="https://github.com/sabai-tech/contracteer-examples">Musketeer API</a> -- a small REST API for managing musketeers and their missions.</p>
+<p>Throughout this documentation, we use the <a href="https://github.com/contracteer-dev/contracteer-examples">Musketeer API</a> -- a small REST API for managing musketeers and their missions.</p>
 <div class="admonition note">
 <p class="admonition-title">Why musketeers?</p>
 <p>Contracteer is a portmanteau of <em>Contract</em> and <em>Musketeer</em> -- because every API deserves a loyal guard defending its contract.</p>
 </div>
 <p>Here is the <code>GET /musketeers/{id}</code> operation from its OpenAPI document:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Excerpt from musketeer-api.yaml</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Full OpenAPI document: https://github.com/contracteer-dev/contracteer-examples</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nt">paths</span><span class="p">:</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="l l-Scalar l-Scalar-Plain">/musketeers/{id}</span><span class="p p-Indicator">:</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">    </span><span class="nt">get</span><span class="p">:</span>
