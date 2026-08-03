@@ -1,0 +1,108 @@
+package dev.contracteer.core.datatype
+
+import dev.contracteer.core.Result
+import dev.contracteer.core.Result.Companion.failure
+import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.accumulate
+import dev.contracteer.core.joinWithQuotes
+import java.lang.System.lineSeparator
+
+/** OpenAPI `anyOf` composition. The value must match at least one sub-schema. */
+class AnyOfDataType private constructor(name: String,
+                                        subTypes: List<DataType<out Any>>,
+                                        override val discriminator: Discriminator? = null,
+                                        outerIsNullable: Boolean = false,
+                                        allowedValues: AllowedValues? = null):
+    CompositeDataType<Any>(name, "anyOf", outerIsNullable, subTypes, Any::class.java, allowedValues) {
+
+  override fun computeNullable(guard: CycleGuard<Boolean>): Boolean =
+    outerIsNullable || subTypes.any { isNullableBranch(it, guard) }
+
+  override fun asRequestType(): DataType<Any> =
+    subTypes
+      .map { it.asRequestType() }
+      .let { transformed ->
+        if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
+        else AnyOfDataType(name, transformed, discriminator, outerIsNullable, allowedValues)
+      }
+
+  override fun asResponseType(): DataType<Any> =
+    subTypes
+      .map { it.asResponseType() }
+      .let { transformed ->
+        if (transformed.zip(subTypes).all { (a, b) -> a === b }) this
+        else AnyOfDataType(name, transformed, discriminator, outerIsNullable, allowedValues)
+      }
+
+  override fun doValidate(value: Any): Result<Any> =
+    if (discriminator != null)
+      validateWithDiscriminator(value)
+    else
+      validateWithoutDiscriminator(value)
+
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<Any> = generateFromAnySubType(ctx)
+
+  private fun validateWithDiscriminator(value: Any): Result<Any> {
+    val discriminatorValue = (value as? Map<*, *>)?.get(discriminator!!.propertyName)
+    return if (discriminatorValue is String)
+      dataTypeFrom(discriminatorValue).flatMap { it.validate(value) }.map { value }
+    else
+      validateWithoutDiscriminator(value)
+  }
+
+  private fun dataTypeFrom(discriminatorValue: String): Result<DataType<out Any>> =
+    subTypes.firstOrNull { it.name == discriminator!!.getDataTypeNameFor(discriminatorValue) }
+      ?.let { success(it) }
+    ?: failure("No schema found for discriminator property '${discriminator!!.propertyName}' with value: $discriminatorValue")
+
+  private fun validateWithoutDiscriminator(value: Any): Result<Any> {
+    val validationResults = subTypes.associateWith { it.validate(value) }
+    val dataTypeErrors = validationResults.filterValues { it.isFailure() }
+    val dataTypeSuccess = validationResults.filterValues { it.isSuccess() }
+    return when {
+      dataTypeSuccess.isNotEmpty() -> success(value)
+      else                         -> buildNoMatchError(dataTypeErrors)
+    }
+  }
+
+  private fun buildNoMatchError(dataTypeErrors: Map<DataType<out Any>, Result<Any?>>): Result<Map<String, Any?>> {
+    val schemaNames = dataTypeErrors.keys.map { it.name }.joinWithQuotes()
+    val detailedErrors = dataTypeErrors.map { (dataType, result) ->
+      "${lineSeparator()}  - Schema '${dataType.name}':" + result.errors().joinToString(
+        prefix = "${lineSeparator()}      - ",
+        separator = "${lineSeparator()}      - "
+      )
+    }.joinToString("")
+    return failure("No matching schema. Value did not match candidate schemas ($schemaNames):${lineSeparator()}$detailedErrors")
+  }
+
+  companion object {
+    @JvmStatic
+    @JvmOverloads
+    fun create(name: String,
+               subTypes: List<DataType<out Any>>,
+               discriminator: Discriminator? = null,
+               outerIsNullable: Boolean = false,
+               enum: List<Any?> = emptyList()) =
+      subTypes.validate(discriminator)
+        .flatMap {
+          AnyOfDataType(name, subTypes, discriminator, outerIsNullable).let { dataType ->
+            if (enum.isEmpty()) success(dataType)
+            else AllowedValues
+              .create(enum, dataType)
+              .map { AnyOfDataType(name, subTypes, discriminator, outerIsNullable, it) }
+          }
+        }
+
+    private fun List<DataType<out Any>>.validate(discriminator: Discriminator?) =
+      when {
+        discriminator == null                           -> success(null)
+        namesNotContains(discriminator.dataTypeNames()) -> failure("Discriminator mapping error. The discriminator references schemas not present in 'anyOf'")
+        else                                            ->
+          accumulate { discriminator.validate(it).forProperty(it.name) }.map { discriminator }
+      }
+
+    private fun List<DataType<out Any>>.namesNotContains(names: Collection<String>) =
+      !map { it.name }.containsAll(names)
+  }
+}

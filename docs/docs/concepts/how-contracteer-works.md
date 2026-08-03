@@ -9,7 +9,7 @@ Both derive their behavior entirely from the document -- no handwritten mocks, n
 
 ## The Musketeer API
 
-Throughout this documentation, we use the [Musketeer API](https://github.com/sabai-tech/contracteer-examples) -- a small REST API for managing musketeers and their missions.
+Throughout this documentation, we use the [Musketeer API](https://github.com/contracteer-dev/contracteer-examples) -- a small REST API for managing musketeers and their missions.
 
 !!! note "Why musketeers?"
     Contracteer is a portmanteau of *Contract* and *Musketeer* -- because every API deserves a loyal guard defending its contract.
@@ -18,7 +18,7 @@ Here is the `GET /musketeers/{id}` operation from its OpenAPI document:
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/contracteer-dev/contracteer-examples
 paths:
   /musketeers/{id}:
     get:

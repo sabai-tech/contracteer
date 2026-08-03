@@ -15,11 +15,11 @@ project:
     - graalvm
     - cli
   links:
-    homepage: https://github.com/sabai-tech/contracteer
-    documentation: https://sabai-tech.github.io/contracteer
+    homepage: https://contracteer.dev
+    documentation: https://contracteer.dev
   languages:
     java:
-      groupId: tech.sabai.contracteer
+      groupId: dev.contracteer
       version: "21"
       multiProject: true
 
@@ -40,7 +40,7 @@ signing:
 
 release:
   github:
-    owner: sabai-tech
+    owner: contracteer-dev
     name: contracteer
     tagName: '{{projectVersion}}'
     releaseName: '{{projectName}} {{projectVersion}}'
@@ -98,9 +98,9 @@ packagers:
       name: github-actions[bot]
       email: github-actions[bot]@users.noreply.github.com
     repository:
-      owner: sabai-tech
+      owner: contracteer-dev
       name: homebrew-contracteer
       username: github-actions
     multiPlatform: true
     livecheck:
-      - 'url "https://github.com/sabai-tech/contracteer/releases/latest"'
+      - 'url "https://github.com/contracteer-dev/contracteer/releases/latest"'

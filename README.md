@@ -8,10 +8,10 @@
 
 <br>
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/sabai-tech/contracteer/tests.yml?branch=main)
-![Maven Central](https://img.shields.io/maven-central/v/tech.sabai.contracteer/contracteer-core)
-![License](https://img.shields.io/github/license/sabai-tech/contracteer)
-[![Documentation](https://img.shields.io/badge/docs-sabai--tech.github.io%2Fcontracteer-blue)](https://sabai-tech.github.io/contracteer/latest/)
+![Build Status](https://img.shields.io/github/actions/workflow/status/contracteer-dev/contracteer/tests.yml?branch=main)
+![Maven Central](https://img.shields.io/maven-central/v/dev.contracteer/contracteer-core)
+![License](https://img.shields.io/github/license/contracteer-dev/contracteer)
+[![Documentation](https://img.shields.io/badge/docs-contracteer.dev-blue)](https://contracteer.dev/latest/)
 
 Contracteer verifies that your API implementation matches your OpenAPI document and provides a mock server that behaves exactly as your document defines.
 Your OpenAPI document is the single source of truth -- Contracteer turns it into executable tests and a faithful mock.
@@ -39,7 +39,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    testImplementation("tech.sabai.contracteer:contracteer-verifier-junit:<version>")
+    testImplementation("dev.contracteer:contracteer-verifier-junit:<version>")
 }
 ```
 
@@ -47,7 +47,7 @@ Maven:
 
 ```xml
 <dependency>
-    <groupId>tech.sabai.contracteer</groupId>
+    <groupId>dev.contracteer</groupId>
     <artifactId>contracteer-verifier-junit</artifactId>
     <version>${contracteer.version}</version>
     <scope>test</scope>
@@ -81,7 +81,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    testImplementation("tech.sabai.contracteer:contracteer-mockserver-spring:<version>")
+    testImplementation("dev.contracteer:contracteer-mockserver-spring:<version>")
 }
 ```
 
@@ -89,7 +89,7 @@ Maven:
 
 ```xml
 <dependency>
-    <groupId>tech.sabai.contracteer</groupId>
+    <groupId>dev.contracteer</groupId>
     <artifactId>contracteer-mockserver-spring</artifactId>
     <version>${contracteer.version}</version>
     <scope>test</scope>
@@ -124,7 +124,7 @@ The mock server starts automatically, validates every request against the OpenAP
 Install:
 
 ```bash
-brew install sabai-tech/contracteer/contracteer
+brew install contracteer-dev/contracteer/contracteer
 ```
 
 Verify a running server:
@@ -159,7 +159,7 @@ All modules:
 | [`contracteer-mockserver-spring`](contracteer-mockserver-spring/) | Spring Boot integration |
 | [`contracteer-cli`](contracteer-cli/) | CLI (native binary) |
 
-See the [documentation site](https://sabai-tech.github.io/contracteer/latest/) for setup guides.
+See the [documentation site](https://contracteer.dev/latest/) for setup guides.
 
 ## Requirements
 
@@ -168,8 +168,8 @@ See the [documentation site](https://sabai-tech.github.io/contracteer/latest/) f
 
 ## Documentation
 
-- [Documentation site](https://sabai-tech.github.io/contracteer/latest/) -- concepts, getting started guides, and troubleshooting.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects demonstrating the specification-as-artifact pattern.
+- [Documentation site](https://contracteer.dev/latest/) -- concepts, getting started guides, and troubleshooting.
+- [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) -- complete working projects demonstrating the specification-as-artifact pattern.
 
 ## Contributing
 

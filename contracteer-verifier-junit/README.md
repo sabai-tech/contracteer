@@ -9,7 +9,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    testImplementation("tech.sabai.contracteer:contracteer-verifier-junit:<version>")
+    testImplementation("dev.contracteer:contracteer-verifier-junit:<version>")
 }
 ```
 
@@ -17,7 +17,7 @@ Maven:
 
 ```xml
 <dependency>
-    <groupId>tech.sabai.contracteer</groupId>
+    <groupId>dev.contracteer</groupId>
     <artifactId>contracteer-verifier-junit</artifactId>
     <version>${contracteer.version}</version>
     <scope>test</scope>
@@ -46,4 +46,4 @@ Contracteer reads the OpenAPI document, generates one JUnit test per verificatio
 
 ## Documentation
 
-See [Verify Your API with JUnit 5](https://sabai-tech.github.io/contracteer/latest/getting-started/verifier-junit/) for the full guide -- annotation fields, dynamic ports, test data preparation, and debugging.
+See [Verify Your API with JUnit 5](https://contracteer.dev/latest/getting-started/verifier-junit/) for the full guide -- annotation fields, dynamic ports, test data preparation, and debugging.

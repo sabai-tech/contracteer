@@ -9,13 +9,13 @@ Common issues and how to resolve them.
 When something does not behave as expected, enable HTTP traffic logging.
 This shows every request and response exchanged between Contracteer and the server.
 
-For JVM projects, set the `tech.sabai.contracteer.http` logger to DEBUG:
+For JVM projects, set the `dev.contracteer.http` logger to DEBUG:
 
 ```yaml
 # application.yaml (Spring Boot)
 logging:
   level:
-    tech.sabai.contracteer.http: DEBUG
+    dev.contracteer.http: DEBUG
 ```
 
 For the CLI, add the `-t` flag:

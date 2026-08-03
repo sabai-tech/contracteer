@@ -5,7 +5,7 @@ This is the right choice for Kotest, TestNG, a custom test harness, or any setup
 
 If you use JUnit 5, consider [Verifier (JUnit 5)](verifier-junit.md) for a simpler annotation-based setup.
 
-The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains complete working projects.
+The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository contains complete working projects.
 
 ---
 
@@ -23,7 +23,7 @@ The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) r
 
     ```kotlin
     dependencies {
-        testImplementation("tech.sabai.contracteer:contracteer-verifier:<version>")
+        testImplementation("dev.contracteer:contracteer-verifier:<version>")
     }
     ```
 
@@ -31,7 +31,7 @@ The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) r
 
     ```xml
     <dependency>
-        <groupId>tech.sabai.contracteer</groupId>
+        <groupId>dev.contracteer</groupId>
         <artifactId>contracteer-verifier</artifactId>
         <version>${contracteer.version}</version>
         <scope>test</scope>
@@ -118,7 +118,7 @@ Three steps: load the OpenAPI document, generate verification cases, run them ag
     Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
     This ensures that the server, client, and contract tests all use the same OpenAPI document.
-    The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
+    The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
 
 ---
 
@@ -186,7 +186,7 @@ See [Testing Your Server](../concepts/testing-your-server.md) for a detailed exp
 When a verification case fails, Contracteer logs the HTTP request and response at WARN level automatically.
 No configuration is needed -- failed cases are always visible.
 
-To see all HTTP traffic -- including successful cases -- set the `tech.sabai.contracteer.http` logger to DEBUG.
+To see all HTTP traffic -- including successful cases -- set the `dev.contracteer.http` logger to DEBUG.
 
 ---
 
@@ -195,4 +195,4 @@ To see all HTTP traffic -- including successful cases -- set the `tech.sabai.con
 - [Testing Your Server](../concepts/testing-your-server.md) -- what the verifier checks in depth, including automatic 400 testing.
 - [Creating Scenarios](../concepts/scenarios.md) -- how to write OpenAPI examples that produce the scenarios you want.
 - [Verifier (JUnit 5)](verifier-junit.md) -- annotation-based setup for JUnit 5.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects with server and client examples.
+- [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) -- complete working projects with server and client examples.

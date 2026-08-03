@@ -5,7 +5,7 @@ plugins {
   alias(libs.plugins.test.logger)
 }
 
-group = "tech.sabai.contracteer"
+group = "dev.contracteer"
 version = System.getenv("RELEASE_VERSION") ?: "LOCAL-SNAPSHOT"
 
 repositories {

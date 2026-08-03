@@ -6,10 +6,10 @@ Works with any language or stack -- no JVM required.
 ## Installation
 
 ```bash
-brew install sabai-tech/contracteer/contracteer
+brew install contracteer-dev/contracteer/contracteer
 ```
 
-Or download the archive for your platform from the [latest release](https://github.com/sabai-tech/contracteer/releases/latest).
+Or download the archive for your platform from the [latest release](https://github.com/contracteer-dev/contracteer/releases/latest).
 
 ## Usage
 
@@ -29,4 +29,4 @@ The OpenAPI document can be a local file path or an HTTP(S) URL.
 
 ## Documentation
 
-See [Use the CLI](https://sabai-tech.github.io/contracteer/latest/getting-started/cli/) for the full guide -- all options, example output, mock server behavior, and a try-it-now example.
+See [Use the CLI](https://contracteer.dev/latest/getting-started/cli/) for the full guide -- all options, example output, mock server behavior, and a try-it-now example.

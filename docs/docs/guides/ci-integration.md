@@ -48,7 +48,7 @@ jobs:
 
       - name: Install Contracteer
         run: |
-          curl -sL https://github.com/sabai-tech/contracteer/releases/download/2.0.0/contracteer-2.0.0-linux-x86_64.zip -o contracteer.zip
+          curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip
           unzip contracteer.zip
           sudo mv contracteer /usr/local/bin/
 
@@ -83,7 +83,7 @@ jobs:
 
       - name: Install Contracteer
         run: |
-          curl -sL https://github.com/sabai-tech/contracteer/releases/download/2.0.0/contracteer-2.0.0-linux-x86_64.zip -o contracteer.zip
+          curl -sL https://github.com/contracteer-dev/contracteer/releases/download/4.0.0/contracteer-4.0.0-linux-x86_64.zip -o contracteer.zip
           unzip contracteer.zip
           sudo mv contracteer /usr/local/bin/
 
@@ -119,7 +119,7 @@ The pattern:
 This ensures that server and client always test against the same version of the contract.
 If the OpenAPI document changes and either side fails to conform, CI catches it immediately.
 
-The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern.
+The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository demonstrates this pattern.
 The `musketeer-spec` module publishes the OpenAPI document as a dependency.
 The server and client projects both consume it via `classpath:musketeer-api.yaml`.
 
@@ -132,4 +132,4 @@ See [The OpenAPI Document as Source of Truth](../concepts/contract-testing.md#th
 - [Use the CLI](../getting-started/cli.md) -- CLI installation and commands.
 - [Verify Your API with JUnit 5](../getting-started/verifier-junit.md) -- JVM verifier setup.
 - [Mock an API with Spring Boot](../getting-started/mockserver-spring.md) -- JVM mock server setup.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects demonstrating the shared OpenAPI document pattern.
+- [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) -- complete working projects demonstrating the shared OpenAPI document pattern.

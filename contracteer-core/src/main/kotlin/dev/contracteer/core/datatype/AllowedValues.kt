@@ -1,0 +1,44 @@
+package dev.contracteer.core.datatype
+
+import dev.contracteer.core.Result.Companion.failure
+import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.accumulate
+import dev.contracteer.core.datatype.AllowedValues.Companion.create
+import dev.contracteer.core.normalize
+
+/**
+ * Represents an OpenAPI `enum` constraint: a fixed set of allowed values for a [DataType].
+ *
+ * Created through the [create] factory method, which validates all values against the target data type.
+ */
+class AllowedValues private constructor(values: List<Any?>) {
+  private val allowedValues = values.distinct().map { it.normalize() }
+
+  val size: Int get() = allowedValues.size
+
+  internal fun asSequence(): Sequence<Any?> = allowedValues.asSequence()
+
+  fun contains(value: Any?) =
+    if (allowedValues.contains(value.normalize())) success(value)
+    else failure("Invalid value '${value.formatValue()}'. Allowed values are ${allowedValues.formatValue()}.")
+
+  fun randomValue(): Any? = allowedValues.filterNotNull().randomOrNull()
+
+  companion object {
+    @JvmStatic
+    fun <T : Any, DT: DataType<T>> create(values: List<Any?>, dataType: DT) =
+      when {
+        values.isEmpty()                              -> failure("enum", "cannot be empty")
+        values.contains(null) && !dataType.isNullable -> failure("enum", "cannot contain a null value when schema is not nullable")
+        else                                          ->
+          values.accumulate { dataType.validate(it) }.forProperty("enum").map { AllowedValues(values) }
+      }
+  }
+
+  private fun Any?.formatValue(): String =
+    when (this) {
+      is Collection<*> -> this.joinToString(prefix = "[", postfix = "]") { it.formatValue() }
+      else             -> this.toString()
+    }
+}
+

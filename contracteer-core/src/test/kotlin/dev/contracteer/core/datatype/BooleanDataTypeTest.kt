@@ -1,0 +1,92 @@
+package dev.contracteer.core.datatype
+
+import org.junit.jupiter.api.Test
+import dev.contracteer.core.dsl.booleanType
+
+class BooleanDataTypeTest {
+  @Test
+  fun `validates value whose type is Boolean`() {
+    // given
+    val booleanDataType = booleanType()
+
+    // when
+    val result = booleanDataType.validate(false)
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `does not validate value whose type is not Boolean`() {
+    // given
+    val booleanDataType = booleanType()
+
+    // when
+    val result = booleanDataType.validate(12)
+
+    // then
+    assert(result.isFailure())
+  }
+
+  @Test
+  fun `validates null value if it is nullable`() {
+    // given
+    val booleanDataType = booleanType(isNullable = true)
+
+    // when
+    val result = booleanDataType.validate(null)
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `does not validate null value if it is not nullable`() {
+     // given
+    val booleanDataType = booleanType(isNullable = false)
+
+     // when
+    val result = booleanDataType.validate(null)
+
+     // then
+    assert(result.isFailure())
+  }
+
+  @Test
+  fun `validates a boolean with enum values`() {
+    // given
+    val booleanDataType = booleanType(enum = listOf(true))
+
+    // when
+    val result = booleanDataType.validate(true)
+
+    // then
+    assert(result.isSuccess())
+  }
+
+  @Test
+  fun `does not validate a boolean with enum values`() {
+    // given
+    val booleanDataType = booleanType(enum = listOf(true))
+
+    // when
+    val result = booleanDataType.validate(false)
+
+    // then
+    assert(result.isFailure())
+  }
+
+  @Test
+  fun `generates random value with enum values`() {
+    // given
+    val enum = listOf(true)
+    val booleanDataType = booleanType(enum = enum)
+
+    // when
+    val result = booleanDataType.randomValue()!!
+
+    // then
+    assert(result)
+  }
+}
+

@@ -10,8 +10,8 @@ publishing {
       from(components["java"])
       pom {
         name.set("contracteer")
-        description.set("The loyal guard of your API contracts. Verify your API and mock your dependencies from your OpenAPI specification.")
-        url.set("https://github.com/sabai-tech/contracteer")
+        description.set("The loyal guard of your API contracts. Verify your API and mock your dependencies from your OpenAPI document.")
+        url.set("https://contracteer.dev")
         licenses {
           license {
             name.set("GNU General Public License, Version 3")
@@ -22,13 +22,13 @@ publishing {
           developer {
             id.set("camory")
             name.set("Christophe Amory")
-            email.set("christophe@sabai.tech")
+            email.set("christophe@amory.fr")
           }
         }
         scm {
-          connection.set("scm:git@github.com:sabai-tech/contracteer.git")
-          developerConnection.set("scm:git@github.com:sabai-tech/contracteer.git")
-          url.set("https://github.com/sabai-tech/contracteer")
+          connection.set("scm:git@github.com:contracteer-dev/contracteer.git")
+          developerConnection.set("scm:git@github.com:contracteer-dev/contracteer.git")
+          url.set("https://github.com/contracteer-dev/contracteer")
         }
       }
     }

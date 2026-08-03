@@ -24,12 +24,12 @@ The CLI exits with code `0` when all cases pass and `1` when any case fails -- s
 ### Homebrew (macOS / Linux)
 
 ```bash
-brew install sabai-tech/contracteer/contracteer
+brew install contracteer-dev/contracteer/contracteer
 ```
 
 ### GitHub Releases (all platforms)
 
-Download the archive for your platform from the [latest release](https://github.com/sabai-tech/contracteer/releases/latest) and extract it.
+Download the archive for your platform from the [latest release](https://github.com/contracteer-dev/contracteer/releases/latest) and extract it.
 
 ### Verify the installation
 
@@ -132,10 +132,10 @@ See [Testing Your Client](../concepts/testing-your-client.md) for a detailed exp
 
 ## Try It Now
 
-Start a mock server from the [Musketeer API](https://github.com/sabai-tech/contracteer-examples) OpenAPI document without cloning anything:
+Start a mock server from the [Musketeer API](https://github.com/contracteer-dev/contracteer-examples) OpenAPI document without cloning anything:
 
 ```bash
-contracteer mock https://raw.githubusercontent.com/sabai-tech/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml -t
+contracteer mock https://raw.githubusercontent.com/contracteer-dev/contracteer-examples/main/musketeer-spec/src/main/resources/musketeer-api.yaml -t
 ```
 
 Then send a request:
@@ -152,4 +152,4 @@ The mock server returns a generated response conforming to the Musketeer schema.
 
 - [Testing Your Server](../concepts/testing-your-server.md) -- what the verifier checks in depth, including automatic 400 testing.
 - [Testing Your Client](../concepts/testing-your-client.md) -- how the mock server validates requests and generates responses.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects with server and client examples.
+- [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) -- complete working projects with server and client examples.

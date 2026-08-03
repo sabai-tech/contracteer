@@ -2,8 +2,8 @@
 
 Add a single annotation to your JUnit tests to verify that your API matches your OpenAPI document.
 
-The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains a complete working project.
-The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-server) demonstrates everything covered on this page.
+The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository contains a complete working project.
+The [musketeer-spring-boot-server](https://github.com/contracteer-dev/contracteer-examples/tree/main/musketeer-spring-boot-server) demonstrates everything covered on this page.
 
 ---
 
@@ -22,7 +22,7 @@ The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-exa
 
     ```kotlin
     dependencies {
-        testImplementation("tech.sabai.contracteer:contracteer-verifier-junit:<version>")
+        testImplementation("dev.contracteer:contracteer-verifier-junit:<version>")
     }
     ```
 
@@ -30,7 +30,7 @@ The [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-exa
 
     ```xml
     <dependency>
-        <groupId>tech.sabai.contracteer</groupId>
+        <groupId>dev.contracteer</groupId>
         <artifactId>contracteer-verifier-junit</artifactId>
         <version>${contracteer.version}</version>
         <scope>test</scope>
@@ -95,7 +95,7 @@ Overridden by `@ContracteerServerPort` if the annotated field has a non-zero val
     Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
     This ensures that the server, client, and contract tests all use the same OpenAPI document.
-    The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
+    The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
 
 ### Dynamic server port
 
@@ -147,7 +147,7 @@ If the field value is non-zero, it overrides `serverPort`.
 With Spring Boot, `@LocalServerPort` captures the random port.
 Annotate the same field with `@ContracteerServerPort` to wire it into Contracteer.
 
-This is the pattern used in the [musketeer-spring-boot-server](https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-server) example:
+This is the pattern used in the [musketeer-spring-boot-server](https://github.com/contracteer-dev/contracteer-examples/tree/main/musketeer-spring-boot-server) example:
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -242,12 +242,12 @@ See [Testing Your Server](../concepts/testing-your-server.md) for a detailed exp
 When a verification case fails, Contracteer logs the HTTP request and response at WARN level automatically.
 No configuration is needed -- failed cases are always visible.
 
-To see all HTTP traffic -- including successful cases -- set the `tech.sabai.contracteer.http` logger to DEBUG:
+To see all HTTP traffic -- including successful cases -- set the `dev.contracteer.http` logger to DEBUG:
 
 === "Logback (logback-test.xml)"
 
     ```xml
-    <logger name="tech.sabai.contracteer.http" level="DEBUG"/>
+    <logger name="dev.contracteer.http" level="DEBUG"/>
     ```
 
 === "application.yaml (Spring Boot)"
@@ -255,7 +255,7 @@ To see all HTTP traffic -- including successful cases -- set the `tech.sabai.con
     ```yaml
     logging:
       level:
-        tech.sabai.contracteer.http: DEBUG
+        dev.contracteer.http: DEBUG
     ```
 
 ---
@@ -265,4 +265,4 @@ To see all HTTP traffic -- including successful cases -- set the `tech.sabai.con
 - [Testing Your Server](../concepts/testing-your-server.md) -- what the verifier checks in depth, including automatic 400 testing.
 - [Creating Scenarios](../concepts/scenarios.md) -- how to write OpenAPI examples that produce the scenarios you want.
 - [Verifier](verifier.md) -- programmatic verifier setup without JUnit.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects with server and client examples.
+- [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) -- complete working projects with server and client examples.

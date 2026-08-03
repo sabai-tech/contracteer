@@ -3,7 +3,7 @@
 A **scenario** is a named pairing of specific request values with an expected response for a given status code.
 This page explains how to write OpenAPI examples that produce the scenarios you want.
 
-All examples come from the [Musketeer API](https://github.com/sabai-tech/contracteer-examples).
+All examples come from the [Musketeer API](https://github.com/contracteer-dev/contracteer-examples).
 
 ---
 
@@ -20,7 +20,7 @@ Here is the `GET /musketeers/{id}` operation with `examples` on the path paramet
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/contracteer-dev/contracteer-examples
 paths:
   /musketeers/{id}:
     get:

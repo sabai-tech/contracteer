@@ -9,7 +9,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    testImplementation("tech.sabai.contracteer:contracteer-mockserver-spring:<version>")
+    testImplementation("dev.contracteer:contracteer-mockserver-spring:<version>")
 }
 ```
 
@@ -17,7 +17,7 @@ Maven:
 
 ```xml
 <dependency>
-    <groupId>tech.sabai.contracteer</groupId>
+    <groupId>dev.contracteer</groupId>
     <artifactId>contracteer-mockserver-spring</artifactId>
     <version>${contracteer.version}</version>
     <scope>test</scope>
@@ -49,4 +49,4 @@ The mock server starts automatically with the Spring test context, validates eve
 
 ## Documentation
 
-See [Mock an API with Spring Boot](https://sabai-tech.github.io/contracteer/latest/getting-started/mockserver-spring/) for the full guide -- annotation fields, multiple mock servers, mock server behavior, and debugging.
+See [Mock an API with Spring Boot](https://contracteer.dev/latest/getting-started/mockserver-spring/) for the full guide -- annotation fields, multiple mock servers, mock server behavior, and debugging.

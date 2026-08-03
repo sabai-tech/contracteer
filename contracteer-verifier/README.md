@@ -11,7 +11,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    testImplementation("tech.sabai.contracteer:contracteer-verifier:<version>")
+    testImplementation("dev.contracteer:contracteer-verifier:<version>")
 }
 ```
 
@@ -19,7 +19,7 @@ Maven:
 
 ```xml
 <dependency>
-    <groupId>tech.sabai.contracteer</groupId>
+    <groupId>dev.contracteer</groupId>
     <artifactId>contracteer-verifier</artifactId>
     <version>${contracteer.version}</version>
     <scope>test</scope>
@@ -55,4 +55,4 @@ assertThat(failures)
 
 ## Documentation
 
-See [Verify Your API Programmatically](https://sabai-tech.github.io/contracteer/latest/getting-started/verifier/) for the full guide -- result interpretation, test data preparation, and debugging.
+See [Verify Your API Programmatically](https://contracteer.dev/latest/getting-started/verifier/) for the full guide -- result interpretation, test data preparation, and debugging.

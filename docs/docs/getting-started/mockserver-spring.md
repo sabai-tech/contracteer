@@ -3,8 +3,8 @@
 Add `@ContracteerMockServer` to your Spring Boot test class to start a mock server from your OpenAPI document.
 No handwritten stubs required.
 
-The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains a complete working project.
-The [musketeer-spring-boot-client](https://github.com/sabai-tech/contracteer-examples/tree/main/musketeer-spring-boot-client) demonstrates everything covered on this page.
+The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository contains a complete working project.
+The [musketeer-spring-boot-client](https://github.com/contracteer-dev/contracteer-examples/tree/main/musketeer-spring-boot-client) demonstrates everything covered on this page.
 
 ---
 
@@ -23,7 +23,7 @@ The [musketeer-spring-boot-client](https://github.com/sabai-tech/contracteer-exa
 
     ```kotlin
     dependencies {
-        testImplementation("tech.sabai.contracteer:contracteer-mockserver-spring:<version>")
+        testImplementation("dev.contracteer:contracteer-mockserver-spring:<version>")
     }
     ```
 
@@ -31,7 +31,7 @@ The [musketeer-spring-boot-client](https://github.com/sabai-tech/contracteer-exa
 
     ```xml
     <dependency>
-        <groupId>tech.sabai.contracteer</groupId>
+        <groupId>dev.contracteer</groupId>
         <artifactId>contracteer-mockserver-spring</artifactId>
         <version>${contracteer.version}</version>
         <scope>test</scope>
@@ -172,7 +172,7 @@ Format: `http://localhost:{port}`.
     Contracteer encourages [specification-driven contract testing](../concepts/contract-testing.md#the-openapi-document-as-source-of-truth): the OpenAPI document exists independently of both server and client.
     Package it as a Maven or Gradle dependency and reference it with `classpath:openapi.yaml`.
     This ensures that the server, client, and contract tests all use the same OpenAPI document.
-    The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
+    The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository demonstrates this pattern with the `musketeer-spec` module.
 
 ---
 
@@ -284,12 +284,12 @@ See [Assert Structure, Not Values](../concepts/testing-your-client.md#assert-str
 When the mock server returns a `418` diagnostic response, Contracteer logs the request at WARN level automatically.
 No configuration is needed.
 
-To see all incoming requests and outgoing responses, set the `tech.sabai.contracteer.http` logger to DEBUG:
+To see all incoming requests and outgoing responses, set the `dev.contracteer.http` logger to DEBUG:
 
 === "Logback (logback-test.xml)"
 
     ```xml
-    <logger name="tech.sabai.contracteer.http" level="DEBUG"/>
+    <logger name="dev.contracteer.http" level="DEBUG"/>
     ```
 
 === "application.yaml (Spring Boot)"
@@ -297,7 +297,7 @@ To see all incoming requests and outgoing responses, set the `tech.sabai.contrac
     ```yaml
     logging:
       level:
-        tech.sabai.contracteer.http: DEBUG
+        dev.contracteer.http: DEBUG
     ```
 
 ---
@@ -307,4 +307,4 @@ To see all incoming requests and outgoing responses, set the `tech.sabai.contrac
 - [Testing Your Client](../concepts/testing-your-client.md) -- how the mock server validates requests and generates responses in depth.
 - [Creating Scenarios](../concepts/scenarios.md) -- how to write OpenAPI examples that produce the scenarios you want.
 - [Mock Server](mockserver.md) -- programmatic mock server setup without Spring Boot.
-- [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) -- complete working projects with server and client examples.
+- [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) -- complete working projects with server and client examples.

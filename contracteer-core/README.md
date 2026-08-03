@@ -14,7 +14,7 @@ Gradle (Kotlin DSL):
 
 ```kotlin
 dependencies {
-    implementation("tech.sabai.contracteer:contracteer-core:<version>")
+    implementation("dev.contracteer:contracteer-core:<version>")
 }
 ```
 
@@ -22,7 +22,7 @@ Maven:
 
 ```xml
 <dependency>
-    <groupId>tech.sabai.contracteer</groupId>
+    <groupId>dev.contracteer</groupId>
     <artifactId>contracteer-core</artifactId>
     <version>${contracteer.version}</version>
 </dependency>
@@ -39,4 +39,4 @@ It accepts a file path, an HTTP(S) URL, or a `classpath:` resource.
 
 ## Documentation
 
-See the [Contracteer documentation](https://sabai-tech.github.io/contracteer/latest/) for concepts, getting started guides, and OpenAPI coverage.
+See the [Contracteer documentation](https://contracteer.dev/latest/) for concepts, getting started guides, and OpenAPI coverage.

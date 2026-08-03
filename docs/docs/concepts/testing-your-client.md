@@ -9,11 +9,11 @@ It validates every incoming request, returns spec-compliant responses, and rejec
 
 The mock server processes each request in three steps: validate, match, respond.
 
-Here is the `GET /musketeers/{id}` operation from the [Musketeer API](https://github.com/sabai-tech/contracteer-examples):
+Here is the `GET /musketeers/{id}` operation from the [Musketeer API](https://github.com/contracteer-dev/contracteer-examples):
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/contracteer-dev/contracteer-examples
 paths:
   /musketeers/{id}:
     get:

@@ -1,0 +1,51 @@
+package dev.contracteer.mockserver
+
+import org.http4k.core.Request
+import dev.contracteer.core.Result
+import dev.contracteer.core.Result.Companion.failure
+import dev.contracteer.core.Result.Companion.failureForKey
+import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.Result.Failure
+import dev.contracteer.core.Result.Success
+import dev.contracteer.core.accumulate
+import dev.contracteer.core.operation.BodySchema
+import dev.contracteer.core.operation.RequestSchema
+
+internal fun RequestSchema.validate(request: Request): Result<Unit> =
+  parameters.accumulate { paramSchema ->
+    val values = request.valuesFor(paramSchema.element)
+    when (val result = paramSchema.codec.decode(values, paramSchema.dataType)) {
+      is Failure                                                   ->
+        result.forKey(paramSchema.element.name)
+
+      is Success if result.value == null && paramSchema.isRequired ->
+        failureForKey(paramSchema.element.name, "is missing")
+
+      is Success if result.value == null                           ->
+        success()
+
+      is Success                                                   ->
+        paramSchema.dataType.validate(result.value).forKey(paramSchema.element.name)
+    }
+  } andThen { bodies.validateBody(request) }
+
+private fun List<BodySchema>.validateBody(request: Request): Result<Unit> {
+  if (isEmpty()) return success()
+
+  val requestContentType = request.header("Content-Type")
+  if (requestContentType.isNullOrEmpty()) {
+    return if (any { it.isRequired })
+      failure("Request body is required but missing")
+    else
+      success()
+  }
+
+  val matchingSchema = find { it.contentType.validate(requestContentType).isSuccess() }
+                       ?: return failure("Request Content-Type '$requestContentType' does not match any expected: ${map { it.contentType.value }}")
+
+  return matchingSchema.serde
+    .deserialize(request.bodyString(), matchingSchema.dataType)
+    .flatMap { matchingSchema.dataType.validate(it) }
+    .mapErrors { "Request body: $it" }
+    .map { }
+}

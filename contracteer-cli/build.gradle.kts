@@ -24,7 +24,7 @@ val isQuickBuild = providers.gradleProperty("quickBuild").map { it.toBoolean() }
 graalvmNative {
   binaries {
     named("main") {
-      mainClass = "tech.sabai.contracteer.cli.CliKt"
+      mainClass = "dev.contracteer.cli.CliKt"
       imageName.set("contracteer")
       quickBuild.set(isQuickBuild)
       sharedLibrary.set(false)

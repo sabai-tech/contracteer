@@ -1,0 +1,51 @@
+package dev.contracteer.core.datatype
+
+import dev.contracteer.core.Result.Companion.failure
+import dev.contracteer.core.Result.Companion.success
+import dev.contracteer.core.datatype.GenerationOutcome.Value
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import kotlin.random.Random
+
+/** OpenAPI `string` type with `format: date-time`. Values must conform to ISO 8601 with offset. */
+class DateTimeDataType private constructor(name: String, isNullable: Boolean, allowedValues: AllowedValues? = null):
+    ResolvedDataType<String>(name, "string/date-time", isNullable, String::class.java, allowedValues) {
+
+  override fun doValidate(value: String) =
+    try {
+      OffsetDateTime.parse(value, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+      success(value)
+    } catch (_: Exception) {
+      failure("Invalid date-time. The provided string is not in the ISO DATE TIME WITH OFFSET format (e.g., 2023-06-01T15:30:00+01:00).")
+    }   
+
+  override fun doRandomValue(ctx: GenerationContext): GenerationOutcome<String> {
+    val year = Random.nextInt(2000, 2100)
+    val month = Random.nextInt(1, 13)
+    val day = Random.nextInt(1, LocalDate.of(year, month, 1).lengthOfMonth() + 1)
+    val hour = Random.nextInt(0, 24)
+    val minute = Random.nextInt(0, 60)
+    val second = Random.nextInt(0, 60)
+    val nano = Random.nextInt(0, 1_000_000_000)
+    val offset = ZoneOffset.ofHours(Random.nextInt(-12, 15))
+    val dateTime = OffsetDateTime.of(year, month, day, hour, minute, second, nano, offset)
+
+    return Value(dateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+  }
+
+  companion object {
+    @JvmStatic
+    @JvmOverloads
+    fun create(
+      name: String,
+      isNullable: Boolean = false,
+      enum: List<String?> = emptyList()
+    ) =
+      DateTimeDataType(name, isNullable).let { dataType ->
+        if (enum.isEmpty()) success(dataType)
+        else AllowedValues.create(enum, dataType).map { DateTimeDataType(name, isNullable, it) }
+      }
+  }
+}

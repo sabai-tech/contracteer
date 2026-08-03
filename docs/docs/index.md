@@ -63,5 +63,5 @@ Verify servers and start mock servers from the command line -- any language, any
 
 ## Examples
 
-The [contracteer-examples](https://github.com/sabai-tech/contracteer-examples) repository contains complete working projects.
+The [contracteer-examples](https://github.com/contracteer-dev/contracteer-examples) repository contains complete working projects.
 It demonstrates the specification-as-artifact pattern with a shared OpenAPI document consumed by both server and client.

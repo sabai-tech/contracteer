@@ -7,11 +7,11 @@ It builds requests from the OpenAPI document, sends them to your running server,
 
 ## What the Verifier Sends and Checks
 
-Here is the `GET /musketeers/{id}` operation from the [Musketeer API](https://github.com/sabai-tech/contracteer-examples):
+Here is the `GET /musketeers/{id}` operation from the [Musketeer API](https://github.com/contracteer-dev/contracteer-examples):
 
 ```yaml
 # Excerpt from musketeer-api.yaml
-# Full OpenAPI document: https://github.com/sabai-tech/contracteer-examples
+# Full OpenAPI document: https://github.com/contracteer-dev/contracteer-examples
 paths:
   /musketeers/{id}:
     get:
