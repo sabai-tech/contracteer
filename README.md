@@ -177,4 +177,4 @@ Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get
 
 ## License
 
-Contracteer is licensed under the [GNU General Public License v3.0](LICENSE).
+Contracteer is licensed under the [Apache License 2.0](LICENSE).

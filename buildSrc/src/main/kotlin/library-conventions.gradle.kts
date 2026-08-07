@@ -14,8 +14,8 @@ publishing {
         url.set("https://contracteer.dev")
         licenses {
           license {
-            name.set("GNU General Public License, Version 3")
-            url.set("https://www.gnu.org/licenses/gpl-3.0.html")
+            name.set("Apache License, Version 2.0")
+            url.set("https://www.apache.org/licenses/LICENSE-2.0")
           }
         }
         developers {

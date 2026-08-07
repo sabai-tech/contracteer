@@ -1,6 +1,6 @@
 # Contributing to Contracteer
 
-Thanks for your interest in contributing to **Contracteer**! 🎉  
+Thanks for your interest in contributing to **Contracteer**!  
 Whether you're fixing a bug, improving the documentation, or proposing a new feature — your help is appreciated.
 
 Contracteer is a developer-first toolkit for contract testing using OpenAPI 3. It emphasizes fast, isolated, and
@@ -8,7 +8,7 @@ reliable testing early in the development lifecycle. Contributions should align 
 
 ---
 
-## 🚀 How to Contribute
+## How to Contribute
 
 1. **Fork** the repository
 2. **Create a feature branch**
@@ -25,7 +25,7 @@ reliable testing early in the development lifecycle. Contributions should align 
 
 ---
 
-## 📦 Project Modules
+## Project Modules
 
 | Module                                         | Description                                                                                                     |
 |------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
@@ -38,10 +38,7 @@ reliable testing early in the development lifecycle. Contributions should align 
 
 ---
 
-
-Core validation engine that compares actual API responses to expected behaviors defined in the OpenAPI contract |
-
-## 🛠 Development Setup
+## Development Setup
 
 ### Requirements
 
@@ -70,7 +67,7 @@ Core validation engine that compares actual API responses to expected behaviors 
 
 ---
 
-## 🎨 Code Style & Quality
+## Code Style & Quality
 
 - Follow Kotlin conventions for formatting and structure
 - Make sure your code builds and tests pass before pushing
@@ -78,7 +75,7 @@ Core validation engine that compares actual API responses to expected behaviors 
 
 ---
 
-## 📝 Commit Message Guidelines
+## Commit Message Guidelines
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) standard to keep the commit history clean and
 automate changelog/versioning.
@@ -93,7 +90,7 @@ docs: update README with Maven usage
 
 ---
 
-## 📥 Pull Request Guidelines
+## Pull Request Guidelines
 
 - Keep changes focused and small
 - One feature or bugfix per PR
@@ -103,7 +100,7 @@ docs: update README with Maven usage
 
 ---
 
-## 🐞 Reporting Bugs
+## Reporting Bugs
 
 Please include the following details when filing an issue:
 
@@ -115,10 +112,21 @@ Please include the following details when filing an issue:
 
 ---
 
-## 🤝 Code of Conduct
+## Code of Conduct
 
 Please review our [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a welcoming and respectful environment for everyone.
 
 ---
 
-Thanks again for helping improve Contracteer! 🚀
+## License
+
+Contracteer is licensed under the [Apache License 2.0](LICENSE).
+
+Unless you state otherwise, any contribution you intentionally submit for
+inclusion in Contracteer is licensed under the same terms, as described in
+section 5 of the Apache License 2.0. No separate contributor license
+agreement is required.
+
+---
+
+Thanks again for helping improve Contracteer!

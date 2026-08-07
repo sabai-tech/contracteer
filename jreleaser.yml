@@ -8,7 +8,7 @@ project:
     tests and a faithful mock.
   authors:
     - Christophe Amory
-  license: GPL-3.0-only
+  license: Apache-2.0
   inceptionYear: "2024"
   tags:
     - kotlin
