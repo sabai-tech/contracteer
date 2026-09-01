@@ -24,8 +24,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install image libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libfreetype6-dev libffi-dev libjpeg-dev libpng-dev
+
       - name: Install dependencies
-        run: pip install mkdocs-material==9.7 mike
+        run: pip install "mkdocs-material[imaging]==9.7" mike
 
       - name: Configure Git
         run: |

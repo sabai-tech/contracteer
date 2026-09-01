@@ -36,6 +36,10 @@ theme:
         icon: material/brightness-7
         name: Switch to dark mode
 
+plugins:
+  - search
+  - social
+
 extra:
   version:
     provider: mike

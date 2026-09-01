@@ -1,3 +1,7 @@
+---
+title: The loyal guard of your API contracts
+---
+
 # Contracteer
 
 *The loyal guard of your API contracts.*
