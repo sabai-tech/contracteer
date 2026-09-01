@@ -32,6 +32,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Deploy latest
+      - name: Deploy dev
         working-directory: docs
-        run: mike deploy --push --update-aliases dev latest
+        run: mike deploy --push dev
