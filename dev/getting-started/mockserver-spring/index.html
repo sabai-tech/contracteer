@@ -61,7 +61,20 @@
 
     
     
-  </head>
+  
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Mock Server with Spring Boot - Contracteer" />
+<meta property="og:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
+<meta property="og:image" content="https://contracteer.dev/dev/assets/images/social/getting-started/mockserver-spring.png" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:url" content="https://contracteer.dev/dev/getting-started/mockserver-spring/" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:title" content="Mock Server with Spring Boot - Contracteer" />
+<meta property="twitter:description" content="Contract testing from your OpenAPI document. Verify your API, mock your dependencies." />
+<meta property="twitter:image" content="https://contracteer.dev/dev/assets/images/social/getting-started/mockserver-spring.png" />
+</head>
   
   
     
@@ -1383,7 +1396,7 @@ The <a href="https://github.com/contracteer-dev/contracteer-examples/tree/main/m
 <div class="tabbed-content">
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">dependencies</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">&quot;dev.contracteer:contracteer-mockserver-spring:&lt;version&gt;&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">    </span><span class="n">testImplementation</span><span class="p">(</span><span class="s">"dev.contracteer:contracteer-mockserver-spring:&lt;version&gt;"</span><span class="p">)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">}</span>
 </code></pre></div>
 </div>
@@ -1409,8 +1422,8 @@ Your client reads this property and automatically points to the mock server.</p>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nd">@SpringBootTest</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nd">@ContracteerMockServer</span><span class="p">(</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;classpath:musketeer-api.yaml&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;musketeer.api.base-url&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"classpath:musketeer-api.yaml"</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"musketeer.api.base-url"</span>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="p">)</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="kd">class</span><span class="w"> </span><span class="nc">MusketeerApiClientTest</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>
@@ -1425,17 +1438,17 @@ Your client reads this property and automatically points to the mock server.</p>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>
 <a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="nd">@Test</span>
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`enlist a new musketeer`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">&quot;d&#39;Artagnan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CADET&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Rapier&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">"d'Artagnan"</span><span class="p">,</span><span class="w"> </span><span class="s">"CADET"</span><span class="p">,</span><span class="w"> </span><span class="s">"Rapier"</span><span class="p">)</span>
 <a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">musketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">enlistMusketeer</span><span class="p">(</span><span class="n">createMusketeer</span><span class="p">)</span>
 <a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">        </span><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">).</span><span class="na">isNotNull</span><span class="p">()</span>
 <a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>
 <a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="nd">@Test</span>
 <a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="kd">fun</span><span class="w"> </span><span class="nf">`reject enlistment when rank is invalid`</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">&quot;d&#39;Artagnan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;KNIGHT&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Rapier&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">        </span><span class="kd">val</span><span class="w"> </span><span class="nv">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">"d'Artagnan"</span><span class="p">,</span><span class="w"> </span><span class="s">"KNIGHT"</span><span class="p">,</span><span class="w"> </span><span class="s">"Rapier"</span><span class="p">)</span>
 <a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">        </span><span class="n">assertThatThrownBy</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">enlistMusketeer</span><span class="p">(</span><span class="n">createMusketeer</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">            </span><span class="p">.</span><span class="na">isInstanceOf</span><span class="p">(</span><span class="n">MusketeerApiException</span><span class="o">::</span><span class="n">class</span><span class="p">.</span><span class="na">java</span><span class="p">)</span>
-<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">            </span><span class="p">.</span><span class="na">extracting</span><span class="p">(</span><span class="s">&quot;statusCode&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">            </span><span class="p">.</span><span class="na">extracting</span><span class="p">(</span><span class="s">"statusCode"</span><span class="p">)</span>
 <a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">            </span><span class="p">.</span><span class="na">isEqualTo</span><span class="p">(</span><span class="m">400</span><span class="p">)</span>
 <a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a>
@@ -1450,8 +1463,8 @@ Your client reads this property and automatically points to the mock server.</p>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@SpringBootTest</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nd">@ContracteerMockServer</span><span class="p">(</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;classpath:musketeer-api.yaml&quot;</span><span class="p">,</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;musketeer.api.base-url&quot;</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"classpath:musketeer-api.yaml"</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"musketeer.api.base-url"</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">)</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="kd">class</span> <span class="nc">MusketeerApiClientTest</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>
@@ -1466,17 +1479,17 @@ Your client reads this property and automatically points to the mock server.</p>
 <a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
 <a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">    </span><span class="nd">@Test</span>
 <a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">enlist_a_new_musketeer</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">&quot;d&#39;Artagnan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;CADET&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Rapier&quot;</span><span class="p">);</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">"d'Artagnan"</span><span class="p">,</span><span class="w"> </span><span class="s">"CADET"</span><span class="p">,</span><span class="w"> </span><span class="s">"Rapier"</span><span class="p">);</span>
 <a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">musketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">enlistMusketeer</span><span class="p">(</span><span class="n">createMusketeer</span><span class="p">);</span>
 <a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="w">        </span><span class="n">assertThat</span><span class="p">(</span><span class="n">musketeer</span><span class="p">).</span><span class="na">isNotNull</span><span class="p">();</span>
 <a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
 <a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="w">    </span><span class="nd">@Test</span>
 <a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">reject_enlistment_when_rank_is_invalid</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">&quot;d&#39;Artagnan&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;KNIGHT&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Rapier&quot;</span><span class="p">);</span>
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">createMusketeer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CreateMusketeer</span><span class="p">(</span><span class="s">"d'Artagnan"</span><span class="p">,</span><span class="w"> </span><span class="s">"KNIGHT"</span><span class="p">,</span><span class="w"> </span><span class="s">"Rapier"</span><span class="p">);</span>
 <a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a><span class="w">        </span><span class="n">assertThatThrownBy</span><span class="p">(()</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">client</span><span class="p">.</span><span class="na">enlistMusketeer</span><span class="p">(</span><span class="n">createMusketeer</span><span class="p">))</span>
 <a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a><span class="w">            </span><span class="p">.</span><span class="na">isInstanceOf</span><span class="p">(</span><span class="n">MusketeerApiException</span><span class="p">.</span><span class="na">class</span><span class="p">)</span>
-<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="w">            </span><span class="p">.</span><span class="na">extracting</span><span class="p">(</span><span class="s">&quot;statusCode&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="w">            </span><span class="p">.</span><span class="na">extracting</span><span class="p">(</span><span class="s">"statusCode"</span><span class="p">)</span>
 <a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a><span class="w">            </span><span class="p">.</span><span class="na">isEqualTo</span><span class="p">(</span><span class="mi">400</span><span class="p">);</span>
 <a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>
@@ -1498,12 +1511,12 @@ The client connects to the mock server without any manual wiring.</p>
 <p>The annotation is repeatable.
 If your client depends on multiple APIs, annotate the test class once per API with a distinct <code>portProperty</code> or <code>baseUrlProperty</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nd">@ContracteerMockServer</span><span class="p">(</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;classpath:billing-api.yaml&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;billing.api.base-url&quot;</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"classpath:billing-api.yaml"</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"billing.api.base-url"</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">)</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="nd">@ContracteerMockServer</span><span class="p">(</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;classpath:inventory-api.yaml&quot;</span><span class="p">,</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;inventory.api.base-url&quot;</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="n">openApiDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"classpath:inventory-api.yaml"</span><span class="p">,</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="n">baseUrlProperty</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">"inventory.api.base-url"</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">)</span>
 </code></pre></div>
 </div>
@@ -1552,11 +1565,11 @@ This matches the <code>D_ARTAGNAN_JOINS</code> scenario:</p>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">        </span><span class="nt">examples</span><span class="p">:</span>
 <a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">          </span><span class="nt">D_ARTAGNAN_JOINS</span><span class="p">:</span>
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">            </span><span class="nt">value</span><span class="p">:</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">d&#39;Artagnan</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">d'Artagnan</span>
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">              </span><span class="nt">rank</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CADET</span>
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">              </span><span class="nt">weapon</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Rapier</span>
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nt">responses</span><span class="p">:</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="s">&#39;201&#39;</span><span class="p p-Indicator">:</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">    </span><span class="s">'201'</span><span class="p p-Indicator">:</span>
 <a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">      </span><span class="nt">headers</span><span class="p">:</span>
 <a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">        </span><span class="nt">Location</span><span class="p">:</span>
 <a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="w">          </span><span class="nt">examples</span><span class="p">:</span>
@@ -1602,7 +1615,7 @@ No configuration is needed.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">Logback (logback-test.xml)</label><label for="__tabbed_3_2">application.yaml (Spring Boot)</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;dev.contracteer.http&quot;</span><span class="w"> </span><span class="na">level=</span><span class="s">&quot;DEBUG&quot;</span><span class="nt">/&gt;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">&lt;logger</span><span class="w"> </span><span class="na">name=</span><span class="s">"dev.contracteer.http"</span><span class="w"> </span><span class="na">level=</span><span class="s">"DEBUG"</span><span class="nt">/&gt;</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">
